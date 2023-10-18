@@ -15,6 +15,8 @@ public:
         context = std::make_unique<llvm::LLVMContext>();
         module = std::make_unique<llvm::Module>(name, *context);
         builder = std::make_unique<llvm::IRBuilder<>>(*context);
+
+        init_external_references();
     }
 
     void eval(const std::string& code, const std::string& outfile = "out.ll") {
@@ -40,11 +42,21 @@ private:
         // For now, it has only one basic block.
         builder->SetInsertPoint(&function->back());
 
-        llvm::Value* ret = builder->getInt32(42);
+        llvm::Constant* message = create_string_literal("message", "Hello, world!\n");
+        std::vector<llvm::Value*> args = { message };
+        call_function("printf", args);
 
-        ret = builder->CreateIntCast(ret, builder->getInt32Ty(), true);
+        builder->CreateRet(builder->getInt32(0));
+    }
 
-        builder->CreateRet(ret);
+    llvm::Constant* create_string_literal(const std::string& name, const std::string& str) {
+        return builder->CreateGlobalStringPtr(str, name);
+    }
+
+    llvm::CallInst* call_function(const std::string& name, const std::vector<llvm::Value*>& args)
+    {
+        llvm::Function* function = module->getFunction(name);
+        return builder->CreateCall(function, args);
     }
 
     llvm::Function* create_function(const std::string& name) {
@@ -74,6 +86,12 @@ private:
         std::error_code error;
         llvm::raw_fd_ostream out(outfile, error);
         module->print(out, nullptr);
+    }
+
+    void init_external_references() {
+        // i32 printf(i8*, ...)
+        llvm::FunctionType* type = llvm::FunctionType::get(builder->getInt32Ty(), {builder->getInt8PtrTy()}, true);
+        module->getOrInsertFunction("printf", type);
     }
 
     std::unique_ptr<llvm::LLVMContext> context;
