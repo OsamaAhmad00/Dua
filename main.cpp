@@ -1,7 +1,7 @@
 #include <iostream>
-#include "EvaLLVM.h"
+#include "Compiler.h"
 
 int main() {
-    EvaLLVM module("MainModule");
-    module.eval("int main() { return 5; }");
+    Compiler module("MainModule");
+    module.compile("(printf \"Hello, world! %d\n\" 42)");
 }

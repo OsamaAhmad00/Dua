@@ -10,8 +10,7 @@ separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
 add_definitions(${LLVM_DEFINITIONS_LIST})
 
 add_executable(LLVMExample main.cpp
-        EvaLLVM.h
-        EvaLLVM.h)
+        Compiler.cpp)
 
 llvm_map_components_to_libnames(llvm_libs support core irreader)
 
