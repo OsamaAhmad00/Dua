@@ -5,8 +5,9 @@ int main() {
     Compiler module("MainModule");
     module.compile("(scope"
                    "    (var hello 15)"
-                   "    (printf \"Hello, world! %d\n\" hello)"
-                   "    (printf \"Hello, again! %d\n\" (scope 1 2 3 4))"
+                   "    (global world 16)"
+                   "    (printf \"Local: %d\n\" hello)"
+                   "    (printf \"Global: %d\n\" world)"
                    ")"
     );
 }

@@ -36,9 +36,24 @@ llvm::GlobalVariable* Compiler::create_global_variable(const std::string& name, 
     return variable;
 }
 
-llvm::Constant* Compiler::get_global_variable(const std::string& name)
+llvm::AllocaInst* Compiler::create_local_variable(const std::string& name, llvm::Constant* initializer)
 {
-    return module->getGlobalVariable(name)->getInitializer();
+    llvm::AllocaInst* variable = builder->CreateAlloca(initializer->getType(), 0, name);
+    builder->CreateStore(initializer, variable);
+    local_variables[name] = variable;
+    return variable;
+}
+
+llvm::LoadInst* Compiler::get_local_variable(const std::string& name)
+{
+    llvm::AllocaInst* variable = local_variables[name];
+    return builder->CreateLoad(variable->getAllocatedType(), variable);
+}
+
+llvm::LoadInst* Compiler::get_global_variable(const std::string& name)
+{
+    llvm::GlobalVariable* variable = module->getGlobalVariable(name);
+    return builder->CreateLoad(variable->getValueType(), variable);
 }
 
 llvm::Value* Compiler::eval(const Expression& expression) {
@@ -48,6 +63,8 @@ llvm::Value* Compiler::eval(const Expression& expression) {
             if (expression.str == "true" || expression.str == "false") {
                 return builder->getInt1(expression.str == "true");
             } else {
+                if (local_variables.find(expression.str) != local_variables.end())
+                    return get_local_variable(expression.str);
                 return get_global_variable(expression.str);
             }
         case SExpressionType::STRING:
@@ -62,16 +79,19 @@ llvm::Value* Compiler::eval(const Expression& expression) {
                     return call_printf(expression);
                 else if (first.str == "scope")
                     return eval_scope(expression);
+                else if (first.str == "global")
+                    return create_global_variable(expression);
                 else if (first.str == "var")
-                    return create_variable(expression);
+                    return create_local_variable(expression);
             }
     }
+    return nullptr;
 }
 
 llvm::Constant* Compiler::get_expression_value(const Expression& expression) {
     switch (expression.type) {
         case SExpressionType::NUMBER:
-            return builder->getInt64(expression.num);
+            return builder->getInt32(expression.num);
         case SExpressionType::STRING:
             return builder->CreateGlobalStringPtr(expression.str);
         default:  // Symbol or List
@@ -82,7 +102,7 @@ llvm::Constant* Compiler::get_expression_value(const Expression& expression) {
 }
 
 llvm::ConstantInt* Compiler::create_integer_literal(long long num) {
-    return builder->getInt64(num);
+    return builder->getInt32(num);
 }
 
 llvm::Constant* Compiler::create_string_literal(const std::string& name, const std::string& str) {
