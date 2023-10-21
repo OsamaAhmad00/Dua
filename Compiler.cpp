@@ -33,6 +33,7 @@ llvm::GlobalVariable* Compiler::create_global_variable(const std::string& name, 
     variable->setConstant(false);
     variable->setAlignment(llvm::MaybeAlign(4));
     variable->setInitializer(initializer);
+    symbol_table.insert_global(name, variable);
     return variable;
 }
 
@@ -40,19 +41,19 @@ llvm::AllocaInst* Compiler::create_local_variable(const std::string& name, llvm:
 {
     llvm::AllocaInst* variable = builder->CreateAlloca(initializer->getType(), 0, name);
     builder->CreateStore(initializer, variable);
-    local_variables[name] = variable;
+    symbol_table.insert(name, variable);
     return variable;
 }
 
 llvm::LoadInst* Compiler::get_local_variable(const std::string& name)
 {
-    llvm::AllocaInst* variable = local_variables[name];
+    llvm::AllocaInst* variable = symbol_table.get(name);
     return builder->CreateLoad(variable->getAllocatedType(), variable);
 }
 
 llvm::LoadInst* Compiler::get_global_variable(const std::string& name)
 {
-    llvm::GlobalVariable* variable = module->getGlobalVariable(name);
+    llvm::GlobalVariable* variable = symbol_table.get_global(name);
     return builder->CreateLoad(variable->getValueType(), variable);
 }
 
@@ -63,9 +64,9 @@ llvm::Value* Compiler::eval(const Expression& expression) {
             if (expression.str == "true" || expression.str == "false") {
                 return builder->getInt1(expression.str == "true");
             } else {
-                if (local_variables.find(expression.str) != local_variables.end())
-                    return get_local_variable(expression.str);
-                return get_global_variable(expression.str);
+                if (symbol_table.contains_global(expression.str))
+                    return get_global_variable(expression.str);
+                return get_local_variable(expression.str);
             }
         case SExpressionType::STRING:
             static int str_lit_cnt = 0;

@@ -9,9 +9,12 @@ llvm::Value* Compiler::call_printf(const Expression& expression) {
 }
 
 llvm::Value* Compiler::eval_scope(const Expression& expression) {
+    symbol_table.push_scope();
     for (int i = 1; i < expression.list.size() - 1; i++)
         eval(expression.list[i]);
-    return eval(expression.list.back());
+    llvm::Value* result = eval(expression.list.back());
+    symbol_table.pop_scope();
+    return result;
 }
 
 llvm::AllocaInst* Compiler::create_local_variable(const Expression& expression) {

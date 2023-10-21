@@ -7,6 +7,7 @@
 #include <llvm/IR/Verifier.h>
 #include <llvm/Support/raw_ostream.h>
 #include "Expression.h"
+#include "SymbolTable.h"
 
 namespace syntax {
     class Parser;
@@ -47,7 +48,8 @@ private:
     std::unique_ptr<llvm::LLVMContext> context;
     std::unique_ptr<llvm::Module> module;
     std::unique_ptr<llvm::IRBuilder<>> builder;
-    std::unordered_map<std::string, llvm::AllocaInst*> local_variables;
+
+    SymbolTable<llvm::AllocaInst*, llvm::GlobalVariable*> symbol_table;
 
     // FIXME
     //  The parser generator generates the definition of the classes and functions
