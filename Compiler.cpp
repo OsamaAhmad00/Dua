@@ -68,6 +68,19 @@ llvm::Value* Compiler::eval(const Expression& expression) {
     }
 }
 
+llvm::Constant* Compiler::get_expression_value(const Expression& expression) {
+    switch (expression.type) {
+        case SExpressionType::NUMBER:
+            return builder->getInt64(expression.num);
+        case SExpressionType::STRING:
+            return builder->CreateGlobalStringPtr(expression.str);
+        default:  // Symbol or List
+            llvm::Constant* value = llvm::dyn_cast<llvm::Constant>(eval(expression));
+            assert(value);
+            return value;
+    }
+}
+
 llvm::ConstantInt* Compiler::create_integer_literal(long long num) {
     return builder->getInt64(num);
 }

@@ -35,6 +35,7 @@ private:
     llvm::BasicBlock* attach_function_entry_block(llvm::Function* function);
     void save_module(const std::string& outfile);
     void init_external_references();
+    llvm::Constant* get_expression_value(const Expression& expression);
 
     llvm::Value* call_printf(const Expression& expression);
     llvm::Value* eval_scope(const Expression& expression);
