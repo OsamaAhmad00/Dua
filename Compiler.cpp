@@ -62,6 +62,8 @@ llvm::Value* Compiler::eval(const Expression& expression) {
                     return call_printf(expression);
                 else if (first.str == "scope")
                     return eval_scope(expression);
+                else if (first.str == "var")
+                    return create_variable(expression);
             }
     }
 }

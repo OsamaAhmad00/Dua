@@ -4,8 +4,9 @@
 int main() {
     Compiler module("MainModule");
     module.compile("(scope"
-                   "    (printf \"Hello, world! %d\n\" 33)"
-                   "    (printf \"Hello, again! %d\n\" 44)"
+                   "    (var hello 15)"
+                   "    (printf \"Hello, world! %d\n\" hello)"
+                   "    (printf \"Hello, again! %d\n\" (scope 1 2 3 4))"
                    ")"
     );
 }

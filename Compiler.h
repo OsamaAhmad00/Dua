@@ -22,6 +22,8 @@ public:
 
 private:
 
+    llvm::GlobalVariable* create_global_variable(const std::string& name, llvm::Constant* initializer);
+    llvm::Constant* get_global_variable(const std::string& name);
     llvm::Constant* create_string_literal(const std::string& name, const std::string& str);
     llvm::ConstantInt* create_integer_literal(long long num);
     llvm::CallInst* call_function(const std::string& name, const std::vector<llvm::Value*>& args);
@@ -36,6 +38,7 @@ private:
 
     llvm::Value* call_printf(const Expression& expression);
     llvm::Value* eval_scope(const Expression& expression);
+    llvm::Value* create_variable(const Expression& expression);
 
     std::unique_ptr<llvm::LLVMContext> context;
     std::unique_ptr<llvm::Module> module;
