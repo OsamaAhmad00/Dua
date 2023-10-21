@@ -24,24 +24,42 @@ void Compiler::compile(const std::string& code, const std::string& outfile) {
     save_module(outfile);
 }
 
-llvm::Value* Compiler::eval(Expression& expression) {
+llvm::GlobalVariable* Compiler::create_global_variable(const std::string& name, llvm::Constant* initializer)
+{
+    module->getOrInsertGlobal(name, initializer->getType());
+    llvm::GlobalVariable* variable = module->getGlobalVariable(name);
+    variable->setConstant(false);
+    variable->setAlignment(llvm::MaybeAlign(4));
+    variable->setInitializer(initializer);
+    return variable;
+}
+
+llvm::Constant* Compiler::get_global_variable(const std::string& name)
+{
+    return module->getGlobalVariable(name)->getInitializer();
+}
+
+llvm::Value* Compiler::eval(const Expression& expression) {
     switch (expression.type)
     {
         case SExpressionType::SYMBOL:
-            break;
+            if (expression.str == "true" || expression.str == "false") {
+                return builder->getInt1(expression.str == "true");
+            } else {
+                return get_global_variable(expression.str);
+            }
         case SExpressionType::STRING:
             static int str_lit_cnt = 0;
             return create_string_literal("literal_" + std::to_string(str_lit_cnt++), expression.str);
         case SExpressionType::NUMBER:
             return create_integer_literal(expression.num);
         case SExpressionType::LIST:
-            Expression& first = expression.list.front();
-            if (first.str == "printf") {
-                std::vector<llvm::Value*> args;
-                for (int i = 1; i < expression.list.size(); i++) {
-                    args.push_back(eval(expression.list[i]));
-                }
-                return call_function("printf", args);
+            const Expression& first = expression.list.front();
+            if (first.type == SExpressionType::SYMBOL) {
+                if (first.str == "printf")
+                    return call_printf(expression);
+                else if (first.str == "scope")
+                    return eval_scope(expression);
             }
     }
 }

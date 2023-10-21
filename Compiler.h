@@ -37,7 +37,7 @@ private:
     llvm::Constant* create_string_literal(const std::string& name, const std::string& str);
     llvm::ConstantInt* create_integer_literal(long long num);
     llvm::CallInst* call_function(const std::string& name, const std::vector<llvm::Value*>& args);
-    llvm::Value* eval(Expression& expression);
+    llvm::Value* eval(const Expression& expression);
     void construct_function_body(llvm::Function* function, Expression& expression);
     void eval_main(Expression& expression);
     llvm::Function* create_function(const std::string& name);
@@ -45,6 +45,9 @@ private:
     llvm::BasicBlock* attach_function_entry_block(llvm::Function* function);
     void save_module(const std::string& outfile);
     void init_external_references();
+
+    llvm::Value* call_printf(const Expression& expression);
+    llvm::Value* eval_scope(const Expression& expression);
 
     std::unique_ptr<llvm::LLVMContext> context;
     std::unique_ptr<llvm::Module> module;
