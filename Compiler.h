@@ -12,24 +12,12 @@ namespace syntax {
     class Parser;
 }
 
-template <typename T>
-struct UniquePointer
-{
-    // A unique pointer with no static assertions that
-    // need to know the size of the objects pointed to.
-    T* ptr;
-    template <typename ...ArgsType>
-    UniquePointer(ArgsType... args) { ptr = new T(args...); }
-    ~UniquePointer() { delete ptr; }
-    T* operator->() { return ptr; }
-    T& operator*() { return *ptr; }
-};
-
 class Compiler {
 
 public:
 
     explicit Compiler(const std::string& name);
+    ~Compiler();
     void compile(const std::string& code, const std::string& outfile = "out.ll");
 
 private:
@@ -53,6 +41,15 @@ private:
     std::unique_ptr<llvm::Module> module;
     std::unique_ptr<llvm::IRBuilder<>> builder;
 
-    UniquePointer<syntax::Parser> parser;
+    // FIXME
+    //  The parser generator generates the definition of the classes and functions
+    //  that it uses in the header file, thus you can include it only once across
+    //  all files that will be part of the compilation, otherwise, you will have
+    //  the classes defined more than once, resulting in linking errors. To overcome
+    //  this, the parser is only included in the compiler source file. Since we can't
+    //  include it here, we can't use a unique pointer for it since the unique pointer
+    //  needs to know the size of the class to do static assertions. A solution would
+    //  be to mark every definition in the header file as static.
+    syntax::Parser* parser;
 };
 

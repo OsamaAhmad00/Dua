@@ -6,10 +6,12 @@ Compiler::Compiler(const std::string& name) {
     module = std::make_unique<llvm::Module>(name, *context);
     builder = std::make_unique<llvm::IRBuilder<>>(*context);
 
-    // The parser is already initialized
+    parser = new syntax::Parser;
 
     init_external_references();
 }
+
+Compiler::~Compiler() { delete parser; }
 
 void Compiler::compile(const std::string& code, const std::string& outfile) {
 
