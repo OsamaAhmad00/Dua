@@ -45,6 +45,16 @@ private:
     llvm::AllocaInst* create_local_variable(const Expression& expression);
     llvm::GlobalVariable* create_global_variable(const Expression& expression);
     llvm::Value* set_variable(const Expression& expression);
+    llvm::Value* eval_sum(const Expression& expression);
+    llvm::Value* eval_sub(const Expression& expression);
+    llvm::Value* eval_mul(const Expression& expression);
+    llvm::Value* eval_div(const Expression& expression);
+    llvm::Value* eval_less_than(const Expression& expression);
+    llvm::Value* eval_greater_than(const Expression& expression);
+    llvm::Value* eval_less_than_eq(const Expression& expression);
+    llvm::Value* eval_greater_than_eq(const Expression& expression);
+    llvm::Value* eval_equal(const Expression& expression);
+    llvm::Value* eval_not_equal(const Expression& expression);
 
     std::unique_ptr<llvm::LLVMContext> context;
     std::unique_ptr<llvm::Module> module;

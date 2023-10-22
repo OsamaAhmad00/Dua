@@ -4,12 +4,16 @@
 int main() {
     Compiler module("MainModule");
     module.compile("(scope"
-                   "    (var hello 15)"
-                   "    (global world 16)"
-                   "    (printf \"%d\n%d\n\" hello world)"
-                   "    (set hello 20)"
-                   "    (set world 21)"
-                   "    (printf \"%d\n%d\n\" hello world)"
+                   "    (printf \"%d\n\" (+  1 2 3 4 5))"
+                   "    (printf \"%d\n\" (-  1 2 3 4 5))"
+                   "    (printf \"%d\n\" (*  1 2 3 4 5))"
+                   "    (printf \"%d\n\" (/  5 2 1))"
+                   "    (printf \"%d\n\" (<  1 2))"
+                   "    (printf \"%d\n\" (>  1 2))"
+                   "    (printf \"%d\n\" (<= 1 2))"
+                   "    (printf \"%d\n\" (>= 1 2))"
+                   "    (printf \"%d\n\" (== 1 2))"
+                   "    (printf \"%d\n\" (!= 1 2))"
                    ")"
     );
 }

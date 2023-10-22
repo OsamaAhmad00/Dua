@@ -86,6 +86,28 @@ llvm::Value* Compiler::eval(const Expression& expression) {
                     return create_local_variable(expression);
                 else if (first.str == "set")
                     return set_variable(expression);
+                else if (first.str == "+")
+                    return eval_sum(expression);
+                else if (first.str == "-")
+                    return eval_sub(expression);
+                else if (first.str == "*")
+                    return eval_mul(expression);
+                else if (first.str == "/")
+                    return eval_div(expression);
+                else if (first.str == "<")
+                    return eval_less_than(expression);
+                else if (first.str == ">")
+                    return eval_greater_than(expression);
+                else if (first.str == "<=")
+                    return eval_less_than_eq(expression);
+                else if (first.str == ">=")
+                    return eval_greater_than_eq(expression);
+                else if (first.str == "==")
+                    return eval_equal(expression);
+                else if (first.str == "!=")
+                    return eval_not_equal(expression);
+                else
+                    throw std::runtime_error("Not supported operation");
             }
     }
     return nullptr;
