@@ -106,6 +106,8 @@ llvm::Value* Compiler::eval(const Expression& expression) {
                     return eval_equal(expression);
                 else if (first.str == "!=")
                     return eval_not_equal(expression);
+                else if (first.str == "if")
+                    return eval_if(expression);
                 else
                     throw std::runtime_error("Not supported operation");
             }
@@ -165,7 +167,7 @@ llvm::Function* Compiler::create_function(const std::string& name) {
         function = create_function_prototype(name, type);
     }
 
-    attach_function_entry_block(function);
+    create_basic_block("entry", function);
 
     return function;
 }
@@ -173,11 +175,12 @@ llvm::Function* Compiler::create_function(const std::string& name) {
 llvm::Function* Compiler::create_function_prototype(const std::string& name, llvm::FunctionType* type) {
     llvm::Function* function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, name, *module);
     llvm::verifyFunction(*function);
+    current_function = function;
     return function;
 }
 
-llvm::BasicBlock* Compiler::attach_function_entry_block(llvm::Function* function) {
-    return llvm::BasicBlock::Create(*context, "entry", function);
+llvm::BasicBlock* Compiler::create_basic_block(const std::string& name, llvm::Function* function) {
+    return llvm::BasicBlock::Create(*context, name, function);
 }
 
 void Compiler::save_module(const std::string& outfile) {

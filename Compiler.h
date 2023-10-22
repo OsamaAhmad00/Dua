@@ -35,11 +35,12 @@ private:
     void eval_main(Expression& expression);
     llvm::Function* create_function(const std::string& name);
     llvm::Function* create_function_prototype(const std::string& name, llvm::FunctionType* type);
-    llvm::BasicBlock* attach_function_entry_block(llvm::Function* function);
+    llvm::BasicBlock* create_basic_block(const std::string& name, llvm::Function* function);
     void save_module(const std::string& outfile);
     void init_external_references();
     llvm::Constant* get_expression_value(const Expression& expression);
 
+    // Operations
     llvm::Value* call_printf(const Expression& expression);
     llvm::Value* eval_scope(const Expression& expression);
     llvm::AllocaInst* create_local_variable(const Expression& expression);
@@ -55,6 +56,7 @@ private:
     llvm::Value* eval_greater_than_eq(const Expression& expression);
     llvm::Value* eval_equal(const Expression& expression);
     llvm::Value* eval_not_equal(const Expression& expression);
+    llvm::Value* eval_if(const Expression& expression);
 
     std::unique_ptr<llvm::LLVMContext> context;
     std::unique_ptr<llvm::Module> module;
@@ -72,5 +74,7 @@ private:
     //  needs to know the size of the class to do static assertions. A solution would
     //  be to mark every definition in the header file as static.
     syntax::Parser* parser;
+
+    llvm::Function* current_function;
 };
 
