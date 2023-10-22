@@ -84,6 +84,8 @@ llvm::Value* Compiler::eval(const Expression& expression) {
                     return create_global_variable(expression);
                 else if (first.str == "var")
                     return create_local_variable(expression);
+                else if (first.str == "set")
+                    return set_variable(expression);
             }
     }
     return nullptr;

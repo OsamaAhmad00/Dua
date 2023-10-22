@@ -24,7 +24,7 @@ public:
         return map[name];
     }
 
-    bool contains(const std::string& name) {
+    bool contains(const std::string& name) const {
         return map.find(name) != map.end();
     }
 
@@ -65,7 +65,7 @@ public:
         return global_scope.get(name);
     }
 
-    bool contains(const std::string& name) {
+    bool contains(const std::string& name) const {
         for (const Scope<Local_T>& scope : scopes)
             if (scope.contains(name))
                 return true;

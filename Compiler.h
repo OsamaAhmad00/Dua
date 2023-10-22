@@ -44,6 +44,7 @@ private:
     llvm::Value* eval_scope(const Expression& expression);
     llvm::AllocaInst* create_local_variable(const Expression& expression);
     llvm::GlobalVariable* create_global_variable(const Expression& expression);
+    llvm::Value* set_variable(const Expression& expression);
 
     std::unique_ptr<llvm::LLVMContext> context;
     std::unique_ptr<llvm::Module> module;
