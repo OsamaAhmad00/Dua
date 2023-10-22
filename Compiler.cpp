@@ -109,6 +109,7 @@ llvm::Value* Compiler::eval(const Expression& expression) {
                 else
                     throw std::runtime_error("Not supported operation");
             }
+            return eval(expression.list.back());
     }
     return nullptr;
 }
