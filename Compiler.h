@@ -57,6 +57,7 @@ private:
     llvm::Value* eval_equal(const Expression& expression);
     llvm::Value* eval_not_equal(const Expression& expression);
     llvm::Value* eval_if(const Expression& expression);
+    llvm::Value* eval_while(const Expression& expression);
 
     std::unique_ptr<llvm::LLVMContext> context;
     std::unique_ptr<llvm::Module> module;

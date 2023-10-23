@@ -1,25 +1,17 @@
-#include <iostream>
 #include "Compiler.h"
 
 int main() {
     Compiler module("MainModule");
     module.compile("(scope"
-                   "    (var x 15)"
-                   "    (var y 16)"
-                   "    (if (> x y)"
-                   "        (if (== x y)"
-                   "            (printf \"Then Then branch\n\")"
-                   "            (printf \"Else Else branch\n\")"
+                   "    (var result 1)"
+                   "    (var x 5)"
+                   "    (while (> x 0)"
+                   "        (scope "
+                   "            (set result (* result x))"
+                   "            (set x (- x 1))"
                    "        )"
-                   "        (printf \"Else branch\n\")"
                    "    )"
-                   "    (if (< x y)"
-                   "        (if (== x y)"
-                   "            (printf \"Then Then branch\n\")"
-                   "            (printf \"Then Else branch\n\")"
-                   "        )"
-                   "        (printf \"Else branch\n\")"
-                   "    )"
+                   "    (printf \"%d\n\" result)"
                    ")"
     );
 }

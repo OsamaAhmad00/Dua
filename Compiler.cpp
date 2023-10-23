@@ -108,6 +108,8 @@ llvm::Value* Compiler::eval(const Expression& expression) {
                     return eval_not_equal(expression);
                 else if (first.str == "if")
                     return eval_if(expression);
+                else if (first.str == "while")
+                    return eval_while(expression);
                 else
                     throw std::runtime_error("Not supported operation");
             }

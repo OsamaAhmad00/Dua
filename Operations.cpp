@@ -132,3 +132,34 @@ llvm::Value* Compiler::eval_if(const Expression& expression) {
 
     return phi;
 }
+
+llvm::Value* Compiler::eval_while(const Expression& expression) {
+    assert(expression.list.size() == 3);
+    const Expression& cond_exp = expression.list[1];
+    const Expression& body_exp = expression.list[2];
+
+    // If a counter is not used, LLVM will assign numbers incrementally (for example while_cond1, while_body2, while_end3)
+    //  which can be confusing, especially in nested expressions.
+    static int _counter = 0;
+    int counter = _counter++;  // storing a local copy
+    // You might delay the attachment of the blocks to the functions to reorder the blocks in a more readable way
+    //  by doing the following: current_function->getBasicBlockList().push_back(block); I prefer this way.
+    llvm::BasicBlock* cond_block = create_basic_block("while_cond" + std::to_string(counter), current_function);
+    llvm::BasicBlock* body_block = create_basic_block("while_body" + std::to_string(counter), current_function);
+    llvm::BasicBlock* end_block = create_basic_block("while_end" + std::to_string(counter), current_function);
+
+    // From the current block.
+    builder->CreateBr(cond_block);
+
+    builder->SetInsertPoint(cond_block);
+    llvm::Value* cond_res = eval(cond_exp);
+    builder->CreateCondBr(cond_res, body_block, end_block);
+
+    builder->SetInsertPoint(body_block);
+    eval(body_exp);
+    builder->CreateBr(cond_block);
+
+    builder->SetInsertPoint(end_block);
+
+    return builder->getInt32(0);
+}
