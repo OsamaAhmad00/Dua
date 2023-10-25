@@ -28,16 +28,15 @@ llvm::AllocaInst* Compiler::create_local_variable(const Expression& expression) 
     // type name (optional init)
     assert(expression.list.size() >= 2);
     llvm::Type* type = get_type(expression.list[0].str);
-    llvm::Constant* init = expression.list.size() > 2 ? get_expression_value(expression.list[2]) : nullptr;
+    const Expression* init = expression.list.size() > 2 ? &expression.list[2] : nullptr;
     return create_local_variable(expression.list[1].str, type, init);
 }
 
 llvm::GlobalVariable* Compiler::create_global_variable(const Expression& expression) {
-    // global type name (optional init)
-    assert(expression.list.size() >= 3);
+    // global type name init
+    assert(expression.list.size() == 4);
     llvm::Type* type = get_type(expression.list[1].str);
-    llvm::Constant* init = expression.list.size() > 3 ? get_expression_value(expression.list[3]) : nullptr;
-    return create_global_variable(expression.list[2].str, type, init);
+    return create_global_variable(expression.list[2].str, type, expression.list[3]);
 }
 
 llvm::Value* Compiler::set_variable(const Expression& expression) {

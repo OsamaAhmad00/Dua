@@ -24,17 +24,18 @@ public:
 private:
 
     llvm::Value* eval(const Expression& expression);
-    llvm::GlobalVariable* create_global_variable(const std::string& name, llvm::Type* type, llvm::Constant* initializer=nullptr);
-    llvm::AllocaInst* create_local_variable(const std::string& name, llvm::Type* type, llvm::Constant* initializer=nullptr);
+    llvm::GlobalVariable* create_global_variable(const std::string& name, llvm::Type* type, const Expression& init_exp);
+    llvm::AllocaInst* create_local_variable(const std::string& name, llvm::Type* type, const Expression* init_exp=nullptr);
     llvm::LoadInst* get_global_variable(const std::string& name);
     llvm::LoadInst* get_local_variable(const std::string& name);
     llvm::CallInst* call_function(const std::string& name, const std::vector<llvm::Value*>& args);
     llvm::Function* create_function(const std::string& name);
     llvm::Function* create_function_prototype(const std::string& name, llvm::FunctionType* type);
     llvm::BasicBlock* create_basic_block(const std::string& name, llvm::Function* function);
-    llvm::Constant* get_expression_value(const Expression& expression);
+    llvm::Constant* get_constant(const Expression& expression);
     llvm::Constant* create_string_literal(const std::string& name, const std::string& str);
     llvm::ConstantInt* create_integer_literal(long long num);
+    llvm::Constant* get_default_value(llvm::Type* type);
     llvm::Type* get_type(const std::string& str);
     void construct_function_body(llvm::Function* function, Expression& expression);
     void eval_main(Expression& expression);
@@ -74,6 +75,7 @@ private:
 
     SymbolTable<llvm::AllocaInst*, llvm::GlobalVariable*> symbol_table;
     std::unordered_map<std::string, llvm::Type*> types;
+    std::unordered_map<llvm::Type*, llvm::Constant*> default_values;
 
     // FIXME
     //  The parser generator generates the definition of the classes and functions

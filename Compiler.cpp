@@ -1,14 +1,13 @@
 #include "Compiler.h"
 #include "Parser.h"
 
-Compiler::Compiler(const std::string& name) {
-    context = std::make_unique<llvm::LLVMContext>();
-    module = std::make_unique<llvm::Module>(name, *context);
-    builder = std::make_unique<llvm::IRBuilder<>>(*context);
-    temp_builder = std::make_unique<llvm::IRBuilder<>>(*context);
-
-    parser = new syntax::Parser;
-
+Compiler::Compiler(const std::string& name) :
+    context(std::make_unique<llvm::LLVMContext>()),
+    module(std::make_unique<llvm::Module>(name, *context)),
+    builder(std::make_unique<llvm::IRBuilder<>>(*context)),
+    temp_builder(std::make_unique<llvm::IRBuilder<>>(*context)),
+    parser(new syntax::Parser)
+{
     init_external_references();
     init_primitive_types();
 }
@@ -33,25 +32,31 @@ void Compiler::init_primitive_types() {
     types["str"] = builder->getInt8PtrTy();
 }
 
-llvm::GlobalVariable* Compiler::create_global_variable(const std::string& name, llvm::Type* type, llvm::Constant* initializer)
+llvm::GlobalVariable* Compiler::create_global_variable(const std::string& name, llvm::Type* type, const Expression& init_exp)
 {
     module->getOrInsertGlobal(name, type);
     llvm::GlobalVariable* variable = module->getGlobalVariable(name);
     variable->setConstant(false);
     variable->setAlignment(llvm::MaybeAlign(4));
-    if (initializer)
-        variable->setInitializer(initializer);
+    variable->setExternallyInitialized(false);
+    if (llvm::Constant *value = get_constant(init_exp); value)
+        variable->setInitializer(value);
+    else
+        throw std::runtime_error("Initialization of a global variable with non-constant value");
     symbol_table.insert_global(name, variable);
     return variable;
 }
 
-llvm::AllocaInst* Compiler::create_local_variable(const std::string& name, llvm::Type* type, llvm::Constant* initializer)
+llvm::AllocaInst* Compiler::create_local_variable(const std::string& name, llvm::Type* type, const Expression* init_exp)
 {
     llvm::BasicBlock* entry = &current_function->getEntryBlock();
     temp_builder->SetInsertPoint(entry, entry->begin());
     llvm::AllocaInst* variable = temp_builder->CreateAlloca(type, 0, name);
-    if (initializer)
+    if (init_exp) {
+        llvm::Value* initializer = get_constant(*init_exp);
+        if (!initializer) initializer = eval(*init_exp);
         builder->CreateStore(initializer, variable);
+    }
     symbol_table.insert(name, variable);
     return variable;
 }
@@ -129,22 +134,26 @@ llvm::Value* Compiler::eval(const Expression& expression) {
     return nullptr;
 }
 
+llvm::Constant* Compiler::get_default_value(llvm::Type* type) {
+    auto result = default_values.find(type);
+    assert(result != default_values.end());
+    return result->second;
+}
+
 llvm::Type* Compiler::get_type(const std::string& str) {
     auto result = types.find(str);
     if (result == types.end()) return nullptr;
     return result->second;
 }
 
-llvm::Constant* Compiler::get_expression_value(const Expression& expression) {
+llvm::Constant* Compiler::get_constant(const Expression& expression) {
     switch (expression.type) {
         case SExpressionType::NUMBER:
             return builder->getInt32(expression.num);
         case SExpressionType::STRING:
             return builder->CreateGlobalStringPtr(expression.str);
         default:  // Symbol or List
-            llvm::Constant* value = llvm::dyn_cast<llvm::Constant>(eval(expression));
-            assert(value);
-            return value;
+            return nullptr;
     }
 }
 
