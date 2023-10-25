@@ -20,7 +20,7 @@ void Compiler::compile(const std::string& code, const std::string& outfile) {
     Expression expression = parser->parse(code);
 
     // Generate IR
-    eval_main(expression);
+    define_function("main", expression, "int");
 
     // Output
     module->print(llvm::outs(), nullptr);  // Print
@@ -134,12 +134,6 @@ llvm::Value* Compiler::eval(const Expression& expression) {
     return nullptr;
 }
 
-llvm::Constant* Compiler::get_default_value(llvm::Type* type) {
-    auto result = default_values.find(type);
-    assert(result != default_values.end());
-    return result->second;
-}
-
 llvm::Type* Compiler::get_type(const std::string& str) {
     auto result = types.find(str);
     if (result == types.end()) return nullptr;
@@ -170,37 +164,29 @@ llvm::CallInst* Compiler::call_function(const std::string& name, const std::vect
     return builder->CreateCall(function, args);
 }
 
-void Compiler::eval_main(Expression& expression) {
-    llvm::Function* function = create_function("main");
-    construct_function_body(function, expression);
-}
+llvm::Function* Compiler::define_function(const std::string& name, const Expression& body, const std::string& return_type, const std::vector<std::string>& parameter_types, bool is_vararg) {
+    llvm::Function* function = module->getFunction(name);
 
-void Compiler::construct_function_body(llvm::Function* function, Expression& body) {
+    if (!function)
+        function = declare_function(name, return_type, parameter_types);
 
-    llvm::IRBuilderBase::InsertPoint old_insert_point = builder->saveIP();
+    create_basic_block("entry", function);
     builder->SetInsertPoint(&function->back());
 
     eval(body);
 
+    // Temporary
     builder->CreateRet(builder->getInt32(0));
-
-    builder->restoreIP(old_insert_point);
-}
-
-llvm::Function* Compiler::create_function(const std::string& name) {
-    llvm::Function* function = module->getFunction(name);
-
-    if (!function) {
-        llvm::FunctionType* type = llvm::FunctionType::get(builder->getInt32Ty(), false);
-        function = create_function_prototype(name, type);
-    }
-
-    create_basic_block("entry", function);
 
     return function;
 }
 
-llvm::Function* Compiler::create_function_prototype(const std::string& name, llvm::FunctionType* type) {
+llvm::Function* Compiler::declare_function(const std::string& name, const std::string& return_type, const std::vector<std::string>& parameter_types, bool is_vararg) {
+    llvm::Type* ret = get_type(return_type);
+    std::vector<llvm::Type*> params;
+    for (auto& type: parameter_types)
+        params.push_back(get_type(type));
+    llvm::FunctionType* type = llvm::FunctionType::get(ret, params, is_vararg);
     llvm::Function* function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, name, *module);
     llvm::verifyFunction(*function);
     current_function = function;
