@@ -23,24 +23,24 @@ public:
 
 private:
 
+    llvm::Value* eval(const Expression& expression);
     llvm::GlobalVariable* create_global_variable(const std::string& name, llvm::Type* type, llvm::Constant* initializer=nullptr);
     llvm::AllocaInst* create_local_variable(const std::string& name, llvm::Type* type, llvm::Constant* initializer=nullptr);
     llvm::LoadInst* get_global_variable(const std::string& name);
     llvm::LoadInst* get_local_variable(const std::string& name);
-    llvm::Constant* create_string_literal(const std::string& name, const std::string& str);
-    llvm::ConstantInt* create_integer_literal(long long num);
     llvm::CallInst* call_function(const std::string& name, const std::vector<llvm::Value*>& args);
-    llvm::Value* eval(const Expression& expression);
-    void construct_function_body(llvm::Function* function, Expression& expression);
-    void eval_main(Expression& expression);
     llvm::Function* create_function(const std::string& name);
     llvm::Function* create_function_prototype(const std::string& name, llvm::FunctionType* type);
     llvm::BasicBlock* create_basic_block(const std::string& name, llvm::Function* function);
-    void save_module(const std::string& outfile);
-    void init_external_references();
     llvm::Constant* get_expression_value(const Expression& expression);
+    llvm::Constant* create_string_literal(const std::string& name, const std::string& str);
+    llvm::ConstantInt* create_integer_literal(long long num);
     llvm::Type* get_type(const std::string& str);
+    void construct_function_body(llvm::Function* function, Expression& expression);
+    void eval_main(Expression& expression);
+    void init_external_references();
     void init_primitive_types();
+    void save_module(const std::string& outfile);
 
     // Operations
     llvm::Value* call_printf(const Expression& expression);
@@ -64,6 +64,13 @@ private:
     std::unique_ptr<llvm::LLVMContext> context;
     std::unique_ptr<llvm::Module> module;
     std::unique_ptr<llvm::IRBuilder<>> builder;
+
+    // Its insertion point is not guaranteed to be anywhere
+    //  and thus, can be used at any point in time. This can
+    //  be useful for example in inserting all the alloca
+    //  instructions in the entry block of a function, regardless
+    //  of their declaration location in the code.
+    std::unique_ptr<llvm::IRBuilder<>> temp_builder;
 
     SymbolTable<llvm::AllocaInst*, llvm::GlobalVariable*> symbol_table;
     std::unordered_map<std::string, llvm::Type*> types;

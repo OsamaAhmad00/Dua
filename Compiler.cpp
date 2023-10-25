@@ -5,6 +5,7 @@ Compiler::Compiler(const std::string& name) {
     context = std::make_unique<llvm::LLVMContext>();
     module = std::make_unique<llvm::Module>(name, *context);
     builder = std::make_unique<llvm::IRBuilder<>>(*context);
+    temp_builder = std::make_unique<llvm::IRBuilder<>>(*context);
 
     parser = new syntax::Parser;
 
@@ -46,7 +47,9 @@ llvm::GlobalVariable* Compiler::create_global_variable(const std::string& name, 
 
 llvm::AllocaInst* Compiler::create_local_variable(const std::string& name, llvm::Type* type, llvm::Constant* initializer)
 {
-    llvm::AllocaInst* variable = builder->CreateAlloca(type, 0, name);
+    llvm::BasicBlock* entry = &current_function->getEntryBlock();
+    temp_builder->SetInsertPoint(entry, entry->begin());
+    llvm::AllocaInst* variable = temp_builder->CreateAlloca(type, 0, name);
     if (initializer)
         builder->CreateStore(initializer, variable);
     symbol_table.insert(name, variable);
