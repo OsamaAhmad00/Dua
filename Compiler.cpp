@@ -9,6 +9,7 @@ Compiler::Compiler(const std::string& name) {
     parser = new syntax::Parser;
 
     init_external_references();
+    init_primitive_types();
 }
 
 Compiler::~Compiler() { delete parser; }
@@ -26,21 +27,28 @@ void Compiler::compile(const std::string& code, const std::string& outfile) {
     save_module(outfile);
 }
 
-llvm::GlobalVariable* Compiler::create_global_variable(const std::string& name, llvm::Constant* initializer)
+void Compiler::init_primitive_types() {
+    types["int"] = builder->getInt32Ty();
+    types["str"] = builder->getInt8PtrTy();
+}
+
+llvm::GlobalVariable* Compiler::create_global_variable(const std::string& name, llvm::Type* type, llvm::Constant* initializer)
 {
-    module->getOrInsertGlobal(name, initializer->getType());
+    module->getOrInsertGlobal(name, type);
     llvm::GlobalVariable* variable = module->getGlobalVariable(name);
     variable->setConstant(false);
     variable->setAlignment(llvm::MaybeAlign(4));
-    variable->setInitializer(initializer);
+    if (initializer)
+        variable->setInitializer(initializer);
     symbol_table.insert_global(name, variable);
     return variable;
 }
 
-llvm::AllocaInst* Compiler::create_local_variable(const std::string& name, llvm::Constant* initializer)
+llvm::AllocaInst* Compiler::create_local_variable(const std::string& name, llvm::Type* type, llvm::Constant* initializer)
 {
-    llvm::AllocaInst* variable = builder->CreateAlloca(initializer->getType(), 0, name);
-    builder->CreateStore(initializer, variable);
+    llvm::AllocaInst* variable = builder->CreateAlloca(type, 0, name);
+    if (initializer)
+        builder->CreateStore(initializer, variable);
     symbol_table.insert(name, variable);
     return variable;
 }
@@ -82,7 +90,7 @@ llvm::Value* Compiler::eval(const Expression& expression) {
                     return eval_scope(expression);
                 else if (first.str == "global")
                     return create_global_variable(expression);
-                else if (first.str == "var")
+                else if (get_type(first.str) != nullptr)
                     return create_local_variable(expression);
                 else if (first.str == "set")
                     return set_variable(expression);
@@ -116,6 +124,12 @@ llvm::Value* Compiler::eval(const Expression& expression) {
             return eval(expression.list.back());
     }
     return nullptr;
+}
+
+llvm::Type* Compiler::get_type(const std::string& str) {
+    auto result = types.find(str);
+    if (result == types.end()) return nullptr;
+    return result->second;
 }
 
 llvm::Constant* Compiler::get_expression_value(const Expression& expression) {

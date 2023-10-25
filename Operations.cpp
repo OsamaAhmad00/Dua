@@ -25,15 +25,19 @@ llvm::Value* Compiler::eval_scope(const Expression& expression) {
 }
 
 llvm::AllocaInst* Compiler::create_local_variable(const Expression& expression) {
-    assert(expression.list.size() == 3);
-    llvm::Constant* init = get_expression_value(expression.list[2]);
-    return create_local_variable(expression.list[1].str, init);
+    // type name (optional init)
+    assert(expression.list.size() >= 2);
+    llvm::Type* type = get_type(expression.list[0].str);
+    llvm::Constant* init = expression.list.size() > 2 ? get_expression_value(expression.list[2]) : nullptr;
+    return create_local_variable(expression.list[1].str, type, init);
 }
 
 llvm::GlobalVariable* Compiler::create_global_variable(const Expression& expression) {
-    assert(expression.list.size() == 3);
-    llvm::Constant* init = get_expression_value(expression.list[2]);
-    return create_global_variable(expression.list[1].str, init);
+    // global type name (optional init)
+    assert(expression.list.size() >= 3);
+    llvm::Type* type = get_type(expression.list[1].str);
+    llvm::Constant* init = expression.list.size() > 3 ? get_expression_value(expression.list[3]) : nullptr;
+    return create_global_variable(expression.list[2].str, type, init);
 }
 
 llvm::Value* Compiler::set_variable(const Expression& expression) {

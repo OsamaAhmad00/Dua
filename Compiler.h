@@ -23,8 +23,8 @@ public:
 
 private:
 
-    llvm::GlobalVariable* create_global_variable(const std::string& name, llvm::Constant* initializer);
-    llvm::AllocaInst* create_local_variable(const std::string& name, llvm::Constant* initializer);
+    llvm::GlobalVariable* create_global_variable(const std::string& name, llvm::Type* type, llvm::Constant* initializer=nullptr);
+    llvm::AllocaInst* create_local_variable(const std::string& name, llvm::Type* type, llvm::Constant* initializer=nullptr);
     llvm::LoadInst* get_global_variable(const std::string& name);
     llvm::LoadInst* get_local_variable(const std::string& name);
     llvm::Constant* create_string_literal(const std::string& name, const std::string& str);
@@ -39,6 +39,8 @@ private:
     void save_module(const std::string& outfile);
     void init_external_references();
     llvm::Constant* get_expression_value(const Expression& expression);
+    llvm::Type* get_type(const std::string& str);
+    void init_primitive_types();
 
     // Operations
     llvm::Value* call_printf(const Expression& expression);
@@ -64,6 +66,7 @@ private:
     std::unique_ptr<llvm::IRBuilder<>> builder;
 
     SymbolTable<llvm::AllocaInst*, llvm::GlobalVariable*> symbol_table;
+    std::unordered_map<std::string, llvm::Type*> types;
 
     // FIXME
     //  The parser generator generates the definition of the classes and functions
@@ -71,9 +74,11 @@ private:
     //  all files that will be part of the compilation, otherwise, you will have
     //  the classes defined more than once, resulting in linking errors. To overcome
     //  this, the parser is only included in the compiler source file. Since we can't
-    //  include it here, we can't use a unique pointer for it since the unique pointer
-    //  needs to know the size of the class to do static assertions. A solution would
-    //  be to mark every definition in the header file as static.
+    //  include it here, we can't use a unique pointer for it because unique pointers
+    //  need to know the size of the class to preform static assertions. Another possible
+    //  solution would be to mark every definition in the header file as static, yet,
+    //  this solution will duplicate the code of the parser in every compilation unit
+    //  that uses it, which would be a big waste of space if it's included frequently.
     syntax::Parser* parser;
 
     llvm::Function* current_function;
