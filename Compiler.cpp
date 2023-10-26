@@ -17,10 +17,13 @@ Compiler::~Compiler() { delete parser; }
 void Compiler::compile(const std::string& code, const std::string& outfile) {
 
     // Parse
-    Expression expression = parser->parse(code);
+    // Since there might be more than one function, put all of
+    //  them in a list, and parse them one after the other.
+    Expression expression = parser->parse("(" + code + ")");
 
     // Generate IR
-    define_function("main", expression, "int");
+    for (auto& exp : expression.list)
+        eval(exp);
 
     // Output
     module->print(llvm::outs(), nullptr);  // Print
@@ -30,6 +33,7 @@ void Compiler::compile(const std::string& code, const std::string& outfile) {
 void Compiler::init_primitive_types() {
     types["int"] = builder->getInt32Ty();
     types["str"] = builder->getInt8PtrTy();
+    types["void"] = nullptr;
 }
 
 llvm::GlobalVariable* Compiler::create_global_variable(const std::string& name, llvm::Type* type, const Expression& init_exp)
@@ -54,7 +58,8 @@ llvm::AllocaInst* Compiler::create_local_variable(const std::string& name, llvm:
     llvm::AllocaInst* variable = temp_builder->CreateAlloca(type, 0, name);
     if (init_exp) {
         llvm::Value* initializer = get_constant(*init_exp);
-        if (!initializer) initializer = eval(*init_exp);
+        if (!initializer)
+            initializer = eval(*init_exp);
         builder->CreateStore(initializer, variable);
     }
     symbol_table.insert(name, variable);
@@ -98,7 +103,7 @@ llvm::Value* Compiler::eval(const Expression& expression) {
                     return eval_scope(expression);
                 else if (first.str == "global")
                     return create_global_variable(expression);
-                else if (get_type(first.str) != nullptr)
+                else if (get_type(first.str, false) != nullptr)
                     return create_local_variable(expression);
                 else if (first.str == "set")
                     return set_variable(expression);
@@ -126,6 +131,8 @@ llvm::Value* Compiler::eval(const Expression& expression) {
                     return eval_if(expression);
                 else if (first.str == "while")
                     return eval_while(expression);
+                else if (first.str == "fun" || first.str == "varfun")
+                    return eval_function(expression);
                 else
                     throw std::runtime_error("Not supported operation");
             }
@@ -134,9 +141,14 @@ llvm::Value* Compiler::eval(const Expression& expression) {
     return nullptr;
 }
 
-llvm::Type* Compiler::get_type(const std::string& str) {
+llvm::Type* Compiler::get_type(const std::string& str, bool panic_if_invalid) {
     auto result = types.find(str);
-    if (result == types.end()) return nullptr;
+    if (result == types.end()) {
+        if (panic_if_invalid)
+            throw std::runtime_error("No such data type");
+        else
+            return nullptr;
+    }
     return result->second;
 }
 
@@ -164,29 +176,36 @@ llvm::CallInst* Compiler::call_function(const std::string& name, const std::vect
     return builder->CreateCall(function, args);
 }
 
-llvm::Function* Compiler::define_function(const std::string& name, const Expression& body, const std::string& return_type, const std::vector<std::string>& parameter_types, bool is_vararg) {
+llvm::Function* Compiler::define_function(const std::string& name, const Expression& body, const std::string& return_type, const Parameters& parameters, bool is_var_arg) {
     llvm::Function* function = module->getFunction(name);
 
     if (!function)
-        function = declare_function(name, return_type, parameter_types);
+        function = declare_function(name, return_type, parameters, is_var_arg);
 
     create_basic_block("entry", function);
     builder->SetInsertPoint(&function->back());
+
+    symbol_table.push_scope();
+
+    for (auto& param: parameters)
+        create_local_variable(param.second, get_type(param.first));
 
     eval(body);
 
     // Temporary
     builder->CreateRet(builder->getInt32(0));
 
+    symbol_table.pop_scope();
+
     return function;
 }
 
-llvm::Function* Compiler::declare_function(const std::string& name, const std::string& return_type, const std::vector<std::string>& parameter_types, bool is_vararg) {
+llvm::Function* Compiler::declare_function(const std::string& name, const std::string& return_type, const Parameters& parameters, bool is_var_arg) {
     llvm::Type* ret = get_type(return_type);
-    std::vector<llvm::Type*> params;
-    for (auto& type: parameter_types)
-        params.push_back(get_type(type));
-    llvm::FunctionType* type = llvm::FunctionType::get(ret, params, is_vararg);
+    std::vector<llvm::Type*> parameter_types;
+    for (auto& param: parameters)
+        parameter_types.push_back(get_type(param.first));
+    llvm::FunctionType* type = llvm::FunctionType::get(ret, parameter_types, is_var_arg);
     llvm::Function* function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, name, *module);
     llvm::verifyFunction(*function);
     current_function = function;

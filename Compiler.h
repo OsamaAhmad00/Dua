@@ -9,6 +9,8 @@
 #include "Expression.h"
 #include "SymbolTable.h"
 
+using Parameters = std::vector<std::pair<std::string, std::string>>;
+
 namespace syntax {
     class Parser;
 }
@@ -29,13 +31,13 @@ private:
     llvm::LoadInst* get_global_variable(const std::string& name);
     llvm::LoadInst* get_local_variable(const std::string& name);
     llvm::CallInst* call_function(const std::string& name, const std::vector<llvm::Value*>& args);
-    llvm::Function* define_function(const std::string& name, const Expression& body, const std::string& return_type="void", const std::vector<std::string>& parameter_types={}, bool is_vararg=false);
-    llvm::Function* declare_function(const std::string& name, const std::string& return_type="void", const std::vector<std::string>& parameter_types={}, bool is_vararg=false);
+    llvm::Function* define_function(const std::string& name, const Expression& body, const std::string& return_type="void", const Parameters& parameters={}, bool is_var_arg=false);
+    llvm::Function* declare_function(const std::string& name, const std::string& return_type="void", const Parameters& parameters={}, bool is_var_arg=false);
     llvm::BasicBlock* create_basic_block(const std::string& name, llvm::Function* function);
     llvm::Constant* get_constant(const Expression& expression);
     llvm::Constant* create_string_literal(const std::string& name, const std::string& str);
     llvm::ConstantInt* create_integer_literal(long long num);
-    llvm::Type* get_type(const std::string& str);
+    llvm::Type* get_type(const std::string& str, bool panic_if_invalid=true);
     void init_external_references();
     void init_primitive_types();
     void save_module(const std::string& outfile);

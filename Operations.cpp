@@ -15,6 +15,29 @@ llvm::Value* Compiler::call_printf(const Expression& expression) {
     return call_function("printf", args);
 }
 
+llvm::Value* Compiler::eval_function(const Expression& expression) {
+    //              0          1         2      3  4           5
+    // Definition : varfun/fun func_name params -> return_type body
+    // Declaration: varfun/fun func_name params -> return_type
+
+    assert(expression.list.size() >= 5);
+    assert(expression.list[3].str == "->");
+
+    bool is_var_arg = expression.list[0].str == "varfun";
+
+    Parameters parameters;
+    for (auto& param : expression.list[2].list) {
+        assert(param.type == SExpressionType::LIST);
+        assert(param.list.size() == 2);
+        parameters.emplace_back(param.list[0].str, param.list[1].str);
+    }
+
+    if (expression.list.size() == 5)
+        return declare_function(expression.list[1].str, expression.list[4].str, parameters, is_var_arg);
+    else
+        return define_function(expression.list[1].str, expression.list[5], expression.list[4].str, parameters, is_var_arg);
+}
+
 llvm::Value* Compiler::eval_scope(const Expression& expression) {
     symbol_table.push_scope();
     for (int i = 1; i < expression.list.size() - 1; i++)
