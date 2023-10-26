@@ -133,6 +133,8 @@ llvm::Value* Compiler::eval(const Expression& expression) {
                     return eval_while(expression);
                 else if (first.str == "fun" || first.str == "varfun")
                     return eval_function(expression);
+                else if (first.str == "return")
+                    return eval_return(expression);
                 else
                     throw std::runtime_error("Not supported operation");
             }
@@ -191,9 +193,6 @@ llvm::Function* Compiler::define_function(const std::string& name, const Express
         create_local_variable(param.second, get_type(param.first));
 
     eval(body);
-
-    // Temporary
-    builder->CreateRet(builder->getInt32(0));
 
     symbol_table.pop_scope();
 

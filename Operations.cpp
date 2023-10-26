@@ -38,6 +38,11 @@ llvm::Value* Compiler::eval_function(const Expression& expression) {
         return define_function(expression.list[1].str, expression.list[5], expression.list[4].str, parameters, is_var_arg);
 }
 
+llvm::Value* Compiler::eval_return(const Expression& expression) {
+    assert(expression.list.size() == 2);
+    return builder->CreateRet(eval(expression.list[1]));
+}
+
 llvm::Value* Compiler::eval_scope(const Expression& expression) {
     symbol_table.push_scope();
     for (int i = 1; i < expression.list.size() - 1; i++)

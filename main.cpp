@@ -7,6 +7,7 @@ int main() {
         "(fun main() -> int"
         "    (scope"
         "        (printf \"Hello, world!\n\")"
+        "        (return 0)"
         "    )"
         ")"
     );
