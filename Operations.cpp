@@ -7,14 +7,6 @@ for (int i = 3; i < EXP.list.size(); i++) \
     result = builder->OP(result, eval(EXP.list[i]));                    \
 return result;
 
-llvm::Value* Compiler::call_printf(const Expression& expression) {
-    std::vector<llvm::Value*> args;
-    for (int i = 1; i < expression.list.size(); i++) {
-        args.push_back(eval(expression.list[i]));
-    }
-    return call_function("printf", args);
-}
-
 llvm::Value* Compiler::eval_function(const Expression& expression) {
     //              0          1         2      3  4           5
     // Definition : varfun/fun func_name params -> return_type body

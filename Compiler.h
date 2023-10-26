@@ -38,12 +38,10 @@ private:
     llvm::Constant* create_string_literal(const std::string& name, const std::string& str);
     llvm::ConstantInt* create_integer_literal(long long num);
     llvm::Type* get_type(const std::string& str, bool panic_if_invalid=true);
-    void init_external_references();
     void init_primitive_types();
     void save_module(const std::string& outfile);
 
     // Operations
-    llvm::Value* call_printf(const Expression& expression);
     llvm::Value* eval_function(const Expression& expression);
     llvm::Value* eval_return(const Expression& expression);
     llvm::Value* eval_function_call(const Expression& expression);

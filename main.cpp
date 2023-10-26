@@ -4,6 +4,8 @@ int main() {
     Compiler module("MainModule");
     module.compile(
         ""
+        "(varfun printf((str message)) -> int)"
+        ""
         "(fun multiply((int a) (int b)) -> int"
         "    (return (* a b))"
         ")"

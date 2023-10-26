@@ -8,7 +8,6 @@ Compiler::Compiler(const std::string& name) :
     temp_builder(std::make_unique<llvm::IRBuilder<>>(*context)),
     parser(new syntax::Parser)
 {
-    init_external_references();
     init_primitive_types();
 }
 
@@ -97,9 +96,7 @@ llvm::Value* Compiler::eval(const Expression& expression) {
         case SExpressionType::LIST:
             const Expression& first = expression.list.front();
             if (first.type == SExpressionType::SYMBOL) {
-                if (first.str == "printf")
-                    return call_printf(expression);
-                else if (first.str == "scope")
+                if (first.str == "scope")
                     return eval_scope(expression);
                 else if (first.str == "global")
                     return create_global_variable(expression);
@@ -228,10 +225,4 @@ void Compiler::save_module(const std::string& outfile) {
     std::error_code error;
     llvm::raw_fd_ostream out(outfile, error);
     module->print(out, nullptr);
-}
-
-void Compiler::init_external_references() {
-    // i32 printf(i8*, ...)
-    llvm::FunctionType* type = llvm::FunctionType::get(builder->getInt32Ty(), {builder->getInt8PtrTy()}, true);
-    module->getOrInsertFunction("printf", type);
 }
