@@ -4,9 +4,9 @@ int main() {
     Compiler module("MainModule");
     module.compile(
         ""
-        "(varfun printf((str message)) -> void)"
+        "(varfun printf(str message) -> void)"
         ""
-        "(fun multiply((int a) (int b)) -> int"
+        "(fun multiply(int a, int b) -> int"
         "    (return (* a b))"
         ")"
         ""

@@ -17,11 +17,13 @@ llvm::Value* Compiler::eval_function(const Expression& expression) {
 
     bool is_var_arg = expression.list[0].str == "varfun";
 
+    auto& source_params = expression.list[2].list;
     Parameters parameters;
-    for (auto& param : expression.list[2].list) {
-        assert(param.type == SExpressionType::LIST);
-        assert(param.list.size() == 2);
-        parameters.emplace_back(param.list[0].str, param.list[1].str);
+    assert(source_params.empty() || source_params.size() == 2 || source_params.size() % 2 == 1);
+    for (int i = 0; i < source_params.size(); i+=3) {
+        if (i != source_params.size() - 2)
+            assert(source_params[i + 2].str == ",");
+        parameters.emplace_back(source_params[i].str, source_params[i+1].str);
     }
 
     if (expression.list.size() == 5)
