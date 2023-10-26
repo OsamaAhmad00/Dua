@@ -77,7 +77,7 @@ llvm::LoadInst* Compiler::get_global_variable(const std::string& name)
 llvm::Value* Compiler::eval(const Expression& expression) {
     switch (expression.type)
     {
-        case SExpressionType::SYMBOL:
+        case SExpressionType::IDENTIFIER:
             if (expression.str == "true" || expression.str == "false") {
                 return builder->getInt1(expression.str == "true");
             } else {
@@ -88,6 +88,8 @@ llvm::Value* Compiler::eval(const Expression& expression) {
                 else
                     throw std::runtime_error("Unknown identifier");
             }
+        case SExpressionType::SYMBOL:
+            throw std::runtime_error("Can't evaluate a symbol");
         case SExpressionType::STRING:
             static int str_lit_cnt = 0;
             return create_string_literal("literal_" + std::to_string(str_lit_cnt++), expression.str);
@@ -95,7 +97,7 @@ llvm::Value* Compiler::eval(const Expression& expression) {
             return create_integer_literal(expression.num);
         case SExpressionType::LIST:
             const Expression& first = expression.list.front();
-            if (first.type == SExpressionType::SYMBOL) {
+            if (first.type == SExpressionType::SYMBOL || first.type == SExpressionType::IDENTIFIER) {
                 if (first.str == "scope")
                     return eval_scope(expression);
                 else if (first.str == "global")

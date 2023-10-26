@@ -10,6 +10,7 @@ enum class SExpressionType
     LIST,
 
     // Atom types
+    IDENTIFIER,
     STRING,
     SYMBOL,
     NUMBER,

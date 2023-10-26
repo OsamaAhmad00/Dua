@@ -18,7 +18,9 @@
 
 \d+                 NUMBER
 
-[\w\-+*/!=<>]+      SYMBOL
+[\w\_\$]+           IDENTIFIER
+
+[\-+*/!=<>,]+       SYMBOL
 
 \"[^\"]*\"          STRING
 
@@ -48,9 +50,10 @@ Expression: Atom
           ;
 
 // The list owning the expressions is responsible for deleting them.
-Atom: SYMBOL { $$ = Expression(SExpressionType::SYMBOL, $1) }
-    | STRING { $$ = Expression(SExpressionType::STRING, $1.substr(1, $1.size() - 2)) }
-    | NUMBER { $$ = Expression(std::stoll($1)) }
+Atom: IDENTIFIER { $$ = Expression(SExpressionType::IDENTIFIER, $1) }
+    | SYMBOL     { $$ = Expression(SExpressionType::SYMBOL, $1) }
+    | STRING     { $$ = Expression(SExpressionType::STRING, $1.substr(1, $1.size() - 2)) }
+    | NUMBER     { $$ = Expression(std::stoll($1)) }
     ;
 
 List: '(' ListEntries ')' { $$ = $2 }
