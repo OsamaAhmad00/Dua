@@ -30,9 +30,9 @@ void Compiler::compile(const std::string& code, const std::string& outfile) {
 }
 
 void Compiler::init_primitive_types() {
-    types["int"] = builder->getInt32Ty();
-    types["str"] = builder->getInt8PtrTy();
-    types["void"] = nullptr;
+    types["int"] = llvm::Type::getInt32Ty(*context);
+    types["str"] = llvm::Type::getInt8PtrTy(*context);
+    types["void"] = llvm::Type::getVoidTy(*context);
 }
 
 llvm::GlobalVariable* Compiler::create_global_variable(const std::string& name, llvm::Type* type, const Expression& init_exp)
