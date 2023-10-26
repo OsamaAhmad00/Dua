@@ -27,7 +27,7 @@ private:
 
     llvm::Value* eval(const Expression& expression);
     llvm::GlobalVariable* create_global_variable(const std::string& name, llvm::Type* type, const Expression& init_exp);
-    llvm::AllocaInst* create_local_variable(const std::string& name, llvm::Type* type, const Expression* init_exp=nullptr);
+    llvm::AllocaInst* create_local_variable(const std::string& name, llvm::Type* type, llvm::Value* init=nullptr);
     llvm::LoadInst* get_global_variable(const std::string& name);
     llvm::LoadInst* get_local_variable(const std::string& name);
     llvm::CallInst* call_function(const std::string& name, const std::vector<llvm::Value*>& args);
@@ -46,6 +46,7 @@ private:
     llvm::Value* call_printf(const Expression& expression);
     llvm::Value* eval_function(const Expression& expression);
     llvm::Value* eval_return(const Expression& expression);
+    llvm::Value* eval_function_call(const Expression& expression);
     llvm::Value* eval_scope(const Expression& expression);
     llvm::AllocaInst* create_local_variable(const Expression& expression);
     llvm::GlobalVariable* create_global_variable(const Expression& expression);

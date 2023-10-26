@@ -51,16 +51,13 @@ llvm::GlobalVariable* Compiler::create_global_variable(const std::string& name, 
     return variable;
 }
 
-llvm::AllocaInst* Compiler::create_local_variable(const std::string& name, llvm::Type* type, const Expression* init_exp)
+llvm::AllocaInst* Compiler::create_local_variable(const std::string& name, llvm::Type* type, llvm::Value* init)
 {
     llvm::BasicBlock* entry = &current_function->getEntryBlock();
     temp_builder->SetInsertPoint(entry, entry->begin());
     llvm::AllocaInst* variable = temp_builder->CreateAlloca(type, 0, name);
-    if (init_exp) {
-        llvm::Value* initializer = get_constant(*init_exp);
-        if (!initializer)
-            initializer = eval(*init_exp);
-        builder->CreateStore(initializer, variable);
+    if (init) {
+        builder->CreateStore(init, variable);
     }
     symbol_table.insert(name, variable);
     return variable;
@@ -85,9 +82,12 @@ llvm::Value* Compiler::eval(const Expression& expression) {
             if (expression.str == "true" || expression.str == "false") {
                 return builder->getInt1(expression.str == "true");
             } else {
-                if (symbol_table.contains_global(expression.str))
+                if (symbol_table.contains(expression.str))
+                    return get_local_variable(expression.str);
+                else if (symbol_table.contains_global(expression.str))
                     return get_global_variable(expression.str);
-                return get_local_variable(expression.str);
+                else
+                    throw std::runtime_error("Unknown identifier");
             }
         case SExpressionType::STRING:
             static int str_lit_cnt = 0;
@@ -136,7 +136,7 @@ llvm::Value* Compiler::eval(const Expression& expression) {
                 else if (first.str == "return")
                     return eval_return(expression);
                 else
-                    throw std::runtime_error("Not supported operation");
+                    return eval_function_call(expression);
             }
             return eval(expression.list.back());
     }
@@ -184,17 +184,27 @@ llvm::Function* Compiler::define_function(const std::string& name, const Express
     if (!function)
         function = declare_function(name, return_type, parameters, is_var_arg);
 
+    llvm::Function* old_function = current_function;
+    llvm::BasicBlock* old_block = builder->GetInsertBlock();
     create_basic_block("entry", function);
     builder->SetInsertPoint(&function->back());
+    current_function = function;
 
     symbol_table.push_scope();
 
-    for (auto& param: parameters)
-        create_local_variable(param.second, get_type(param.first));
+    int i = 0;
+    for (llvm::Argument& arg : function->args()) {
+        auto& param = parameters[i++];
+        arg.setName(param.second);
+        create_local_variable(param.second, get_type(param.first), &arg);
+    }
 
     eval(body);
 
     symbol_table.pop_scope();
+
+    builder->SetInsertPoint(old_block);
+    current_function = old_function;
 
     return function;
 }
@@ -207,7 +217,6 @@ llvm::Function* Compiler::declare_function(const std::string& name, const std::s
     llvm::FunctionType* type = llvm::FunctionType::get(ret, parameter_types, is_var_arg);
     llvm::Function* function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, name, *module);
     llvm::verifyFunction(*function);
-    current_function = function;
     return function;
 }
 

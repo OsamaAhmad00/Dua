@@ -43,6 +43,14 @@ llvm::Value* Compiler::eval_return(const Expression& expression) {
     return builder->CreateRet(eval(expression.list[1]));
 }
 
+llvm::Value* Compiler::eval_function_call(const Expression& expression) {
+    assert(expression.list.size() >= 1);
+    std::vector<llvm::Value*> args(expression.list.size() - 1);
+    for (int i = 1; i < expression.list.size(); i++)
+        args[i - 1] = eval(expression.list[i]);
+    return call_function(expression.list[0].str, args);
+}
+
 llvm::Value* Compiler::eval_scope(const Expression& expression) {
     symbol_table.push_scope();
     for (int i = 1; i < expression.list.size() - 1; i++)
@@ -56,7 +64,11 @@ llvm::AllocaInst* Compiler::create_local_variable(const Expression& expression) 
     // type name (optional init)
     assert(expression.list.size() >= 2);
     llvm::Type* type = get_type(expression.list[0].str);
-    const Expression* init = expression.list.size() > 2 ? &expression.list[2] : nullptr;
+    llvm::Value* init = nullptr;
+    if (expression.list.size() > 2) {
+        init = get_constant(expression.list[2]);
+        if (!init) init = eval(expression.list[2]);
+    }
     return create_local_variable(expression.list[1].str, type, init);
 }
 
