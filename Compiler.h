@@ -38,6 +38,7 @@ private:
     llvm::Constant* create_string_literal(const std::string& name, const std::string& str);
     llvm::ConstantInt* create_integer_literal(long long num);
     llvm::Type* get_type(const std::string& str, bool panic_if_invalid=true);
+    static llvm::Constant* get_default_value(llvm::Type* type);
     void init_primitive_types();
     void save_module(const std::string& outfile);
 

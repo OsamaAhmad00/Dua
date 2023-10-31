@@ -35,6 +35,12 @@ void Compiler::init_primitive_types() {
     types["void"] = llvm::Type::getVoidTy(*context);
 }
 
+llvm::Constant* Compiler::get_default_value(llvm::Type* type) {
+    if (type->isIntOrPtrTy())
+        return llvm::Constant::getNullValue(type);
+    return llvm::ConstantAggregateZero::get(type);
+}
+
 llvm::GlobalVariable* Compiler::create_global_variable(const std::string& name, llvm::Type* type, const Expression& init_exp)
 {
     module->getOrInsertGlobal(name, type);
@@ -42,11 +48,14 @@ llvm::GlobalVariable* Compiler::create_global_variable(const std::string& name, 
     variable->setConstant(false);
     variable->setAlignment(llvm::MaybeAlign(4));
     variable->setExternallyInitialized(false);
-    if (llvm::Constant *value = get_constant(init_exp); value)
-        variable->setInitializer(value);
-    else
-        throw std::runtime_error("Initialization of a global variable with non-constant value");
     symbol_table.insert_global(name, variable);
+    if (llvm::Constant *value = get_constant(init_exp); value) {
+        variable->setInitializer(value);
+    } else {
+        variable->setInitializer(get_default_value(type));
+        builder->CreateStore(eval(init_exp), variable);
+    }
+
     return variable;
 }
 
