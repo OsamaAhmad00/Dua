@@ -7,7 +7,7 @@ for (int i = 3; i < EXP.list.size(); i++) \
     result = builder->OP(result, eval(EXP.list[i]));                    \
 return result;
 
-llvm::Value* Compiler::eval_function(const Expression& expression) {
+llvm::Function* Compiler::eval_function(const Expression& expression) {
     //              0          1         2      3  4           5
     // Definition : varfun/fun func_name params -> return_type body
     // Declaration: varfun/fun func_name params -> return_type
@@ -32,12 +32,12 @@ llvm::Value* Compiler::eval_function(const Expression& expression) {
         return define_function(expression.list[1].str, expression.list[5], expression.list[4].str, parameters, is_var_arg);
 }
 
-llvm::Value* Compiler::eval_return(const Expression& expression) {
+llvm::ReturnInst* Compiler::eval_return(const Expression& expression) {
     assert(expression.list.size() == 2);
     return builder->CreateRet(eval(expression.list[1]));
 }
 
-llvm::Value* Compiler::eval_function_call(const Expression& expression) {
+llvm::CallInst* Compiler::eval_function_call(const Expression& expression) {
     assert(expression.list.size() >= 1);
     std::vector<llvm::Value*> args(expression.list.size() - 1);
     for (int i = 1; i < expression.list.size(); i++)
@@ -73,14 +73,13 @@ llvm::GlobalVariable* Compiler::create_global_variable(const Expression& express
     return create_global_variable(expression.list[2].str, type, expression.list[3]);
 }
 
-llvm::Value* Compiler::set_variable(const Expression& expression) {
+llvm::StoreInst* Compiler::set_variable(const Expression& expression) {
     assert(expression.list.size() == 3);
     auto& name = expression.list[1].str;
     auto& exp = expression.list[2];
     llvm::Value* result = symbol_table.contains(name) ?
             (llvm::Value*)symbol_table.get(name) : (llvm::Value*)symbol_table.get_global(name);
-    builder->CreateStore(eval(exp), result);
-    return result;
+    return builder->CreateStore(eval(exp), result);
 }
 
 llvm::Value* Compiler::eval_sum(const Expression& expression) {
@@ -123,7 +122,7 @@ llvm::Value* Compiler::eval_not_equal(const Expression& expression) {
     BINARY_OP(CreateICmpNE, expression, "temp_neq", ==)
 }
 
-llvm::Value* Compiler::eval_if(const Expression& expression) {
+llvm::PHINode* Compiler::eval_if(const Expression& expression) {
     assert(expression.list.size() == 4);
     const Expression& cond_exp = expression.list[1];
     const Expression& then_exp = expression.list[2];

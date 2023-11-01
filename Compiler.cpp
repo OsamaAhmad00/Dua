@@ -6,7 +6,8 @@ Compiler::Compiler(const std::string& name) :
     module(std::make_unique<llvm::Module>(name, *context)),
     builder(std::make_unique<llvm::IRBuilder<>>(*context)),
     temp_builder(std::make_unique<llvm::IRBuilder<>>(*context)),
-    parser(new syntax::Parser)
+    parser(new syntax::Parser),
+    current_function(nullptr)
 {
     init_primitive_types();
 }
