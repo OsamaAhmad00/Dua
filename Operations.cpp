@@ -77,8 +77,7 @@ llvm::StoreInst* Compiler::set_variable(const Expression& expression) {
     assert(expression.list.size() == 3);
     auto& name = expression.list[1].str;
     auto& exp = expression.list[2];
-    llvm::Value* result = symbol_table.contains(name) ?
-            (llvm::Value*)symbol_table.get(name) : (llvm::Value*)symbol_table.get_global(name);
+    llvm::Value* result = symbol_table.get(name).ptr;
     return builder->CreateStore(eval(exp), result);
 }
 

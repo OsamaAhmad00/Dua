@@ -21,9 +21,12 @@ void Compiler::compile(const std::string& code, const std::string& outfile) {
     //  them in a list, and parse them one after the other.
     Expression expression = parser->parse("(" + code + ")");
 
+    // Global scope
+    symbol_table.push_scope();
     // Generate IR
     for (auto& exp : expression.list)
         eval(exp);
+    symbol_table.pop_scope();
 
     // Output
     module->print(llvm::outs(), nullptr);  // Print
@@ -49,7 +52,7 @@ llvm::GlobalVariable* Compiler::create_global_variable(const std::string& name, 
     variable->setConstant(false);
     variable->setAlignment(llvm::MaybeAlign(4));
     variable->setExternallyInitialized(false);
-    symbol_table.insert_global(name, variable);
+    symbol_table.insert_global(name, { variable, type });
     if (llvm::Constant *value = get_constant(init_exp); value) {
         variable->setInitializer(value);
     } else {
@@ -68,20 +71,20 @@ llvm::AllocaInst* Compiler::create_local_variable(const std::string& name, llvm:
     if (init) {
         builder->CreateStore(init, variable);
     }
-    symbol_table.insert(name, variable);
+    symbol_table.insert(name, { variable, type });
     return variable;
 }
 
 llvm::LoadInst* Compiler::get_local_variable(const std::string& name)
 {
-    llvm::AllocaInst* variable = symbol_table.get(name);
-    return builder->CreateLoad(variable->getAllocatedType(), variable);
+    auto result = symbol_table.get(name);
+    return builder->CreateLoad(result.type, result.ptr);
 }
 
 llvm::LoadInst* Compiler::get_global_variable(const std::string& name)
 {
-    llvm::GlobalVariable* variable = symbol_table.get_global(name);
-    return builder->CreateLoad(variable->getValueType(), variable);
+    auto result = symbol_table.get_global(name);
+    return builder->CreateLoad(result.type, result.ptr);
 }
 
 llvm::Value* Compiler::eval(const Expression& expression) {

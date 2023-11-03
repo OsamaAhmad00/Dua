@@ -19,6 +19,11 @@ class Compiler {
 
 public:
 
+    struct Variable {
+        llvm::Value* ptr;
+        llvm::Type* type;
+    };
+
     explicit Compiler(const std::string& name);
     ~Compiler();
     void compile(const std::string& code, const std::string& outfile = "out.ll");
@@ -74,7 +79,7 @@ private:
     //  of their declaration location in the code.
     std::unique_ptr<llvm::IRBuilder<>> temp_builder;
 
-    SymbolTable<llvm::AllocaInst*, llvm::GlobalVariable*> symbol_table;
+    SymbolTable<Variable> symbol_table;
     std::unordered_map<std::string, llvm::Type*> types;
 
     // FIXME

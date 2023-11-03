@@ -32,11 +32,13 @@ private:
     std::unordered_map<std::string, T> map;
 };
 
-template<typename Local_T, typename Global_T>
+template<typename T>
 class SymbolTable
 {
 public:
-    SymbolTable& insert(const std::string& name, const Local_T& t, int scope_num = 1) {
+    size_t size() const { return scopes.size(); }
+
+    SymbolTable& insert(const std::string& name, const T& t, int scope_num = 1) {
         if (scopes.empty()) {
             throw std::runtime_error("There is no local scope");
         }
@@ -44,55 +46,64 @@ public:
         return *this;
     }
 
-    SymbolTable& insert_global(const std::string& name, const Global_T& t) {
-        global_scope.insert(name, t);
+    SymbolTable& insert_global(const std::string& name, const T& t) {
+        insert(name, t, size());
         return *this;
     }
 
-    const Local_T& get(const std::string& name, int scope_num = 1) {
+    const T& get(const std::string& name, bool include_global = true, int scope_num = 1) {
         if (scopes.empty()) {
             throw std::runtime_error("There is no local scope");
         }
-        for (int i = scopes.size() - scope_num; i >= 1; i--) {
+
+        for (int i = scopes.size() - scope_num; i >= 1 + !include_global; i--) {
             if (scopes[i].contains(name)) {
                 return scopes[i].get(name);
             }
         }
-        return scopes[0].get(name);  // will throw an exception if not present here either.
+
+        // no check here so that it throws an exception if not present here either.
+        return scopes[!include_global].get(name);
     }
 
-    const Global_T& get_global(const std::string& name) {
-        return global_scope.get(name);
+    const T& get_global(const std::string& name) {
+        return get(name, true, size());
     }
 
-    bool contains(const std::string& name) const {
-        for (const Scope<Local_T>& scope : scopes)
-            if (scope.contains(name))
+    bool contains(const std::string& name, bool include_global = true, int scope_num = 1) {
+        if (scopes.empty()) {
+            throw std::runtime_error("There is no local scope");
+        }
+
+        for (int i = scopes.size() - scope_num; i >= !include_global; i--) {
+            if (scopes[i].contains(name)) {
                 return true;
+            }
+        }
+
         return false;
     }
 
     bool contains_global(const std::string& name) {
-        return global_scope.contains(name);
+        return contains(name, true, size());
     }
 
-    SymbolTable& push_scope(Scope<Local_T> scope) {
+    SymbolTable& push_scope(Scope<T> scope) {
         scopes.push_back(std::move(scope));
         return *this;
     }
 
     SymbolTable& push_scope() {
-        push_scope(Scope<Local_T>());
+        push_scope(Scope<T>());
         return *this;
     }
 
-    Scope<Local_T> pop_scope() {
-        Scope<Local_T> top = scopes.back();
+    Scope<T> pop_scope() {
+        Scope<T> top = scopes.back();
         scopes.pop_back();
         return top;
     }
 
 private:
-    std::vector<Scope<Local_T>> scopes;
-    Scope<Global_T> global_scope;
+    std::vector<Scope<T>> scopes;
 };
