@@ -2,9 +2,9 @@
 
 #define BINARY_OP(OP, EXP, LABEL, PARAM_RESTRICTION) \
 assert(EXP.list.size() PARAM_RESTRICTION 3); \
-llvm::Value* result = builder->OP(eval(EXP.list[1]), eval(EXP.list[2]), LABEL);\
+llvm::Value* result = builder.OP(eval(EXP.list[1]), eval(EXP.list[2]), LABEL);\
 for (int i = 3; i < EXP.list.size(); i++) \
-    result = builder->OP(result, eval(EXP.list[i]));                    \
+    result = builder.OP(result, eval(EXP.list[i]));                    \
 return result;
 
 llvm::Function* Compiler::eval_function(const Expression& expression) {
@@ -34,7 +34,7 @@ llvm::Function* Compiler::eval_function(const Expression& expression) {
 
 llvm::ReturnInst* Compiler::eval_return(const Expression& expression) {
     assert(expression.list.size() == 2);
-    return builder->CreateRet(eval(expression.list[1]));
+    return builder.CreateRet(eval(expression.list[1]));
 }
 
 llvm::CallInst* Compiler::eval_function_call(const Expression& expression) {
@@ -78,7 +78,7 @@ llvm::StoreInst* Compiler::set_variable(const Expression& expression) {
     auto& name = expression.list[1].str;
     auto& exp = expression.list[2];
     llvm::Value* result = symbol_table.get(name).ptr;
-    return builder->CreateStore(eval(exp), result);
+    return builder.CreateStore(eval(exp), result);
 }
 
 llvm::Value* Compiler::eval_sum(const Expression& expression) {
@@ -139,9 +139,9 @@ llvm::PHINode* Compiler::eval_if(const Expression& expression) {
 
 
     llvm::Value* cond_res = eval(cond_exp);
-    builder->CreateCondBr(cond_res, then_block, else_block);
+    builder.CreateCondBr(cond_res, then_block, else_block);
 
-    builder->SetInsertPoint(then_block);
+    builder.SetInsertPoint(then_block);
     llvm::Value* then_res = eval(then_exp);
     // Since the block may contain nested statements, the current then_block may be terminated early, and after the eval
     //  of the then_exp, we end up in a completely different block. This block is where the branching instruction to
@@ -149,19 +149,19 @@ llvm::PHINode* Compiler::eval_if(const Expression& expression) {
     //  of the current then_block. Thus, we need to use the block we ended up upon after evaluating the then_exp instead
     //  of the current then_block (the two blocks may be the same) when referring to the phi instruction, which expects
     //  the provided blocks to be its predecessor.
-    builder->CreateBr(end_block);
-    then_block = builder->GetInsertBlock();
+    builder.CreateBr(end_block);
+    then_block = builder.GetInsertBlock();
 
-    builder->SetInsertPoint(else_block);
+    builder.SetInsertPoint(else_block);
     llvm::Value* else_res = eval(else_exp);
     // Same as the then block.
-    builder->CreateBr(end_block);
-    else_block = builder->GetInsertBlock();
+    builder.CreateBr(end_block);
+    else_block = builder.GetInsertBlock();
 
     assert(then_res->getType() == else_res->getType());
-    builder->SetInsertPoint(end_block);
+    builder.SetInsertPoint(end_block);
 
-    llvm::PHINode* phi = builder->CreatePHI(then_res->getType(), 2, "if_result" + std::to_string(counter));
+    llvm::PHINode* phi = builder.CreatePHI(then_res->getType(), 2, "if_result" + std::to_string(counter));
     phi->addIncoming(then_res, then_block);
     phi->addIncoming(else_res, else_block);
 
@@ -184,17 +184,17 @@ llvm::Value* Compiler::eval_while(const Expression& expression) {
     llvm::BasicBlock* end_block = create_basic_block("while_end" + std::to_string(counter), current_function);
 
     // From the current block.
-    builder->CreateBr(cond_block);
+    builder.CreateBr(cond_block);
 
-    builder->SetInsertPoint(cond_block);
+    builder.SetInsertPoint(cond_block);
     llvm::Value* cond_res = eval(cond_exp);
-    builder->CreateCondBr(cond_res, body_block, end_block);
+    builder.CreateCondBr(cond_res, body_block, end_block);
 
-    builder->SetInsertPoint(body_block);
+    builder.SetInsertPoint(body_block);
     eval(body_exp);
-    builder->CreateBr(cond_block);
+    builder.CreateBr(cond_block);
 
-    builder->SetInsertPoint(end_block);
+    builder.SetInsertPoint(end_block);
 
-    return builder->getInt32(0);
+    return builder.getInt32(0);
 }

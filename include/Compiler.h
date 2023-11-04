@@ -65,17 +65,17 @@ private:
     llvm::Value*            eval_while(const Expression& expression);
     llvm::PHINode*          eval_if(const Expression& expression);
 
-    std::unique_ptr<llvm::LLVMContext> context;
-    std::unique_ptr<llvm::Module> module;
-    std::unique_ptr<llvm::IRBuilder<>> builder;
-    std::unique_ptr<Parser> parser;
+    llvm::LLVMContext context;
+    llvm::Module module;
+    llvm::IRBuilder<> builder;
+    Parser parser;
 
     // Its insertion point is not guaranteed to be anywhere
     //  and thus, can be used at any point in time. This can
     //  be useful for example in inserting all the alloca
     //  instructions in the entry block of a function, regardless
     //  of their declaration location in the code.
-    std::unique_ptr<llvm::IRBuilder<>> temp_builder;
+    llvm::IRBuilder<> temp_builder;
 
     SymbolTable<Variable> symbol_table;
     std::unordered_map<std::string, llvm::Type*> types;
