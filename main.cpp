@@ -1,4 +1,4 @@
-#include "Compiler.h"
+#include <Compiler.h>
 
 int main() {
     Compiler module("MainModule");
