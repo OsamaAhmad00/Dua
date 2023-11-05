@@ -1,0 +1,125 @@
+// CASE Basic for loop
+// Returns 55
+
+int main()
+{
+    int res = 0;
+    for (int i = 0; i <= 5; i = i + 1) {
+        res = res + i * i;
+    }
+    return res;
+}
+
+
+// CASE Basic while loop
+// Returns 5
+
+int main()
+{
+    int x = 0;
+    int y = 5;
+    while (y > 0) {
+        y = y - 1;
+        x = x + 1;
+    }
+    return x;
+}
+
+
+// CASE Basic do while loop
+// Returns 5
+
+int main()
+{
+    int x = 0;
+    int y = 5;
+    do {
+        y = y - 1;
+        x = x + 1;
+    } while (y > 0);
+    return x;
+}
+
+
+// CASE 45th fibonacci with while loop
+// Returns 1836311903
+
+int main()
+{
+    int x = 45;
+    int a = 0;
+    int b = 1;
+    int c;
+    while (x) {
+       c = a + b;
+       a = b;
+       b = c;
+       x = x - 1;
+    }
+    return c;
+}
+
+
+// CASE 45th fibonacci with for loop
+// Returns 1836311903
+
+int main()
+{
+    int a = 0;
+    int b = 1;
+    int c;
+    for (int i = 0; i <= 44; i = i + 1) {
+        c = b + a;
+        a = b;
+        b = c;
+    }
+    return c;
+}
+
+
+// CASE 45th fibonacci with do-while loop
+// Returns 1836311903
+
+int main()
+{
+    int x = 45;
+    int a = 0;
+    int b = 1;
+    int c;
+    do {
+       c = a + b;
+       a = b;
+       b = c;
+       x = x - 1;
+    } while (x);
+    return c;
+}
+
+
+// CASE Empty for loop sections
+// Returns 0
+
+int main()
+{
+    bool b = false;
+    for (;;) {
+        if (b) break;
+        b = true;
+    }
+
+    for (int i = 0;;) {
+        if (i) break;
+        i++;
+    }
+
+    i = 0;
+    for (; i != 0;) {
+        if (i) break;
+        i++;
+    }
+
+    int i = 0;
+    for (;; i++) {
+        if (i) break;
+    }
+}

@@ -1,0 +1,91 @@
+// CASE Basic function declaration
+// Returns 15
+
+int triple_num(int n);
+
+int main()
+{
+    return triple_num(5);
+}
+
+/*
+   Declaration is not intended for this use.
+   Functions can be defined in any order, and
+   will be visible through the whole file.
+   Declarations are intended for external functions.
+*/
+int triple_num(int n) { return n * 3; }
+
+
+// CASE Basic function definition
+// Outputs
+
+int factorial(int i)
+{
+    if (i > 0) {
+        return i * factorial(i - 1);
+    }
+    return 1;
+}
+
+// CASE Implicit return
+// returns 0
+
+void x() { /* implicit return void */ }
+
+int main ()
+{
+    x();
+    /* implicit return 0 */
+}
+
+
+// CASE Implicit return type conversion
+// returns 1
+
+int main ()
+{
+    bool b = true;
+    // The return value is 32 bits, not 8.
+    // An implicit type conversion happens here.
+    return b;
+}
+
+
+// CASE Variable arguments declaration
+// Outputs Hello, world!
+
+int printf(str message, ...);
+
+int main()
+{
+    printf("Hello, world!");
+}
+
+
+// CASE Function visibility
+// Returns 15
+
+int get_result(int num) { return triple_result(num); }
+
+int main()
+{
+    return get_result(5);
+}
+
+int triple_result(int num) { return num * 3; }
+
+
+// CASE Recursion, fib(5)
+// Returns 5
+
+int fib(int i)
+{
+    if (i <= 1) return i;
+    return fib(i - 1) + fib(i - 2);
+}
+
+int main()
+{
+    return fib(5);
+}

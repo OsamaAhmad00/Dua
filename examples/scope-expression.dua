@@ -1,0 +1,17 @@
+// CASE Basic scope expression
+// Returns 5
+
+int main()
+{
+    return { 5 };
+}
+
+
+// Case Multi-statement scope expression
+// Returns 6
+
+int main()
+{
+    int k = 1;
+    return { k += 2; k *= 2; k };
+}

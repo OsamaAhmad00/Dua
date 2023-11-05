@@ -1,0 +1,85 @@
+// CASE Basic declaration
+// Returns 1
+
+int main()
+{
+    int y;
+    y = 1;
+    return y;
+}
+
+
+// CASE Basic definition
+// Returns 4
+
+int main()
+{
+    int z = 4;
+    return z;
+}
+
+
+// CASE Definition with an assignment
+// Returns 5
+
+int main()
+{
+    int x;  // declaration
+    x = 1;
+    int y = 4;  // definition
+    int z = x + y;
+    return z;
+}
+
+
+// CASE Name shadowing
+// Returns 10
+
+int d;
+d = 4;
+
+int main()
+{
+    int result;
+
+    // Shadows the global d
+    int d = 5;
+    {
+        // Shadows both d's
+        int d = 10;
+        result = d;
+    }
+
+    return result;
+}
+
+
+// CASE Global default values
+// Returns 0
+
+// Globals default to be zero-initialized.
+int d;
+
+int main()
+{
+    return d;
+}
+
+
+// CASE Redefinition in the same scope
+// Panics
+
+int d;
+
+int main()
+{
+    // No problem.
+    int d;
+
+    {
+        // No problem.
+        int d;
+        // Semantic Error: Redefinition of the variable d in the same scope.
+        int d;
+    }
+}

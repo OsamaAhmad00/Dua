@@ -1,0 +1,73 @@
+// CASE Basic integer types
+// Outputs 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+
+int printf(str message, ...);
+
+int main()
+{
+    // 64-bit signed
+    i64 i_64 = 9'223'372'036'854'775'807;
+    long i_64_alias = i64_alias;
+    // 64-bit unsigned
+    u64 u_64 = 18'446'744'073'709'551'615;
+    ulong u_64_alias = u_64_alias;
+
+    // 32-bit signed
+    i32 i_32 = 2'147'483'647;
+    int i_32_alias = i_32;
+    // 32-bit unsigned
+    u32 u_32 = 4'294'967'295;
+    uint u_32_alias = u_32;
+
+    // 16-bit signed
+    i16 i_16 = 32'767;
+    short i_16_alias = i_16;
+    // 16-bit unsigned
+    u16 u_16 = 65'535;
+    ushort u_16_alias = u_16;
+
+    // 8-bit signed
+    i8 i_8 = 127;
+    bool i_8_alias = i_8;
+    // 8-bit unsigned
+    u8 u_8 = 255;
+    byte u_8_alias = u_8;
+
+    // Wraps around
+    i_64 += 2;  // = 0
+    i_32 += 2;  // = 0
+    i_16 += 2;  // = 0
+    i_8  += 2;  // = 0
+
+    // Wraps around
+    u_64++;  // = 0
+    u_32++;  // = 0
+    u_16++;  // = 0
+    u_8 ++;  // = 0
+
+    printf("%ld %ld %d %u %hd %hu %hhd %hhu",
+        i_64, u_64,
+        i_32, u_32,
+        i_16, u_16,
+        i_8 , u_8
+    )
+
+    printf("%ld %ld %d %u %hd %hu %hhd %hhu",
+        i_64_alias, u_64_alias,
+        i_32_alias, u_32_alias,
+        i_16_alias, u_16_alias,
+        i_8_alias,  u_8_alias
+    )
+}
+
+
+// CASE Basic string type
+// Outputs Hello, world!
+
+int printf(str message, ...);
+
+int main()
+{
+    str message = "Hello, world!";
+    printf(message);
+}
