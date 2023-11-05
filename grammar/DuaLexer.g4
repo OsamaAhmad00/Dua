@@ -1,4 +1,4 @@
-lexer grammar LLVMExampleLexer;
+lexer grammar DuaLexer;
 
 channels { CommentsChannel }
 

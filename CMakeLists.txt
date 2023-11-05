@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.26)
-project(LLVMExample)
+project(Dua)
 
 # Required for Antlr4
 set(CMAKE_CXX_STANDARD 17)
@@ -46,12 +46,12 @@ set(ANTLR_EXECUTABLE ${PROJECT_SOURCE_DIR}/Antlr4/antlr-4.13.1-complete.jar)
 find_package(ANTLR REQUIRED)
 
 # Add the lexer and the parser to the build dependencies.
-antlr_target(TLexer ${PROJECT_SOURCE_DIR}/grammar/LLVMExampleLexer.g4 LEXER
-        PACKAGE LLVMExample)  # namespace = LLVMExample
-antlr_target(TParser ${PROJECT_SOURCE_DIR}/grammar/LLVMExampleParser.g4 PARSER
-        PACKAGE LLVMExample
+antlr_target(TLexer ${PROJECT_SOURCE_DIR}/grammar/DuaLexer.g4 LEXER
+        PACKAGE Dua)  # namespace = Dua
+antlr_target(TParser ${PROJECT_SOURCE_DIR}/grammar/DuaParser.g4 PARSER
+        PACKAGE Dua
         DEPENDS_ANTLR TLexer
-        COMPILE_FLAGS -lib ${ANTLR_TLexer_OUTPUT_DIR})  # namespace = LLVMExample
+        COMPILE_FLAGS -lib ${ANTLR_TLexer_OUTPUT_DIR})  # namespace = Dua
 
 include_directories(${ANTLR_TLexer_OUTPUT_DIR})
 include_directories(${ANTLR_TParser_OUTPUT_DIR})
@@ -61,11 +61,11 @@ set(ANTLR4_LIBS antlr4_static)
 
 FILE(GLOB SOURCES ${PROJECT_SOURCE_DIR}/src/*)
 
-add_executable(LLVMExample
+add_executable(Dua
     main.cpp
     ${SOURCES}
     ${ANTLR_TLexer_CXX_OUTPUTS}
     ${ANTLR_TParser_CXX_OUTPUTS}
 )
 
-target_link_libraries(LLVMExample ${LLVM_LIBS} ${ANTLR4_LIBS})
+target_link_libraries(Dua ${LLVM_LIBS} ${ANTLR4_LIBS})

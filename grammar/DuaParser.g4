@@ -1,7 +1,7 @@
-parser grammar LLVMExampleParser;
+parser grammar DuaParser;
 
 options {
-	tokenVocab = LLVMExampleLexer;
+	tokenVocab = DuaLexer;
 }
 
 @parser::postinclude {
