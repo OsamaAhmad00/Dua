@@ -3,6 +3,7 @@
 BlockNode& BlockNode::append(ASTNode *element)
 {
     elements.push_back(element);
+    return *this;
 }
 
 llvm::Value* BlockNode::eval()
