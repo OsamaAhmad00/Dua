@@ -8,12 +8,16 @@ struct FunctionNodeBase : public ASTNode
 {
     struct Param {
         std::string name;
-        std::string type;
+        TypeBase* type;
+
+        ~Param() { delete type; }
     };
     struct FunctionSignature {
         std::string name;
-        std::string return_type;
+        TypeBase* return_type;
         std::vector<Param> params;
         bool is_var_arg = false;
+
+        ~FunctionSignature() { delete return_type; }
     };
 };

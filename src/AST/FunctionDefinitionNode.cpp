@@ -3,18 +3,16 @@
 
 llvm::Function *FunctionDefinitionNode::eval()
 {
-    return (body == nullptr) ?
-        declare_function(signature) :
-        define_function(signature, body);
+    return (body == nullptr) ? declare_function() : define_function();
 }
 
 
-llvm::Function* FunctionDefinitionNode::define_function(const FunctionNodeBase::FunctionSignature &signature, ASTNode *body)
+llvm::Function* FunctionDefinitionNode::define_function()
 {
     llvm::Function* function = module().getFunction(signature.name);
 
     if (!function)
-        function = declare_function(signature);
+        function = declare_function();
 
     llvm::Function* old_function = current_function();
     llvm::BasicBlock* old_block = builder().GetInsertBlock();
@@ -28,7 +26,7 @@ llvm::Function* FunctionDefinitionNode::define_function(const FunctionNodeBase::
     for (llvm::Argument& arg : function->args()) {
         auto& param = signature.params[i++];
         arg.setName(param.name);
-        create_local_variable(param.name, get_type(param.type), &arg);
+        create_local_variable(param.name, param.type->llvm_type(), &arg);
     }
 
     body->eval();
@@ -41,12 +39,12 @@ llvm::Function* FunctionDefinitionNode::define_function(const FunctionNodeBase::
     return function;
 }
 
-llvm::Function* FunctionDefinitionNode::declare_function(const FunctionNodeBase::FunctionSignature &signature)
+llvm::Function* FunctionDefinitionNode::declare_function()
 {
-    llvm::Type* ret = get_type(signature.return_type);
+    llvm::Type* ret = signature.return_type->llvm_type();
     std::vector<llvm::Type*> parameter_types;
     for (auto& param: signature.params)
-        parameter_types.push_back(get_type(param.type));
+        parameter_types.push_back(param.type->llvm_type());
     llvm::FunctionType* type = llvm::FunctionType::get(ret, parameter_types, signature.is_var_arg);
     llvm::Function* function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, signature.name, module());
     llvm::verifyFunction(*function);

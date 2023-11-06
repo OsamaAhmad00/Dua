@@ -1,40 +1,31 @@
 #include <AST/terminals/ValueNode.h>
+#include <types/IntegerTypes.h>
 
-#define INTEGER_VALUE_NODE(NAME, WIDTH, TYPE)     \
-class NAME : public ValueNode                     \
-{                                                 \
-    TYPE value;                                   \
-                                                  \
-public:                                           \
-                                                  \
-    NAME() { value = 0; }                         \
-    NAME(TYPE value) : value(value) {}            \
-                                                  \
-    llvm::Constant* eval() override {             \
-        return builder().getInt##WIDTH(value);    \
-    }                                             \
-                                                  \
-    llvm::Constant* default_value() override {    \
-        return builder().getInt##WIDTH(0);        \
-    }                                             \
-                                                  \
-    llvm::Type* llvm_type() override {            \
-        return builder().getInt##WIDTH##Ty();     \
-    }                                             \
+#define DEFINE_INTEGER_VALUE_NODE(PREFIX, WIDTH, TYPE)          \
+class PREFIX##WIDTH##ValueNode : public ValueNode               \
+{                                                               \
+    TYPE value;                                                 \
+    PREFIX##WIDTH##Type type;                                   \
+                                                                \
+public:                                                         \
+                                                                \
+    PREFIX##WIDTH##ValueNode() { value = 0; }                   \
+    PREFIX##WIDTH##ValueNode(TYPE value)                        \
+        : value(value) {}                                       \
+                                                                \
+    llvm::Constant* eval() override {                           \
+        return builder().getInt##WIDTH(value);                  \
+    }                                                           \
+                                                                \
+    PREFIX##WIDTH##Type* get_type() override { return &type; }  \
 };
 
-INTEGER_VALUE_NODE(I64ValueNode, 64, int64_t)
+DEFINE_INTEGER_VALUE_NODE(I, 64, int64_t)
+DEFINE_INTEGER_VALUE_NODE(I, 32, int32_t)
+DEFINE_INTEGER_VALUE_NODE(I, 16, int16_t)
+DEFINE_INTEGER_VALUE_NODE(I, 8,  int8_t)
 
-INTEGER_VALUE_NODE(I32ValueNode, 32, int32_t)
-
-INTEGER_VALUE_NODE(I16ValueNode, 16, int16_t)
-
-INTEGER_VALUE_NODE(I8ValueNode , 8 , int8_t )
-
-INTEGER_VALUE_NODE(U64ValueNode, 64, uint64_t)
-
-INTEGER_VALUE_NODE(U32ValueNode, 32, uint32_t)
-
-INTEGER_VALUE_NODE(U16ValueNode, 16, uint16_t)
-
-INTEGER_VALUE_NODE(U8ValueNode,  8 , uint8_t )
+DEFINE_INTEGER_VALUE_NODE(U, 64, uint64_t)
+DEFINE_INTEGER_VALUE_NODE(U, 32, uint32_t)
+DEFINE_INTEGER_VALUE_NODE(U, 16, uint16_t)
+DEFINE_INTEGER_VALUE_NODE(U, 8,  uint8_t)
