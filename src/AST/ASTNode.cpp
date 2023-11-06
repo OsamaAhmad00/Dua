@@ -5,17 +5,6 @@ llvm::BasicBlock* ASTNode::create_basic_block(const std::string& name, llvm::Fun
     return llvm::BasicBlock::Create(context(), name, function);
 }
 
-llvm::Type* ASTNode::get_type(const std::string& str, bool panic_if_invalid) {
-    auto result = types().find(str);
-    if (result == types().end()) {
-        if (panic_if_invalid)
-            throw std::runtime_error("No such data type");
-        else
-            return nullptr;
-    }
-    return result->second;
-}
-
 llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, llvm::Type* type, llvm::Value* init)
 {
     llvm::BasicBlock* entry = &current_function()->getEntryBlock();

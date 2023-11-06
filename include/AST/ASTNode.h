@@ -14,13 +14,12 @@ public:
 
     friend class ModuleCompiler;
 
-    virtual ~ASTNode() {}
+    virtual ~ASTNode() = default;
     virtual llvm::Value* eval() = 0;
 
 protected:
 
     llvm::BasicBlock* create_basic_block(const std::string& name, llvm::Function* function);
-    llvm::Type* get_type(const std::string& str, bool panic_if_invalid = true);
     llvm::AllocaInst* create_local_variable(const std::string& name, llvm::Type* type, llvm::Value* init);
     llvm::LoadInst* get_local_variable(const std::string& name);
     llvm::LoadInst* get_global_variable(const std::string& name);
@@ -43,6 +42,5 @@ protected:
     STATE_MEMBER_GETTER(builder)
     STATE_MEMBER_GETTER(temp_builder)
     STATE_MEMBER_GETTER(symbol_table)
-    STATE_MEMBER_GETTER(types)
     STATE_MEMBER_GETTER(current_function)
 };

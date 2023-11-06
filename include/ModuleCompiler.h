@@ -41,7 +41,6 @@ private:
     //  of their declaration location in the code.
     llvm::IRBuilder<> temp_builder;
     SymbolTable<Variable> symbol_table;
-    std::unordered_map<std::string, llvm::Type*> types;
     llvm::Function* current_function;
 
     std::string result;
