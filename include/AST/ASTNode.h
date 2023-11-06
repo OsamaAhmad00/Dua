@@ -21,8 +21,6 @@ protected:
 
     llvm::BasicBlock* create_basic_block(const std::string& name, llvm::Function* function);
     llvm::AllocaInst* create_local_variable(const std::string& name, llvm::Type* type, llvm::Value* init);
-    llvm::LoadInst* get_local_variable(const std::string& name);
-    llvm::LoadInst* get_global_variable(const std::string& name);
     NoneValue none_value();
 
     // Debugging info
