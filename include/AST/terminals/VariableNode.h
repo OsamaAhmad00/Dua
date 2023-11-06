@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AST/ASTNode.h"
+#include <AST/ASTNode.h>
 
 class VariableNode : public ASTNode
 {

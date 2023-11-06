@@ -1,4 +1,4 @@
-#include "AST/terminals/VariableNode.h"
+#include <AST/terminals/VariableNode.h>
 
 llvm::Value* VariableNode::eval()
 {
