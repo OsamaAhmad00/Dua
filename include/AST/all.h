@@ -4,17 +4,17 @@
 
 #include <AST/TranslationUnitNode.h>
 
+#include <AST/GlobalVariableDefinitionNode.h>
+#include <AST/LocalVariableDefinitionNode.h>
 #include <AST/AssignmentNode.h>
 #include <AST/Block.h>
-#include <AST/GlobalVariableDefinitionNode.h>
 #include <AST/IfNode.h>
-#include <AST/LocalVariableDefinitionNode.h>
-#include <AST/ReturnNode.h>
 #include <AST/WhileNode.h>
 
-#include <AST/FunctionNodeBase.h>
-#include <AST/FunctionCallNode.h>
-#include <AST/FunctionDefinitionNode.h>
+#include <AST/function/FunctionNodeBase.h>
+#include <AST/function/FunctionCallNode.h>
+#include <AST/function/FunctionDefinitionNode.h>
+#include <AST/function/ReturnNode.h>
 
 #include <AST/binary/BinaryExp.h>
 #include <AST/binary/ComparisonNodes.h>

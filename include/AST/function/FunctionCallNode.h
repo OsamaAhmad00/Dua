@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AST/FunctionNodeBase.h>
+#include <AST/function/FunctionNodeBase.h>
 
 class FunctionCallNode : public FunctionNodeBase
 {
