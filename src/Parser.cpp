@@ -1,8 +1,8 @@
-#include "Parser.h"
-#include "DuaParser.h"
-#include "DuaLexer.h"
+#include <DuaParser.h>
+#include <DuaLexer.h>
+#include <Parser.h>
 
-Expression Parser::parse(const std::string& str) const
+TranslationUnitNode* Parser::parse(const std::string& str) const
 {
     antlr4::ANTLRInputStream input(str);
 
@@ -14,9 +14,10 @@ Expression Parser::parse(const std::string& str) const
 
     // Create a parser from the token stream
     Dua::DuaParser parser(&tokens);
+    parser.set_module_compiler(&module_compiler);
 
     // Parse the entry-point production
-    Expression result = parser.entry_point()->result;
+    TranslationUnitNode* result = parser.entry_point()->result;
 
     return result;
 }

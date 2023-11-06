@@ -1,0 +1,59 @@
+#include <AST/FunctionDefinitionNode.h>
+#include <llvm/IR/Verifier.h>
+
+llvm::Function *FunctionDefinitionNode::eval()
+{
+    return (body == nullptr) ?
+        declare_function(signature) :
+        define_function(signature, body);
+}
+
+
+llvm::Function* FunctionDefinitionNode::define_function(const FunctionNodeBase::FunctionSignature &signature, ASTNode *body)
+{
+    llvm::Function* function = module().getFunction(signature.name);
+
+    if (!function)
+        function = declare_function(signature);
+
+    llvm::Function* old_function = current_function();
+    llvm::BasicBlock* old_block = builder().GetInsertBlock();
+    create_basic_block("entry", function);
+    builder().SetInsertPoint(&function->back());
+    current_function() = function;
+
+    symbol_table().push_scope();
+
+    int i = 0;
+    for (llvm::Argument& arg : function->args()) {
+        auto& param = signature.params[i++];
+        arg.setName(param.name);
+        create_local_variable(param.name, get_type(param.type), &arg);
+    }
+
+    body->eval();
+
+    symbol_table().pop_scope();
+
+    builder().SetInsertPoint(old_block);
+    current_function() = old_function;
+
+    return function;
+}
+
+llvm::Function* FunctionDefinitionNode::declare_function(const FunctionNodeBase::FunctionSignature &signature)
+{
+    llvm::Type* ret = get_type(signature.return_type);
+    std::vector<llvm::Type*> parameter_types;
+    for (auto& param: signature.params)
+        parameter_types.push_back(get_type(param.type));
+    llvm::FunctionType* type = llvm::FunctionType::get(ret, parameter_types, signature.is_var_arg);
+    llvm::Function* function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, signature.name, module());
+    llvm::verifyFunction(*function);
+    return function;
+}
+
+FunctionDefinitionNode::~FunctionDefinitionNode()
+{
+    delete body;
+}

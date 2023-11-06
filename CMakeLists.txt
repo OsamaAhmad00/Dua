@@ -59,7 +59,7 @@ include_directories(${ANTLR_TParser_OUTPUT_DIR})
 set(ANTLR4_LIBS antlr4_static)
 # End of Antlr4 ---------
 
-FILE(GLOB SOURCES ${PROJECT_SOURCE_DIR}/src/*)
+FILE(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/src/*)
 
 add_executable(Dua
     main.cpp
