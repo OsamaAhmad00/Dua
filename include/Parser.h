@@ -1,9 +1,12 @@
 #pragma once
 
-#include <Expression.h>
+#include <ModuleCompiler.h>
+#include <AST/TranslationUnitNode.h>
 
 class Parser
 {
+    ModuleCompiler& module_compiler;
 public:
-    Expression parse(const std::string& str) const;
+    Parser(ModuleCompiler& module_compiler) : module_compiler(module_compiler) {}
+    TranslationUnitNode* parse(const std::string& str) const;
 };
