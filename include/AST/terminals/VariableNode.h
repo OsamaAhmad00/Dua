@@ -4,12 +4,12 @@
 
 class VariableNode : public ASTNode
 {
-    bool dereference;
+    bool get_address;
     std::string name;
 
 public:
 
-    VariableNode(std::string name, bool dereference=true)
-        : name(std::move(name)), dereference(dereference) {}
+    VariableNode(std::string name, bool get_address=false)
+        : name(std::move(name)), get_address(get_address) {}
     llvm::Value* eval() override;
 };
