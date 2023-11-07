@@ -6,7 +6,7 @@ options {
 
 @parser::postinclude {
 #include <string>
-#include <AST/all.h>
+#include <AST/TranslationUnitNode.h>
 #include <ModuleCompiler.h>
 }
 

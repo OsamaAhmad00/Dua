@@ -1,3 +1,5 @@
+#pragma once
+
 #include <types/TypeBase.h>
 
 struct StringType : TypeBase
