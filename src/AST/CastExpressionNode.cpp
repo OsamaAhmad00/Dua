@@ -34,7 +34,7 @@ llvm::Value *CastExpressionNode::eval()
             return builder().CreateFPTrunc(value, target_type);
         } else if (source_width < target_width) {
             // Extend the value to fit the larger type
-            return builder().CreateFPExt(value, t);
+            return builder().CreateFPExt(value, target_type);
         } else {
             // The types have the same bit width, no need to cast
             return value;
