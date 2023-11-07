@@ -60,11 +60,9 @@ VarArg: '...';
 I64: ('i64' | 'long'  );
 I32: ('i32' | 'int'   );
 I16: ('i16' | 'short' );
-I8 : ('i8'  | 'bool'  );
+I8 : ('i8'  | 'bool' | 'byte');
 
-U64: ('u64' | 'ulong' );
-U32: ('u32' | 'uint'  );
-U16: ('u16' | 'ushort');
-U8 : ('u8'  | 'byte'  );
+F64: ('f64' | 'double');
+F32: ('f32' | 'float');
 
 Void: 'void';
