@@ -1,7 +1,7 @@
-#include <AST/AssignmentNode.h>
+#include <AST/AssignmentExpressionNode.h>
 #include <Utils.h>
 
-llvm::Value* AssignmentNode::eval()
+llvm::Value* AssignmentExpressionNode::eval()
 {
     auto [ptr, type] = symbol_table().get(lhs);
     llvm::Value* result = rhs->eval();
@@ -38,7 +38,7 @@ llvm::Value* AssignmentNode::eval()
     return ptr;
 }
 
-AssignmentNode::~AssignmentNode()
+AssignmentExpressionNode::~AssignmentExpressionNode()
 {
     delete rhs;
 }
