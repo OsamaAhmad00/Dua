@@ -2,15 +2,15 @@
 
 #include <AST/ASTNode.h>
 
-class AssignmentNode : public ASTNode
+class AssignmentExpressionNode : public ASTNode
 {
     std::string lhs;
     ASTNode* rhs;
 
 public:
 
-    AssignmentNode(std::string lhs, ASTNode* rhs)
+    AssignmentExpressionNode(std::string lhs, ASTNode* rhs)
         : lhs(std::move(lhs)), rhs(rhs) {};
     llvm::Value* eval() override;
-    ~AssignmentNode() override;
+    ~AssignmentExpressionNode() override;
 };
