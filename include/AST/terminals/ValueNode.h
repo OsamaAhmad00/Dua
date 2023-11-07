@@ -6,6 +6,6 @@
 class ValueNode : public ASTNode
 {
 public:
-    virtual llvm::Constant* eval() override = 0;
+    llvm::Constant* eval() override = 0;
     virtual TypeBase* get_type() = 0;
 };

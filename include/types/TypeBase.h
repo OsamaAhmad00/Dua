@@ -16,4 +16,7 @@ struct TypeBase
     virtual llvm::Constant* default_value() = 0;
     virtual llvm::Type* llvm_type() = 0;
     virtual ~TypeBase() = 0;
+
+    llvm::Type* operator->() { return llvm_type(); }
+    operator llvm::Type*() { return llvm_type(); }
 };
