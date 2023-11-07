@@ -1,3 +1,5 @@
+#pragma once
+
 #include <AST/terminals/ValueNode.h>
 #include <types/StringType.h>
 

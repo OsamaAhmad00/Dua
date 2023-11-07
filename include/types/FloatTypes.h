@@ -1,3 +1,5 @@
+#pragma once
+
 #include <types/TypeBase.h>
 
 #define DEFINE_FLOAT_TYPE(WIDTH, TYPE)                \
