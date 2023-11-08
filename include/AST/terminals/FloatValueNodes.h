@@ -3,7 +3,7 @@
 #include <AST/terminals/ValueNode.h>
 #include <types/FloatTypes.h>
 
-#define DEFINE_FLOAT_TYPE(TYPE, WIDTH)                              \
+#define DEFINE_FLOAT_VALUE_NODE(TYPE, WIDTH)                              \
 class F##WIDTH##ValueNode : public ValueNode {                      \
     TYPE value;                                                     \
     F64Type type;                                                   \
@@ -15,5 +15,5 @@ public:                                                             \
     F64Type *get_type() override { return &type; }                  \
 };
 
-DEFINE_FLOAT_TYPE(double, 64)
-DEFINE_FLOAT_TYPE(float, 32)
+DEFINE_FLOAT_VALUE_NODE(double, 64)
+DEFINE_FLOAT_VALUE_NODE(float, 32)
