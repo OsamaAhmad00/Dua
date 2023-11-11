@@ -54,7 +54,7 @@ void IfNode::set_else(ASTNode *node)
 
 IfNode &IfNode::add_branch_at_top(ASTNode *condition, ASTNode *node)
 {
-    this->else_expr = new IfNode(this->cond_expr, this->then_expr, this->else_expr);
+    this->else_expr = compiler->create_node<IfNode>(this->cond_expr, this->then_expr, this->else_expr);
     this->cond_expr = condition;
     this->then_expr = node;
     return *this;
@@ -62,7 +62,7 @@ IfNode &IfNode::add_branch_at_top(ASTNode *condition, ASTNode *node)
 
 IfNode &IfNode::add_branch_at_bottom(ASTNode *condition, ASTNode *node)
 {
-    auto x = new IfNode(condition, node, this->else_expr);
+    auto x = compiler->create_node<IfNode>(condition, node, this->else_expr);
     this->else_expr = x;
     return *x;
 }

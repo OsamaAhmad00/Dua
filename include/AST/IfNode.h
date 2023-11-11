@@ -14,10 +14,9 @@ class IfNode : public ASTNode
 
 public:
 
-    IfNode() : IfNode(nullptr, nullptr, nullptr) {}
-    IfNode(ASTNode* cond_expr, ASTNode* then_expr, ASTNode* else_expr)
-        : cond_expr(cond_expr), then_expr(then_expr), else_expr(else_expr) {}
-    IfNode(ASTNode* cond_expr, ASTNode* then_expr) : IfNode(cond_expr, then_expr, nullptr) {}
+    IfNode(ModuleCompiler* compiler) : IfNode(compiler, nullptr, nullptr, nullptr) {}
+    IfNode(ModuleCompiler* compiler, ASTNode* cond_expr, ASTNode* then_expr, ASTNode* else_expr)
+        : cond_expr(cond_expr), then_expr(then_expr), else_expr(else_expr) { this->compiler = compiler; }
     llvm::PHINode* eval() override;
     // These two functions return the next insertion point.
     // An if, else-if, else conditional is represented as a nested IfNode, which

@@ -2,7 +2,7 @@
 
 #include <ModuleCompiler.h>
 
-#define STATE_MEMBER_GETTER(NAME) auto& NAME() { return module_compiler->NAME; }
+#define STATE_MEMBER_GETTER(NAME) auto& NAME() { return compiler->NAME; }
 
 // Just an indicator that the return
 //  value is not going to be used.
@@ -27,11 +27,9 @@ protected:
     size_t line;
     size_t column;
 
-private:
-
-    ModuleCompiler* module_compiler;
-
 protected:
+
+    ModuleCompiler* compiler;
 
     // Convenience methods to access the internal state,
     // and also to ensure that they don't get set by accident.

@@ -4,6 +4,8 @@
 
 struct StringType : TypeBase
 {
+    StringType(llvm::IRBuilder<>* builder) { this->builder = builder; }
+
     llvm::Constant * default_value() override {
         return llvm::Constant::getNullValue(llvm_type());
     }

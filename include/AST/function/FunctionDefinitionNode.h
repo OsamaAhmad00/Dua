@@ -12,8 +12,8 @@ class FunctionDefinitionNode : public FunctionNodeBase
 
 public:
 
-    FunctionDefinitionNode(FunctionSignature signature, ASTNode* body)
-        : signature(std::move(signature)), body(body) {}
+    FunctionDefinitionNode(ModuleCompiler* compiler, FunctionSignature signature, ASTNode* body)
+        : signature(std::move(signature)), body(body) { this->compiler = compiler; }
     llvm::Function* eval() override;
     ~FunctionDefinitionNode() override;
 };

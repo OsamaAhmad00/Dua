@@ -19,10 +19,16 @@ public:
     template <typename T, typename ...Args>
     T* create_node(Args ...args)
     {
-        T* node = new T(args...);
-        node->module_compiler = this;
-        return node;
+        return new T(this, args...);
     }
+
+    template <typename T, typename ...Args>
+    T* create_type(Args ...args)
+    {
+        return new T(&builder, args...);
+    }
+
+    llvm::IRBuilder<>* get_builder() { return &builder; }
 
     struct Variable {
         llvm::Value* ptr;

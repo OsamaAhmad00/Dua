@@ -13,8 +13,8 @@ class WhileNode : public ASTNode
 
 public:
 
-    WhileNode(ASTNode* cond_exp, ASTNode* body_exp)
-        : cond_exp(cond_exp), body_exp(body_exp) {}
+    WhileNode(ModuleCompiler* compiler, ASTNode* cond_exp, ASTNode* body_exp)
+        : cond_exp(cond_exp), body_exp(body_exp) { this->compiler = compiler; }
     NoneValue eval() override;
     ~WhileNode() override;
 };
