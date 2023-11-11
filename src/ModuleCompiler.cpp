@@ -1,5 +1,5 @@
 #include <ModuleCompiler.h>
-#include <Parser.h>
+#include "parsing/Parser.h"
 #include <AST/TranslationUnitNode.h>
 #include <sstream>
 

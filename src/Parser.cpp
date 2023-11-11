@@ -1,6 +1,6 @@
 #include <DuaParser.h>
 #include <DuaLexer.h>
-#include <Parser.h>
+#include "parsing/Parser.h"
 
 TranslationUnitNode* Parser::parse(const std::string& str) const
 {
