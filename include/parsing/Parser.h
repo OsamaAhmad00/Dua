@@ -1,7 +1,7 @@
 #pragma once
 
-#include <ModuleCompiler.h>
-#include <AST/TranslationUnitNode.h>
+#include "ModuleCompiler.h"
+#include "AST/TranslationUnitNode.h"
 
 class Parser
 {
