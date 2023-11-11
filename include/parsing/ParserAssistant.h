@@ -1,7 +1,5 @@
 #pragma once
 
-#include <parsing/ParserAssistantStack.h>
-
 #include "AST/ASTNode.h"
 
 #include "AST/TranslationUnitNode.h"
@@ -37,6 +35,21 @@
 #include "types/StringType.h"
 #include "types/ArrayType.h"
 
+#define ADD_STACK_DATATYPE(NAME, TYPE, FACTORY) \
+private:                                   \
+    std::vector<TYPE> NAME##s; \
+    TYPE pop_##NAME() { \
+        TYPE result = NAME##s.back(); \
+        NAME##s.pop_back(); \
+        return result; \
+    }\
+public: \
+    template<typename T, typename ...Args> \
+    void push_##NAME(Args... args) { \
+        NAME##s.push_back(FACTORY(args...)); \
+    }\
+    size_t NAME##s_count() { return NAME##s.size(); } \
+private:
 
 // This class is responsible for accepting the text (or some other intermediate form)
 //  representation from the parser, and maintaining an internal state about the current
@@ -47,29 +60,23 @@ class ParserAssistant
 {
     ModuleCompiler* compiler = nullptr;
 
-    // This stack is used to push every recent result into it.
-    // If a node currently under construction requires previous
-    //  results, it can pop this out of this stack and use it.
-    //  When this node is constructed, it'll be pushed here.
-    // At the end, this stack will contain the elements of
-    //  the translation unit.
-    ParserAssistantStack stack;
-
 public:
 
-    void push_str(std::string str) {
-        stack.push(std::move(str));
-    }
-
-    template<typename T, typename ...Args>
-    void push_type(Args... args) {
-        stack.push(compiler->create_type<T>(args...));
-    }
-
-    template<typename T, typename ...Args>
-    void push_node(Args... args) {
-        stack.push(compiler->create_node<T>(args...));
-    }
+    // These stacks are used to push every recent result into it.
+    // If a node currently under construction requires previous
+    //  results, it can pop this out of the appropriate stack and
+    //  use it. When this node is constructed, it'll be pushed to
+    //  the appropriate stack.
+    // At the end, this stack will contain the elements of the
+    //  translation unit. In other words, we're mimicking a stack
+    //  machine, but with each datatype in a separate stack.
+    std::vector<std::string> strings;
+    ADD_STACK_DATATYPE(node, ASTNode*, compiler->create_node<T>);
+    ADD_STACK_DATATYPE(type, TypeBase*, compiler->create_type<T>);
+public:
+    size_t str_count() { return strings.size(); }
+    void push_str(std::string str) { strings.push_back(std::move(str)); }
+    std::string pop_str() { auto result = std::move(strings.back()); strings.pop_back(); return result;}
 
     void create_definition();
 
