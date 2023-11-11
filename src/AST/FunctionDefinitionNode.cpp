@@ -53,5 +53,8 @@ llvm::Function* FunctionDefinitionNode::declare_function()
 
 FunctionDefinitionNode::~FunctionDefinitionNode()
 {
+    for (auto& param : signature.params)
+        delete param.type;
+    delete signature.return_type;
     delete body;
 }
