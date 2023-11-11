@@ -6,7 +6,6 @@ options {
 
 @parser::postinclude {
 #include <string>
-#include <ASTNodeFactory.h>
 #include <ModuleCompiler.h>
 }
 
@@ -109,8 +108,7 @@ statements
     ;
 
 statement
-    : if_statement
-    | when_expression ';'
+    : if
     | for
     | while
     | do_while
@@ -123,6 +121,56 @@ statement
     | ';'  // empty statement
     ;
 
+expression
+    : number
+    | String
+    | lvalue
+    | block_expression
+    | function_call
+    | if_expression
+    | when_expression
+    | '(' expression ')'
+    | expression '++'
+    | expression '--'
+    | '++' expression
+    | '--' expression
+    | '-'  expression
+    | '+'  expression  // do nothing
+    | '!'  expression
+    | '~'  expression
+    | '&' lvalue
+    | expression '*' expression
+    | expression '/' expression
+    | expression '%' expression
+    | expression '+' expression
+    | expression '-' expression
+    | expression '<<' expression
+    | expression '>>' expression
+    | expression '<'  expression
+    | expression '>'  expression
+    | expression '<=' expression
+    | expression '>=' expression
+    | expression '==' expression
+    | expression '!=' expression
+    | expression '&'  expression
+    | expression '^'  expression
+    | expression '|'  expression
+    | expression '&&' expression
+    | expression '||' expression
+    | expression '?' expression ':' expression  // ternary conditional
+    | lvalue '='   expression
+    | lvalue '+='  expression
+    | lvalue '-='  expression
+    | lvalue '*='  expression
+    | lvalue '/='  expression
+    | lvalue '%='  expression
+    | lvalue '<<=' expression
+    | lvalue '>>=' expression
+    | lvalue '&='  expression
+    | lvalue '^='  expression
+    | lvalue '|='  expression
+    ;
+
 return_statement
     : Return expression ';'
     ;
@@ -131,13 +179,13 @@ expression_statement
     : expression ';'
     ;
 
-if_statement
+if
     : 'if' '(' expression ')' statement else_if_else_statement
     ;
 
 else_if_else_statement
-    : else_statement
-    | 'else' 'if' '(' expression ')' statement else_if_else_statement
+    : 'else' 'if' '(' expression ')' statement else_if_else_statement
+    | else_statement
     ;
 
 else_statement
@@ -150,8 +198,8 @@ if_expression
     ;
 
 else_if_else_expression
-    : else_expression
-    | 'else' 'if' '(' expression ')' expression else_if_else_expression
+    : 'else' 'if' '(' expression ')' expression else_if_else_expression
+    | else_expression
     ;
 
 else_expression
@@ -233,103 +281,12 @@ lvalue
     | '*' expression  // lvalue or unary_expression?
     ;
 
-assignment
-    : lvalue '='  expression
-    | lvalue '+=' expression
-    | lvalue '-=' expression
-    | lvalue '*=' expression
-    | lvalue '/=' expression
-    | lvalue '%=' expression
-    ;
-
-
-// ----------------------------------------------------------
-// The below grammar is similar to the following, but
-//  with left recursion eliminated.
-//expression
-//    : expression_not_left_recursive
-//    | expression postfix_unary_op
-//    | expression binary_op expression
-//    ;
-
-expression
-    : expression_not_left_recursive expression_
-    ;
-
-expression_
-    : postfix_unary_op expression_
-    | binary_op expression expression_
-    | /* empty */
-    ;
-// ----------------------------------------------------------
-
-expression_not_left_recursive
-    : number
-    | String
-    | True
-    | False
-    | lvalue
-    | assignment
-    | block_expression
-    | function_call
-    | if_expression
-    | when_expression
-    | '(' expression ')'
-    | '&' lvalue
-    | prefix_unary_op expression
-    ;
-
-prefix_unary_op
-    : '-'
-    | '+'  // do nothing
-    | '!'
-    | '~'
-    | '++'
-    | '--'
-    ;
-
-postfix_unary_op
-    : '++'
-    | '--'
-    ;
-
-arithmetic_op
-    : '+'
-    | '-'
-    | '*'
-    | '/'
-    | '%'
-    ;
-
-boolean_op
-    : '<'
-    | '>'
-    | '<='
-    | '>='
-    | '=='
-    | '!='
-    | '&&'
-    | '||'
-    ;
-
-bits_op
-    : '<<'
-    | '>>'
-    | '&'
-    | '|'
-    | '^'
-    ;
-
-binary_op
-    : arithmetic_op
-    | boolean_op
-    | bits_op
-    ;
-
 number
     : integer
     | float
-    | Null  // Should this be considered a number?
+    | True
+    | False
+    | Null
     ;
 
 integer
@@ -344,29 +301,11 @@ float
     | F32Val
     ;
 
-// ----------------------------------------------------------
-// The below grammar is similar to the following, but
-//  with left recursion eliminated.
-//type
-//    : type_not_left_recursive
-//    | type '[' integer ']'  // array types
-//    | type '*'              // pointer types
-//    ;
-
 type
-    : type_not_left_recursive type_
-    ;
-
-type_
-    : '[' integer ']' type_
-    | '*' type_
-    | /* empty */
-    ;
-// ----------------------------------------------------------
-
-type_not_left_recursive
     : primitive_type
-    | Identifier  // User-defined types
+    | Identifier            // User-defined types
+    | type '[' integer ']'  // array types
+    | type '*'              // pointer types
     ;
 
 primitive_type

@@ -4,26 +4,31 @@ channels { CommentsChannel }
 
 Comma: ',';
 
-Equals: '=';
-Plus: '+';
 PlusEq: '+=';
 PlusPlus: '++';
+Plus: '+';
 MinusEq: '-=';
 MinusMinus: '--';
 Minus: '-';
-Star: '*';
 StarEq: '*=';
-Slash: '/';
+Star: '*';
 SlashEq: '/=';
-Mod: '%';
+Slash: '/';
 ModEq: '%=';
+Mod: '%';
 LeftShift: '<<';
+LeftShiftEq: '<<=';
 RightShift: '>>';
+RightShiftEq: '>>=';
+AndEq: '&=';
+CarretEq: '^=';
+OrEq: '|=';
+Equals: '=';
 
 Bang: '!';
-Carret: '^';
 Tilde: '~';
 And: '&';
+Carret: '^';
 Or: '|';
 
 AndAnd: '&&';
@@ -54,6 +59,9 @@ Do: 'do';
 Break: 'break';
 Continue: 'continue';
 Return: 'return';
+
+Question: '?';
+Colon: ':';
 
 VarArg: '...';
 
