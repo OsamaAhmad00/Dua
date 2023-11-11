@@ -12,11 +12,11 @@ llvm::PHINode* IfNode::eval()
     llvm::BasicBlock* end_block  = create_basic_block("if_end" + std::to_string(counter), current_function());
 
 
-    llvm::Value* cond_res = cond_exp->eval();
+    llvm::Value* cond_res = cond_expr->eval();
     builder().CreateCondBr(cond_res, then_block, else_block);
 
     builder().SetInsertPoint(then_block);
-    llvm::Value* then_res = then_exp->eval();
+    llvm::Value* then_res = then_expr->eval();
     // Since the block may contain nested statements, the current then_block may be terminated early, and after the eval
     //  of the then_exp, we end up in a completely different block. This block is where the branching instruction to
     //  the end_block will be inserted, and this block is the block that would be a predecessor of the end_block, instead
@@ -27,7 +27,7 @@ llvm::PHINode* IfNode::eval()
     then_block = builder().GetInsertBlock();
 
     builder().SetInsertPoint(else_block);
-    llvm::Value* else_res = else_exp->eval();
+    llvm::Value* else_res = else_expr->eval();
     // Same as the then block.
     builder().CreateBr(end_block);
     else_block = builder().GetInsertBlock();
@@ -44,20 +44,28 @@ llvm::PHINode* IfNode::eval()
 
 void IfNode::set_else(ASTNode *node)
 {
-    assert(else_exp == nullptr);
-    else_exp = node;
+    assert(else_expr == nullptr);
+    else_expr = node;
 }
 
-IfNode &IfNode::add_else_if(ASTNode *condition, ASTNode *node)
+IfNode &IfNode::add_branch_at_top(ASTNode *condition, ASTNode *node)
 {
-    auto x = new IfNode(condition, node, this->else_exp);
-    this->else_exp = x;
+    this->else_expr = new IfNode(this->cond_expr, this->then_expr, this->else_expr);
+    this->cond_expr = condition;
+    this->then_expr = node;
+    return *this;
+}
+
+IfNode &IfNode::add_branch_at_bottom(ASTNode *condition, ASTNode *node)
+{
+    auto x = new IfNode(condition, node, this->else_expr);
+    this->else_expr = x;
     return *x;
 }
 
 IfNode::~IfNode()
 {
-    delete cond_exp;
-    delete then_exp;
-    delete else_exp;
+    delete cond_expr;
+    delete then_expr;
+    delete else_expr;
 }
