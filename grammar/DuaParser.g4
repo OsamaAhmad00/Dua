@@ -68,7 +68,8 @@ variable_def_no_simicolon
     ;
 
 function_decl_no_simicolon
-    : type Identifier '(' param_list ')'
+    : type Identifier { assistant.push_str($Identifier.text); }
+        '(' param_list ')' { assistant.create_function_declaration(); }
     ;
 
 function_declaration
@@ -82,17 +83,17 @@ function_definition
 
 param_list
     : comma_separated_var_decls var_arg_or_none
-    | /* empty */
+    | /* empty */ { assistant.param_count = 0; assistant.is_var_arg = false; }
     ;
 
 var_arg_or_none
-    : ',' '...'
-    | /* empty */
+    : ',' '...'   { assistant.is_var_arg = true;  }
+    | /* empty */ { assistant.is_var_arg = false; }
     ;
 
 comma_separated_var_decls
-    : variable_decl_no_simicolon
-    | comma_separated_var_decls ',' variable_decl_no_simicolon
+    : variable_decl_no_simicolon { assistant.param_count = 1; }
+    | comma_separated_var_decls ',' variable_decl_no_simicolon { assistant.param_count += 1; }
     ;
 
 block_statement
