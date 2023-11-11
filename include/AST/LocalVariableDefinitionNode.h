@@ -10,8 +10,8 @@ class LocalVariableDefinitionNode : public ASTNode
     ASTNode* initializer;  // Can be nullptr in case of declaration
 
 public:
-    LocalVariableDefinitionNode(std::string name, TypeBase* type, ASTNode* initializer)
-            : name(std::move(name)), type(type), initializer(initializer) {}
+    LocalVariableDefinitionNode(ModuleCompiler* compiler, std::string name, TypeBase* type, ASTNode* initializer)
+            : name(std::move(name)), type(type), initializer(initializer) { this->compiler = compiler; }
     llvm::AllocaInst* eval() override;
     ~LocalVariableDefinitionNode() override;
 };

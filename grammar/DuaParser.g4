@@ -5,31 +5,28 @@ options {
 }
 
 @parser::postinclude {
-#include <string>
-#include <ModuleCompiler.h>
+#include <ParserAssistant.h>
 }
 
 @parser::members
 {
 private:
 
-    ModuleCompiler* module_compiler;
+    ParserAssistant assistant;
 
 public:
 
-    void set_module_compiler(ModuleCompiler* module_compiler) {
-        this->module_compiler = module_compiler;
+    void set_module_compiler(ModuleCompiler* compiler) {
+        assistant.set_module_compiler(compiler);
     }
 
-    template <typename T, typename ...Args>
-    T* create(Args... args) {
-        return module_compiler->create_node<T>(args...);
+    TranslationUnitNode* parse() {
+        starting_symbol();
+        return assistant.construct_result();
     }
 }
 
 starting_symbol
-returns [TranslationUnitNode* result]
-@init{ $result = create<TranslationUnitNode>(); }
     : module EOF
     ;
 
@@ -46,6 +43,9 @@ global_elements
 global_element
     : variable_decl_or_def
     | function_decl_or_def
+    // TODO remove these two.
+    | statement
+    | expression
     ;
 
 variable_decl_or_def
@@ -63,11 +63,11 @@ function_decl_or_def
     ;
 
 variable_decl_no_simicolon
-    : type Identifier
+    : type Identifier { assistant.push_str($Identifier.text); }
     ;
 
 variable_def_no_simicolon
-    : variable_decl_no_simicolon '=' expression
+    : variable_decl_no_simicolon '=' expression { assistant.create_definition(); }
     ;
 
 function_decl_no_simicolon
@@ -278,7 +278,7 @@ function_call
 
 lvalue
     : Identifier
-    | '*' expression  // lvalue or unary_expression?
+    | '*' expression
     ;
 
 number
@@ -290,10 +290,10 @@ number
     ;
 
 integer
-    : I64Val
-    | I32Val
-    | I16Val
-    | I8Val
+    : I64Val { assistant.push_node<I32ValueNode>(stol($I64Val.text)); }
+    | I32Val { assistant.push_node<I32ValueNode>(stoi($I32Val.text)); }
+    | I16Val { assistant.push_node<I32ValueNode>(stoi($I16Val.text)); }
+    | I8Val  { assistant.push_node<I32ValueNode>(stoi($I8Val.text)) ; }
     ;
 
 float
@@ -309,12 +309,12 @@ type
     ;
 
 primitive_type
-    : I64
-    | I32
-    | I16
-    | I8
-    | F64
-    | F32
+    : I64  { assistant.push_type<I64Type>(); }
+    | I32  { assistant.push_type<I32Type>(); }
+    | I16  { assistant.push_type<I16Type>(); }
+    | I8   { assistant.push_type<I8Type> (); }
+    | F64  { assistant.push_type<F64Type>(); }
+    | F32  { assistant.push_type<F32Type>(); }
     | Void
     ;
 

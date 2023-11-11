@@ -36,11 +36,14 @@ template<typename T>
 class SymbolTable
 {
 public:
+
+    SymbolTable() { push_scope(); }
+
     size_t size() const { return scopes.size(); }
 
     SymbolTable& insert(const std::string& name, const T& t, int scope_num = 1) {
         if (scopes.empty()) {
-            throw std::runtime_error("There is no local scope");
+            throw std::runtime_error("There is no scope");
         }
         scopes[scopes.size() - scope_num].insert(name, t);
         return *this;
@@ -53,7 +56,7 @@ public:
 
     const T& get(const std::string& name, bool include_global = true, int scope_num = 1) {
         if (scopes.empty()) {
-            throw std::runtime_error("There is no local scope");
+            throw std::runtime_error("There is no scope");
         }
 
         for (int i = scopes.size() - scope_num; i >= 1 + !include_global; i--) {
@@ -72,7 +75,7 @@ public:
 
     bool contains(const std::string& name, bool include_global = true, int scope_num = 1) {
         if (scopes.empty()) {
-            throw std::runtime_error("There is no local scope");
+            throw std::runtime_error("There is no scope");
         }
 
         for (int i = scopes.size() - scope_num; i >= !include_global; i--) {

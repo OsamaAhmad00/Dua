@@ -8,7 +8,8 @@ class NegativeExpressionNode : public ASTNode
 
 public:
 
-    NegativeExpressionNode(ASTNode* expression) : expression(expression) {}
+    NegativeExpressionNode(ModuleCompiler* compiler, ASTNode* expression)
+        : expression(expression) { this->compiler = compiler; }
     llvm::Value* eval() override;
     ~NegativeExpressionNode() override { delete expression; }
 };
@@ -19,7 +20,8 @@ class NotExpressionNode : public ASTNode
 
 public:
 
-    NotExpressionNode(ASTNode* expression) : expression(expression) {}
+    NotExpressionNode(ModuleCompiler* compiler, ASTNode* expression)
+        : expression(expression) { this->compiler = compiler; }
     llvm::Value* eval() override;
     ~NotExpressionNode() override { delete expression; }
 };
@@ -30,7 +32,8 @@ class BitwiseComplementExpressionNode : public ASTNode
 
 public:
 
-    BitwiseComplementExpressionNode(ASTNode* expression) : expression(expression) {}
+    BitwiseComplementExpressionNode(ModuleCompiler* compiler, ASTNode* expression)
+        : expression(expression) { this->compiler = compiler; }
     llvm::Value* eval() override;
     ~BitwiseComplementExpressionNode() override { delete expression; }
 };

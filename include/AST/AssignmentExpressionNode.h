@@ -9,8 +9,8 @@ class AssignmentExpressionNode : public ASTNode
 
 public:
 
-    AssignmentExpressionNode(std::string lhs, ASTNode* rhs)
-        : lhs(std::move(lhs)), rhs(rhs) {};
+    AssignmentExpressionNode(ModuleCompiler* compiler, std::string lhs, ASTNode* rhs)
+        : lhs(std::move(lhs)), rhs(rhs) { this->compiler = compiler; };
     llvm::Value* eval() override;
     ~AssignmentExpressionNode() override;
 };

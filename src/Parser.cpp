@@ -16,8 +16,5 @@ TranslationUnitNode* Parser::parse(const std::string& str) const
     Dua::DuaParser parser(&tokens);
     parser.set_module_compiler(&module_compiler);
 
-    // Parse the entry-point production
-    TranslationUnitNode* result = parser.starting_symbol()->result;
-
-    return result;
+    return parser.parse();
 }

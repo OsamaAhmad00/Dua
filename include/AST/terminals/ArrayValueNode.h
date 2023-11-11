@@ -9,6 +9,9 @@ class ArrayValueNode : public ValueNode
     std::vector<llvm::Constant*> values;
     ArrayType* type;
 
+    ArrayValueNode(ModuleCompiler* compiler, std::vector<llvm::Constant*> values)
+        : values(std::move(values)) { this->compiler = compiler; }
+
     llvm::Constant* eval() override { return llvm::ConstantArray::get(type->llvm_type(), values); }
     ArrayType* get_type() override { return type; }
 };

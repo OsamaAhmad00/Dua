@@ -5,6 +5,9 @@
 #define DEFINE_FLOAT_TYPE(WIDTH, TYPE)                \
 struct F##WIDTH##Type : public FloatType              \
 {                                                     \
+    F##WIDTH##Type(llvm::IRBuilder<>* builder)        \
+        { this->builder = builder; }                  \
+                                                      \
     llvm::Constant* default_value() override {        \
         return llvm::ConstantFP::get(llvm_type(), 0); \
     }                                                 \

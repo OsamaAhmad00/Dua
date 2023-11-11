@@ -8,7 +8,7 @@ class BlockNode : public ASTNode
 
 public:
 
-    BlockNode() {};
+    BlockNode(ModuleCompiler* compiler) { this->compiler = compiler; };
     BlockNode& append(ASTNode* element);
     llvm::Value* eval() override;
     ~BlockNode() override;

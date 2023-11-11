@@ -5,6 +5,9 @@
 #define DEFINE_INTEGER_TYPE(PREFIX, WIDTH)          \
 struct PREFIX##WIDTH##Type : public IntegerType     \
 {                                                   \
+    PREFIX##WIDTH##Type(llvm::IRBuilder<>* builder) \
+        { this->builder = builder; }                \
+                                                    \
     llvm::Constant* default_value() override {      \
         return builder->getInt##WIDTH(0);           \
     }                                               \

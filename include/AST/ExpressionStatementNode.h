@@ -8,8 +8,8 @@ class ExpressionStatement : public ASTNode
 
 public:
 
-    ExpressionStatement(ASTNode* expression)
-            : expression(expression) {};
+    ExpressionStatement(ModuleCompiler* compiler, ASTNode* expression)
+            : expression(expression) { this->compiler = compiler; };
     NoneValue eval() override { expression->eval(); return none_value(); };
     ~ExpressionStatement() override;
 };
