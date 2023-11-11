@@ -1,4 +1,5 @@
 #include <AST/IfNode.h>
+#include <Utils.h>
 
 int IfNode::_counter = 0;
 
@@ -13,6 +14,9 @@ llvm::PHINode* IfNode::eval()
 
 
     llvm::Value* cond_res = cond_expr->eval();
+    cond_res = cast_value(cond_res, builder().getInt1Ty(), builder());
+    if (cond_res == nullptr)
+        throw std::runtime_error("The provided condition can't be casted to boolean value.");
     builder().CreateCondBr(cond_res, then_block, else_block);
 
     builder().SetInsertPoint(then_block);
