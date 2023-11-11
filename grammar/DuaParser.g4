@@ -77,8 +77,9 @@ function_declaration
     ;
 
 function_definition
-    : function_decl_no_simicolon block_statement
+    : function_decl_no_simicolon block_statement { assistant.create_function_definition(); }
     | function_decl_no_simicolon '=' expression ';'
+        { assistant.statements_count = 1; assistant.create_function_definition(); }
     ;
 
 param_list
@@ -97,12 +98,12 @@ comma_separated_var_decls
     ;
 
 block_statement
-    : scope_begin statements scope_end
+    : scope_begin statements scope_end  { assistant.create_block_statement(); }
     ;
 
 statements
-    : statements statement
-    | /* empty */
+    : statements statement  { assistant.statements_count += 1; }
+    | /* empty */           { assistant.statements_count  = 0; }
     ;
 
 statement
@@ -316,6 +317,6 @@ primitive_type
     | Void
     ;
 
-scope_begin: '{';
+scope_begin: '{' { assistant.scope_depth++; };
 
-scope_end: '}';
+scope_end:   '}' { assistant.scope_depth--; };
