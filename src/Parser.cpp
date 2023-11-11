@@ -17,7 +17,7 @@ TranslationUnitNode* Parser::parse(const std::string& str) const
     parser.set_module_compiler(&module_compiler);
 
     // Parse the entry-point production
-    TranslationUnitNode* result = parser.entry_point()->result;
+    TranslationUnitNode* result = parser.starting_symbol()->result;
 
     return result;
 }
