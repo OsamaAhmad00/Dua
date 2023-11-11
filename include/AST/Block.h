@@ -8,7 +8,8 @@ class BlockNode : public ASTNode
 
 public:
 
-    BlockNode(ModuleCompiler* compiler) { this->compiler = compiler; };
+    BlockNode(ModuleCompiler* compiler, std::vector<ASTNode*> elements)
+        : elements(std::move(elements)) { this->compiler = compiler; };
     BlockNode& append(ASTNode* element);
     llvm::Value* eval() override;
     ~BlockNode() override;

@@ -78,8 +78,14 @@ class ParserAssistant
 public:
 
     // Used while parsing functions.
+    // If nested functions are supported, we would
+    //  need to use a stack of these values instead.
     bool is_var_arg = false;
     size_t param_count = 0;
+    size_t statements_count = 0;
+
+    // Used mainly to determine whether we're in global scope or not.
+    size_t scope_depth = 0;
 
     // These stacks are used to push every recent result into it.
     // If a node currently under construction requires previous
@@ -95,6 +101,8 @@ public:
 
     void create_definition();
     void create_function_declaration();
+    void create_block_statement();
+    void create_function_definition();
 
     TranslationUnitNode* construct_result();
 
