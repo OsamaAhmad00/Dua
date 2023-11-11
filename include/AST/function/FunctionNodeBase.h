@@ -14,7 +14,7 @@ struct FunctionNodeBase : public ASTNode
     };
     struct FunctionSignature {
         std::string name;
-        TypeBase* return_type;
+        TypeBase* return_type = nullptr;
         std::vector<Param> params;
         bool is_var_arg = false;
 
