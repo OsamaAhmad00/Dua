@@ -43,9 +43,6 @@ global_elements
 global_element
     : variable_decl_or_def
     | function_decl_or_def
-    // TODO remove these two.
-    | statement
-    | expression
     ;
 
 variable_decl_or_def
