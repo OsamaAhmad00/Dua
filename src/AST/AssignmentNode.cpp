@@ -1,5 +1,4 @@
 #include <AST/AssignmentExpressionNode.h>
-#include <Utils.h>
 
 llvm::Value* AssignmentExpressionNode::eval()
 {
@@ -7,7 +6,7 @@ llvm::Value* AssignmentExpressionNode::eval()
     llvm::Value* result = rhs->eval();
 
     if (result->getType() != type) {
-        llvm::Value* alternative = cast_value(result, type, builder());
+        llvm::Value* alternative = compiler->cast_value(result, type);
         if (alternative == nullptr)
             throw std::runtime_error("Invalid assignment operation");
         result = alternative;

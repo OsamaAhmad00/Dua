@@ -14,6 +14,8 @@ public:
 
     ModuleCompiler(const std::string& module_name, const std::string& code);
 
+    llvm::Value* cast_value(llvm::Value* value, llvm::Type* target_type);
+
     const std::string& get_result() { return result; }
 
     template <typename T, typename ...Args>

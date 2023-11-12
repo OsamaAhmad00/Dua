@@ -1,10 +1,9 @@
 #include <AST/GlobalVariableDefinitionNode.h>
-#include <Utils.h>
 
 llvm::GlobalVariable* GlobalVariableDefinitionNode::eval()
 {
     llvm::Value* value = initializer->eval();
-    value = cast_value(value, type->llvm_type(), builder());
+    value = compiler->cast_value(value, type->llvm_type());
     if (value == nullptr)
         throw std::runtime_error("Type mismatch");
     module().getOrInsertGlobal(name, type->llvm_type());

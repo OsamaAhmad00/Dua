@@ -7,6 +7,7 @@
 #include "AST/GlobalVariableDefinitionNode.h"
 #include "AST/LocalVariableDefinitionNode.h"
 #include "AST/AssignmentExpressionNode.h"
+#include "AST/ExpressionStatementNode.h"
 #include "AST/Block.h"
 #include "AST/IfNode.h"
 #include "AST/WhileNode.h"
@@ -85,27 +86,36 @@ public:
     //  need to use a stack of these values instead.
     bool is_var_arg = false;
     size_t param_count = 0;
-    size_t statements_count = 0;
 
-    // Used mainly to determine whether we're in global scope or not.
-    size_t scope_depth = 0;
+    void push_str(std::string str) { strings.push_back(std::move(str)); }
+    size_t str_count() { return strings.size(); }
 
-    // These stacks are used to push every recent result into it.
-    // If a node currently under construction requires previous
-    //  results, it can pop this out of the appropriate stack and
-    //  use it. When this node is constructed, it'll be pushed to
-    //  the appropriate stack.
-    // At the end, this stack will contain the elements of the
-    //  translation unit. In other words, we're mimicking a stack
-    //  machine, but with each datatype in a separate stack.
-    ADD_STACK_DATATYPE(str, std::string)
-    ADD_TEMPLATED_STACK_DATATYPE(node, ASTNode*, compiler->create_node<T>);
-    ADD_TEMPLATED_STACK_DATATYPE(type, TypeBase*, compiler->create_type<T>);
+    template<typename T, typename...Args>
+    void push_node(Args...args) {
+        nodes.push_back(compiler->create_node<T>(args...));
+    }
+    size_t nodes_count() { return nodes.size(); }
+
+    template<typename T, typename...Args>
+    void push_type(Args...args) { types.push_back(compiler->create_type<T>(args...)); }
+    size_t types_count() { return types.size(); }
 
     void create_definition();
     void create_function_declaration();
     void create_block_statement();
     void create_function_definition();
+    void create_if();
+    void add_if_branch();
+    void set_else_branch();
+    void set_no_else();
+    void create_expression_statement();
+
+    void enter_scope();
+    void leave_scope();
+    void inc_statements();
+    void dec_statements();
+
+    bool is_in_global_scope();
 
     TranslationUnitNode* construct_result();
 
