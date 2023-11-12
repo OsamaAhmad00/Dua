@@ -35,45 +35,48 @@
 #include "types/StringType.h"
 #include "types/ArrayType.h"
 
-#define ADD_TEMPLATED_STACK_DATATYPE(NAME, TYPE, FACTORY)       \
-private:                                                        \
-    std::vector<TYPE> NAME##s;                                  \
-    TYPE pop_##NAME() {                                         \
-        TYPE result = NAME##s.back();                           \
-        NAME##s.pop_back();                                     \
-        return result;                                          \
-    }                                                           \
-public:                                                         \
-    template<typename T, typename ...Args>                      \
-    void push_##NAME(Args... args) {                            \
-        NAME##s.push_back(FACTORY(args...));                    \
-    }                                                           \
-    size_t NAME##s_count() { return NAME##s.size(); }           \
 
-
-#define ADD_STACK_DATATYPE(NAME, TYPE)                          \
-private:                                                        \
-    std::vector<TYPE> NAME##s;                                  \
-    TYPE pop_##NAME() {                                         \
-        auto result = std::move(NAME##s.back());                \
-        NAME##s.pop_back();                                     \
-        return result;                                          \
-    }                                                           \
-public:                                                         \
-    void push_##NAME(TYPE NAME) {                               \
-        NAME##s.push_back(std::move(NAME));                     \
-    }                                                           \
-    size_t str_count() { return NAME##s.size(); }               \
-
-
-// This class is responsible for accepting the text (or some other intermediate form)
-//  representation from the parser, and maintaining an internal state about the current
-//  situation while parsing. This is to make the semantic-actions in the parser grammar
-//  file as minimal as possible, making the grammar clearer, and also the code more
+//  This class is used to make the semantic-actions in the parser grammar file
+//  as minimal as possible, making the grammar clearer, and also the code more
 //  isolated from the grammar, thus, more readable.
 class ParserAssistant
 {
     ModuleCompiler* compiler = nullptr;
+
+    // These stacks are used to push every recent result into it.
+    // If a node currently under construction requires previous
+    //  results, it can pop this out of the appropriate stack and
+    //  use it. When this node is constructed, it'll be pushed to
+    //  the appropriate stack.
+    // At the end, this stack will contain the elements of the
+    //  translation unit. In other words, we're mimicking a stack
+    //  machine, but with each datatype in a separate stack.
+    std::vector<std::string> strings;
+    std::vector<ASTNode *> nodes;
+    std::vector<TypeBase *> types;
+
+    // A stack for counting the number of statements
+    //  inside the current scope.
+    // Has initially one counter for the global scope.
+    std::vector<size_t> statements_count { 0 };
+
+    std::string pop_str() {
+        auto result = std::move(strings.back());
+        strings.pop_back();
+        return result;
+    }
+
+    ASTNode *pop_node() {
+        ASTNode *result = nodes.back();
+        nodes.pop_back();
+        return result;
+    }
+
+    TypeBase *pop_type() {
+        TypeBase *result = types.back();
+        types.pop_back();
+        return result;
+    }
 
 public:
 
