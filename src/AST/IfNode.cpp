@@ -1,5 +1,4 @@
 #include <AST/IfNode.h>
-#include <Utils.h>
 
 int IfNode::_counter = 0;
 
@@ -12,9 +11,8 @@ llvm::PHINode* IfNode::eval()
     llvm::BasicBlock* else_block = create_basic_block("else" + std::to_string(counter), current_function());
     llvm::BasicBlock* end_block  = create_basic_block("if_end" + std::to_string(counter), current_function());
 
-
     llvm::Value* cond_res = cond_expr->eval();
-    cond_res = cast_value(cond_res, builder().getInt1Ty(), builder());
+    cond_res = compiler->cast_value(cond_res, builder().getInt1Ty());
     if (cond_res == nullptr)
         throw std::runtime_error("The provided condition can't be casted to boolean value.");
     builder().CreateCondBr(cond_res, then_block, else_block);
@@ -31,12 +29,19 @@ llvm::PHINode* IfNode::eval()
     then_block = builder().GetInsertBlock();
 
     builder().SetInsertPoint(else_block);
-    llvm::Value* else_res = else_expr->eval();
+    // TODO don't create an else branch if there isn't one.
+    llvm::Value* else_res = (else_expr != nullptr) ? else_expr->eval() : none_value();
     // Same as the then block.
     builder().CreateBr(end_block);
     else_block = builder().GetInsertBlock();
 
-    assert(then_res->getType() == else_res->getType());
+    if (then_res->getType() != else_res->getType()) {
+        else_res = compiler->cast_value(else_res, then_res->getType());
+        if (!else_res) {
+            throw std::runtime_error("Type mismatch in the branches of an if expression");
+        }
+    }
+
     builder().SetInsertPoint(end_block);
 
     llvm::PHINode* phi = builder().CreatePHI(then_res->getType(), 2, "if_result" + std::to_string(counter));

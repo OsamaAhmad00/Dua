@@ -79,7 +79,12 @@ function_declaration
 function_definition
     : function_decl_no_simicolon block_statement { assistant.create_function_definition(); }
     | function_decl_no_simicolon '=' expression ';'
-        { assistant.statements_count = 1; assistant.create_function_definition(); }
+        {
+            assistant.enter_scope();
+            assistant.inc_statements();
+            assistant.create_function_definition();
+            assistant.leave_scope();
+        }
     ;
 
 param_list
@@ -98,12 +103,12 @@ comma_separated_var_decls
     ;
 
 block_statement
-    : scope_begin statements scope_end  { assistant.create_block_statement(); }
+    : scope_begin statements scope_end { assistant.create_block_statement(); }
     ;
 
 statements
-    : statements statement  { assistant.statements_count += 1; }
-    | /* empty */           { assistant.statements_count  = 0; }
+    : statements statement
+    | /* empty */
     ;
 
 statement
@@ -175,21 +180,21 @@ return_statement
     ;
 
 expression_statement
-    : expression ';'
+    : expression ';' { assistant.create_expression_statement(); }
     ;
 
 if
-    : 'if' '(' expression ')' statement else_if_else_statement
+    : 'if' '(' expression ')' statement { assistant.create_if(); } else_if_else_statement
     ;
 
 else_if_else_statement
-    : 'else' 'if' '(' expression ')' statement else_if_else_statement
+    : 'else' 'if' '(' expression ')' statement { assistant.add_if_branch(); } else_if_else_statement
     | else_statement
     ;
 
 else_statement
-    : 'else' statement
-    | /* empty */
+    : 'else' statement { assistant.set_else_branch(); }
+    | /* empty */      { assistant.set_no_else();     }
     ;
 
 if_expression
@@ -289,10 +294,10 @@ number
     ;
 
 integer
-    : I64Val { assistant.push_node<I32ValueNode>(stol($I64Val.text)); }
+    : I64Val { assistant.push_node<I64ValueNode>(stol($I64Val.text)); }
     | I32Val { assistant.push_node<I32ValueNode>(stoi($I32Val.text)); }
-    | I16Val { assistant.push_node<I32ValueNode>(stoi($I16Val.text)); }
-    | I8Val  { assistant.push_node<I32ValueNode>(stoi($I8Val.text)) ; }
+    | I16Val { assistant.push_node<I16ValueNode>(stoi($I16Val.text)); }
+    | I8Val  { assistant.push_node<I8ValueNode >(stoi($I8Val.text )); }
     ;
 
 float
@@ -317,6 +322,9 @@ primitive_type
     | Void
     ;
 
-scope_begin: '{' { assistant.scope_depth++; };
+scope_begin: '{' { assistant.enter_scope(); };
 
-scope_end:   '}' { assistant.scope_depth--; };
+// We don't call leave scope here, instead, it's up to the
+//  assistant to determine when the scope will end. (usually
+//  ends when constructing a block.
+scope_end:   '}';
