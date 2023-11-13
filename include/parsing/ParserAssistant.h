@@ -114,6 +114,7 @@ public:
     void create_function_definition();
     void create_if();
     void create_expression_statement();
+    void create_return();
 
     void enter_scope();
     size_t leave_scope();

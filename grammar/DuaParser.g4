@@ -176,7 +176,7 @@ expression
     ;
 
 return_statement
-    : Return expression ';'
+    : Return expression ';' { assistant.create_return(); }
     ;
 
 expression_statement

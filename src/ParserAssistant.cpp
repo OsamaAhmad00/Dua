@@ -132,3 +132,10 @@ void ParserAssistant::create_expression_statement() {
     //  statement, and turn it into a statement.
     inc_statements();
 }
+
+void ParserAssistant::create_return() {
+    push_node<ReturnNode>(pop_node());
+    // It takes an expression that didn't count as a
+    //  statement, and turn it into a statement.
+    inc_statements();
+}
