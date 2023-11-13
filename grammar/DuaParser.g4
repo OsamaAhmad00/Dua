@@ -197,6 +197,11 @@ else_statement
     | /* empty */      { assistant.has_else = false; }
     ;
 
+// Expressions don't increase the statements counter.
+// The IfNode decreases the statements count for each
+//  branch it takes, assuming that it's a statement.
+//  To cancel this effect for expressions, we increment
+//  the statements counter once for each branch.
 if_expression @init {
     assistant.enter_conditional();
     assistant.inc_branches();
@@ -211,12 +216,15 @@ else_if_expression
     | /* empty */
     ;
 
-when_expression
-    : 'when' scope_begin when_list scope_end
+when_expression @init {
+    assistant.enter_conditional();
+    assistant.has_else = true;
+}
+    : 'when' scope_begin when_list scope_end { assistant.leave_scope(); }
     ;
 
 when_list
-    : when_list_no_else ',' 'else' '->' expression
+    : when_list_no_else ',' 'else' '->' expression { assistant.create_if(); }
     ;
 
 when_list_no_else
@@ -225,7 +233,7 @@ when_list_no_else
     ;
 
 when_item
-    : expression '->' expression
+    : expression '->' expression { assistant.inc_branches(); assistant.inc_statements(); }
     ;
 
 comma_separated_multi_variable_decl_or_def
