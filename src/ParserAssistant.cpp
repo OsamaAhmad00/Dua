@@ -14,8 +14,6 @@ void ParserAssistant::create_definition()
     auto value = pop_node();
     auto name = pop_str();
     auto type = pop_type();
-    // This stack contains as many counters as the
-    //  current level of nesting.
     if (is_in_global_scope()) {
         push_node<GlobalVariableDefinitionNode>(std::move(name), type, (ValueNode *) value);
     } else {
@@ -40,7 +38,7 @@ void ParserAssistant::create_function_declaration()
 
 void ParserAssistant::create_block_statement()
 {
-    size_t n = statements_count.back();
+    size_t n = statement_counters.back();
     std::vector<ASTNode*> statements(n);
     for (int i = 0; i < n; i++)
         statements[n - i - 1] = pop_node();
@@ -64,66 +62,68 @@ void ParserAssistant::create_function_definition()
 
 void ParserAssistant::create_if()
 {
+    size_t n = leave_conditional();
 
-    auto branch = pop_node();
-    auto condition = pop_node();
+    std::vector<ASTNode*> conditions(n);
+    std::vector<ASTNode*> branches(n);
 
-    push_node<IfNode>(condition, branch, nullptr);
+    ASTNode* else_node = nullptr;
+    if (has_else) {
+        else_node = pop_node();
+        dec_statements();
+    }
 
-    // For if conditionals, you need to have the top node as a result,
-    //  but you need to keep track of the next insertion point as well.
-    //  For this, we push the top node twice at the beginning, once as
-    //  the final result, and the second as the next insertion point.
-    //  Upon insertions of further branches, the insertion point is
-    //  popped and the new insertion point is pushed. Upon finishing
-    //  construction of the conditional, the insertion point is popped,
-    //  and the first node is kept as the result of the operation.
-    //  This additional node doesn't increment the number of statements.
-    nodes.push_back(nodes.back());
+    for (size_t i = 0; i < n; i++) {
+        branches[n - i - 1] = pop_node();
+        conditions[n - i - 1] = pop_node();
+        dec_statements();
+    }
+
+    if (else_node) branches.push_back(else_node);
+
+    push_node<IfNode>(std::move(conditions), std::move(branches));
+
+    inc_statements();
 }
-
-void ParserAssistant::add_if_branch()
-{
-    auto branch = pop_node();
-    auto condition = pop_node();
-
-    auto node = (IfNode*)pop_node();
-    nodes.push_back(&node->add_branch_at_bottom(condition, branch));
-
-    dec_statements();
-}
-
-void ParserAssistant::set_else_branch()
-{
-    auto branch = pop_node();
-
-    auto node = (IfNode*)pop_node();
-    // No insertion point is pushed here.
-    node->set_else(branch);
-
-    dec_statements();
-}
-
-void ParserAssistant::set_no_else() { pop_node(); }
 
 void ParserAssistant::enter_scope() {
-    statements_count.push_back(0);
+    statement_counters.push_back(0);
 }
 
-void ParserAssistant::leave_scope() {
-    statements_count.pop_back();
+size_t ParserAssistant::leave_scope() {
+    size_t result = statement_counters.back();
+    statement_counters.pop_back();
+    return result;
+}
+
+void ParserAssistant::enter_conditional() {
+    branches_count.push_back(0);
+}
+
+size_t ParserAssistant::leave_conditional() {
+    size_t result = branches_count.back();
+    branches_count.pop_back();
+    return result;
 }
 
 void ParserAssistant::inc_statements() {
-    statements_count.back() += 1;
+    statement_counters.back() += 1;
 }
 
 void ParserAssistant::dec_statements() {
-    statements_count.back() -= 1;
+    statement_counters.back() -= 1;
+}
+
+void ParserAssistant::inc_branches() {
+    branches_count.back() += 1;
+}
+
+void ParserAssistant::dec_branches() {
+    branches_count.back() -= 1;
 }
 
 bool ParserAssistant::is_in_global_scope() {
-    return statements_count.size() == 1;
+    return statement_counters.size() == 1;
 }
 
 void ParserAssistant::create_expression_statement() {

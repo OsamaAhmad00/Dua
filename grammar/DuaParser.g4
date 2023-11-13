@@ -183,18 +183,18 @@ expression_statement
     : expression ';' { assistant.create_expression_statement(); }
     ;
 
-if
-    : 'if' '(' expression ')' statement { assistant.create_if(); } else_if_else_statement
+if  @init { assistant.enter_conditional(); assistant.inc_branches(); }
+    : 'if' '(' expression ')' statement else_if_else_statement { assistant.create_if(); }
     ;
 
 else_if_else_statement
-    : 'else' 'if' '(' expression ')' statement { assistant.add_if_branch(); } else_if_else_statement
+    : 'else' 'if' '(' expression ')' statement else_if_else_statement { assistant.inc_branches(); }
     | else_statement
     ;
 
 else_statement
-    : 'else' statement { assistant.set_else_branch(); }
-    | /* empty */      { assistant.set_no_else();     }
+    : 'else' statement { assistant.has_else = true;  }
+    | /* empty */      { assistant.has_else = false; }
     ;
 
 if_expression
