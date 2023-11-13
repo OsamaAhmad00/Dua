@@ -139,3 +139,10 @@ void ParserAssistant::create_return() {
     //  statement, and turn it into a statement.
     inc_statements();
 }
+
+void ParserAssistant::create_while()
+{
+    ASTNode* body = pop_node();
+    ASTNode* condition = pop_node();
+    push_node<WhileNode>(condition, body);
+}

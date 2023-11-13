@@ -50,15 +50,15 @@ llvm::Value* ModuleCompiler::cast_value(llvm::Value* value, llvm::Type* target_t
     // If the types are both integer types, use the Trunc or ZExt or SExt instructions
     if (source_type->isIntegerTy() && target_type->isIntegerTy())
     {
-        if (source_width > target_width) {
+        if (source_width >= target_width) {
+            // This needs to be >=, not just > because of the case of
+            //  converting between an i8 and i1, which both give a size
+            //  of 1 byte.
             // Truncate the value to fit the smaller type
             return builder.CreateTrunc(value, target_type);
         } else if (source_width < target_width) {
             // Extend the value to fit the larger type
             return builder.CreateSExt(value, target_type);
-        } else {
-            // The types have the same bit width, no need to cast
-            return value;
         }
     }
 
