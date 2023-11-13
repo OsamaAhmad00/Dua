@@ -5,15 +5,7 @@ int main()
     ModuleCompiler module(
         "MainModule", ""
         "int main() {"
-        "   if (3) {"
-        "       int x = 3;"
-        "   } else if (4)"
-        "       5;"
-        "   else if (5) {"
-        "       int y = 3;"
-        "   } else {"
-        "       6;"
-        "   }"
+        "   if (1) 2 else if (3) 4 else 5;"
         "}"
     );
 }
