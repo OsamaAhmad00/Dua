@@ -197,12 +197,17 @@ else_statement
     | /* empty */      { assistant.has_else = false; }
     ;
 
-if_expression
-    : 'if' '(' expression ')' expression else_if_expression 'else' expression
+if_expression @init {
+    assistant.enter_conditional();
+    assistant.inc_branches();
+    assistant.inc_statements();
+    assistant.has_else = true;
+}
+    : 'if' '(' expression ')' expression else_if_expression 'else' expression  { assistant.create_if(); }
     ;
 
 else_if_expression
-    : 'else' 'if' '(' expression ')' expression else_if_expression
+    : 'else' 'if' '(' expression ')' expression else_if_expression { assistant.inc_branches(); assistant.inc_statements(); }
     | /* empty */
     ;
 
