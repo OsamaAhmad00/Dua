@@ -198,16 +198,11 @@ else_statement
     ;
 
 if_expression
-    : 'if' '(' expression ')' expression else_if_else_expression
+    : 'if' '(' expression ')' expression else_if_expression 'else' expression
     ;
 
-else_if_else_expression
-    : 'else' 'if' '(' expression ')' expression else_if_else_expression
-    | else_expression
-    ;
-
-else_expression
-    : 'else' expression
+else_if_expression
+    : 'else' 'if' '(' expression ')' expression else_if_expression
     | /* empty */
     ;
 
@@ -216,8 +211,7 @@ when_expression
     ;
 
 when_list
-    : when_list_no_else
-    | when_list_no_else ',' 'else' '->' expression
+    : when_list_no_else ',' 'else' '->' expression
     ;
 
 when_list_no_else
