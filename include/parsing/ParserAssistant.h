@@ -57,9 +57,14 @@ class ParserAssistant
     std::vector<TypeBase *> types;
 
     // A stack for counting the number of statements
-    //  inside the current scope.
+    //  inside the current scope, and for determining
+    //  whether we're in a local or the global scope.
     // Has initially one counter for the global scope.
-    std::vector<size_t> statements_count { 0 };
+    std::vector<size_t> statement_counters { 0 };
+
+    // Used to determine the number of branches in the
+    //  current if/when statement/expression.
+    std::vector<size_t> branches_count;
 
     std::string pop_str() {
         auto result = std::move(strings.back());
@@ -87,6 +92,9 @@ public:
     bool is_var_arg = false;
     size_t param_count = 0;
 
+    // Used when constructing if statements
+    bool has_else = false;
+
     void push_str(std::string str) { strings.push_back(std::move(str)); }
     size_t str_count() { return strings.size(); }
 
@@ -105,15 +113,16 @@ public:
     void create_block_statement();
     void create_function_definition();
     void create_if();
-    void add_if_branch();
-    void set_else_branch();
-    void set_no_else();
     void create_expression_statement();
 
     void enter_scope();
-    void leave_scope();
+    size_t leave_scope();
+    void enter_conditional();
+    size_t leave_conditional();
     void inc_statements();
     void dec_statements();
+    void inc_branches();
+    void dec_branches();
 
     bool is_in_global_scope();
 
