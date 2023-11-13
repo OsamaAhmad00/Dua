@@ -251,17 +251,17 @@ comma_separated_multi_variable_decl_or_def_or_none
 for
     : 'for'
       '(' comma_separated_multi_variable_decl_or_def_or_none
-      ';' expression_or_none
+      ';' loop_expression_or_none
       ';' expression_or_none
       ')' statement
     ;
 
 while
-    : 'while' '(' expression_or_none ')' statement
+    : 'while' '(' loop_expression_or_none ')' statement { assistant.create_while(); }
     ;
 
 do_while
-    : 'do' statement 'while' '(' expression ')' ';'
+    : 'do' statement 'while' '(' loop_expression_or_none ')' ';'
     ;
 
 expressions_list
@@ -272,6 +272,11 @@ expressions_list
 comma_separated_expressions
     : expression
     | comma_separated_expressions ',' expression
+    ;
+
+loop_expression_or_none
+    : expression
+    | /* empty */ { assistant.push_node<I8ValueNode>(1); }
     ;
 
 expression_or_none

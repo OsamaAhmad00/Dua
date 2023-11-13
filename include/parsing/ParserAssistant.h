@@ -112,18 +112,20 @@ public:
     void create_function_declaration();
     void create_block_statement();
     void create_function_definition();
-    void create_if();
     void create_expression_statement();
     void create_return();
+    void create_while();
+
+    void enter_conditional();
+    size_t leave_conditional();
+    void inc_branches();
+    void dec_branches();
+    void create_if();
 
     void enter_scope();
     size_t leave_scope();
-    void enter_conditional();
-    size_t leave_conditional();
     void inc_statements();
     void dec_statements();
-    void inc_branches();
-    void dec_branches();
 
     bool is_in_global_scope();
 

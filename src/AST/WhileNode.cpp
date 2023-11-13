@@ -16,6 +16,10 @@ NoneValue WhileNode::eval()
 
     builder().SetInsertPoint(cond_block);
     llvm::Value* cond_res = cond_exp->eval();
+    cond_res = compiler->cast_value(cond_res, builder().getInt1Ty());
+    if (cond_res == nullptr)
+        throw std::runtime_error("The provided cond_res can't be casted to boolean value.");
+    cond_res->print(llvm::outs());
     builder().CreateCondBr(cond_res, body_block, end_block);
 
     builder().SetInsertPoint(body_block);
