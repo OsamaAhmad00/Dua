@@ -64,7 +64,11 @@ class ParserAssistant
 
     // Used to determine the number of branches in the
     //  current if/when statement/expression.
-    std::vector<size_t> branches_count;
+    std::vector<size_t> branch_counters;
+
+    // Used to determine the number of arguments
+    //  in a function call expression.
+    std::vector<size_t> argument_counters;
 
     std::string pop_str() {
         auto result = std::move(strings.back());
@@ -121,13 +125,17 @@ public:
     void enter_conditional();
     size_t leave_conditional();
     void inc_branches();
-    void dec_branches();
     void create_if();
 
     void enter_scope();
     size_t leave_scope();
     void inc_statements();
     void dec_statements();
+
+    void enter_fun_call();
+    size_t leave_fun_call();
+    void inc_args();
+    void create_function_call();
 
     bool is_in_global_scope();
 
