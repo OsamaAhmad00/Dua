@@ -2,7 +2,8 @@
 
 llvm::Value* AssignmentExpressionNode::eval()
 {
-    auto [ptr, type] = symbol_table().get(lhs);
+    llvm::Value* ptr = lhs->eval();
+    llvm::Type* type = ptr->getType();
     llvm::Value* result = rhs->eval();
 
     if (result->getType() != type) {

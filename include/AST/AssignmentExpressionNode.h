@@ -4,13 +4,13 @@
 
 class AssignmentExpressionNode : public ASTNode
 {
-    std::string lhs;
+    ASTNode* lhs;
     ASTNode* rhs;
 
 public:
 
-    AssignmentExpressionNode(ModuleCompiler* compiler, std::string lhs, ASTNode* rhs)
-        : lhs(std::move(lhs)), rhs(rhs) { this->compiler = compiler; };
+    AssignmentExpressionNode(ModuleCompiler* compiler, ASTNode* lhs, ASTNode* rhs)
+        : lhs(lhs), rhs(rhs) { this->compiler = compiler; };
     llvm::Value* eval() override;
     ~AssignmentExpressionNode() override;
 };

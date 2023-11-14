@@ -5,10 +5,10 @@ int main()
     ModuleCompiler module(
         "MainModule", ""
         "int main() {"
-        "   int i = 0;"
+        "   int i = 5;"
         "   int j;"
-        "   j = 3;"
-        "   return 5;"
+        "   j = i;"
+        "   return j;"
         "}"
     );
 }
