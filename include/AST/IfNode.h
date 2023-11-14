@@ -13,11 +13,20 @@ class IfNode : public ASTNode
     //  else branch. Otherwise, both sizes are equal.
     std::vector<ASTNode*> branches;
 
+    bool is_expression;
+
 public:
 
-    IfNode(ModuleCompiler* compiler, std::vector<ASTNode*> conditions, std::vector<ASTNode*> branches)
-        : conditions(std::move(conditions)), branches(std::move(branches)) { this->compiler = compiler; }
-    llvm::PHINode* eval() override;
+    IfNode(ModuleCompiler* compiler, std::vector<ASTNode*> conditions,
+           std::vector<ASTNode*> branches, bool is_expression=true)
+        : conditions(std::move(conditions)),
+          branches(std::move(branches)),
+          is_expression(is_expression)
+    {
+        this->compiler = compiler;
+    }
+
+    llvm::Value* eval() override;
     bool has_else() { return branches.size() == conditions.size() + 1; }
     ~IfNode() override;
 };

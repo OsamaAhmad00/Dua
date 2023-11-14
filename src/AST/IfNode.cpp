@@ -2,7 +2,7 @@
 
 int IfNode::_counter = 0;
 
-llvm::PHINode* IfNode::eval()
+llvm::Value* IfNode::eval()
 {
     assert(!conditions.empty());
 
@@ -74,10 +74,18 @@ llvm::PHINode* IfNode::eval()
     if (else_block) body_blocks.push_back(else_block);
     for (size_t i = 0; i < body_blocks.size(); i++) {
         builder().SetInsertPoint(body_blocks[i]);
-        values.push_back(branches[i]->eval());
+        llvm::Value* value = branches[i]->eval();
         builder().CreateBr(end_block);
-        phi_blocks.push_back(builder().GetInsertBlock());
+        if (is_expression) {
+            values.push_back(value);
+            phi_blocks.push_back(builder().GetInsertBlock());
+        }
     }
+
+    builder().SetInsertPoint(end_block);
+
+    if (!is_expression)
+        return none_value();
 
     for (size_t i = 1; i < values.size(); i++) {
         values[i] = compiler->cast_value(values[i], values.front()->getType());
@@ -86,7 +94,6 @@ llvm::PHINode* IfNode::eval()
         }
     }
 
-    builder().SetInsertPoint(end_block);
     llvm::PHINode* phi = builder().CreatePHI(
         values.front()->getType(),
         values.size(),

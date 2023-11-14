@@ -182,7 +182,7 @@ expression_statement
     ;
 
 if_statement  @init { assistant.enter_conditional(); assistant.inc_branches(); }
-    : 'if' '(' expression ')' statement else_if_else_statement { assistant.create_if(); }
+    : 'if' '(' expression ')' statement else_if_else_statement { assistant.create_if_statement(); }
     ;
 
 else_if_else_statement
@@ -195,22 +195,16 @@ else_statement
     | /* empty */      { assistant.has_else = false; }
     ;
 
-// Expressions don't increase the statements counter.
-// The IfNode decreases the statements count for each
-//  branch it takes, assuming that it's a statement.
-//  To cancel this effect for expressions, we increment
-//  the statements counter once for each branch.
 if_expression @init {
     assistant.enter_conditional();
     assistant.inc_branches();
-    assistant.inc_statements();
     assistant.has_else = true;
 }
-    : 'if' '(' expression ')' expression else_if_expression 'else' expression  { assistant.create_if(); }
+    : 'if' '(' expression ')' expression else_if_expression 'else' expression  { assistant.create_if_expression(); }
     ;
 
 else_if_expression
-    : 'else' 'if' '(' expression ')' expression else_if_expression { assistant.inc_branches(); assistant.inc_statements(); }
+    : 'else' 'if' '(' expression ')' expression else_if_expression { assistant.inc_branches(); }
     | /* empty */
     ;
 
@@ -222,7 +216,7 @@ when_expression @init {
     ;
 
 when_list
-    : when_list_no_else ',' 'else' '->' expression { assistant.create_if(); }
+    : when_list_no_else ',' 'else' '->' expression { assistant.create_if_expression(); }
     ;
 
 when_list_no_else
@@ -231,7 +225,7 @@ when_list_no_else
     ;
 
 when_item
-    : expression '->' expression { assistant.inc_branches(); assistant.inc_statements(); }
+    : expression '->' expression { assistant.inc_branches(); }
     ;
 
 comma_separated_multi_variable_decl_or_def

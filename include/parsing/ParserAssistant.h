@@ -133,7 +133,8 @@ public:
     void enter_conditional();
     size_t leave_conditional();
     void inc_branches();
-    void create_if();
+    void create_if_statement();
+    void create_if_expression();
 
     void enter_scope();
     size_t leave_scope();
