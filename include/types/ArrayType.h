@@ -9,8 +9,8 @@ class ArrayType : public TypeBase
 
 public:
 
-    ArrayType(llvm::IRBuilder<>* builder, TypeBase* element_type)
-        : element_type(element_type) { this->builder = builder; }
+    ArrayType(llvm::IRBuilder<>* builder, TypeBase* element_type, size_t size)
+        : element_type(element_type), size(size) { this->builder = builder; }
     llvm::Constant* default_value() override;
     llvm::ArrayType * llvm_type() override;
     ~ArrayType() override { delete element_type; }

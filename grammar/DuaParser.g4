@@ -313,6 +313,13 @@ number
     | Null
     ;
 
+size
+    : I64Val { assistant.push_num(stol($I64Val.text)); }
+    | I32Val { assistant.push_num(stol($I32Val.text)); }
+    | I16Val { assistant.push_num(stol($I16Val.text)); }
+    | I8Val  { assistant.push_num(stol($I8Val.text )); }
+    ;
+
 integer
     : I64Val { assistant.push_node<I64ValueNode>(stol($I64Val.text)); }
     | I32Val { assistant.push_node<I32ValueNode>(stoi($I32Val.text)); }
@@ -328,7 +335,7 @@ float
 type
     : primitive_type
     | Identifier            // User-defined types
-    | type '[' integer ']'  // array types
+    | type '[' size ']'     { assistant.create_array_type(); }
     | type '*'              { assistant.create_pointer_type(); }
     ;
 
