@@ -36,6 +36,8 @@ void ParserAssistant::create_variable_definition()
 
 void ParserAssistant::create_function_declaration()
 {
+    if (!is_in_global_scope())
+        throw std::runtime_error("Function declarations/definitions not allowed in a local scope");
     inc_statements();
     FunctionNodeBase::FunctionSignature signature;
     signature.is_var_arg = is_var_arg;
@@ -102,12 +104,12 @@ size_t ParserAssistant::leave_scope() {
 }
 
 void ParserAssistant::enter_conditional() {
-    branches_count.push_back(0);
+    branch_counters.push_back(0);
 }
 
 size_t ParserAssistant::leave_conditional() {
-    size_t result = branches_count.back();
-    branches_count.pop_back();
+    size_t result = branch_counters.back();
+    branch_counters.pop_back();
     return result;
 }
 
@@ -120,11 +122,7 @@ void ParserAssistant::dec_statements() {
 }
 
 void ParserAssistant::inc_branches() {
-    branches_count.back() += 1;
-}
-
-void ParserAssistant::dec_branches() {
-    branches_count.back() -= 1;
+    branch_counters.back() += 1;
 }
 
 bool ParserAssistant::is_in_global_scope() {
@@ -160,4 +158,28 @@ void ParserAssistant::create_assignment()
     ASTNode* rhs = pop_node();
     ASTNode* lhs = pop_node();
     push_node<AssignmentExpressionNode>(lhs, rhs);
+}
+
+void ParserAssistant::enter_fun_call() {
+    argument_counters.push_back(0);
+}
+
+size_t ParserAssistant::leave_fun_call() {
+    size_t result = argument_counters.back();
+    argument_counters.pop_back();
+    return result;
+}
+
+void ParserAssistant::inc_args() {
+    argument_counters.back() += 1;
+}
+
+void ParserAssistant::create_function_call()
+{
+    std::string name = pop_str();
+    size_t n = leave_fun_call();
+    std::vector<ASTNode*> args(n);
+    for (size_t i = 0; i < n; i++)
+        args[i] = pop_node();
+    push_node<FunctionCallNode>(std::move(name), std::move(args));
 }

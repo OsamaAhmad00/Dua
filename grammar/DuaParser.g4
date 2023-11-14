@@ -88,7 +88,7 @@ function_definition
     ;
 
 param_list
-    : comma_separated_var_decls var_arg_or_none
+    : comma_separated_params var_arg_or_none
     | /* empty */ { assistant.param_count = 0; assistant.is_var_arg = false; }
     ;
 
@@ -97,9 +97,13 @@ var_arg_or_none
     | /* empty */ { assistant.is_var_arg = false; }
     ;
 
-comma_separated_var_decls
-    : variable_decl_no_simicolon { assistant.param_count = 1; }
-    | comma_separated_var_decls ',' variable_decl_no_simicolon { assistant.param_count += 1; }
+param
+    : type identifier
+    ;
+
+comma_separated_params
+    : param { assistant.param_count = 1; }
+    | comma_separated_params ',' param { assistant.param_count += 1; }
     ;
 
 block_statement
@@ -264,14 +268,14 @@ do_while
     : 'do' statement 'while' '(' expression_or_none_loop ')' ';'
     ;
 
-expressions_list
-    : comma_separated_expressions
+arg_list @init { assistant.enter_fun_call(); }
+    : comma_separated_arguments
     | /* empty */
     ;
 
-comma_separated_expressions
-    : expression
-    | comma_separated_expressions ',' expression
+comma_separated_arguments
+    : expression { assistant.inc_args(); }
+    | comma_separated_arguments ',' expression { assistant.inc_args(); }
     ;
 
 // If none, push true
@@ -290,7 +294,7 @@ block_expression
     ;
 
 function_call
-    : Identifier '(' expressions_list ')'
+    : identifier '(' arg_list ')' { assistant.create_function_call(); }
     ;
 
 variable
