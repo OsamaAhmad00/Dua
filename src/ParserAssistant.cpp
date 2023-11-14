@@ -235,3 +235,8 @@ void ParserAssistant::create_array_type() {
     auto size = pop_num();
     push_type<ArrayType>(type, size);
 }
+
+void ParserAssistant::create_string_value() {
+    auto str = pop_str();
+    push_node<StringValueNode>(str.substr(1, str.size() - 2));
+}

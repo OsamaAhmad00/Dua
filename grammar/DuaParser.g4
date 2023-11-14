@@ -125,7 +125,7 @@ statement
 
 expression
     : number
-    | String
+    | String { assistant.push_str($String.text); assistant.create_string_value(); }
     | variable
     | block_expression
     | function_call
