@@ -103,7 +103,7 @@ comma_separated_var_decls
     ;
 
 block_statement
-    : scope_begin statements scope_end { assistant.create_block_statement(); }
+    : scope_begin statements scope_end { assistant.create_block(); assistant.inc_statements(); }
     ;
 
 statements
@@ -112,7 +112,7 @@ statements
     ;
 
 statement
-    : if
+    : if_statement
     | for
     | while
     | do_while
@@ -183,7 +183,7 @@ expression_statement
     : expression ';' { assistant.create_expression_statement(); }
     ;
 
-if  @init { assistant.enter_conditional(); assistant.inc_branches(); }
+if_statement  @init { assistant.enter_conditional(); assistant.inc_branches(); }
     : 'if' '(' expression ')' statement else_if_else_statement { assistant.create_if(); }
     ;
 
@@ -286,7 +286,7 @@ expression_or_none
     ;
 
 block_expression
-    : scope_begin statements expression scope_end
+    : scope_begin statements expression scope_end { assistant.inc_statements(); assistant.create_block(); }
     ;
 
 function_call
