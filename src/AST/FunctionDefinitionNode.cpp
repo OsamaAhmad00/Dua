@@ -16,8 +16,8 @@ llvm::Function* FunctionDefinitionNode::define_function()
 
     llvm::Function* old_function = current_function();
     llvm::BasicBlock* old_block = builder().GetInsertBlock();
-    create_basic_block("entry", function);
-    builder().SetInsertPoint(&function->back());
+    llvm::BasicBlock* current_block = create_basic_block("entry", function);
+    builder().SetInsertPoint(current_block);
     current_function() = function;
 
     symbol_table().push_scope();
