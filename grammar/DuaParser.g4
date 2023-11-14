@@ -128,7 +128,7 @@ statement
 expression
     : number
     | String
-    | lvalue
+    | variable
     | block_expression
     | function_call
     | if_expression
@@ -293,12 +293,17 @@ function_call
     : Identifier '(' expressions_list ')'
     ;
 
-lvalue
-    : identifier
+variable
+    : Identifier { assistant.push_node<VariableNode>($Identifier.text); }
 //    | '*' expression  // Not supported for now
     ;
 
-// A convinience production that pushes the identifier.
+lvalue
+    : Identifier { assistant.push_node<VariableNode>($Identifier.text, true); }
+//    | '*' expression  // Not supported for now
+    ;
+
+// A convinience production that pushes the identifier's text.
 identifier
     : Identifier { assistant.push_str($Identifier.text); }
     ;
