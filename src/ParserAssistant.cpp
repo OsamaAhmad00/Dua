@@ -75,7 +75,7 @@ void ParserAssistant::create_function_definition_expression_body()
     function->set_body(body);
 }
 
-void ParserAssistant::create_if()
+void ParserAssistant::create_if_statement()
 {
     size_t n = leave_conditional();
 
@@ -96,10 +96,33 @@ void ParserAssistant::create_if()
 
     if (else_node) branches.push_back(else_node);
 
-    push_node<IfNode>(std::move(conditions), std::move(branches));
+    push_node<IfNode>(std::move(conditions), std::move(branches), false);
 
     inc_statements();
 }
+
+void ParserAssistant::create_if_expression()
+{
+    size_t n = leave_conditional();
+
+    std::vector<ASTNode*> conditions(n);
+    std::vector<ASTNode*> branches(n);
+
+    ASTNode* else_node = nullptr;
+    if (has_else) {
+        else_node = pop_node();
+    }
+
+    for (size_t i = 0; i < n; i++) {
+        branches[n - i - 1] = pop_node();
+        conditions[n - i - 1] = pop_node();
+    }
+
+    if (else_node) branches.push_back(else_node);
+
+    push_node<IfNode>(std::move(conditions), std::move(branches), true);
+}
+
 
 void ParserAssistant::enter_scope() {
     statement_counters.push_back(0);

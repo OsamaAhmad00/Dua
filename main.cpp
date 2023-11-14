@@ -4,12 +4,10 @@ int main()
 {
     ModuleCompiler module(
         "MainModule", ""
-        "int x() = 6;"
-        ""
-        "int y(int i, int j) { return i * j; }"
-        ""
         "int main() {"
-        "   return x() + y(4, 2);"
+        "   if (1) 2; else if (3) 4; else 5;"
+        "   if (1) 2 else if (3) 4 else 5;"
+        "   when { 1 -> 2, 3 -> 4, else -> 5 };"
         "}"
     );
 }
