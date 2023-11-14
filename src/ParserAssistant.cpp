@@ -221,3 +221,11 @@ void ParserAssistant::create_cast()
     auto expr = pop_node();
     push_node<CastExpressionNode>(expr, type->llvm_type());
 }
+
+void ParserAssistant::create_address_of() {
+    push_node<VariableNode>(pop_str(), true);
+}
+
+void ParserAssistant::create_pointer_type() {
+    push_type<PointerType>(pop_type());
+}

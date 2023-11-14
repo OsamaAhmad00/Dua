@@ -329,7 +329,7 @@ type
     : primitive_type
     | Identifier            // User-defined types
     | type '[' integer ']'  // array types
-    | type '*'              // pointer types
+    | type '*'              { assistant.create_pointer_type(); }
     ;
 
 primitive_type
