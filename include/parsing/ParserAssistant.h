@@ -131,6 +131,7 @@ public:
     void create_address_of();
     void create_pointer_type();
     void create_array_type();
+    void create_string_value();
 
     template<typename T>
     void create_unary_expr() {

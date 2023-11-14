@@ -4,10 +4,12 @@ int main()
 {
     ModuleCompiler module(
         "MainModule", ""
+        "int printf(i8* message, ...);"
+        ""
         "int main() {"
-        "    if (4 < 3 == true) return 5;"
-        "    else if (5 < 3 == false) return 6;"
-        "    else return 1;"
+        "    i8* str = \"Hello, world!\";"
+        "    printf(str);"
+        "    return 0;"
         "}"
     );
 }
