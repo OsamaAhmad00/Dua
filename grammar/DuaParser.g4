@@ -308,9 +308,9 @@ identifier
 number
     : integer
     | float
-    | True
-    | False
-    | Null
+    | True  { assistant.push_node<I8ValueNode>(1); }
+    | False { assistant.push_node<I8ValueNode>(0); }
+    | Null  { assistant.push_node<I8ValueNode>(0); }  // TODO you might make it a little more sophesticated.
     ;
 
 size
