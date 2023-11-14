@@ -35,6 +35,7 @@
 #include "types/FloatTypes.h"
 #include "types/StringType.h"
 #include "types/ArrayType.h"
+#include "types/PointerType.h"
 
 
 //  This class is used to make the semantic-actions in the parser grammar file
@@ -123,6 +124,8 @@ public:
     void create_while();
     void create_assignment();
     void create_cast();
+    void create_address_of();
+    void create_pointer_type();
 
     template<typename T>
     void create_unary_expr() {
