@@ -54,6 +54,7 @@ class ParserAssistant
     //  translation unit. In other words, we're mimicking a stack
     //  machine, but with each datatype in a separate stack.
     std::vector<std::string> strings;
+    std::vector<uint64_t> numbers;
     std::vector<ASTNode *> nodes;
     std::vector<TypeBase *> types;
 
@@ -74,6 +75,12 @@ class ParserAssistant
     std::string pop_str() {
         auto result = std::move(strings.back());
         strings.pop_back();
+        return result;
+    }
+
+    uint64_t pop_num() {
+        auto result = numbers.back();
+        numbers.pop_back();
         return result;
     }
 
@@ -101,17 +108,14 @@ public:
     bool has_else = false;
 
     void push_str(std::string str) { strings.push_back(std::move(str)); }
-    size_t str_count() { return strings.size(); }
+
+    void push_num(uint64_t num) { numbers.push_back(num); }
 
     template<typename T, typename...Args>
-    void push_node(Args...args) {
-        nodes.push_back(compiler->create_node<T>(args...));
-    }
-    size_t nodes_count() { return nodes.size(); }
+    void push_node(Args...args) { nodes.push_back(compiler->create_node<T>(args...)); }
 
     template<typename T, typename...Args>
     void push_type(Args...args) { types.push_back(compiler->create_type<T>(args...)); }
-    size_t types_count() { return types.size(); }
 
     void create_variable_declaration();
     void create_variable_definition();
@@ -126,6 +130,7 @@ public:
     void create_cast();
     void create_address_of();
     void create_pointer_type();
+    void create_array_type();
 
     template<typename T>
     void create_unary_expr() {

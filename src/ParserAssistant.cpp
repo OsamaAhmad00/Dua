@@ -2,7 +2,7 @@
 
 TranslationUnitNode* ParserAssistant::construct_result()
 {
-    size_t n = nodes_count();
+    size_t n = nodes.size();
     std::vector<ASTNode*> elements(n);
     for (int i = 0; i < n; i++)
         elements[n - i - 1] = pop_node();
@@ -228,4 +228,10 @@ void ParserAssistant::create_address_of() {
 
 void ParserAssistant::create_pointer_type() {
     push_type<PointerType>(pop_type());
+}
+
+void ParserAssistant::create_array_type() {
+    auto type = pop_type();
+    auto size = pop_num();
+    push_type<ArrayType>(type, size);
 }

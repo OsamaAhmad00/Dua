@@ -4,9 +4,9 @@ int main()
 {
     ModuleCompiler module(
         "MainModule", ""
-        "int* main() {"
-        "    int i = 3;"
-        "    return &i;"
+        "int main() {"
+        "    int[5][3][6] i;"
+        "    return 3;"
         "}"
     );
 }
