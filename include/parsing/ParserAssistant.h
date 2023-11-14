@@ -116,7 +116,8 @@ public:
     void create_variable_definition();
     void create_function_declaration();
     void create_block();
-    void create_function_definition();
+    void create_function_definition_block_body();
+    void create_function_definition_expression_body();
     void create_expression_statement();
     void create_return();
     void create_while();

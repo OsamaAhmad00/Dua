@@ -59,9 +59,17 @@ void ParserAssistant::create_block()
     push_node<BlockNode>(statements);
 }
 
-void ParserAssistant::create_function_definition()
+void ParserAssistant::create_function_definition_block_body()
 {
     ASTNode* body = pop_node();
+    // The function is not popped, so it's still in the stack.
+    auto function = (FunctionDefinitionNode*)nodes.back();
+    function->set_body(body);
+}
+
+void ParserAssistant::create_function_definition_expression_body()
+{
+    ASTNode* body = compiler->create_node<ReturnNode>(pop_node());
     // The function is not popped, so it's still in the stack.
     auto function = (FunctionDefinitionNode*)nodes.back();
     function->set_body(body);

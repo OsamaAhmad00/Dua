@@ -77,14 +77,8 @@ function_declaration
     ;
 
 function_definition
-    : function_decl_no_simicolon block_statement { assistant.create_function_definition(); }
-    | function_decl_no_simicolon '=' expression ';'
-        {
-            assistant.enter_scope();
-            assistant.inc_statements();
-            assistant.create_function_definition();
-            assistant.leave_scope();
-        }
+    : function_decl_no_simicolon block_statement { assistant.create_function_definition_block_body(); }
+    | function_decl_no_simicolon '=' expression ';' { assistant.create_function_definition_expression_body(); }
     ;
 
 param_list
