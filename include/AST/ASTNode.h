@@ -24,12 +24,12 @@ protected:
     NoneValue none_value();
 
     // Debugging info
-    size_t line;
-    size_t column;
+    // size_t line;
+    // size_t column;
 
 protected:
 
-    ModuleCompiler* compiler;
+    ModuleCompiler* compiler = nullptr;
 
     // Convenience methods to access the internal state,
     // and also to ensure that they don't get set by accident.
