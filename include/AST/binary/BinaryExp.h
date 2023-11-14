@@ -10,7 +10,7 @@ class NAME : public ASTNode                                        \
                                                                    \
 public:                                                            \
                                                                    \
-    NAME(ModuleCompiler* comiler, ASTNode* lhs, ASTNode* rhs)      \
+    NAME(ModuleCompiler* compiler, ASTNode* lhs, ASTNode* rhs)     \
         : lhs(lhs), rhs(rhs) { this->compiler = compiler; }        \
                                                                    \
     llvm::Value* eval() override {                                 \
