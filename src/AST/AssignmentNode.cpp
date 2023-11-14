@@ -3,7 +3,7 @@
 llvm::Value* AssignmentExpressionNode::eval()
 {
     llvm::Value* ptr = lhs->eval();
-    llvm::Type* type = ptr->getType();
+    llvm::Type* type = lhs->type();
     llvm::Value* result = rhs->eval();
 
     if (result->getType() != type) {
