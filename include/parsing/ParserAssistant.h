@@ -124,6 +124,11 @@ public:
     void create_assignment();
 
     template<typename T>
+    void create_unary_expr() {
+        push_node<T>(pop_node());
+    }
+
+    template<typename T>
     void create_binary_expr() {
         auto rhs = pop_node();
         auto lhs = pop_node();

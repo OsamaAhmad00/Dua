@@ -13,7 +13,7 @@ llvm::Value* NotExpressionNode::eval()
     llvm::Value* value = expression->eval();
     if (value->getType()->isFloatTy())
         value = builder().CreateFPToSI(value, builder().getInt8Ty(), "int_value");
-    return builder().CreateNeg(value, "neg_value");
+    return builder().CreateNot(value, "not_value");
 }
 
 llvm::Value* BitwiseComplementExpressionNode::eval()

@@ -134,12 +134,12 @@ expression
     | '(' expression ')'
     | expression '++'
     | expression '--'
+    | '+'  expression  // do nothing
     | '++' expression
     | '--' expression
-    | '-'  expression
-    | '+'  expression  // do nothing
-    | '!'  expression
-    | '~'  expression
+    | '-'  expression { assistant.create_unary_expr<NegativeExpressionNode>();          }
+    | '!'  expression { assistant.create_unary_expr<NotExpressionNode>();               }
+    | '~'  expression { assistant.create_unary_expr<BitwiseComplementExpressionNode>(); }
     | '&' lvalue
     | expression '*' expression  { assistant.create_binary_expr<MultiplicationNode>(); }
     | expression '/' expression  { assistant.create_binary_expr<DivisionNode>();       }
