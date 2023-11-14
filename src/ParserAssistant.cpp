@@ -9,7 +9,19 @@ TranslationUnitNode* ParserAssistant::construct_result()
     return compiler->create_node<TranslationUnitNode>(std::move(elements));
 }
 
-void ParserAssistant::create_definition()
+void ParserAssistant::create_variable_declaration()
+{
+    auto name = pop_str();
+    auto type = pop_type();
+    if (is_in_global_scope()) {
+        throw std::runtime_error("Global variables must be initialized");
+    } else {
+        push_node<LocalVariableDefinitionNode>(std::move(name), type, nullptr);
+    }
+    inc_statements();
+}
+
+void ParserAssistant::create_variable_definition()
 {
     auto value = pop_node();
     auto name = pop_str();

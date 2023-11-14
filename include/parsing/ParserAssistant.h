@@ -108,7 +108,8 @@ public:
     void push_type(Args...args) { types.push_back(compiler->create_type<T>(args...)); }
     size_t types_count() { return types.size(); }
 
-    void create_definition();
+    void create_variable_declaration();
+    void create_variable_definition();
     void create_function_declaration();
     void create_block_statement();
     void create_function_definition();
