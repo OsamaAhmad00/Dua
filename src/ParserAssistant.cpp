@@ -158,3 +158,13 @@ void ParserAssistant::create_while()
     ASTNode* condition = pop_node();
     push_node<WhileNode>(condition, body);
 }
+
+void ParserAssistant::create_assignment()
+{
+    // We don't increment the statements counter here since this
+    //  is an expression, and the expression statement would increase
+    //  it as appropriate
+    ASTNode* rhs = pop_node();
+    std::string lhs = pop_str();
+    push_node<AssignmentExpressionNode>(lhs, rhs);
+}

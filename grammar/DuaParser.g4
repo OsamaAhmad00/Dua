@@ -162,7 +162,7 @@ expression
     | expression '&&' expression
     | expression '||' expression
     | expression '?' expression ':' expression  // ternary conditional
-    | lvalue '='   expression
+    | lvalue '='   expression { assistant.create_assignment(); }
     | lvalue '+='  expression
     | lvalue '-='  expression
     | lvalue '*='  expression
@@ -251,17 +251,17 @@ comma_separated_multi_variable_decl_or_def_or_none
 for
     : 'for'
       '(' comma_separated_multi_variable_decl_or_def_or_none
-      ';' loop_expression_or_none
+      ';' expression_or_none_loop
       ';' expression_or_none
       ')' statement
     ;
 
 while
-    : 'while' '(' loop_expression_or_none ')' statement { assistant.create_while(); }
+    : 'while' '(' expression_or_none_loop ')' statement { assistant.create_while(); }
     ;
 
 do_while
-    : 'do' statement 'while' '(' loop_expression_or_none ')' ';'
+    : 'do' statement 'while' '(' expression_or_none_loop ')' ';'
     ;
 
 expressions_list
@@ -274,7 +274,8 @@ comma_separated_expressions
     | comma_separated_expressions ',' expression
     ;
 
-loop_expression_or_none
+// If none, push true
+expression_or_none_loop
     : expression
     | /* empty */ { assistant.push_node<I8ValueNode>(1); }
     ;
@@ -293,8 +294,8 @@ function_call
     ;
 
 lvalue
-    : Identifier
-    | '*' expression
+    : identifier
+//    | '*' expression  // Not supported for now
     ;
 
 // A convinience production that pushes the identifier.

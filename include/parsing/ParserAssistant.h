@@ -116,6 +116,7 @@ public:
     void create_expression_statement();
     void create_return();
     void create_while();
+    void create_assignment();
 
     void enter_conditional();
     size_t leave_conditional();
