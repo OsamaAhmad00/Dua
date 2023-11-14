@@ -122,6 +122,7 @@ public:
     void create_return();
     void create_while();
     void create_assignment();
+    void create_cast();
 
     template<typename T>
     void create_unary_expr() {
