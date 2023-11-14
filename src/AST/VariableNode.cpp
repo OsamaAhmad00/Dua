@@ -10,3 +10,7 @@ llvm::Value* VariableNode::eval()
 
     return builder().CreateLoad(variable.type, variable.ptr);
 }
+
+llvm::Type *VariableNode::type() {
+    return symbol_table().get(name).type;
+}
