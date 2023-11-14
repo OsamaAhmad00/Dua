@@ -148,12 +148,12 @@ expression
     | expression '-' expression  { assistant.create_binary_expr<SubtractionNode>();    }
     | expression '<<' expression
     | expression '>>' expression
-    | expression '<'  expression
-    | expression '>'  expression
-    | expression '<=' expression
-    | expression '>=' expression
-    | expression '==' expression
-    | expression '!=' expression
+    | expression '<'  expression { assistant.create_binary_expr<LTNode>();  }
+    | expression '>'  expression { assistant.create_binary_expr<GTNode>();  }
+    | expression '<=' expression { assistant.create_binary_expr<LTENode>(); }
+    | expression '>=' expression { assistant.create_binary_expr<GTENode>(); }
+    | expression '==' expression { assistant.create_binary_expr<EQNode>();  }
+    | expression '!=' expression { assistant.create_binary_expr<NENode>();  }
     | expression '&'  expression
     | expression '^'  expression
     | expression '|'  expression

@@ -5,9 +5,16 @@ int main()
     ModuleCompiler module(
         "MainModule", ""
         "int main() {"
-        "   if (1) 2; else if (3) 4; else 5;"
-        "   if (1) 2 else if (3) 4 else 5;"
-        "   when { 1 -> 2, 3 -> 4, else -> 5 };"
+        "    int i = 4;"
+        "    int j = 1;"
+        "    if (i <= 4) {"
+        "        j = 5;"
+        "        if (j > 10) {"
+        "            i = 30;"
+        "        } else"
+        "            i = 3;"
+        "    }"
+        "    return i * j;"
         "}"
     );
 }
