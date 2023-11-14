@@ -60,15 +60,15 @@ function_decl_or_def
     ;
 
 variable_decl_no_simicolon
-    : type Identifier { assistant.push_str($Identifier.text); }
+    : type identifier { assistant.create_variable_declaration(); }
     ;
 
 variable_def_no_simicolon
-    : variable_decl_no_simicolon '=' expression { assistant.create_definition(); }
+    : type identifier '=' expression { assistant.create_variable_definition(); }
     ;
 
 function_decl_no_simicolon
-    : type Identifier { assistant.push_str($Identifier.text); }
+    : type identifier
         '(' param_list ')' { assistant.create_function_declaration(); }
     ;
 
@@ -295,6 +295,11 @@ function_call
 lvalue
     : Identifier
     | '*' expression
+    ;
+
+// A convinience production that pushes the identifier.
+identifier
+    : Identifier { assistant.push_str($Identifier.text); }
     ;
 
 number

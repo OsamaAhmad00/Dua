@@ -5,8 +5,8 @@ int main()
     ModuleCompiler module(
         "MainModule", ""
         "int main() {"
-        "    while () { 3; }"
-        "    return 0;"
+        "   int i = 0;"
+        "   int j;"
         "}"
     );
 }
