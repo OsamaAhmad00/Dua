@@ -5,10 +5,8 @@ int main()
     ModuleCompiler module(
         "MainModule", ""
         "int main() {"
-        "   int i = 5;"
-        "   int j;"
-        "   j = i;"
-        "   return j;"
+        "   int i = { int j = 3; j };"
+        "   return i;"
         "}"
     );
 }

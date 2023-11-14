@@ -48,24 +48,17 @@ void ParserAssistant::create_function_declaration()
     push_node<FunctionDefinitionNode>(signature, nullptr);
 }
 
-void ParserAssistant::create_block_statement()
+void ParserAssistant::create_block()
 {
-    size_t n = statement_counters.back();
+    size_t n = leave_scope();
     std::vector<ASTNode*> statements(n);
     for (int i = 0; i < n; i++)
         statements[n - i - 1] = pop_node();
     push_node<BlockNode>(statements);
-
-    leave_scope();
-    inc_statements();
 }
 
 void ParserAssistant::create_function_definition()
 {
-    // We're merging the block and the
-    //  declaration into a single node.
-    dec_statements();
-
     ASTNode* body = pop_node();
     // The function is not popped, so it's still in the stack.
     auto function = (FunctionDefinitionNode*)nodes.back();
