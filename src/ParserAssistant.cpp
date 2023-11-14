@@ -214,3 +214,10 @@ void ParserAssistant::create_function_call()
         args[i] = pop_node();
     push_node<FunctionCallNode>(std::move(name), std::move(args));
 }
+
+void ParserAssistant::create_cast()
+{
+    auto type = pop_type();
+    auto expr = pop_node();
+    push_node<CastExpressionNode>(expr, type->llvm_type());
+}

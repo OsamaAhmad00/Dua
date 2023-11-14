@@ -131,6 +131,7 @@ expression
     | function_call
     | if_expression
     | when_expression
+    | cast_expression
     | '(' expression ')'
     | expression '++'
     | expression '--'
@@ -171,6 +172,10 @@ expression
     | lvalue '&='  expression
     | lvalue '^='  expression
     | lvalue '|='  expression
+    ;
+
+cast_expression
+    : '(' type ')' expression { assistant.create_cast(); }
     ;
 
 return_statement
