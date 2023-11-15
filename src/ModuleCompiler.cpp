@@ -98,5 +98,34 @@ llvm::Value* ModuleCompiler::cast_value(llvm::Value* value, llvm::Type* target_t
 
 TypeBase* ModuleCompiler::get_winning_type(TypeBase* lhs, TypeBase* rhs)
 {
+    auto l = lhs->llvm_type();
+    auto r = rhs->llvm_type();
 
+    if (l == r) {
+        return lhs;
+    }
+
+    llvm::DataLayout dl(&module);
+    unsigned int l_width = dl.getTypeAllocSize(l);
+    unsigned int r_width = dl.getTypeAllocSize(r);
+
+    if (l->isIntegerTy() && r->isIntegerTy())
+        return (l_width >= r_width) ? lhs : rhs;
+
+    if (l->isPointerTy() && r->isIntegerTy())
+        return lhs;
+
+    if (l->isIntegerTy() && r->isPointerTy())
+        return rhs;
+
+    if (l->isFloatingPointTy() && r->isFloatingPointTy())
+        return (l_width >= r_width) ? lhs : rhs;
+
+    if (l->isIntegerTy() && r->isFloatingPointTy())
+        return rhs;
+
+    if (l->isFloatingPointTy() && r->isIntegerTy())
+        return rhs;
+
+    throw std::runtime_error("Type mismatch");
 }
