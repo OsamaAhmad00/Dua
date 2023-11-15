@@ -80,13 +80,14 @@ void ParserAssistant::create_function_definition_expression_body()
 
 void ParserAssistant::create_if_statement()
 {
+    bool create_else = has_else.back();
     size_t n = leave_conditional();
 
     std::vector<ASTNode*> conditions(n);
     std::vector<ASTNode*> branches(n);
 
     ASTNode* else_node = nullptr;
-    if (has_else) {
+    if (create_else) {
         else_node = pop_node();
         dec_statements();
     }
@@ -106,13 +107,14 @@ void ParserAssistant::create_if_statement()
 
 void ParserAssistant::create_if_expression()
 {
+    bool create_else = has_else.back();
     size_t n = leave_conditional();
 
     std::vector<ASTNode*> conditions(n);
     std::vector<ASTNode*> branches(n);
 
     ASTNode* else_node = nullptr;
-    if (has_else) {
+    if (create_else) {
         else_node = pop_node();
     }
 
@@ -139,11 +141,13 @@ size_t ParserAssistant::leave_scope() {
 
 void ParserAssistant::enter_conditional() {
     branch_counters.push_back(0);
+    has_else.push_back(false);
 }
 
 size_t ParserAssistant::leave_conditional() {
     size_t result = branch_counters.back();
     branch_counters.pop_back();
+    has_else.pop_back();
     return result;
 }
 
@@ -157,6 +161,10 @@ void ParserAssistant::dec_statements() {
 
 void ParserAssistant::inc_branches() {
     branch_counters.back() += 1;
+}
+
+void ParserAssistant::set_has_else() {
+    has_else.back() = true;
 }
 
 bool ParserAssistant::is_in_global_scope() {
@@ -273,6 +281,7 @@ void ParserAssistant::create_post_dec() {
 void ParserAssistant::create_ternary_operator() {
     enter_conditional();
     inc_branches();
-    has_else = true;
+    set_has_else();
     create_if_expression();
 }
+

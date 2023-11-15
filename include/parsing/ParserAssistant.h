@@ -70,6 +70,7 @@ class ParserAssistant
     // Used to determine the number of branches in the
     //  current if/when statement/expression.
     std::vector<size_t> branch_counters;
+    std::vector<bool> has_else;
 
     // Used to determine the number of arguments
     //  in a function call expression.
@@ -115,9 +116,6 @@ public:
     //  need to use a stack of these values instead.
     bool is_var_arg = false;
     size_t param_count = 0;
-
-    // Used when constructing if statements
-    bool has_else = false;
 
     void push_str(std::string str) { strings.push_back(std::move(str)); }
 
@@ -166,6 +164,7 @@ public:
     void enter_conditional();
     size_t leave_conditional();
     void inc_branches();
+    void set_has_else();
     void create_if_statement();
     void create_if_expression();
 

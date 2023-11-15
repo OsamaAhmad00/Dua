@@ -197,14 +197,14 @@ else_if_else_statement
     ;
 
 else_statement
-    : 'else' statement { assistant.has_else = true;  }
-    | /* empty */      { assistant.has_else = false; }
+    : 'else' statement { assistant.set_has_else();  }
+    | /* empty */
     ;
 
 if_expression @init {
     assistant.enter_conditional();
     assistant.inc_branches();
-    assistant.has_else = true;
+    assistant.set_has_else();
 }
     : 'if' '(' expression ')' expression else_if_expression 'else' expression  { assistant.create_if_expression(); }
     ;
@@ -216,7 +216,7 @@ else_if_expression
 
 when_expression @init {
     assistant.enter_conditional();
-    assistant.has_else = true;
+    assistant.set_has_else();
 }
     : 'when' scope_begin when_list scope_end { assistant.leave_scope(); }
     ;
