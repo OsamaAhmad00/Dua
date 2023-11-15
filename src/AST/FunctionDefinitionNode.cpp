@@ -1,5 +1,6 @@
 #include <AST/function/FunctionDefinitionNode.h>
 #include <llvm/IR/Verifier.h>
+#include <types/VoidType.h>
 
 llvm::Function *FunctionDefinitionNode::eval()
 {
@@ -26,7 +27,7 @@ llvm::Function* FunctionDefinitionNode::define_function()
     for (llvm::Argument& arg : function->args()) {
         auto& param = signature.params[i++];
         arg.setName(param.name);
-        create_local_variable(param.name, param.type->llvm_type(), &arg);
+        create_local_variable(param.name, param.type, &arg);
     }
 
     body->eval();

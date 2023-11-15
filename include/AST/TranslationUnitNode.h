@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AST/ASTNode.h>
+#include <types/VoidType.h>
 
 class TranslationUnitNode : public ASTNode
 {

@@ -14,7 +14,10 @@ public:
 
     FunctionDefinitionNode(ModuleCompiler* compiler, FunctionSignature signature, ASTNode* body)
         : signature(std::move(signature)), body(body) { this->compiler = compiler; }
+
     void set_body(ASTNode* body) { assert(this->body == nullptr); this->body = body; }
+
     llvm::Function* eval() override;
+
     ~FunctionDefinitionNode() override;
 };

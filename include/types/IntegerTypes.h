@@ -15,6 +15,10 @@ struct PREFIX##WIDTH##Type : public IntegerType     \
     llvm::Type* llvm_type() override {              \
         return builder->getInt##WIDTH##Ty();        \
     }                                               \
+                                                    \
+    PREFIX##WIDTH##Type* clone() override {         \
+        return new PREFIX##WIDTH##Type(builder);    \
+    }                                               \
 };
 
 struct IntegerType : public TypeBase {};

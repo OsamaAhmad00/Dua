@@ -27,6 +27,10 @@ public:
     }
 
     llvm::Value* eval() override;
+
     bool has_else() { return branches.size() == conditions.size() + 1; }
+
+    TypeBase* compute_type() override;
+
     ~IfNode() override;
 };

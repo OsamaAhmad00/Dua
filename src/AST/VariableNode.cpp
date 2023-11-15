@@ -1,4 +1,4 @@
-#include "AST/terminals/lvalue/VariableNode.h"
+#include "AST/lvalue/VariableNode.h"
 
 llvm::Value* VariableNode::eval()
 {
@@ -8,9 +8,9 @@ llvm::Value* VariableNode::eval()
     if (get_address)
         return variable.ptr;
 
-    return builder().CreateLoad(variable.type, variable.ptr);
+    return builder().CreateLoad(variable.type->llvm_type(), variable.ptr);
 }
 
-llvm::Type *VariableNode::type() {
-    return symbol_table().get(name).type;
+TypeBase* VariableNode::compute_type() {
+    return type = symbol_table().get(name).type;
 }

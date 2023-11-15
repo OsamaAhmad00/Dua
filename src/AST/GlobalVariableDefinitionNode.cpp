@@ -12,7 +12,7 @@ llvm::GlobalVariable* GlobalVariableDefinitionNode::eval()
     // Should any variable type be aligned this way?
     variable->setAlignment(llvm::MaybeAlign(4));
     variable->setExternallyInitialized(false);
-    symbol_table().insert_global(name, { variable, initializer->get_type()->llvm_type() });
+    symbol_table().insert_global(name, { variable, initializer->get_cached_type() });
     variable->setInitializer((llvm::Constant*)value);
     return variable;
 }

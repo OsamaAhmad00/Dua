@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ModuleCompiler.h>
+#include <types/TypeBase.h>
 
 #define STATE_MEMBER_GETTER(NAME) auto& NAME() { return compiler->NAME; }
 
@@ -14,21 +15,20 @@ public:
 
     friend class ModuleCompiler;
 
-    virtual ~ASTNode() = default;
+    virtual ~ASTNode() { delete type; };
     virtual llvm::Value* eval() = 0;
+
+    // The typing system
+    TypeBase* get_cached_type();
+    virtual TypeBase* compute_type();
 
 protected:
 
     llvm::BasicBlock* create_basic_block(const std::string& name, llvm::Function* function);
-    llvm::AllocaInst* create_local_variable(const std::string& name, llvm::Type* type, llvm::Value* init);
+    llvm::AllocaInst* create_local_variable(const std::string& name, TypeBase* type, llvm::Value* init);
     NoneValue none_value();
 
-    // Debugging info
-    // size_t line;
-    // size_t column;
-
-protected:
-
+    TypeBase* type = nullptr;
     ModuleCompiler* compiler = nullptr;
 
     // Convenience methods to access the internal state,

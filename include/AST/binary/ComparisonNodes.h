@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AST/ASTNode.h>
+#include <AST/binary/BinaryExp.h>
 
 SAME_TYPE_BINARY_EXP_NODE(LTNode, CreateICmpSLT, "temp_lt")
 

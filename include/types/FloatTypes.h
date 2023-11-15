@@ -15,6 +15,10 @@ struct F##WIDTH##Type : public FloatType              \
     llvm::Type* llvm_type() override {                \
         return builder->get##TYPE##Ty();              \
     }                                                 \
+                                                      \
+    F##WIDTH##Type* clone() override {                \
+        return new F##WIDTH##Type(builder);           \
+    }                                                 \
 };
 
 struct FloatType : public TypeBase {};

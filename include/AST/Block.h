@@ -12,5 +12,6 @@ public:
         : elements(std::move(elements)) { this->compiler = compiler; };
     BlockNode& append(ASTNode* element);
     llvm::Value* eval() override;
+    TypeBase* compute_type() override;
     ~BlockNode() override;
 };

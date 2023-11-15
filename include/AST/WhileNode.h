@@ -16,5 +16,6 @@ public:
     WhileNode(ModuleCompiler* compiler, ASTNode* cond_exp, ASTNode* body_exp)
         : cond_exp(cond_exp), body_exp(body_exp) { this->compiler = compiler; }
     NoneValue eval() override;
+    TypeBase* compute_type() override;
     ~WhileNode() override;
 };

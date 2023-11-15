@@ -1,4 +1,5 @@
 #include <AST/WhileNode.h>
+#include <types/VoidType.h>
 
 int WhileNode::_counter = 0;
 
@@ -29,6 +30,12 @@ NoneValue WhileNode::eval()
     builder().SetInsertPoint(end_block);
 
     return none_value();
+}
+
+TypeBase *WhileNode::compute_type() {
+    if (type == nullptr)
+        return compiler->create_type<VoidType>();
+    return type;
 }
 
 WhileNode::~WhileNode()

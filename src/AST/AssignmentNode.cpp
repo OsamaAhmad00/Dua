@@ -3,7 +3,7 @@
 llvm::Value* AssignmentExpressionNode::eval()
 {
     llvm::Value* ptr = lhs->eval();
-    llvm::Type* type = lhs->type();
+    llvm::Type* type = lhs->get_cached_type()->llvm_type();
     llvm::Value* result = rhs->eval();
 
     if (result->getType() != type) {
@@ -38,7 +38,13 @@ llvm::Value* AssignmentExpressionNode::eval()
     return ptr;
 }
 
+TypeBase *AssignmentExpressionNode::compute_type() {
+    delete type;
+    return type = lhs->get_cached_type()->clone();
+}
+
 AssignmentExpressionNode::~AssignmentExpressionNode()
 {
+    delete lhs;
     delete rhs;
 }

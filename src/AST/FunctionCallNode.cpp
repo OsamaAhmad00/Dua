@@ -16,3 +16,8 @@ FunctionCallNode::~FunctionCallNode()
     for (ASTNode* arg : args)
         delete arg;
 }
+
+TypeBase *FunctionCallNode::compute_type() {
+    // need to be able to retrieve the function return type.
+    throw std::runtime_error("todo");
+}

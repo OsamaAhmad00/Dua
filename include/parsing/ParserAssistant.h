@@ -29,9 +29,9 @@
 #include "AST/terminals/FloatValueNodes.h"
 #include "AST/terminals/IntegerValueNodes.h"
 #include "AST/terminals/StringValueNode.h"
-#include "AST/terminals/lvalue/LValueNode.h"
-#include "AST/terminals/lvalue/VariableNode.h"
-#include "AST/terminals/lvalue/AddressNode.h"
+#include "AST/lvalue/LValueNode.h"
+#include "AST/lvalue/VariableNode.h"
+#include "AST/lvalue/AddressNode.h"
 
 #include "types/IntegerTypes.h"
 #include "types/FloatTypes.h"
