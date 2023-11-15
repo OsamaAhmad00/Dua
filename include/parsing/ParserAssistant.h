@@ -20,6 +20,7 @@
 #include "AST/binary/BinaryExp.h"
 #include "AST/binary/ComparisonNodes.h"
 #include "AST/binary/ArithmeticNodes.h"
+#include "AST/binary/BitManipulationNodes.h"
 
 #include "AST/unary/NumericalUnaryExpressionNodes.h"
 #include "AST/unary/CastExpressionNode.h"

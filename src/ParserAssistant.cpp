@@ -284,4 +284,3 @@ void ParserAssistant::create_ternary_operator() {
     set_has_else();
     create_if_expression();
 }
-

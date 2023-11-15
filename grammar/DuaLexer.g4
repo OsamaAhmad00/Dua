@@ -20,6 +20,8 @@ LeftShift: '<<';
 LeftShiftEq: '<<=';
 RightShift: '>>';
 RightShiftEq: '>>=';
+ArithmeticRightShift: '>>>';
+ArithmeticRightShiftEq: '>>>=';
 AndEq: '&=';
 CarretEq: '^=';
 OrEq: '|=';
