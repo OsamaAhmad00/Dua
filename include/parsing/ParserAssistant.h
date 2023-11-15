@@ -29,7 +29,9 @@
 #include "AST/terminals/FloatValueNodes.h"
 #include "AST/terminals/IntegerValueNodes.h"
 #include "AST/terminals/StringValueNode.h"
-#include "AST/terminals/VariableNode.h"
+#include "AST/terminals/lvalue/LValueNode.h"
+#include "AST/terminals/lvalue/VariableNode.h"
+#include "AST/terminals/lvalue/AddressNode.h"
 
 #include "types/IntegerTypes.h"
 #include "types/FloatTypes.h"
@@ -131,6 +133,8 @@ public:
     void create_pointer_type();
     void create_array_type();
     void create_string_value();
+    void create_address_expr();
+    void create_dereference();
 
     template<typename T>
     void create_unary_expr() {
