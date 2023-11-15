@@ -8,12 +8,7 @@ int main()
         ""
         "int main() {"
         "    int x = 3;"
-        "    x++;"
-        "    printf(\"%d\n\", x);"
-        "    x--; --x;"
-        "    printf(\"%d\n\", x++);"
-        "    printf(\"%d\n\", x);"
-        "    printf(\"%d\n\", --x);"
+        "    printf(\"%d\n\", ((x < 3) ? 5 : 10));"
         "    return 0;"
         "}"
     );
