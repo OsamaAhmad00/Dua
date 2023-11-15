@@ -141,7 +141,7 @@ expression
     | '-'  expression { assistant.create_unary_expr<NegativeExpressionNode>();          }
     | '!'  expression { assistant.create_unary_expr<NotExpressionNode>();               }
     | '~'  expression { assistant.create_unary_expr<BitwiseComplementExpressionNode>(); }
-    | '&' lvalue
+    | '&' lvalue  // lvalues load the address already, so there is nothing to be done here
     | expression '*' expression  { assistant.create_binary_expr<MultiplicationNode>(); }
     | expression '/' expression  { assistant.create_binary_expr<DivisionNode>();       }
     | expression '%' expression  // { assistant.create_binary_expr<ModNode>();         }
