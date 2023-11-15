@@ -5,14 +5,14 @@
 #include <AST/NoDeleteWrapperNode.h>
 
 template <typename OpNode>
-class OpAssignExpressionNode : public ASTNode
+class CompoundAssignmentExpressionNode : public ASTNode
 {
     LValueNode* lhs;
     ASTNode* rhs;
 
 public:
 
-    OpAssignExpressionNode(ModuleCompiler* compiler, LValueNode* lhs, ASTNode* rhs)
+    CompoundAssignmentExpressionNode(ModuleCompiler* compiler, LValueNode* lhs, ASTNode* rhs)
             : lhs(lhs), rhs(rhs) { this->compiler = compiler; };
 
     llvm::Value* eval() override
@@ -33,5 +33,5 @@ public:
 
     TypeBase* compute_type() override { delete type; return type = lhs->get_cached_type()->clone(); };
 
-    ~OpAssignExpressionNode() override { delete lhs; delete rhs; };
+    ~CompoundAssignmentExpressionNode() override { delete lhs; delete rhs; };
 };
