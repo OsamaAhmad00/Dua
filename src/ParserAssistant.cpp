@@ -257,14 +257,14 @@ void ParserAssistant::create_dereference() {
 }
 
 void ParserAssistant::create_pre_inc() {
-    push_node<OpAssignExpressionNode<AdditionNode>>(
+    push_node<CompoundAssignmentExpressionNode<AdditionNode>>(
         pop_node_as<LValueNode>(),
         compiler->create_node<I32ValueNode>(1)
     );
 }
 
 void ParserAssistant::create_pre_dec() {
-    push_node<OpAssignExpressionNode<SubtractionNode>>(
+    push_node<CompoundAssignmentExpressionNode<SubtractionNode>>(
         pop_node_as<LValueNode>(),
         compiler->create_node<I32ValueNode>(1)
     );

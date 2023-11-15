@@ -7,7 +7,7 @@
 #include "AST/GlobalVariableDefinitionNode.h"
 #include "AST/LocalVariableDefinitionNode.h"
 #include "AST/AssignmentExpressionNode.h"
-#include "AST/OpAssignExpressionNode.h"
+#include "AST/CompoundAssignmentExpressionNode.h"
 #include "AST/ExpressionStatementNode.h"
 #include "AST/BlockNode.h"
 #include "AST/IfNode.h"
@@ -160,6 +160,13 @@ public:
         auto rhs = pop_node();
         auto lhs = pop_node();
         push_node<T>(lhs, rhs);
+    }
+
+    template <typename T>
+    void create_compound_assignment() {
+        auto rhs = pop_node();
+        auto lhs = pop_node_as<LValueNode>();
+        push_node<CompoundAssignmentExpressionNode<T>>(lhs, rhs);
     }
 
     void enter_conditional();

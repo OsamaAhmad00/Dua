@@ -162,18 +162,18 @@ expression
     | expression '&&' expression
     | expression '||' expression
     | expression '?' expression ':' expression { assistant.create_ternary_operator(); }
-    | lvalue '='   expression { assistant.create_assignment(); }
-    | lvalue '+='  expression
-    | lvalue '-='  expression
-    | lvalue '*='  expression
-    | lvalue '/='  expression
-    | lvalue '%='  expression
-    | lvalue '<<=' expression
-    | lvalue '>>=' expression
-    | lvalue '>>>=' expression
-    | lvalue '&='  expression
-    | lvalue '^='  expression
-    | lvalue '|='  expression
+    | lvalue '='   expression  { assistant.create_assignment(); }
+    | lvalue '+='  expression  { assistant.create_compound_assignment<AdditionNode>(); }
+    | lvalue '-='  expression  { assistant.create_compound_assignment<SubtractionNode>(); }
+    | lvalue '*='  expression  { assistant.create_compound_assignment<MultiplicationNode>(); }
+    | lvalue '/='  expression  { assistant.create_compound_assignment<DivisionNode>(); }
+    | lvalue '%='  expression  { assistant.create_compound_assignment<ModNode>(); }
+    | lvalue '<<=' expression  { assistant.create_compound_assignment<LeftShiftNode>(); }
+    | lvalue '>>=' expression  { assistant.create_compound_assignment<RightShiftNode>(); }
+    | lvalue '>>>=' expression { assistant.create_compound_assignment<ArithmeticRightShiftNode>(); }
+    | lvalue '&='  expression  { assistant.create_compound_assignment<BitwiseAndNode>(); }
+    | lvalue '^='  expression  { assistant.create_compound_assignment<XorNode>(); }
+    | lvalue '|='  expression  { assistant.create_compound_assignment<BitwiseOrNode>(); }
     | '*' expression { assistant.create_dereference(); }
     ;
 
