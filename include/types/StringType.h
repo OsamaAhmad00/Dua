@@ -13,4 +13,6 @@ struct StringType : TypeBase
     llvm::Type* llvm_type() override {
         return builder->getInt8PtrTy();
     }
+
+    StringType* clone() override { return new StringType(builder); }
 };

@@ -17,6 +17,13 @@ public:                                                            \
         return builder().OP(lhs->eval(), rhs->eval(), LABEL);      \
     }                                                              \
                                                                    \
+    TypeBase* compute_type() override {                            \
+        delete type;                                               \
+        auto ltype = lhs->get_cached_type();                       \
+        auto rtype = rhs->get_cached_type();                       \
+        return type = compiler->get_winning_type(ltype, rtype);    \
+    }                                                              \
+                                                                   \
     ~NAME() override {                                             \
         delete lhs;                                                \
         delete rhs;                                                \
@@ -41,6 +48,13 @@ public:                                                                         
         if (rhs_value == nullptr)                                                   \
             throw std::runtime_error("Type mismatch between the two operands");     \
         return builder().OP(lhs_value, rhs_value, LABEL);                           \
+    }                                                                               \
+                                                                                    \
+    TypeBase* compute_type() override {                                             \
+        delete type;                                                                \
+        auto ltype = lhs->get_cached_type();                                        \
+        auto rtype = rhs->get_cached_type();                                        \
+        return type = compiler->get_winning_type(ltype, rtype);                     \
     }                                                                               \
                                                                                     \
     ~NAME() override {                                                              \

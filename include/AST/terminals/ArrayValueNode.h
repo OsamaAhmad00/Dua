@@ -7,11 +7,22 @@ class ArrayValueNode : public ValueNode
 {
     // An initialized array
     std::vector<llvm::Constant*> values;
-    ArrayType* type;
+    TypeBase* element_type;
+    size_t size;
 
-    ArrayValueNode(ModuleCompiler* compiler, std::vector<llvm::Constant*> values)
-        : values(std::move(values)) { this->compiler = compiler; }
+public:
 
-    llvm::Constant* eval() override { return llvm::ConstantArray::get(type->llvm_type(), values); }
-    ArrayType* get_type() override { return type; }
+    ArrayValueNode(ModuleCompiler* compiler, size_t size, TypeBase* element_type, std::vector<llvm::Constant*> values)
+        : values(std::move(values)), size(size), element_type(element_type) { this->compiler = compiler; }
+
+    llvm::Constant* eval() override {
+        return llvm::ConstantArray::get((llvm::ArrayType*)(get_cached_type()->llvm_type()), values);
+    }
+
+    TypeBase* compute_type() override {
+        if (type == nullptr) return type = compiler->create_type<ArrayType>(element_type, size);
+        return type;
+    }
+
+    ~ArrayValueNode() override { delete element_type; }
 };

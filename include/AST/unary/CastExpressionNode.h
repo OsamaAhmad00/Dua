@@ -7,12 +7,13 @@
 class CastExpressionNode : public ASTNode
 {
     ASTNode* expression;
-    llvm::Type* target_type;
+    TypeBase* target_type;
 
 public:
 
-    CastExpressionNode(ModuleCompiler* compiler, ASTNode* expression, llvm::Type* target_type)
+    CastExpressionNode(ModuleCompiler* compiler, ASTNode* expression, TypeBase* target_type)
         : expression(expression), target_type(target_type) { this->compiler = compiler; }
     llvm::Value * eval() override;
+    TypeBase* compute_type() override;
     ~CastExpressionNode() override;
 };

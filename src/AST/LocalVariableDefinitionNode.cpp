@@ -3,7 +3,7 @@
 llvm::AllocaInst *LocalVariableDefinitionNode::eval()
 {
     llvm::Value* init_value = initializer ? initializer->eval() : nullptr;
-    return create_local_variable(name, type->llvm_type(), init_value);
+    return create_local_variable(name, type, init_value);
 }
 
 LocalVariableDefinitionNode::~LocalVariableDefinitionNode()

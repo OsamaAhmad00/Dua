@@ -15,6 +15,7 @@ struct TypeBase
     llvm::IRBuilder<>* builder;
     virtual llvm::Constant* default_value() = 0;
     virtual llvm::Type* llvm_type() = 0;
+    virtual TypeBase* clone() = 0;
     virtual ~TypeBase() = default;
 
     llvm::Type* operator->() { return llvm_type(); }

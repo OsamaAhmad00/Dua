@@ -95,3 +95,8 @@ llvm::Value* ModuleCompiler::cast_value(llvm::Value* value, llvm::Type* target_t
 
     return nullptr;
 }
+
+TypeBase* ModuleCompiler::get_winning_type(TypeBase* lhs, TypeBase* rhs)
+{
+
+}

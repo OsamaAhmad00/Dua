@@ -1,4 +1,5 @@
 #include <AST/function/ReturnNode.h>
+#include <types/VoidType.h>
 
 llvm::ReturnInst* ReturnNode::eval()
 {
@@ -8,3 +9,4 @@ llvm::ReturnInst* ReturnNode::eval()
 }
 
 ReturnNode::~ReturnNode() { delete expression; }
+

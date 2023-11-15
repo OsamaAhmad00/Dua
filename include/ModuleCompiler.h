@@ -5,6 +5,7 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/LLVMContext.h>
 #include <SymbolTable.h>
+#include <types/TypeBase.h>
 
 class ModuleCompiler
 {
@@ -13,6 +14,9 @@ public:
     friend class ASTNode;
 
     ModuleCompiler(const std::string& module_name, const std::string& code);
+
+    // Returns the result type of an operation involving the two types.
+    TypeBase* get_winning_type(TypeBase* lhs, TypeBase* rhs);
 
     llvm::Value* cast_value(llvm::Value* value, llvm::Type* target_type);
 
@@ -34,7 +38,7 @@ public:
 
     struct Variable {
         llvm::Value* ptr;
-        llvm::Type* type;
+        TypeBase* type;
     };
 
 private:

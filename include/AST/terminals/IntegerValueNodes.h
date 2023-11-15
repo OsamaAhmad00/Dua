@@ -7,13 +7,11 @@
 class I##WIDTH##ValueNode : public ValueNode                             \
 {                                                                        \
     int##WIDTH##_t value;                                                \
-    I##WIDTH##Type type;                                                 \
                                                                          \
 public:                                                                  \
                                                                          \
     I##WIDTH##ValueNode(ModuleCompiler* compiler, int##WIDTH##_t value)  \
-        : value(value), type(compiler->get_builder())                    \
-        { this->compiler = compiler; }                                   \
+        : value(value) { this->compiler = compiler; }                    \
                                                                          \
     I##WIDTH##ValueNode(ModuleCompiler* compiler)                        \
         : I##WIDTH##ValueNode(compiler, 0) {}                            \
@@ -22,7 +20,11 @@ public:                                                                  \
         return builder().getInt##WIDTH(value);                           \
     }                                                                    \
                                                                          \
-    I##WIDTH##Type* get_type() override { return &type; }                \
+    TypeBase* compute_type() override {                                  \
+        if (type == nullptr)                                             \
+            return type = compiler->create_type<I##WIDTH##Type>();       \
+        return type;                                                     \
+    }                                                                    \
 };
 
 DEFINE_INTEGER_VALUE_NODE(64)

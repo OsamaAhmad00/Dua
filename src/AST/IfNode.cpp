@@ -1,4 +1,5 @@
 #include <AST/IfNode.h>
+#include <types/VoidType.h>
 
 int IfNode::_counter = 0;
 
@@ -87,9 +88,10 @@ llvm::Value* IfNode::eval()
     if (!is_expression)
         return none_value();
 
-    for (size_t i = 1; i < values.size(); i++) {
-        values[i] = compiler->cast_value(values[i], values.front()->getType());
-        if (values[i] == nullptr) {
+    auto type = get_cached_type()->llvm_type();
+    for (auto& value : values) {
+        value = compiler->cast_value(value, type);
+        if (value == nullptr) {
             throw std::runtime_error("Mismatch in the types of the branches");
         }
     }
@@ -107,6 +109,12 @@ llvm::Value* IfNode::eval()
     return phi;
 }
 
+TypeBase *IfNode::compute_type() {
+    delete type;
+    if (is_expression)
+        return type = branches.front()->get_cached_type()->clone();
+    return type = compiler->create_type<VoidType>();
+}
 
 IfNode::~IfNode()
 {

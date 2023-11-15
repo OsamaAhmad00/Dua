@@ -1,4 +1,5 @@
-#include "AST/terminals/lvalue/AddressNode.h"
+#include "AST/lvalue/AddressNode.h"
+#include "types/PointerType.h"
 
 llvm::Value* AddressNode::eval()
 {
@@ -7,12 +8,20 @@ llvm::Value* AddressNode::eval()
     if (!load_value)
         return ptr;
 
-    // FIXME load different types depending on the context
-    module().print(llvm::outs(), nullptr);
-    ptr = builder().CreateIntToPtr(ptr, builder().getInt64Ty()->getPointerTo());
-    return builder().CreateLoad(builder().getInt64Ty(), ptr);
+    auto t = get_cached_type()->llvm_type();
+
+    return builder().CreateLoad(t, ptr);
 }
 
-llvm::Type* AddressNode::type() {
-    return builder().getPtrTy();
+TypeBase *AddressNode::compute_type()
+{
+    delete type;
+
+    TypeBase* t = address->get_cached_type();
+    auto ptr = dynamic_cast<PointerType*>(t);
+
+    if (ptr == nullptr)
+        throw std::runtime_error("Can't dereference a non-pointer type");
+
+    return type = (load_value ? ptr->get_element_type() : ptr)->clone();
 }
