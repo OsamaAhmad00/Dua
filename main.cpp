@@ -8,7 +8,9 @@ int main()
         ""
         "int main() {"
         "    int x = 3;"
-        "    printf(\"0x%X\n\", &x);"
+        "    int* p = &x;"
+        "    *p = 5;"
+        "    printf(\"%d\n\", x);"
         "    return 0;"
         "}"
     );

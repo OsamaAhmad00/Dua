@@ -187,7 +187,7 @@ void ParserAssistant::create_assignment()
     //  is an expression, and the expression statement would increase
     //  it as appropriate
     ASTNode* rhs = pop_node();
-    auto lhs = (VariableNode*)pop_node();
+    auto lhs = (LValueNode*)pop_node();
     push_node<AssignmentExpressionNode>(lhs, rhs);
 }
 
@@ -235,4 +235,12 @@ void ParserAssistant::create_array_type() {
 void ParserAssistant::create_string_value() {
     auto str = pop_str();
     push_node<StringValueNode>(str.substr(1, str.size() - 2));
+}
+
+void ParserAssistant::create_address_expr() {
+    push_node<AddressNode>(pop_node(), false);
+}
+
+void ParserAssistant::create_dereference() {
+    push_node<AddressNode>(pop_node(), true);
 }

@@ -172,6 +172,7 @@ expression
     | lvalue '&='  expression
     | lvalue '^='  expression
     | lvalue '|='  expression
+    | '*' expression { assistant.create_dereference(); }
     ;
 
 cast_expression
@@ -292,12 +293,12 @@ function_call
 
 variable
     : Identifier { assistant.push_node<VariableNode>($Identifier.text); }
-//    | '*' expression  // Not supported for now
     ;
 
 lvalue
-    : Identifier { assistant.push_node<VariableNode>($Identifier.text, true); }
-//    | '*' expression  // Not supported for now
+    : '(' lvalue ')'
+    | Identifier { assistant.push_node<VariableNode>($Identifier.text, true); }
+    | '*' expression { assistant.create_address_expr(); }
     ;
 
 // A convinience production that pushes the identifier's text.
