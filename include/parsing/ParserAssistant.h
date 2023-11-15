@@ -7,8 +7,9 @@
 #include "AST/GlobalVariableDefinitionNode.h"
 #include "AST/LocalVariableDefinitionNode.h"
 #include "AST/AssignmentExpressionNode.h"
+#include "AST/OpAssignExpressionNode.h"
 #include "AST/ExpressionStatementNode.h"
-#include "AST/Block.h"
+#include "AST/BlockNode.h"
 #include "AST/IfNode.h"
 #include "AST/WhileNode.h"
 
@@ -22,6 +23,7 @@
 
 #include "AST/unary/NumericalUnaryExpressionNodes.h"
 #include "AST/unary/CastExpressionNode.h"
+#include "AST/unary/PostfixAdditionExpressionNode.h"
 
 #include "AST/terminals/ValueNode.h"
 #include "AST/terminals/ArrayValueNode.h"
@@ -91,6 +93,15 @@ class ParserAssistant
         return result;
     }
 
+    template<typename T>
+    T *pop_node_as() {
+        auto result = pop_node();
+        auto casted = dynamic_cast<T*>(result);
+        if (result == nullptr)
+            throw std::runtime_error("Unexpected node type");
+        return casted;
+    }
+
     TypeBase *pop_type() {
         TypeBase *result = types.back();
         types.pop_back();
@@ -134,6 +145,10 @@ public:
     void create_string_value();
     void create_address_expr();
     void create_dereference();
+    void create_pre_inc();
+    void create_pre_dec();
+    void create_post_inc();
+    void create_post_dec();
 
     template<typename T>
     void create_unary_expr() {

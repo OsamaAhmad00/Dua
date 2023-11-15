@@ -133,11 +133,11 @@ expression
     | when_expression
     | cast_expression
     | '(' expression ')'
-    | expression '++'
-    | expression '--'
+    | lvalue '++' { assistant.create_post_inc(); }
+    | lvalue '--' { assistant.create_post_dec(); }
     | '+'  expression  // do nothing
-    | '++' expression
-    | '--' expression
+    | '++' lvalue { assistant.create_pre_inc(); }
+    | '--' lvalue { assistant.create_pre_dec(); }
     | '-'  expression { assistant.create_unary_expr<NegativeExpressionNode>();          }
     | '!'  expression { assistant.create_unary_expr<NotExpressionNode>();               }
     | '~'  expression { assistant.create_unary_expr<BitwiseComplementExpressionNode>(); }

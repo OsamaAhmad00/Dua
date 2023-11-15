@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AST/ASTNode.h>
-#include <types/IntegerTypes.h>
+#include <types/TypeBase.h>
 
 
 class CastExpressionNode : public ASTNode
