@@ -147,17 +147,18 @@ expression
     | expression '%' expression  { assistant.create_binary_expr<ModNode>();            }
     | expression '+' expression  { assistant.create_binary_expr<AdditionNode>();       }
     | expression '-' expression  { assistant.create_binary_expr<SubtractionNode>();    }
-    | expression '<<' expression
-    | expression '>>' expression
+    | expression '<<' expression { assistant.create_binary_expr<LeftShiftNode>(); }
+    | expression '>>' expression { assistant.create_binary_expr<RightShiftNode>(); }
+    | expression '>>>' expression { assistant.create_binary_expr<ArithmeticRightShiftNode>(); }
     | expression '<'  expression { assistant.create_binary_expr<LTNode>();  }
     | expression '>'  expression { assistant.create_binary_expr<GTNode>();  }
     | expression '<=' expression { assistant.create_binary_expr<LTENode>(); }
     | expression '>=' expression { assistant.create_binary_expr<GTENode>(); }
     | expression '==' expression { assistant.create_binary_expr<EQNode>();  }
     | expression '!=' expression { assistant.create_binary_expr<NENode>();  }
-    | expression '&'  expression
-    | expression '^'  expression
-    | expression '|'  expression
+    | expression '&'  expression { assistant.create_binary_expr<BitwiseAndNode>(); }
+    | expression '^'  expression { assistant.create_binary_expr<XorNode>(); }
+    | expression '|'  expression { assistant.create_binary_expr<BitwiseOrNode>(); }
     | expression '&&' expression
     | expression '||' expression
     | expression '?' expression ':' expression { assistant.create_ternary_operator(); }
@@ -169,6 +170,7 @@ expression
     | lvalue '%='  expression
     | lvalue '<<=' expression
     | lvalue '>>=' expression
+    | lvalue '>>>=' expression
     | lvalue '&='  expression
     | lvalue '^='  expression
     | lvalue '|='  expression
