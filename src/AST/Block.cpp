@@ -1,4 +1,4 @@
-#include <AST/Block.h>
+#include <AST/BlockNode.h>
 
 BlockNode& BlockNode::append(ASTNode *element)
 {

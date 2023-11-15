@@ -4,13 +4,12 @@
 
 class VariableNode : public LValueNode
 {
-    bool get_address;
     std::string name;
 
 public:
 
     VariableNode(ModuleCompiler* compiler, std::string name, bool get_address=false)
-        : name(std::move(name)), get_address(get_address) { this->compiler = compiler; }
+        : name(std::move(name)) { this->compiler = compiler; this->load_value = !get_address; }
     llvm::Value* eval() override;
     TypeBase* compute_type() override;
 };

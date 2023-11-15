@@ -23,11 +23,11 @@ void ParserAssistant::create_variable_declaration()
 
 void ParserAssistant::create_variable_definition()
 {
-    auto value = pop_node();
+    auto value = pop_node_as<ValueNode>();
     auto name = pop_str();
     auto type = pop_type();
     if (is_in_global_scope()) {
-        push_node<GlobalVariableDefinitionNode>(std::move(name), type, (ValueNode *) value);
+        push_node<GlobalVariableDefinitionNode>(std::move(name), type, value);
     } else {
         push_node<LocalVariableDefinitionNode>(std::move(name), type, value);
     }
@@ -64,16 +64,18 @@ void ParserAssistant::create_function_definition_block_body()
 {
     ASTNode* body = pop_node();
     // The function is not popped, so it's still in the stack.
-    auto function = (FunctionDefinitionNode*)nodes.back();
+    auto function = pop_node_as<FunctionDefinitionNode>();
     function->set_body(body);
+    nodes.push_back(function);
 }
 
 void ParserAssistant::create_function_definition_expression_body()
 {
     ASTNode* body = compiler->create_node<ReturnNode>(pop_node());
     // The function is not popped, so it's still in the stack.
-    auto function = (FunctionDefinitionNode*)nodes.back();
+    auto function = pop_node_as<FunctionDefinitionNode>();
     function->set_body(body);
+    nodes.push_back(function);
 }
 
 void ParserAssistant::create_if_statement()
@@ -188,7 +190,7 @@ void ParserAssistant::create_assignment()
     //  is an expression, and the expression statement would increase
     //  it as appropriate
     ASTNode* rhs = pop_node();
-    auto lhs = (LValueNode*)pop_node();
+    auto lhs = pop_node_as<LValueNode>();
     push_node<AssignmentExpressionNode>(lhs, rhs);
 }
 
@@ -244,4 +246,26 @@ void ParserAssistant::create_address_expr() {
 
 void ParserAssistant::create_dereference() {
     push_node<AddressNode>(pop_node(), true);
+}
+
+void ParserAssistant::create_pre_inc() {
+    push_node<OpAssignExpressionNode<AdditionNode>>(
+        pop_node_as<LValueNode>(),
+        compiler->create_node<I32ValueNode>(1)
+    );
+}
+
+void ParserAssistant::create_pre_dec() {
+    push_node<OpAssignExpressionNode<SubtractionNode>>(
+        pop_node_as<LValueNode>(),
+        compiler->create_node<I32ValueNode>(1)
+    );
+}
+
+void ParserAssistant::create_post_inc() {
+    push_node<PostfixAdditionExpressionNode>(pop_node_as<LValueNode>(), 1);
+}
+
+void ParserAssistant::create_post_dec() {
+    push_node<PostfixAdditionExpressionNode>(pop_node_as<LValueNode>(), -1);
 }
