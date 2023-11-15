@@ -144,7 +144,7 @@ expression
     | '&' lvalue  // lvalues load the address already, so there is nothing to be done here
     | expression '*' expression  { assistant.create_binary_expr<MultiplicationNode>(); }
     | expression '/' expression  { assistant.create_binary_expr<DivisionNode>();       }
-    | expression '%' expression  // { assistant.create_binary_expr<ModNode>();         }
+    | expression '%' expression  { assistant.create_binary_expr<ModNode>();            }
     | expression '+' expression  { assistant.create_binary_expr<AdditionNode>();       }
     | expression '-' expression  { assistant.create_binary_expr<SubtractionNode>();    }
     | expression '<<' expression

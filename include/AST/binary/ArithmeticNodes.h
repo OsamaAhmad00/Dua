@@ -9,3 +9,5 @@ BINARY_EXP_NODE(SubtractionNode, CreateSub, "temp_sub")
 BINARY_EXP_NODE(MultiplicationNode, CreateMul, "temp_mul")
 
 BINARY_EXP_NODE(DivisionNode, CreateSDiv, "temp_div")
+
+BINARY_EXP_NODE(ModNode, CreateSRem, "temp_mod")

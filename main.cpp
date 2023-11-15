@@ -11,7 +11,7 @@ int main()
         "    int* p = &x;"
         "    int** pp = &p;"
         "    int*** ppp = &pp;"
-        "    ***ppp = 5;"
+        "    ***ppp = 5 % 3;"
         "    printf(\"%d\n\", x);"
         "    return 0;"
         "}"
