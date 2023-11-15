@@ -128,7 +128,6 @@ public:
     void create_while();
     void create_assignment();
     void create_cast();
-    void create_address_of();
     void create_pointer_type();
     void create_array_type();
     void create_string_value();

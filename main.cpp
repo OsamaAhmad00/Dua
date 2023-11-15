@@ -7,8 +7,8 @@ int main()
         "int printf(i8* message, ...);"
         ""
         "int main() {"
-        "    i8* str = \"Hello, world!\";"
-        "    printf(str);"
+        "    int x = 3;"
+        "    printf(\"0x%X\n\", &x);"
         "    return 0;"
         "}"
     );

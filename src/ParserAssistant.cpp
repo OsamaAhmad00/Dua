@@ -211,7 +211,7 @@ void ParserAssistant::create_function_call()
     size_t n = leave_fun_call();
     std::vector<ASTNode*> args(n);
     for (size_t i = 0; i < n; i++)
-        args[i] = pop_node();
+        args[n - i - 1] = pop_node();
     push_node<FunctionCallNode>(std::move(name), std::move(args));
 }
 
@@ -220,10 +220,6 @@ void ParserAssistant::create_cast()
     auto type = pop_type();
     auto expr = pop_node();
     push_node<CastExpressionNode>(expr, type->llvm_type());
-}
-
-void ParserAssistant::create_address_of() {
-    push_node<VariableNode>(pop_str(), true);
 }
 
 void ParserAssistant::create_pointer_type() {
