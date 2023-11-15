@@ -12,7 +12,6 @@
 #include "AST/IfNode.h"
 #include "AST/WhileNode.h"
 
-#include "AST/function/FunctionNodeBase.h"
 #include "AST/function/FunctionCallNode.h"
 #include "AST/function/FunctionDefinitionNode.h"
 #include "AST/function/ReturnNode.h"

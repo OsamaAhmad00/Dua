@@ -1,8 +1,9 @@
 #pragma once
 
-#include <AST/function/FunctionNodeBase.h>
+#include <AST/ASTNode.h>
+#include <FunctionInfo.h>
 
-class FunctionCallNode : public FunctionNodeBase
+class FunctionCallNode : public ASTNode
 {
     std::string name;
     std::vector<ASTNode*> args;

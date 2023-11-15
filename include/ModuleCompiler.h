@@ -6,6 +6,7 @@
 #include <llvm/IR/LLVMContext.h>
 #include <SymbolTable.h>
 #include <types/TypeBase.h>
+#include <FunctionInfo.h>
 
 class ModuleCompiler
 {
@@ -34,6 +35,9 @@ public:
         return new T(&builder, args...);
     }
 
+    void register_function(std::string name, FunctionSignature signature);
+    FunctionSignature& get_function(const std::string& name);
+
     llvm::IRBuilder<>* get_builder() { return &builder; }
 
     struct Variable {
@@ -53,6 +57,7 @@ private:
     //  of their declaration location in the code.
     llvm::IRBuilder<> temp_builder;
     SymbolTable<Variable> symbol_table;
+    std::unordered_map<std::string, FunctionSignature> functions;
     llvm::Function* current_function;
 
     std::string result;

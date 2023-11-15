@@ -39,15 +39,16 @@ void ParserAssistant::create_function_declaration()
     if (!is_in_global_scope())
         throw std::runtime_error("Function declarations/definitions not allowed in a local scope");
     inc_statements();
-    FunctionNodeBase::FunctionSignature signature;
+    FunctionSignature signature;
     signature.is_var_arg = is_var_arg;
     signature.params.resize(param_count);
     // The params are pushed in reverse-order
     for (int i = 0; i < param_count; i++)
         signature.params[param_count - i - 1] = {pop_str(), pop_type()};
     signature.return_type = pop_type();
-    signature.name = pop_str();
-    push_node<FunctionDefinitionNode>(signature, nullptr);
+    auto name = pop_str();
+    compiler->register_function(name, std::move(signature));
+    push_node<FunctionDefinitionNode>(std::move(name), nullptr);
 }
 
 void ParserAssistant::create_block()
