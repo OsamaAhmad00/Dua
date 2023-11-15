@@ -18,6 +18,6 @@ FunctionCallNode::~FunctionCallNode()
 }
 
 TypeBase *FunctionCallNode::compute_type() {
-    // need to be able to retrieve the function return type.
-    throw std::runtime_error("todo");
+    delete type;
+    return type = compiler->get_function(name).return_type->clone();
 }

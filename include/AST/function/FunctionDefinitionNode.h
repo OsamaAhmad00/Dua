@@ -1,10 +1,11 @@
 #pragma once
 
-#include <AST/function/FunctionNodeBase.h>
+#include <AST/ASTNode.h>
+#include <FunctionInfo.h>
 
-class FunctionDefinitionNode : public FunctionNodeBase
+class FunctionDefinitionNode : public ASTNode
 {
-    FunctionSignature signature;
+    std::string name;
     ASTNode* body;  // Can be nullptr in case of declaration
 
     llvm::Function* define_function();
@@ -12,8 +13,8 @@ class FunctionDefinitionNode : public FunctionNodeBase
 
 public:
 
-    FunctionDefinitionNode(ModuleCompiler* compiler, FunctionSignature signature, ASTNode* body)
-        : signature(std::move(signature)), body(body) { this->compiler = compiler; }
+    FunctionDefinitionNode(ModuleCompiler* compiler, std::string name, ASTNode* body)
+        : name(std::move(name)), body(body) { this->compiler = compiler; }
 
     void set_body(ASTNode* body) { assert(this->body == nullptr); this->body = body; }
 

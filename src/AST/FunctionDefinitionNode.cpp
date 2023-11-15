@@ -7,10 +7,10 @@ llvm::Function *FunctionDefinitionNode::eval()
     return (body == nullptr) ? declare_function() : define_function();
 }
 
-
 llvm::Function* FunctionDefinitionNode::define_function()
 {
-    llvm::Function* function = module().getFunction(signature.name);
+    auto& signature = compiler->get_function(name);
+    llvm::Function* function = module().getFunction(name);
 
     if (!function)
         function = declare_function();
@@ -42,20 +42,19 @@ llvm::Function* FunctionDefinitionNode::define_function()
 
 llvm::Function* FunctionDefinitionNode::declare_function()
 {
+    auto& signature = compiler->get_function(name);
     llvm::Type* ret = signature.return_type->llvm_type();
     std::vector<llvm::Type*> parameter_types;
     for (auto& param: signature.params)
         parameter_types.push_back(param.type->llvm_type());
     llvm::FunctionType* type = llvm::FunctionType::get(ret, parameter_types, signature.is_var_arg);
-    llvm::Function* function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, signature.name, module());
+    llvm::Function* function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, name, module());
     llvm::verifyFunction(*function);
+
     return function;
 }
 
 FunctionDefinitionNode::~FunctionDefinitionNode()
 {
-    for (auto& param : signature.params)
-        delete param.type;
-    delete signature.return_type;
     delete body;
 }
