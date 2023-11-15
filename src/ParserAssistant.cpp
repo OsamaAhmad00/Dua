@@ -269,3 +269,10 @@ void ParserAssistant::create_post_inc() {
 void ParserAssistant::create_post_dec() {
     push_node<PostfixAdditionExpressionNode>(pop_node_as<LValueNode>(), -1);
 }
+
+void ParserAssistant::create_ternary_operator() {
+    enter_conditional();
+    inc_branches();
+    has_else = true;
+    create_if_expression();
+}

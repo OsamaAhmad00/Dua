@@ -160,7 +160,7 @@ expression
     | expression '|'  expression
     | expression '&&' expression
     | expression '||' expression
-    | expression '?' expression ':' expression  // ternary conditional
+    | expression '?' expression ':' expression { assistant.create_ternary_operator(); }
     | lvalue '='   expression { assistant.create_assignment(); }
     | lvalue '+='  expression
     | lvalue '-='  expression

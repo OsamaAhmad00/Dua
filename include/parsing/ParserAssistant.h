@@ -149,6 +149,7 @@ public:
     void create_pre_dec();
     void create_post_inc();
     void create_post_dec();
+    void create_ternary_operator();
 
     template<typename T>
     void create_unary_expr() {
