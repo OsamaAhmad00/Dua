@@ -263,7 +263,7 @@ while
     ;
 
 do_while
-    : 'do' statement 'while' '(' expression_or_none_loop ')' ';'
+    : 'do' statement 'while' '(' expression_or_none_loop ')' ';' { assistant.create_do_while(); }
     ;
 
 arg_list @init { assistant.enter_fun_call(); }

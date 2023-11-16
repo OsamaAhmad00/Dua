@@ -14,6 +14,7 @@
 
 #include "AST/loops/ForNode.h"
 #include "AST/loops/WhileNode.h"
+#include "AST/loops/DoWhileNode.h"
 #include "AST/loops/ContinueNode.h"
 #include "AST/loops/BreakNode.h"
 
@@ -159,6 +160,7 @@ public:
     void create_empty_statement();
     void create_continue();
     void create_break();
+    void create_do_while();
 
     template<typename T>
     void create_unary_expr() {

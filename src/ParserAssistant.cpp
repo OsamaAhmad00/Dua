@@ -323,4 +323,10 @@ void ParserAssistant::create_break() {
     inc_statements();
 }
 
+void ParserAssistant::create_do_while() {
+    ASTNode* condition = pop_node();
+    ASTNode* body = pop_node();
+    push_node<DoWhileNode>(condition, body);
+}
+
 }
