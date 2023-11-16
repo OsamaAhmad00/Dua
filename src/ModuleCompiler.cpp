@@ -1,5 +1,5 @@
 #include <ModuleCompiler.h>
-#include "parsing/Parser.h"
+#include "parsing/ParserFacade.h"
 #include <AST/TranslationUnitNode.h>
 #include <sstream>
 
@@ -11,7 +11,7 @@ ModuleCompiler::ModuleCompiler(const std::string &module_name, const std::string
     temp_builder(context),
     current_function(nullptr)
 {
-    Parser parser(*this);
+    ParserFacade parser(*this);
 
     // Parse
     TranslationUnitNode* ast = parser.parse(code);
