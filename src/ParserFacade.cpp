@@ -1,8 +1,8 @@
 #include <DuaParser.h>
 #include <DuaLexer.h>
-#include "parsing/Parser.h"
+#include "parsing/ParserFacade.h"
 
-TranslationUnitNode* Parser::parse(const std::string& str) const
+TranslationUnitNode* ParserFacade::parse(const std::string& str) const
 {
     antlr4::ANTLRInputStream input(str);
 
