@@ -3,6 +3,9 @@
 #include <AST/terminals/ValueNode.h>
 #include <types/ArrayType.h>
 
+namespace dua
+{
+
 class ArrayValueNode : public ValueNode
 {
     // An initialized array
@@ -26,3 +29,5 @@ public:
 
     ~ArrayValueNode() override { delete element_type; }
 };
+
+}

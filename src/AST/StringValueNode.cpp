@@ -1,5 +1,8 @@
 #include <AST/terminals/StringValueNode.h>
 
+namespace dua
+{
+
 int StringValueNode::counter = 0;
 
 llvm::Constant* StringValueNode::eval()
@@ -11,4 +14,6 @@ llvm::Constant* StringValueNode::eval()
 TypeBase *StringValueNode::compute_type() {
     if (type == nullptr) return type = compiler->create_type<StringType>();
     return type;
+}
+
 }

@@ -1,6 +1,9 @@
 #include <AST/IfNode.h>
 #include <types/VoidType.h>
 
+namespace dua
+{
+
 int IfNode::_counter = 0;
 
 llvm::Value* IfNode::eval()
@@ -123,4 +126,6 @@ IfNode::~IfNode()
         delete ptr;
     for (auto ptr : branches)
         delete ptr;
+}
+
 }

@@ -4,6 +4,9 @@
 #include <AST/lvalue/LValueNode.h>
 #include <AST/NoDeleteWrapperNode.h>
 
+namespace dua
+{
+
 template <typename OpNode>
 class CompoundAssignmentExpressionNode : public ASTNode
 {
@@ -36,3 +39,5 @@ public:
 
     ~CompoundAssignmentExpressionNode() override { delete lhs; delete rhs; };
 };
+
+}

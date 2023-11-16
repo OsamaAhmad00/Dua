@@ -8,6 +8,9 @@
 #include <types/TypeBase.h>
 #include <FunctionInfo.h>
 
+namespace dua
+{
+
 class ModuleCompiler
 {
 public:
@@ -69,3 +72,4 @@ private:
     std::string result;
 };
 
+}

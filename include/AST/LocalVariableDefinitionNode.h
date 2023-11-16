@@ -3,6 +3,9 @@
 #include <AST/ASTNode.h>
 #include <types/TypeBase.h>
 
+namespace dua
+{
+
 class LocalVariableDefinitionNode : public ASTNode
 {
     std::string name;
@@ -16,3 +19,5 @@ public:
     TypeBase* compute_type() override { return type; }
     ~LocalVariableDefinitionNode() override;
 };
+
+}

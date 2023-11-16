@@ -1,5 +1,8 @@
 #include <AST/function/FunctionCallNode.h>
 
+namespace dua
+{
+
 llvm::CallInst* FunctionCallNode::eval()
 {
     llvm::Function* function = module().getFunction(name);
@@ -27,4 +30,6 @@ FunctionCallNode::~FunctionCallNode()
 TypeBase *FunctionCallNode::compute_type() {
     delete type;
     return type = compiler->get_function(name).return_type->clone();
+}
+
 }

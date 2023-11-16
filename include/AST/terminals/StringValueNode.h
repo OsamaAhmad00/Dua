@@ -3,6 +3,9 @@
 #include <AST/terminals/ValueNode.h>
 #include <types/StringType.h>
 
+namespace dua
+{
+
 class StringValueNode : public ValueNode {
 
     bool is_nullptr;
@@ -20,3 +23,5 @@ public:
     llvm::Constant* eval() override;
     TypeBase* compute_type() override;
 };
+
+}

@@ -1,5 +1,8 @@
 #include "AST/lvalue/VariableNode.h"
 
+namespace dua
+{
+
 llvm::Value* VariableNode::eval()
 {
     // This searches locally first, then globally if not found.
@@ -13,4 +16,6 @@ llvm::Value* VariableNode::eval()
 
 TypeBase* VariableNode::compute_type() {
     return type = symbol_table().get(name).type;
+}
+
 }

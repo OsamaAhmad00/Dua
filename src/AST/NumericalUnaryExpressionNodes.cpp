@@ -1,5 +1,8 @@
 #include <AST/unary/NumericalUnaryExpressionNodes.h>
 
+namespace dua
+{
+
 llvm::Value* NegativeExpressionNode::eval()
 {
     llvm::Value* value = expression->eval();
@@ -29,3 +32,4 @@ llvm::Value* BitwiseComplementExpressionNode::eval()
     );
 };
 
+}

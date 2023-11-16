@@ -3,6 +3,8 @@
 #include <AST/TranslationUnitNode.h>
 #include <sstream>
 
+namespace dua
+{
 
 ModuleCompiler::ModuleCompiler(const std::string &module_name, const std::string &code) :
     context(),
@@ -143,3 +145,4 @@ FunctionSignature& ModuleCompiler::get_function(const std::string& name) {
     return it->second;
 }
 
+}

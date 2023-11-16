@@ -2,6 +2,9 @@
 
 #include <AST/ASTNode.h>
 
+namespace dua
+{
+
 #define SAME_TYPE_BINARY_EXP_NODE(NAME, OP, LABEL)                                    \
 class NAME : public ASTNode                                                           \
 {                                                                                     \
@@ -36,3 +39,4 @@ public:                                                                         
     }                                                                                 \
 };
 
+}

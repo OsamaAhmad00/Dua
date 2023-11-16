@@ -2,6 +2,9 @@
 
 #include <AST/lvalue/LValueNode.h>
 
+namespace dua
+{
+
 class PostfixAdditionExpressionNode : public ASTNode
 {
     LValueNode* lvalue;
@@ -15,3 +18,5 @@ public:
     TypeBase* compute_type() override;
     ~PostfixAdditionExpressionNode() override;
 };
+
+}

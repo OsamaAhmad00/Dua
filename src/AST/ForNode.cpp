@@ -1,5 +1,8 @@
 #include "AST/loops/ForNode.h"
 
+namespace dua
+{
+
 int ForNode::_counter = 0;
 
 NoneValue ForNode::eval()
@@ -57,4 +60,6 @@ ForNode::~ForNode()
     delete cond_exp;
     delete body_exp;
     delete update_exp;
+}
+
 }

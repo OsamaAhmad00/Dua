@@ -1,5 +1,8 @@
 #include <AST/BlockNode.h>
 
+namespace dua
+{
+
 BlockNode& BlockNode::append(ASTNode *element)
 {
     elements.push_back(element);
@@ -33,4 +36,6 @@ BlockNode::~BlockNode()
 {
     for (auto element: elements)
         delete element;
+}
+
 }

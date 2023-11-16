@@ -5,6 +5,9 @@
 #include <vector>
 #include <stdexcept>
 
+namespace dua
+{
+
 template<typename T>
 class Scope
 {
@@ -110,3 +113,5 @@ public:
 private:
     std::vector<Scope<T>> scopes;
 };
+
+}

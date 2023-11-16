@@ -2,6 +2,9 @@
 
 #include <types/TypeBase.h>
 
+namespace dua
+{
+
 struct Param {
     std::string name;
     TypeBase* type;
@@ -12,3 +15,5 @@ struct FunctionSignature {
     std::vector<Param> params;
     bool is_var_arg = false;
 };
+
+}

@@ -2,6 +2,9 @@
 
 #include "AST/ASTNode.h"
 
+namespace dua
+{
+
 struct ContinueNode : public ASTNode
 {
 public:
@@ -15,3 +18,5 @@ public:
         return none_value();
     }
 };
+
+}

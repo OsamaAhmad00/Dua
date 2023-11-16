@@ -2,6 +2,9 @@
 
 #include <AST/ASTNode.h>
 
+namespace dua
+{
+
 class NegativeExpressionNode : public ASTNode
 {
     ASTNode* expression;
@@ -40,3 +43,5 @@ public:
     TypeBase* compute_type() override { delete type; return type = expression->get_cached_type()->clone(); }
     ~BitwiseComplementExpressionNode() override { delete expression; }
 };
+
+}

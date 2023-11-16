@@ -1,5 +1,8 @@
 #include <types/PointerType.h>
 
+namespace dua
+{
+
 llvm::Constant* PointerType::default_value() {
     return llvm::Constant::getNullValue(llvm_type());
 }
@@ -10,4 +13,6 @@ llvm::PointerType* PointerType::llvm_type() {
 
 PointerType *PointerType::clone() {
     return new PointerType(builder, element_type->clone());
+}
+
 }

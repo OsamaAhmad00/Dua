@@ -2,6 +2,9 @@
 
 #include <types/TypeBase.h>
 
+namespace dua
+{
+
 struct StringType : TypeBase
 {
     StringType(llvm::IRBuilder<>* builder) { this->builder = builder; }
@@ -16,3 +19,5 @@ struct StringType : TypeBase
 
     StringType* clone() override { return new StringType(builder); }
 };
+
+}

@@ -3,6 +3,9 @@
 #include <AST/ASTNode.h>
 #include <types/TypeBase.h>
 
+namespace dua
+{
+
 // This class is used to pass an ASTNode pointer to a temporary
 //  ASTNode, which holds ownership of the pointer, and still get
 //  the pointer not deleted at the owner's destruction.
@@ -20,3 +23,5 @@ public:
     TypeBase* compute_type() override { return this->type = node->compute_type(); };
     ~NoDeleteWrapperNode() override = default;
 };
+
+}

@@ -2,6 +2,9 @@
 
 #include <AST/ASTNode.h>
 
+namespace dua
+{
+
 class BlockNode : public ASTNode
 {
     std::vector<ASTNode*> elements;
@@ -15,3 +18,5 @@ public:
     TypeBase* compute_type() override;
     ~BlockNode() override;
 };
+
+}

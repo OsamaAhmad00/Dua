@@ -1,6 +1,8 @@
 #include <AST/ASTNode.h>
 #include "types/VoidType.h"
 
+namespace dua
+{
 
 llvm::BasicBlock* ASTNode::create_basic_block(const std::string& name, llvm::Function* function) {
     return llvm::BasicBlock::Create(context(), name, function);
@@ -34,3 +36,4 @@ TypeBase *ASTNode::compute_type() {
     return type;
 }
 
+}
