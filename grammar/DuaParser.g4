@@ -118,9 +118,9 @@ statement
     | expression_statement
     | variable_decl_or_def
     | return_statement
-    | Break
-    | Continue
-    | ';'  { assistant.push_node<I8ValueNode>(0); assistant.inc_statements(); }
+    | Continue { assistant.create_continue(); }
+    | Break { assistant.create_break(); }
+    | ';'  { assistant.create_empty_statement(); }
     ;
 
 expression

@@ -76,7 +76,8 @@ llvm::Value* IfNode::eval()
     for (size_t i = 0; i < body_blocks.size(); i++) {
         builder().SetInsertPoint(body_blocks[i]);
         llvm::Value* value = branches[i]->eval();
-        builder().CreateBr(end_block);
+        if (builder().GetInsertBlock()->empty() || !builder().GetInsertBlock()->back().isTerminator())
+            builder().CreateBr(end_block);
         if (is_expression) {
             values.push_back(value);
             phi_blocks.push_back(builder().GetInsertBlock());
