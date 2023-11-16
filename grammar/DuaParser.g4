@@ -208,7 +208,8 @@ if_expression @init {
     assistant.inc_branches();
     assistant.set_has_else();
 }
-    : 'if' '(' expression ')' expression else_if_expression 'else' expression  { assistant.create_if_expression(); }
+    : 'if' '(' expression ')' expression else_if_expression 'else' expression
+        { assistant.push_str("if"); assistant.create_if_expression(); }
     ;
 
 else_if_expression
@@ -224,7 +225,7 @@ when_expression @init {
     ;
 
 when_list
-    : when_list_no_else ',' 'else' '->' expression { assistant.create_if_expression(); }
+    : when_list_no_else ',' 'else' '->' expression { assistant.push_str("when"); assistant.create_if_expression(); }
     ;
 
 when_list_no_else

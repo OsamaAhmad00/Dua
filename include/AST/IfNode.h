@@ -13,15 +13,19 @@ class IfNode : public ASTNode
     //  else branch. Otherwise, both sizes are equal.
     std::vector<ASTNode*> branches;
 
+    // Used by when expressions
+    std::string operation_name = "if";
+
     bool is_expression;
 
 public:
 
     IfNode(ModuleCompiler* compiler, std::vector<ASTNode*> conditions,
-           std::vector<ASTNode*> branches, bool is_expression=true)
+           std::vector<ASTNode*> branches, bool is_expression=true, std::string operation_name="if")
         : conditions(std::move(conditions)),
           branches(std::move(branches)),
-          is_expression(is_expression)
+          is_expression(is_expression),
+          operation_name(std::move(operation_name))
     {
         this->compiler = compiler;
     }

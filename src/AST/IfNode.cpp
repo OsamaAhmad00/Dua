@@ -18,12 +18,12 @@ llvm::Value* IfNode::eval()
     for (size_t i = 0; i < conditions.size(); i++)
     {
         llvm::BasicBlock* condition_block = create_basic_block(
-                "if" + std::to_string(counter) + "_condition" + std::to_string(i),
+                operation_name + std::to_string(counter) + "_condition" + std::to_string(i),
                 current_function()
         );
 
         llvm::BasicBlock* branch_block = create_basic_block(
-                "if" + std::to_string(counter) + "_branch" + std::to_string(i),
+                operation_name + std::to_string(counter) + "_branch" + std::to_string(i),
                 current_function()
         );
 
@@ -36,7 +36,7 @@ llvm::Value* IfNode::eval()
     if (has_else())
     {
          else_block = create_basic_block(
-                "if" + std::to_string(counter) + "_branch_else",
+                operation_name + std::to_string(counter) + "_branch_else",
                 current_function()
         );
 
@@ -47,7 +47,7 @@ llvm::Value* IfNode::eval()
     builder().CreateBr(jump_to_blocks.front());
 
     llvm::BasicBlock* end_block  = create_basic_block(
-            "if" + std::to_string(counter) + "_end",
+            operation_name + std::to_string(counter) + "_end",
             current_function()
     );
     jump_to_blocks.push_back(end_block);
@@ -100,7 +100,7 @@ llvm::Value* IfNode::eval()
     llvm::PHINode* phi = builder().CreatePHI(
         values.front()->getType(),
         values.size(),
-        "if" + std::to_string(counter) + "_result"
+        operation_name + std::to_string(counter) + "_result"
     );
 
     for (size_t i = 0; i < values.size(); i++) {

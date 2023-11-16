@@ -125,7 +125,7 @@ void ParserAssistant::create_if_expression()
 
     if (else_node) branches.push_back(else_node);
 
-    push_node<IfNode>(std::move(conditions), std::move(branches), true);
+    push_node<IfNode>(std::move(conditions), std::move(branches), true, pop_str());
 }
 
 
