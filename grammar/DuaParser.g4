@@ -120,7 +120,7 @@ statement
     | return_statement
     | Break
     | Continue
-    | ';'  // empty statement
+    | ';'  { assistant.push_node<I8ValueNode>(0); assistant.inc_statements(); }
     ;
 
 expression
@@ -236,6 +236,7 @@ when_item
     : expression '->' expression { assistant.inc_branches(); }
     ;
 
+// Used for for loops
 comma_separated_multi_variable_decl_or_def
     : comma_separated_multi_variable_decl_or_def
       ',' variable_decl_or_def_no_simicolon
@@ -248,13 +249,13 @@ comma_separated_multi_variable_decl_or_def_or_none
     | /* empty */
     ;
 
-for
+for @init { assistant.enter_scope(); }
     : 'for'
       '(' comma_separated_multi_variable_decl_or_def_or_none
       ';' expression_or_none_loop
-      ';' expression_or_none
-      ')' statement
-    ;
+      ';' expression_or_none_loop
+      ')' statement { assistant.create_for(); }
+      ;
 
 while
     : 'while' '(' expression_or_none_loop ')' statement { assistant.create_while(); }
@@ -274,15 +275,11 @@ comma_separated_arguments
     | comma_separated_arguments ',' expression { assistant.inc_args(); }
     ;
 
-// If none, push true
+// If none, push 1. If used as a condition, equals true. If used as
+// a statement, equals an expression statement with no side effect.
 expression_or_none_loop
     : expression
     | /* empty */ { assistant.push_node<I8ValueNode>(1); }
-    ;
-
-expression_or_none
-    : expression
-    | /* empty */
     ;
 
 block_expression

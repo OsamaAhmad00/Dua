@@ -284,3 +284,27 @@ void ParserAssistant::create_ternary_operator() {
     set_has_else();
     create_if_expression();
 }
+
+void ParserAssistant::create_for()
+{
+    // No dec_statements, will push later
+    auto body = pop_node();
+
+    // No dec_statements, just an expression
+    auto update = pop_node();
+
+    enter_scope();
+    inc_statements();
+    inc_statements();
+    nodes.push_back(body);
+    nodes.push_back(update);
+    create_block();
+
+    // Nodes now: scope -> initialization -> condition -> { body; update; }
+    // Counts as a statement. Don't inc_statements since you didn't dec_statements earlier.
+    create_while();
+
+    create_block();
+
+    inc_statements();
+}
