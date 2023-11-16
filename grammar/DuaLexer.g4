@@ -85,8 +85,8 @@ I64Val: Integer 'L';
 I32Val: Integer;
 I16Val: Integer 'S';
 I8Val:  Integer 'B';
-F64Val: Float 'L';
-F32Val: Float;
+F64Val: Float;
+F32Val: Float 'F';
 
 Identifier: LETTER (LETTER | Digit)*;
 

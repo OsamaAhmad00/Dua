@@ -23,6 +23,7 @@ public:
             new NoDeleteWrapperNode<ASTNode>(rhs)
         );
         auto value = op->eval();
+        value = compiler->cast_value(value, lhs->get_cached_type()->llvm_type());
 
         lhs->set_load_value(false);
         auto ptr = lhs->eval();
