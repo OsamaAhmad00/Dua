@@ -4,6 +4,9 @@
 #include <llvm/IR/Type.h>
 #include <llvm/IR/IRBuilder.h>
 
+namespace dua
+{
+
 struct TypeBase
 {
     // FIXME the lifetime of the a type is the same as
@@ -21,3 +24,5 @@ struct TypeBase
     llvm::Type* operator->() { return llvm_type(); }
     operator llvm::Type*() { return llvm_type(); }
 };
+
+}

@@ -2,6 +2,9 @@
 
 #include <types/TypeBase.h>
 
+namespace dua
+{
+
 #define DEFINE_INTEGER_TYPE(PREFIX, WIDTH)          \
 struct PREFIX##WIDTH##Type : public IntegerType     \
 {                                                   \
@@ -27,3 +30,5 @@ DEFINE_INTEGER_TYPE(I, 64)
 DEFINE_INTEGER_TYPE(I, 32)
 DEFINE_INTEGER_TYPE(I, 16)
 DEFINE_INTEGER_TYPE(I, 8 )
+
+}

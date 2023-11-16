@@ -1,6 +1,9 @@
 #include "AST/lvalue/AddressNode.h"
 #include "types/PointerType.h"
 
+namespace dua
+{
+
 llvm::Value* AddressNode::eval()
 {
     auto ptr = address->eval();
@@ -24,4 +27,6 @@ TypeBase *AddressNode::compute_type()
         throw std::runtime_error("Can't dereference a non-pointer type");
 
     return type = (load_value ? ptr->get_element_type() : ptr)->clone();
+}
+
 }

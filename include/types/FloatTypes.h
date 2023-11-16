@@ -2,6 +2,9 @@
 
 #include <types/TypeBase.h>
 
+namespace dua
+{
+
 #define DEFINE_FLOAT_TYPE(WIDTH, TYPE)                \
 struct F##WIDTH##Type : public FloatType              \
 {                                                     \
@@ -25,3 +28,5 @@ struct FloatType : public TypeBase {};
 
 DEFINE_FLOAT_TYPE(64, Double)
 DEFINE_FLOAT_TYPE(32, Float)
+
+}

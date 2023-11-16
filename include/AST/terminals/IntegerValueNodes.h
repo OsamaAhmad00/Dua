@@ -3,6 +3,9 @@
 #include <AST/terminals/ValueNode.h>
 #include <types/IntegerTypes.h>
 
+namespace dua
+{
+
 #define DEFINE_INTEGER_VALUE_NODE(WIDTH)                                 \
 class I##WIDTH##ValueNode : public ValueNode                             \
 {                                                                        \
@@ -31,3 +34,5 @@ DEFINE_INTEGER_VALUE_NODE(64)
 DEFINE_INTEGER_VALUE_NODE(32)
 DEFINE_INTEGER_VALUE_NODE(16)
 DEFINE_INTEGER_VALUE_NODE(8)
+
+}

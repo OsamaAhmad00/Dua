@@ -2,6 +2,9 @@
 
 #include <types/TypeBase.h>
 
+namespace dua
+{
+
 struct VoidType : TypeBase
 {
     VoidType(llvm::IRBuilder<>* builder) { this->builder = builder; }
@@ -16,3 +19,5 @@ struct VoidType : TypeBase
 
     VoidType* clone() override { return new VoidType(builder); }
 };
+
+}

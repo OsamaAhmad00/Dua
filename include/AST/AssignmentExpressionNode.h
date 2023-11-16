@@ -3,6 +3,9 @@
 #include <AST/ASTNode.h>
 #include "AST/lvalue/LValueNode.h"
 
+namespace dua
+{
+
 class AssignmentExpressionNode : public ASTNode
 {
     LValueNode* lhs;
@@ -16,3 +19,5 @@ public:
     TypeBase* compute_type() override;
     ~AssignmentExpressionNode() override;
 };
+
+}

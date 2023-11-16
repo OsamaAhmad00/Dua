@@ -2,6 +2,9 @@
 
 #include "AST/ASTNode.h"
 
+namespace dua
+{
+
 class ForNode : public ASTNode
 {
     // If a counter is not used, LLVM will assign numbers incrementally (for example for_cond1, for_body2, for_end3)
@@ -22,3 +25,5 @@ public:
     NoneValue eval() override;
     ~ForNode() override;
 };
+
+}

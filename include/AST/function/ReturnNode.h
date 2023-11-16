@@ -2,6 +2,9 @@
 
 #include <AST/ASTNode.h>
 
+namespace dua
+{
+
 class ReturnNode : public ASTNode
 {
     ASTNode* expression;
@@ -15,3 +18,5 @@ public:
 
     ~ReturnNode() override;
 };
+
+}

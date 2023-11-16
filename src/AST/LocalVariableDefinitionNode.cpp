@@ -1,5 +1,8 @@
 #include <AST/LocalVariableDefinitionNode.h>
 
+namespace dua
+{
+
 llvm::AllocaInst *LocalVariableDefinitionNode::eval()
 {
     llvm::Value* init_value = initializer ? initializer->eval() : nullptr;
@@ -9,4 +12,6 @@ llvm::AllocaInst *LocalVariableDefinitionNode::eval()
 LocalVariableDefinitionNode::~LocalVariableDefinitionNode()
 {
     delete initializer;
+}
+
 }

@@ -4,6 +4,9 @@
 #include <AST/terminals/IntegerValueNodes.h>
 #include <AST/lvalue/NoDeleteLValueWrapperNode.h>
 
+namespace dua
+{
+
 llvm::Value *PostfixAdditionExpressionNode::eval()
 {
     lvalue->set_load_value(true);
@@ -23,4 +26,6 @@ PostfixAdditionExpressionNode::~PostfixAdditionExpressionNode()
 TypeBase *PostfixAdditionExpressionNode::compute_type() {
     delete type;
     return type = lvalue->get_cached_type()->clone();
+}
+
 }

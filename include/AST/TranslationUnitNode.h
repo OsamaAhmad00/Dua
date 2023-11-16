@@ -3,6 +3,9 @@
 #include <AST/ASTNode.h>
 #include <types/VoidType.h>
 
+namespace dua
+{
+
 class TranslationUnitNode : public ASTNode
 {
     std::vector<ASTNode*> elements;
@@ -22,3 +25,5 @@ public:
         return none_value();
     }
 };
+
+}

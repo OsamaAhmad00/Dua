@@ -3,6 +3,8 @@
 #include <AST/ASTNode.h>
 #include <types/TypeBase.h>
 
+namespace dua
+{
 
 class CastExpressionNode : public ASTNode
 {
@@ -17,3 +19,5 @@ public:
     TypeBase* compute_type() override;
     ~CastExpressionNode() override;
 };
+
+}

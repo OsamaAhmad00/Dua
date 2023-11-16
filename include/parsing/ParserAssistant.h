@@ -45,6 +45,8 @@
 #include "types/ArrayType.h"
 #include "types/PointerType.h"
 
+namespace dua
+{
 
 //  This class is used to make the semantic-actions in the parser grammar file
 //  as minimal as possible, making the grammar clearer, and also the code more
@@ -200,3 +202,5 @@ public:
 
     void set_module_compiler(ModuleCompiler* compiler) { this->compiler = compiler; }
 };
+
+}

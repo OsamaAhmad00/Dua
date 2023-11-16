@@ -2,7 +2,7 @@
 
 int main()
 {
-    ModuleCompiler module(
+    dua::ModuleCompiler module(
         "MainModule", ""
         "int printf(i8* message, ...);"
         ""

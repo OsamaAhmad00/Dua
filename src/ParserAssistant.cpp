@@ -1,5 +1,8 @@
 #include "parsing/ParserAssistant.h"
 
+namespace dua
+{
+
 TranslationUnitNode* ParserAssistant::construct_result()
 {
     size_t n = nodes.size();
@@ -318,4 +321,6 @@ void ParserAssistant::create_continue() {
 void ParserAssistant::create_break() {
     push_node<BreakNode>();
     inc_statements();
+}
+
 }

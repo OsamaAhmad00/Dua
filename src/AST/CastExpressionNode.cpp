@@ -1,5 +1,8 @@
 #include <AST/unary/CastExpressionNode.h>
 
+namespace dua
+{
+
 llvm::Value *CastExpressionNode::eval()
 {
     llvm::Value* result = compiler->cast_value(expression->eval(), target_type->llvm_type());
@@ -17,4 +20,6 @@ CastExpressionNode::~CastExpressionNode()
 TypeBase *CastExpressionNode::compute_type() {
     delete type;
     return type = target_type->clone();
+}
+
 }

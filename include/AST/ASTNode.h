@@ -3,6 +3,9 @@
 #include <ModuleCompiler.h>
 #include <types/TypeBase.h>
 
+namespace dua
+{
+
 #define STATE_MEMBER_GETTER(NAME) auto& NAME() { return compiler->NAME; }
 
 // Just an indicator that the return
@@ -40,3 +43,5 @@ protected:
     STATE_MEMBER_GETTER(symbol_table)
     STATE_MEMBER_GETTER(current_function)
 };
+
+}

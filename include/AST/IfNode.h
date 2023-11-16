@@ -2,6 +2,9 @@
 
 #include <AST/ASTNode.h>
 
+namespace dua
+{
+
 class IfNode : public ASTNode
 {
     // If a counter is not used, LLVM will assign numbers incrementally (for example then1, else2, condition3)
@@ -38,3 +41,5 @@ public:
 
     ~IfNode() override;
 };
+
+}

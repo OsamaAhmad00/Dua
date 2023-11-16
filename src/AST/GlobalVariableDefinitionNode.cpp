@@ -1,5 +1,8 @@
 #include <AST/GlobalVariableDefinitionNode.h>
 
+namespace dua
+{
+
 llvm::GlobalVariable* GlobalVariableDefinitionNode::eval()
 {
     llvm::Value* value = initializer->eval();
@@ -20,4 +23,6 @@ llvm::GlobalVariable* GlobalVariableDefinitionNode::eval()
 GlobalVariableDefinitionNode::~GlobalVariableDefinitionNode()
 {
     delete initializer;
+}
+
 }

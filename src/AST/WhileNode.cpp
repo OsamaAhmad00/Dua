@@ -1,5 +1,8 @@
 #include "AST/loops/WhileNode.h"
 
+namespace dua
+{
+
 int WhileNode::_counter = 0;
 
 NoneValue WhileNode::eval()
@@ -41,4 +44,6 @@ WhileNode::~WhileNode()
 {
     delete cond_exp;
     delete body_exp;
+}
+
 }

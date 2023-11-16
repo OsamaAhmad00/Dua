@@ -2,6 +2,9 @@
 
 #include <types/TypeBase.h>
 
+namespace dua
+{
+
 class ArrayType : public TypeBase
 {
     size_t size;
@@ -20,3 +23,5 @@ public:
 
     ~ArrayType() override { delete element_type; }
 };
+
+}

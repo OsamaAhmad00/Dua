@@ -3,6 +3,9 @@
 #include <AST/ASTNode.h>
 #include <AST/terminals/ValueNode.h>
 
+namespace dua
+{
+
 class GlobalVariableDefinitionNode : public ASTNode
 {
     std::string name;
@@ -17,3 +20,5 @@ public:
     TypeBase* compute_type() override { return type; }
     ~GlobalVariableDefinitionNode() override;
 };
+
+}

@@ -1,6 +1,9 @@
 #include <AST/function/ReturnNode.h>
 #include <types/VoidType.h>
 
+namespace dua
+{
+
 llvm::ReturnInst* ReturnNode::eval()
 {
     if (expression == nullptr)
@@ -10,3 +13,4 @@ llvm::ReturnInst* ReturnNode::eval()
 
 ReturnNode::~ReturnNode() { delete expression; }
 
+}

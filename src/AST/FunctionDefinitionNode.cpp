@@ -2,6 +2,9 @@
 #include <llvm/IR/Verifier.h>
 #include <types/VoidType.h>
 
+namespace dua
+{
+
 llvm::Function *FunctionDefinitionNode::eval()
 {
     return (body == nullptr) ? declare_function() : define_function();
@@ -60,4 +63,6 @@ llvm::Function* FunctionDefinitionNode::declare_function()
 FunctionDefinitionNode::~FunctionDefinitionNode()
 {
     delete body;
+}
+
 }

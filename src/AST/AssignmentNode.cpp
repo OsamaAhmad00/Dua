@@ -1,5 +1,8 @@
 #include <AST/AssignmentExpressionNode.h>
 
+namespace dua
+{
+
 llvm::Value* AssignmentExpressionNode::eval()
 {
     llvm::Value* ptr = lhs->eval();
@@ -47,4 +50,6 @@ AssignmentExpressionNode::~AssignmentExpressionNode()
 {
     delete lhs;
     delete rhs;
+}
+
 }

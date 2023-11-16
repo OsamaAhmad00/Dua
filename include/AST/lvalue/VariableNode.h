@@ -2,6 +2,9 @@
 
 #include "LValueNode.h"
 
+namespace dua
+{
+
 class VariableNode : public LValueNode
 {
     std::string name;
@@ -13,3 +16,5 @@ public:
     llvm::Value* eval() override;
     TypeBase* compute_type() override;
 };
+
+}

@@ -46,15 +46,15 @@ set(ANTLR_EXECUTABLE ${PROJECT_SOURCE_DIR}/Antlr4/antlr-4.13.1-complete.jar)
 find_package(ANTLR REQUIRED)
 
 # Add the lexer and the parser to the build dependencies.
-antlr_target(TLexer ${PROJECT_SOURCE_DIR}/grammar/DuaLexer.g4 LEXER
-        PACKAGE Dua)  # namespace = Dua
-antlr_target(TParser ${PROJECT_SOURCE_DIR}/grammar/DuaParser.g4 PARSER
-        PACKAGE Dua
-        DEPENDS_ANTLR TLexer
-        COMPILE_FLAGS -lib ${ANTLR_TLexer_OUTPUT_DIR})  # namespace = Dua
+antlr_target(DuaLexer ${PROJECT_SOURCE_DIR}/grammar/DuaLexer.g4 LEXER
+        PACKAGE dua)  # namespace = dua
+antlr_target(DuaParser ${PROJECT_SOURCE_DIR}/grammar/DuaParser.g4 PARSER
+        PACKAGE dua
+        DEPENDS_ANTLR DuaLexer
+        COMPILE_FLAGS -lib ${ANTLR_DuaLexer_OUTPUT_DIR})  # namespace = dua
 
-include_directories(${ANTLR_TLexer_OUTPUT_DIR})
-include_directories(${ANTLR_TParser_OUTPUT_DIR})
+include_directories(${ANTLR_DuaLexer_OUTPUT_DIR})
+include_directories(${ANTLR_DuaParser_OUTPUT_DIR})
 
 set(ANTLR4_LIBS antlr4_static)
 # End of Antlr4 ---------
@@ -64,8 +64,8 @@ FILE(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/src/*)
 add_executable(Dua
     main.cpp
     ${SOURCES}
-    ${ANTLR_TLexer_CXX_OUTPUTS}
-    ${ANTLR_TParser_CXX_OUTPUTS}
+    ${ANTLR_DuaLexer_CXX_OUTPUTS}
+    ${ANTLR_DuaParser_CXX_OUTPUTS}
 )
 
 target_link_libraries(Dua ${LLVM_LIBS} ${ANTLR4_LIBS})

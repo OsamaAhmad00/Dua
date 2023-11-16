@@ -2,6 +2,9 @@
 
 #include <types/TypeBase.h>
 
+namespace dua
+{
+
 class PointerType : public TypeBase
 {
     TypeBase* element_type;
@@ -16,3 +19,5 @@ public:
     PointerType* clone() override;
     ~PointerType() override { delete element_type; }
 };
+
+}

@@ -2,6 +2,9 @@
 
 #include "AST/ASTNode.h"
 
+namespace dua
+{
+
 class WhileNode : public ASTNode
 {
     // If a counter is not used, LLVM will assign numbers incrementally (for example while_cond1, while_body2, while_end3)
@@ -18,3 +21,5 @@ public:
     NoneValue eval() override;
     ~WhileNode() override;
 };
+
+}

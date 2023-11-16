@@ -2,6 +2,9 @@
 
 #include "LValueNode.h"
 
+namespace dua
+{
+
 class AddressNode : public LValueNode
 {
     ASTNode* address;
@@ -14,3 +17,5 @@ public:
     TypeBase* compute_type() override;
     ~AddressNode() override { delete address; }
 };
+
+}

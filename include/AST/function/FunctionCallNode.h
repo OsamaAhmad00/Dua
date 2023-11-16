@@ -3,6 +3,9 @@
 #include <AST/ASTNode.h>
 #include <FunctionInfo.h>
 
+namespace dua
+{
+
 class FunctionCallNode : public ASTNode
 {
     std::string name;
@@ -19,3 +22,5 @@ public:
 
     ~FunctionCallNode() override;
 };
+
+}

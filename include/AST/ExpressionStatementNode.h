@@ -2,6 +2,9 @@
 
 #include <AST/ASTNode.h>
 
+namespace dua
+{
+
 class ExpressionStatementNode : public ASTNode
 {
     ASTNode* expression;
@@ -14,3 +17,5 @@ public:
     TypeBase* compute_type() override { delete type; return type = expression->get_cached_type()->clone(); }
     ~ExpressionStatementNode() override { delete expression; }
 };
+
+}
