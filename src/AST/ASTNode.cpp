@@ -12,6 +12,7 @@ llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, TypeBa
     temp_builder().SetInsertPoint(entry, entry->begin());
     llvm::AllocaInst* variable = temp_builder().CreateAlloca(type->llvm_type(), 0, name);
     if (init) {
+        init = compiler->cast_value(init, type->llvm_type());
         builder().CreateStore(init, variable);
     }
     symbol_table().insert(name, { variable, type });

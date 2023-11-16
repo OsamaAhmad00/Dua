@@ -331,25 +331,25 @@ integer
     ;
 
 float
-    : F64Val
-    | F32Val
+    : F64Val { assistant.push_node<F64ValueNode>(stod($F64Val.text)); }
+    | F32Val { assistant.push_node<F32ValueNode>(stof($F32Val.text)); }
     ;
 
 type
     : primitive_type
-    | Identifier            // User-defined types
+    // | Identifier            // User-defined types
     | type '[' size ']'     { assistant.create_array_type(); }
     | type '*'              { assistant.create_pointer_type(); }
     ;
 
 primitive_type
-    : I64  { assistant.push_type<I64Type>(); }
-    | I32  { assistant.push_type<I32Type>(); }
-    | I16  { assistant.push_type<I16Type>(); }
-    | I8   { assistant.push_type<I8Type> (); }
-    | F64  { assistant.push_type<F64Type>(); }
-    | F32  { assistant.push_type<F32Type>(); }
-    | Void
+    : I64  { assistant.push_type<I64Type>();  }
+    | I32  { assistant.push_type<I32Type>();  }
+    | I16  { assistant.push_type<I16Type>();  }
+    | I8   { assistant.push_type<I8Type> ();  }
+    | F64  { assistant.push_type<F64Type>();  }
+    | F32  { assistant.push_type<F32Type>();  }
+    | Void { assistant.push_type<VoidType>(); }
     ;
 
 scope_begin: '{' { assistant.enter_scope(); };
