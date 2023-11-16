@@ -34,8 +34,6 @@ llvm::Function* FunctionDefinitionNode::define_function()
 
     if (signature.return_type->llvm_type() == builder().getVoidTy())
         builder().CreateRetVoid();
-    else
-        builder().CreateRet(signature.return_type->default_value());
 
     symbol_table().pop_scope();
 

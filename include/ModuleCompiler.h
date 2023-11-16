@@ -39,6 +39,8 @@ public:
     FunctionSignature& get_function(const std::string& name);
 
     llvm::IRBuilder<>* get_builder() { return &builder; }
+    std::vector<llvm::BasicBlock*>& get_continue_stack() { return continue_stack; }
+    std::vector<llvm::BasicBlock*>& get_break_stack() { return break_stack; }
 
     struct Variable {
         llvm::Value* ptr;
@@ -59,6 +61,10 @@ private:
     SymbolTable<Variable> symbol_table;
     std::unordered_map<std::string, FunctionSignature> functions;
     llvm::Function* current_function;
+
+    // Loops
+    std::vector<llvm::BasicBlock*> continue_stack;
+    std::vector<llvm::BasicBlock*> break_stack;
 
     std::string result;
 };

@@ -1,21 +1,32 @@
-#include "AST/loops/WhileNode.h"
+#include "AST/loops/ForNode.h"
 
-int WhileNode::_counter = 0;
+int ForNode::_counter = 0;
 
-NoneValue WhileNode::eval()
+NoneValue ForNode::eval()
 {
+    symbol_table().push_scope();
+
+    for (ASTNode* node : initializations)
+        node->eval();
+
     int counter = _counter++;  // storing a local copy
     // You might delay the attachment of the blocks to the functions to reorder the blocks in a more readable way
     //  by doing the following: current_function->getBasicBlockList().push_back(block); I prefer this way.
-    llvm::BasicBlock* cond_block = create_basic_block("while_cond" + std::to_string(counter), current_function());
-    llvm::BasicBlock* body_block = create_basic_block("while_body" + std::to_string(counter), current_function());
-    llvm::BasicBlock* end_block = create_basic_block("while_end" + std::to_string(counter), current_function());
+    llvm::BasicBlock* update_block = create_basic_block("for_update" + std::to_string(counter), current_function());
+    llvm::BasicBlock* cond_block = create_basic_block("for_cond" + std::to_string(counter), current_function());
+    llvm::BasicBlock* body_block = create_basic_block("for_body" + std::to_string(counter), current_function());
+    llvm::BasicBlock* end_block = create_basic_block("for_end" + std::to_string(counter), current_function());
 
-    compiler->get_continue_stack().push_back(cond_block);
+    compiler->get_continue_stack().push_back(update_block);
     compiler->get_break_stack().push_back(end_block);
 
     // From the current block.
     builder().CreateBr(cond_block);
+
+    builder().SetInsertPoint(update_block);
+    update_exp->eval();
+    if (builder().GetInsertBlock()->empty() || !builder().GetInsertBlock()->back().isTerminator())
+        builder().CreateBr(cond_block);
 
     builder().SetInsertPoint(cond_block);
     llvm::Value* cond_res = cond_exp->eval();
@@ -27,18 +38,23 @@ NoneValue WhileNode::eval()
     builder().SetInsertPoint(body_block);
     body_exp->eval();
     if (builder().GetInsertBlock()->empty() || !builder().GetInsertBlock()->back().isTerminator())
-        builder().CreateBr(cond_block);
+        builder().CreateBr(update_block);
 
     builder().SetInsertPoint(end_block);
 
     compiler->get_continue_stack().pop_back();
     compiler->get_break_stack().pop_back();
 
+    symbol_table().push_scope();
+
     return none_value();
 }
 
-WhileNode::~WhileNode()
+ForNode::~ForNode()
 {
+    for (auto exp : initializations)
+        delete exp;
     delete cond_exp;
     delete body_exp;
+    delete update_exp;
 }

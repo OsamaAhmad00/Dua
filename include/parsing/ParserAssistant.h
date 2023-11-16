@@ -11,7 +11,11 @@
 #include "AST/ExpressionStatementNode.h"
 #include "AST/BlockNode.h"
 #include "AST/IfNode.h"
-#include "AST/WhileNode.h"
+
+#include "AST/loops/ForNode.h"
+#include "AST/loops/WhileNode.h"
+#include "AST/loops/ContinueNode.h"
+#include "AST/loops/BreakNode.h"
 
 #include "AST/function/FunctionCallNode.h"
 #include "AST/function/FunctionDefinitionNode.h"
@@ -150,6 +154,9 @@ public:
     void create_post_dec();
     void create_ternary_operator();
     void create_for();
+    void create_empty_statement();
+    void create_continue();
+    void create_break();
 
     template<typename T>
     void create_unary_expr() {

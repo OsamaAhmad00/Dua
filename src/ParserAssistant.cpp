@@ -287,24 +287,35 @@ void ParserAssistant::create_ternary_operator() {
 
 void ParserAssistant::create_for()
 {
-    // No dec_statements, will push later
-    auto body = pop_node();
 
-    // No dec_statements, just an expression
     auto update = pop_node();
+    auto body = pop_node();
+    auto condition = pop_node();
 
-    enter_scope();
+    // Decrement for popping the body statement
+    dec_statements();
+
+    auto n = leave_scope();
+    std::vector<ASTNode*> initializations(n);
+    for (int i = 0; i < n; i++)
+        initializations[n - i - 1] = pop_node();
+
     inc_statements();
+
+    push_node<ForNode>(std::move(initializations), condition, update, body);
+}
+
+void ParserAssistant::create_empty_statement() {
+    push_node<I8ValueNode>(0);
     inc_statements();
-    nodes.push_back(body);
-    nodes.push_back(update);
-    create_block();
+}
 
-    // Nodes now: scope -> initialization -> condition -> { body; update; }
-    // Counts as a statement. Don't inc_statements since you didn't dec_statements earlier.
-    create_while();
+void ParserAssistant::create_continue() {
+    push_node<ContinueNode>();
+    inc_statements();
+}
 
-    create_block();
-
+void ParserAssistant::create_break() {
+    push_node<BreakNode>();
     inc_statements();
 }
