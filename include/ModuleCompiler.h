@@ -22,7 +22,7 @@ public:
     // Returns the result type of an operation involving the two types.
     TypeBase* get_winning_type(TypeBase* lhs, TypeBase* rhs);
 
-    llvm::Value* cast_value(llvm::Value* value, llvm::Type* target_type);
+    llvm::Value* cast_value(llvm::Value* value, llvm::Type* target_type, bool panic_on_failure=true);
 
     const std::string& get_result() { return result; }
 

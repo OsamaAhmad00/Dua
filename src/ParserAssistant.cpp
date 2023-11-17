@@ -330,4 +330,10 @@ void ParserAssistant::create_loaded_lvalue() {
     push_node<LoadedLValueNode>(node);
 }
 
+void ParserAssistant::create_array_indexing() {
+    auto index = pop_node();
+    auto arr = pop_node_as<LValueNode>();
+    push_node<ArrayIndexingNode>(arr, index);
+}
+
 }

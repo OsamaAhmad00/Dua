@@ -39,6 +39,7 @@
 
 #include "AST/lvalue/LValueNode.h"
 #include "AST/lvalue/VariableNode.h"
+#include "AST/lvalue/ArrayIndexingNode.h"
 #include "AST/lvalue/DereferenceNode.h"
 #include "AST/lvalue/LoadedLValueNode.h"
 
@@ -163,6 +164,7 @@ public:
     void create_break();
     void create_do_while();
     void create_loaded_lvalue();
+    void create_array_indexing();
 
     template<typename T>
     void create_unary_expr() {
