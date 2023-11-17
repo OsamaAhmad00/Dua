@@ -9,11 +9,8 @@ int main()
         "void print(i32 num) { printf(\"%d\n\", num); }"
         ""
         "int main() {"
-        "    printf(\"Hello, world!\n\");"
-        "    printf(\"Hello, world!\n\");"
-        "    printf(\"Helloooo, world!\n\");"
-        "    printf(\"Hello, world!\n\");"
-        "    printf(\"Hello, world!\n\");"
+        "    if (0 && 1 < 3 && 5 && *(int*)0) print(5);"
+        "    else if (1 || *(int*)0) print(6);"
         "    return 0;"
         "}"
     );
