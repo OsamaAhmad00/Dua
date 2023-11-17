@@ -11,10 +11,11 @@ class VariableNode : public LValueNode
 
 public:
 
-    VariableNode(ModuleCompiler* compiler, std::string name, bool get_address=false)
-        : name(std::move(name)) { this->compiler = compiler; this->load_value = !get_address; }
+    VariableNode(ModuleCompiler* compiler, std::string name)
+        : name(std::move(name)) { this->compiler = compiler; }
     llvm::Value* eval() override;
     TypeBase* compute_type() override;
+    TypeBase* get_element_type() override;
 };
 
 }

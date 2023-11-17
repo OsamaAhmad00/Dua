@@ -26,7 +26,7 @@ void ParserAssistant::create_variable_declaration()
 
 void ParserAssistant::create_variable_definition()
 {
-    auto value = pop_node_as<ValueNode>();
+    auto value = pop_node();
     auto name = pop_str();
     auto type = pop_type();
     if (is_in_global_scope()) {
@@ -251,12 +251,8 @@ void ParserAssistant::create_string_value() {
     push_node<StringValueNode>(str.substr(1, str.size() - 2));
 }
 
-void ParserAssistant::create_address_expr() {
-    push_node<AddressNode>(pop_node(), false);
-}
-
 void ParserAssistant::create_dereference() {
-    push_node<AddressNode>(pop_node(), true);
+    push_node<DereferenceNode>(pop_node());
 }
 
 void ParserAssistant::create_pre_inc() {
@@ -327,6 +323,11 @@ void ParserAssistant::create_do_while() {
     ASTNode* condition = pop_node();
     ASTNode* body = pop_node();
     push_node<DoWhileNode>(condition, body);
+}
+
+void ParserAssistant::create_loaded_lvalue() {
+    auto node = pop_node_as<LValueNode>();
+    push_node<LoadedLValueNode>(node);
 }
 
 }

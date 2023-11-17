@@ -126,7 +126,6 @@ statement
 expression
     : number
     | String { assistant.push_str($String.text); assistant.create_string_value(); }
-    | variable
     | block_expression
     | function_call
     | if_expression
@@ -174,7 +173,7 @@ expression
     | lvalue '&='  expression  { assistant.create_compound_assignment<BitwiseAndNode>(); }
     | lvalue '^='  expression  { assistant.create_compound_assignment<XorNode>(); }
     | lvalue '|='  expression  { assistant.create_compound_assignment<BitwiseOrNode>(); }
-    | '*' expression { assistant.create_dereference(); }
+    | lvalue { assistant.create_loaded_lvalue(); }
     ;
 
 cast_expression
@@ -297,8 +296,8 @@ variable
 
 lvalue
     : '(' lvalue ')'
-    | Identifier { assistant.push_node<VariableNode>($Identifier.text, true); }
-    | '*' expression { assistant.create_address_expr(); }
+    | variable
+    | '*' expression { assistant.create_dereference(); }
     ;
 
 // A convinience production that pushes the identifier's text.
@@ -353,6 +352,6 @@ primitive_type
 scope_begin: '{' { assistant.enter_scope(); };
 
 // We don't call leave scope here, instead, it's up to the
-//  assistant to determine when the scope will end. (usually
-//  ends when constructing a block.
+//  assistant to determine when the scope ends (usually
+//  ends when a block construction finishes).
 scope_end:   '}';

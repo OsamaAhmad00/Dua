@@ -16,14 +16,24 @@ public:                                                                         
     NAME(ModuleCompiler* compiler, ASTNode* lhs, ASTNode* rhs)                        \
         : lhs(lhs), rhs(rhs) { this->compiler = compiler; }                           \
                                                                                       \
+    static llvm::Value* perform(ModuleCompiler* compiler,                             \
+        llvm::Value* lhs, llvm::Value* rhs, llvm::Type* type) {                       \
+        lhs = compiler->cast_value(lhs, type);                                        \
+        rhs = compiler->cast_value(rhs, type);                                        \
+        if (lhs == nullptr || rhs == nullptr)                                         \
+            throw std::runtime_error("Type mismatch between the two operands");       \
+        return compiler->get_builder()->OP(lhs, rhs, LABEL);                          \
+    }                                                                                 \
+                                                                                      \
     llvm::Value* eval() override {                                                    \
         auto lhs_value = lhs->eval();                                                 \
         auto rhs_value = rhs->eval();                                                 \
-        lhs_value = compiler->cast_value(lhs_value, get_cached_type()->llvm_type());  \
-        rhs_value = compiler->cast_value(rhs_value, get_cached_type()->llvm_type());  \
-        if (lhs_value == nullptr || rhs_value == nullptr)                             \
-            throw std::runtime_error("Type mismatch between the two operands");       \
-        return builder().OP(lhs_value, rhs_value, LABEL);                             \
+        return NAME::perform(                                                         \
+            compiler,                                                                 \
+            lhs_value,                                                                \
+            rhs_value,                                                                \
+            get_cached_type()->llvm_type()                                            \
+        );                                                                            \
     }                                                                                 \
                                                                                       \
     TypeBase* compute_type() override {                                               \
