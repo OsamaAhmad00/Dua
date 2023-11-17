@@ -36,7 +36,7 @@ ModuleCompiler::ModuleCompiler(const std::string &module_name, const std::string
     delete ast;
 }
 
-llvm::Value* ModuleCompiler::cast_value(llvm::Value* value, llvm::Type* target_type)
+llvm::Value* ModuleCompiler::cast_value(llvm::Value* value, llvm::Type* target_type, bool panic_on_failure)
 {
     llvm::Type* source_type = value->getType();
 
@@ -94,6 +94,9 @@ llvm::Value* ModuleCompiler::cast_value(llvm::Value* value, llvm::Type* target_t
     // This may not preserve the semantics of the value, and should be used with caution
     if (source_width == target_width)
         return builder.CreateBitCast(value, target_type);
+
+    if (panic_on_failure)
+        throw std::runtime_error("Cast failure");
 
     return nullptr;
 }

@@ -19,6 +19,8 @@ public:
 
     llvm::ArrayType * llvm_type() override;
 
+    TypeBase* get_element_type() { return element_type; }
+
     ArrayType* clone() override { return new ArrayType(builder, element_type->clone(), size); }
 
     ~ArrayType() override { delete element_type; }

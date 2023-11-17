@@ -290,13 +290,10 @@ function_call
     : identifier '(' arg_list ')' { assistant.create_function_call(); }
     ;
 
-variable
-    : Identifier { assistant.push_node<VariableNode>($Identifier.text); }
-    ;
-
 lvalue
     : '(' lvalue ')'
-    | variable
+    | Identifier { assistant.push_node<VariableNode>($Identifier.text); }
+    | lvalue '[' expression ']' { assistant.create_array_indexing(); }
     | '*' expression { assistant.create_dereference(); }
     ;
 

@@ -2,7 +2,6 @@
 
 #include <AST/ASTNode.h>
 #include <AST/lvalue/LValueNode.h>
-#include <AST/NoDeleteWrapperNode.h>
 
 namespace dua
 {
