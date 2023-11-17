@@ -336,4 +336,50 @@ void ParserAssistant::create_array_indexing() {
     push_node<ArrayIndexingNode>(arr, index);
 }
 
+void ParserAssistant::create_logical_and()
+{
+    auto rhs = pop_node();
+    auto lhs = pop_node();
+
+    auto zero = compiler->create_node<I32ValueNode>(0);
+    auto one = compiler->create_node<I32ValueNode>(1);
+
+    auto rhs_casted = compiler->create_node<NENode>(rhs, zero);
+    std::vector<ASTNode*> inner_conditions { rhs_casted };
+    std::vector<ASTNode*> inner_branches { one, zero };
+    auto inner = compiler->create_node<IfNode>(std::move(inner_conditions),
+                                               std::move(inner_branches), true, "And");
+
+    auto lhs_casted = compiler->create_node<NENode>(lhs, zero);
+    std::vector<ASTNode*> outer_conditions { lhs_casted };
+    std::vector<ASTNode*> outer_branches { inner, zero };
+    auto outer = compiler->create_node<IfNode>(std::move(outer_conditions),
+                                               std::move(outer_branches), true, "And");
+
+    nodes.push_back(outer);
+}
+
+void ParserAssistant::create_logical_or()
+{
+    auto rhs = pop_node();
+    auto lhs = pop_node();
+
+    auto zero = compiler->create_node<I32ValueNode>(0);
+    auto one = compiler->create_node<I32ValueNode>(1);
+
+    auto rhs_casted = compiler->create_node<NENode>(rhs, zero);
+    std::vector<ASTNode*> inner_conditions { rhs_casted };
+    std::vector<ASTNode*> inner_branches { one, zero };
+    auto inner = compiler->create_node<IfNode>(std::move(inner_conditions),
+                           std::move(inner_branches), true, "Or");
+
+    auto lhs_casted = compiler->create_node<NENode>(lhs, zero);
+    std::vector<ASTNode*> outer_conditions { lhs_casted };
+    std::vector<ASTNode*> outer_branches { one, inner };
+    auto outer = compiler->create_node<IfNode>(std::move(outer_conditions),
+                           std::move(outer_branches), true, "Or");
+
+    nodes.push_back(outer);
+}
+
 }

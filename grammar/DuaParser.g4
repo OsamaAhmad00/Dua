@@ -140,7 +140,7 @@ expression
     | '-'  expression { assistant.create_unary_expr<NegativeExpressionNode>();          }
     | '!'  expression { assistant.create_unary_expr<NotExpressionNode>();               }
     | '~'  expression { assistant.create_unary_expr<BitwiseComplementExpressionNode>(); }
-    | '&' lvalue  // lvalues load the address already, so there is nothing to be done here
+    | '&' lvalue  // the lvalue production has loaded the address already, there is nothing to be done here.
     | expression '*' expression  { assistant.create_binary_expr<MultiplicationNode>(); }
     | expression '/' expression  { assistant.create_binary_expr<DivisionNode>();       }
     | expression '%' expression  { assistant.create_binary_expr<ModNode>();            }
@@ -158,8 +158,8 @@ expression
     | expression '&'  expression { assistant.create_binary_expr<BitwiseAndNode>(); }
     | expression '^'  expression { assistant.create_binary_expr<XorNode>(); }
     | expression '|'  expression { assistant.create_binary_expr<BitwiseOrNode>(); }
-    | expression '&&' expression
-    | expression '||' expression
+    | expression '&&' expression { assistant.create_logical_and(); }
+    | expression '||' expression { assistant.create_logical_or(); }
     | expression '?' expression ':' expression { assistant.create_ternary_operator(); }
     | lvalue '='   expression  { assistant.create_assignment(); }
     | lvalue '+='  expression  { assistant.create_compound_assignment<AdditionNode>(); }

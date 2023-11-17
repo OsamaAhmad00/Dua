@@ -165,6 +165,8 @@ public:
     void create_do_while();
     void create_loaded_lvalue();
     void create_array_indexing();
+    void create_logical_and();
+    void create_logical_or();
 
     template<typename T>
     void create_unary_expr() {
