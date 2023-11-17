@@ -44,6 +44,7 @@ public:
     llvm::IRBuilder<>* get_builder() { return &builder; }
     std::vector<llvm::BasicBlock*>& get_continue_stack() { return continue_stack; }
     std::vector<llvm::BasicBlock*>& get_break_stack() { return break_stack; }
+    std::unordered_map<std::string, llvm::Constant*>& get_string_pool() { return string_pool; }
 
     struct Variable {
         llvm::Value* ptr;
@@ -63,6 +64,7 @@ private:
     llvm::IRBuilder<> temp_builder;
     SymbolTable<Variable> symbol_table;
     std::unordered_map<std::string, FunctionSignature> functions;
+    std::unordered_map<std::string, llvm::Constant*> string_pool;
     llvm::Function* current_function;
 
     // Loops
