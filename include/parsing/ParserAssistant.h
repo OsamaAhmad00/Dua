@@ -36,9 +36,11 @@
 #include "AST/terminals/FloatValueNodes.h"
 #include "AST/terminals/IntegerValueNodes.h"
 #include "AST/terminals/StringValueNode.h"
+
 #include "AST/lvalue/LValueNode.h"
 #include "AST/lvalue/VariableNode.h"
-#include "AST/lvalue/AddressNode.h"
+#include "AST/lvalue/DereferenceNode.h"
+#include "AST/lvalue/LoadedLValueNode.h"
 
 #include "types/IntegerTypes.h"
 #include "types/FloatTypes.h"
@@ -106,7 +108,7 @@ class ParserAssistant
     T *pop_node_as() {
         auto result = pop_node();
         auto casted = dynamic_cast<T*>(result);
-        if (result == nullptr)
+        if (casted == nullptr)
             throw std::runtime_error("Unexpected node type");
         return casted;
     }
@@ -149,7 +151,6 @@ public:
     void create_pointer_type();
     void create_array_type();
     void create_string_value();
-    void create_address_expr();
     void create_dereference();
     void create_pre_inc();
     void create_pre_dec();
@@ -161,6 +162,7 @@ public:
     void create_continue();
     void create_break();
     void create_do_while();
+    void create_loaded_lvalue();
 
     template<typename T>
     void create_unary_expr() {

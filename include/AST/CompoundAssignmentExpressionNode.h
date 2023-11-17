@@ -20,18 +20,11 @@ public:
 
     llvm::Value* eval() override
     {
-        lhs->set_load_value(true);
-        auto op = compiler->create_node<OpNode>(
-            new NoDeleteWrapperNode<ASTNode>(lhs),
-            new NoDeleteWrapperNode<ASTNode>(rhs)
-        );
-        auto value = op->eval();
-        value = compiler->cast_value(value, lhs->get_cached_type()->llvm_type());
-
-        lhs->set_load_value(false);
-        auto ptr = lhs->eval();
-        builder().CreateStore(value, ptr);
-
+        auto lhs_ptr = lhs->eval();
+        auto lhs_value = builder().CreateLoad(lhs->get_element_type()->llvm_type(), lhs_ptr);
+        auto rhs_value = rhs->eval();
+        auto value = OpNode::perform(compiler, lhs_value, rhs_value, lhs->get_element_type()->llvm_type());
+        builder().CreateStore(value, lhs_ptr);
         return value;
     }
 

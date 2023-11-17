@@ -1,21 +1,21 @@
-#include "AST/lvalue/VariableNode.h"
+#include <AST/lvalue/VariableNode.h>
+#include <types/PointerType.h>
 
 namespace dua
 {
 
-llvm::Value* VariableNode::eval()
-{
+llvm::Value* VariableNode::eval() {
     // This searches locally first, then globally if not found.
-    auto variable = symbol_table().get(name);
-
-    if (!load_value)
-        return variable.ptr;
-
-    return builder().CreateLoad(variable.type->llvm_type(), variable.ptr);
+    return symbol_table().get(name).ptr;
 }
 
 TypeBase* VariableNode::compute_type() {
-    return type = symbol_table().get(name).type;
+    delete type;
+    return type = compiler->create_type<PointerType>(symbol_table().get(name).type);
+}
+
+TypeBase *VariableNode::get_element_type() {
+    return symbol_table().get(name).type;
 }
 
 }
