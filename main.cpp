@@ -19,6 +19,7 @@ int main()
         "    print(00011T);"
         "    print(0b01010101);"
         "    print(0xFFFFFFFS);"
+        "    return 0;"
         "}"
     );
 }
