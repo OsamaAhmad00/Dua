@@ -311,17 +311,17 @@ number
     ;
 
 size
-    : I64Val { assistant.push_num(stol($I64Val.text)); }
-    | I32Val { assistant.push_num(stol($I32Val.text)); }
-    | I16Val { assistant.push_num(stol($I16Val.text)); }
-    | I8Val  { assistant.push_num(stol($I8Val.text )); }
+    : I64Val { assistant.push_num(assistant.get_i64($I64Val.text)); }
+    | I32Val { assistant.push_num(assistant.get_i64($I32Val.text)); }
+    | I16Val { assistant.push_num(assistant.get_i64($I16Val.text)); }
+    | I8Val  { assistant.push_num(assistant.get_i64($I8Val.text )); }
     ;
 
 integer
-    : I64Val { assistant.push_node<I64ValueNode>(stol($I64Val.text)); }
-    | I32Val { assistant.push_node<I32ValueNode>(stoi($I32Val.text)); }
-    | I16Val { assistant.push_node<I16ValueNode>(stoi($I16Val.text)); }
-    | I8Val  { assistant.push_node<I8ValueNode >(stoi($I8Val.text )); }
+    : I64Val { assistant.push_node<I64ValueNode>(assistant.get_i64($I64Val.text)); }
+    | I32Val { assistant.push_node<I32ValueNode>(assistant.get_i32($I32Val.text)); }
+    | I16Val { assistant.push_node<I16ValueNode>(assistant.get_i16($I16Val.text)); }
+    | I8Val  { assistant.push_node<I8ValueNode >(assistant.get_i8 ($I8Val.text )); }
     ;
 
 float

@@ -81,19 +81,33 @@ Null: 'null';
 True: 'true';
 False: 'false';
 
-I64Val: Integer 'L';
-I32Val: Integer;
+I64Val: Integer;
+I32Val: Integer 'I';
 I16Val: Integer 'S';
-I8Val:  Integer 'B';
+I8Val:  Integer 'T';
 F64Val: Float;
 F32Val: Float 'F';
 
-Identifier: LETTER (LETTER | Digit)*;
+Integer: HexInteger | DecimalInteger | OctalInteger | BinaryInteger;
 
-fragment Integer: (Digit | NONZERO (Digit | '\'')*);
-fragment Float: Integer '.' Digit*;
-fragment Digit: [0-9];
-fragment NONZERO: [1-9];
+Identifier: LETTER (LETTER | DecimalDigit)*;
+
+fragment HexInteger: '0x' (HexDigit | '\'')+;
+fragment DecimalInteger: DecimalNonZeroDigit (DecimalDigit | '\'')*;
+fragment OctalInteger: '0' (OctalDigit | '\'')*;  // Quick hack: 0 is counted as octal
+fragment BinaryInteger: '0b' (BinaryDigit | '\'')+;
+
+fragment Float: DecimalInteger '.' DecimalInteger*;
+
+fragment HexDigit: [0-9a-fA-F];
+
+fragment DecimalDigit: [0-9];
+fragment DecimalNonZeroDigit: [1-9];
+
+fragment OctalDigit: [0-7];
+
+fragment BinaryDigit: [0-1];
+
 fragment LETTER: [a-zA-Z_$];
 
 String: '"' .*? '"';

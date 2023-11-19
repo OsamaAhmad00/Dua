@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AST/terminals/ValueNode.h>
+#include <AST/values/ValueNode.h>
 #include <types/ArrayType.h>
 
 namespace dua

@@ -1,4 +1,4 @@
-#include <AST/terminals/StringValueNode.h>
+#include <AST/values/StringValueNode.h>
 
 namespace dua
 {

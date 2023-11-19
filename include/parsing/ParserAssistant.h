@@ -31,11 +31,11 @@
 #include "AST/unary/CastExpressionNode.h"
 #include "AST/unary/PostfixAdditionExpressionNode.h"
 
-#include "AST/terminals/ValueNode.h"
-#include "AST/terminals/ArrayValueNode.h"
-#include "AST/terminals/FloatValueNodes.h"
-#include "AST/terminals/IntegerValueNodes.h"
-#include "AST/terminals/StringValueNode.h"
+#include "AST/values/ValueNode.h"
+#include "AST/values/ArrayValueNode.h"
+#include "AST/values/FloatValueNodes.h"
+#include "AST/values/IntegerValueNodes.h"
+#include "AST/values/StringValueNode.h"
 
 #include "AST/lvalue/LValueNode.h"
 #include "AST/lvalue/VariableNode.h"
@@ -167,6 +167,11 @@ public:
     void create_array_indexing();
     void create_logical_and();
     void create_logical_or();
+
+    static int64_t get_i64(const std::string& num);
+    static int32_t get_i32(const std::string& num);
+    static int16_t get_i16(const std::string& num);
+    static int8_t  get_i8 (const std::string& num);
 
     template<typename T>
     void create_unary_expr() {

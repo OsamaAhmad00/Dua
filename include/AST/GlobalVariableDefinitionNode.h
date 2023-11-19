@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AST/ASTNode.h>
-#include <AST/terminals/ValueNode.h>
+#include <AST/values/ValueNode.h>
 
 namespace dua
 {

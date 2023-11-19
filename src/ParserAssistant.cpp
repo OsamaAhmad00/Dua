@@ -382,4 +382,24 @@ void ParserAssistant::create_logical_or()
     nodes.push_back(outer);
 }
 
+#define get_ixx(FUNC)                                         \
+if (num[0] == '0')                                            \
+{                                                             \
+    if (num.size() > 2)                                       \
+    {                                                         \
+        if (num[1] == 'x')                                    \
+            return FUNC(num.c_str() + 2, nullptr, 16);        \
+        else if (num[1] == 'b')                               \
+            return FUNC(num.c_str() + 2, nullptr, 2);         \
+    }                                                         \
+    if (num.size() > 1)                                       \
+        return FUNC(num.c_str() + 1, nullptr, 8);             \
+}                                                             \
+return FUNC(num);
+
+int64_t ParserAssistant::get_i64(const std::string &num) { get_ixx(std::stoll); }
+int32_t ParserAssistant::get_i32(const std::string &num) { get_ixx(std::stoi); }
+int16_t ParserAssistant::get_i16(const std::string &num) { get_ixx(std::stoi); }
+int8_t  ParserAssistant::get_i8 (const std::string &num) { get_ixx(std::stoi); }
+
 }
