@@ -1,7 +1,7 @@
 #include <ModuleCompiler.h>
 #include "parsing/ParserFacade.h"
 #include <AST/TranslationUnitNode.h>
-#include <sstream>
+#include <llvm/Support/Host.h>
 
 namespace dua
 {
@@ -13,6 +13,8 @@ ModuleCompiler::ModuleCompiler(const std::string &module_name, const std::string
     temp_builder(context),
     current_function(nullptr)
 {
+    module.setTargetTriple(llvm::sys::getDefaultTargetTriple());
+
     ParserFacade parser(*this);
 
     // Parse
@@ -22,16 +24,16 @@ ModuleCompiler::ModuleCompiler(const std::string &module_name, const std::string
     ast->eval();
 
     // Print code to stdout
-    module.print(llvm::outs(), nullptr);
+    // module.print(llvm::outs(), nullptr);
 
     // Save code to file
-    std::error_code error;
-    llvm::raw_fd_ostream out(module_name + ".ll", error);
-    module.print(out, nullptr);
+    // std::error_code error;
+    // llvm::raw_fd_ostream out(module_name + ".ll", error);
+    // module.print(out, nullptr);
 
-    llvm::raw_string_ostream stream(result);
-    module.print(stream, nullptr);
-    result = stream.str();
+     llvm::raw_string_ostream stream(result);
+     module.print(stream, nullptr);
+     result = stream.str();
 
     delete ast;
 }
