@@ -59,6 +59,20 @@ include_directories(${ANTLR_DuaParser_OUTPUT_DIR})
 set(ANTLR4_LIBS antlr4_static)
 # End of Antlr4 ---------
 
+#
+
+# Start of Boost --------
+find_package(Boost REQUIRED)
+
+if(Boost_FOUND)
+    message(STATUS "Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
+    message(STATUS "Boost_LIBRARIES: ${Boost_LIBRARIES}")
+    message(STATUS "Boost_VERSION: ${Boost_VERSION}")
+    include_directories(${Boost_INCLUDE_DIRS})
+endif()
+# End of Boost ----------
+
+
 FILE(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/src/*)
 
 add_executable(Dua
@@ -68,4 +82,4 @@ add_executable(Dua
     ${ANTLR_DuaParser_CXX_OUTPUTS}
 )
 
-target_link_libraries(Dua ${LLVM_LIBS} ${ANTLR4_LIBS})
+target_link_libraries(Dua ${LLVM_LIBS} ${ANTLR4_LIBS} ${Boost_LIBRARIES})
