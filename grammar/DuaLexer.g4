@@ -110,7 +110,7 @@ fragment BinaryDigit: [0-1];
 
 fragment LETTER: [a-zA-Z_$];
 
-String: '"' .*? '"';
+String: '"' ('\\' . | '""' | ~["\\])* '"';
 
 // Whitespaces
 WS: [ \t\r\n]+ -> channel(99);

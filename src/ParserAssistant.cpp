@@ -246,9 +246,39 @@ void ParserAssistant::create_array_type() {
     push_type<ArrayType>(type, size);
 }
 
-void ParserAssistant::create_string_value() {
+void ParserAssistant::create_string_value()
+{
     auto str = pop_str();
-    push_node<StringValueNode>(str.substr(1, str.size() - 2));
+    std::string result;
+    int i = 1;
+    for (; i < str.size() - 2; i++) {
+        if (str[i] == '\\') {
+            i++;
+            switch (str[i]) {
+                case '\'': result.push_back('\''); break;
+                case '"': result.push_back('\"');  break;
+                case '?': result.push_back('\?');  break;
+                case '\\': result.push_back('\\'); break;
+                case 'a': result.push_back('\a');  break;
+                case 'b': result.push_back('\b');  break;
+                case 'f': result.push_back('\f');  break;
+                case 'n': result.push_back('\n');  break;
+                case 'r': result.push_back('\r');  break;
+                case 't': result.push_back('\t');  break;
+                case 'v': result.push_back('\v');  break;
+                default: throw std::runtime_error(
+                        std::string("Undefined escape character: ") + str[i] + ".");
+            }
+        } else result.push_back(str[i]);
+    }
+    if (i == str.size() - 2) {
+        if (str.back() == '\\')
+            throw std::runtime_error("Last character can't be a \\.");
+        else
+            result.push_back(str[str.size() - 2]);
+    }
+
+    push_node<StringValueNode>(std::move(result));
 }
 
 void ParserAssistant::create_dereference() {
