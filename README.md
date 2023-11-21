@@ -2,12 +2,13 @@
 
 # Dua
 
-The Dua language compiler. Written in C++, and is based on LLVM, Antlr4, and Boost libraries
+The Dua language compiler. Written in C++, and is based on LLVM, Antlr4, Boost libraries, and the GoogleTest framework
 
 ## Notable compiler functionalities
 
 - Compiling to multiple architectures (such as x86, MIPS, RISC-V, and even PIC microcontrollers)
 - Compiling to multiple OSs (such as Windows, Linux, and MacOSX)
+- Generating and linking against both static and dynamic libraries
 - Generating LLVM IR
 - Generating assembly
 - Generating object files
@@ -367,8 +368,8 @@ The project is organized as follows:
   - `types`: Contains classes representing types
   - `utils`: Contains util functions such as the `termcolor` library, or `clang` related functions for final executable generation.
 - `src`: Contains all source files
-
----
+- `testing`: Contains the test files along with the tools needed for testing.
+  - To add new test cases, you can add a new test source file in `testing/tests`, and use the `define_test` macro in `testing\tests\CMakeLists.txt` to include the new test. Note that the source file name should be the same as the test name, plus the `.cpp` extension.
 
 ## Project Prerequisites
 
