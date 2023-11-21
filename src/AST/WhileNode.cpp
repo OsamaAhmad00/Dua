@@ -1,4 +1,5 @@
 #include "AST/loops/WhileNode.h"
+#include <utils/ErrorReporting.h>
 
 namespace dua
 {
@@ -24,7 +25,7 @@ NoneValue WhileNode::eval()
     llvm::Value* cond_res = cond_exp->eval();
     cond_res = compiler->cast_value(cond_res, builder().getInt1Ty());
     if (cond_res == nullptr)
-        throw std::runtime_error("The provided cond_res can't be casted to boolean value.");
+        report_error("The provided condition can't be casted to boolean value.");
     builder().CreateCondBr(cond_res, body_block, end_block);
 
     builder().SetInsertPoint(body_block);

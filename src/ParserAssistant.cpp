@@ -17,7 +17,7 @@ void ParserAssistant::create_variable_declaration()
     auto name = pop_str();
     auto type = pop_type();
     if (is_in_global_scope()) {
-        throw std::runtime_error("Global variables must be initialized");
+        report_error("The global variable " + name + " must be initialized");
     } else {
         push_node<LocalVariableDefinitionNode>(std::move(name), type, nullptr);
     }
@@ -40,7 +40,7 @@ void ParserAssistant::create_variable_definition()
 void ParserAssistant::create_function_declaration()
 {
     if (!is_in_global_scope())
-        throw std::runtime_error("Function declarations/definitions not allowed in a local scope");
+        report_error("Function declarations/definitions not allowed in a local scope");
     inc_statements();
     FunctionSignature signature;
     signature.is_var_arg = is_var_arg;
@@ -266,14 +266,13 @@ void ParserAssistant::create_string_value()
                 case 'r': result.push_back('\r');  break;
                 case 't': result.push_back('\t');  break;
                 case 'v': result.push_back('\v');  break;
-                default: throw std::runtime_error(
-                        std::string("Undefined escape character: ") + str[i] + ".");
+                default: report_error(std::string("Undefined escape character: ") + str[i]);
             }
         } else result.push_back(str[i]);
     }
     if (i == str.size() - 2) {
         if (str.back() == '\\')
-            throw std::runtime_error("Last character can't be a \\.");
+            report_error("Last character can't be a \\.");
         else
             result.push_back(str[str.size() - 2]);
     }

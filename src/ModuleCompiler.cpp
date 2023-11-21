@@ -2,6 +2,7 @@
 #include "parsing/ParserFacade.h"
 #include <AST/TranslationUnitNode.h>
 #include <llvm/Support/Host.h>
+#include <utils/ErrorReporting.h>
 
 namespace dua
 {
@@ -89,7 +90,7 @@ llvm::Value* ModuleCompiler::cast_value(llvm::Value* value, llvm::Type* target_t
         return builder.CreateFPToSI(value, target_type);
 
     if (panic_on_failure)
-        throw std::runtime_error("Cast failure");
+        report_error("Casting couldn't be done");
 
     return nullptr;
 }
@@ -125,19 +126,20 @@ TypeBase* ModuleCompiler::get_winning_type(TypeBase* lhs, TypeBase* rhs)
     if (l->isFloatingPointTy() && r->isIntegerTy())
         return rhs;
 
-    throw std::runtime_error("Type mismatch");
+    report_internal_error("Type mismatch");
+    return nullptr;
 }
 
 void ModuleCompiler::register_function(std::string name, FunctionSignature signature) {
     if (functions.find(name) != functions.end())
-        throw std::runtime_error("Function " + name + " is already declared/defined");
+        report_internal_error("Function " + name + " is already declared/defined");
     functions[std::move(name)] = std::move(signature);
 }
 
 FunctionSignature& ModuleCompiler::get_function(const std::string& name) {
     auto it = functions.find(name);
     if (it == functions.end())
-        throw std::runtime_error("The function " + name + " is not declared/defined");
+        report_internal_error("The function " + name + " is not declared/defined");
     return it->second;
 }
 

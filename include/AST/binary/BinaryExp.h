@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AST/ASTNode.h>
+#include <utils/ErrorReporting.h>
 
 namespace dua
 {
@@ -21,7 +22,7 @@ public:                                                                         
         lhs = compiler->cast_value(lhs, type);                                        \
         rhs = compiler->cast_value(rhs, type);                                        \
         if (lhs == nullptr || rhs == nullptr)                                         \
-            throw std::runtime_error("Type mismatch between the two operands");       \
+            report_error("Type mismatch between the two operands");                   \
         return compiler->get_builder()->OP(lhs, rhs, LABEL);                          \
     }                                                                                 \
                                                                                       \

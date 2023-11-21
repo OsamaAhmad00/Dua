@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AST/ASTNode.h"
+#include <utils/ErrorReporting.h>
 
 namespace dua
 {
@@ -13,7 +14,7 @@ public:
     NoneValue eval() override {
         auto& s = compiler->get_continue_stack();
         if (s.empty())
-            throw std::runtime_error("Not inside a loop");
+            report_internal_error("Not inside a loop");
         builder().CreateBr(s.back());
         return none_value();
     }

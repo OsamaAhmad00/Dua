@@ -1,5 +1,6 @@
 #include <AST/IfNode.h>
 #include <types/VoidType.h>
+#include <utils/ErrorReporting.h>
 
 namespace dua
 {
@@ -61,7 +62,7 @@ llvm::Value* IfNode::eval()
         llvm::Value* condition = conditions[i]->eval();
         condition = compiler->cast_value(condition, builder().getInt1Ty());
         if (condition == nullptr)
-            throw std::runtime_error("The provided condition can't be casted to boolean value.");
+            report_error("The provided condition can't be casted to boolean value.");
         builder().CreateCondBr(condition, body_blocks[i], jump_to_blocks[i + 1]);
     }
 
@@ -96,7 +97,7 @@ llvm::Value* IfNode::eval()
     for (auto& value : values) {
         value = compiler->cast_value(value, type);
         if (value == nullptr) {
-            throw std::runtime_error("Mismatch in the types of the branches");
+            report_error("Mismatch in the types of the branches");
         }
     }
 

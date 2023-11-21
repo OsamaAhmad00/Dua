@@ -1,4 +1,5 @@
 #include <AST/AssignmentExpressionNode.h>
+#include <utils/ErrorReporting.h>
 
 namespace dua
 {
@@ -12,18 +13,18 @@ llvm::Value* AssignmentExpressionNode::eval()
     if (result->getType() != type) {
         llvm::Value* alternative = compiler->cast_value(result, type);
         if (alternative == nullptr)
-            throw std::runtime_error("Invalid assignment operation");
+            report_error("Invalid assignment operation");
         result = alternative;
     }
 
     if (!type->isAggregateType())
         return builder().CreateStore(result, ptr);
 
-    size_t n;
+    size_t n = -1;
     if (type->isArrayTy())
         n = type->getArrayNumElements();
     else
-        throw std::runtime_error("Not supported aggregate type");
+        report_internal_error("Not supported aggregate type");
 
 
     llvm::Type* element_type = type->getArrayElementType();

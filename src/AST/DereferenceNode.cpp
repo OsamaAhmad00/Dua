@@ -1,13 +1,13 @@
 #include "AST/lvalue/DereferenceNode.h"
 #include "types/PointerType.h"
+#include <utils/ErrorReporting.h>
 
 namespace dua
 {
 
 PointerType* assert_ptr(TypeBase* type) {
     auto ptr = dynamic_cast<PointerType*>(type);
-    if (!ptr)
-        throw std::runtime_error("Can't dereference a non-pointer type expression");
+    if (!ptr) report_error("Can't dereference a non-pointer type expression");
     return ptr;
 }
 

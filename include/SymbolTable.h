@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <utils/ErrorReporting.h>
 
 namespace dua
 {
@@ -14,7 +15,7 @@ class Scope
 public:
     Scope& insert(const std::string& name, const T& t) {
         if (contains(name)) {
-            throw std::runtime_error("The symbol " + name + " is already defined");
+            report_error("The symbol " + name + " is already defined");
         }
         map[name] = t;
         return *this;
@@ -22,7 +23,7 @@ public:
 
     const T& get(const std::string& name) {
         if (!contains(name)) {
-            throw std::runtime_error("The symbol " + name + " is not defined");
+            report_error("The symbol " + name + " is not defined");
         }
         return map[name];
     }
@@ -46,7 +47,7 @@ public:
 
     SymbolTable& insert(const std::string& name, const T& t, int scope_num = 1) {
         if (scopes.empty()) {
-            throw std::runtime_error("There is no scope");
+            report_internal_error("There is no scope");
         }
         scopes[scopes.size() - scope_num].insert(name, t);
         return *this;
@@ -59,7 +60,7 @@ public:
 
     const T& get(const std::string& name, bool include_global = true, int scope_num = 1) {
         if (scopes.empty()) {
-            throw std::runtime_error("There is no scope");
+            report_internal_error("There is no scope");
         }
 
         for (int i = scopes.size() - scope_num; i >= 1 + !include_global; i--) {
@@ -68,7 +69,7 @@ public:
             }
         }
 
-        // no check here so that it throws an exception if not present here either.
+        // no check here so that it errs if not present here either.
         return scopes[!include_global].get(name);
     }
 
@@ -78,7 +79,7 @@ public:
 
     bool contains(const std::string& name, bool include_global = true, int scope_num = 1) {
         if (scopes.empty()) {
-            throw std::runtime_error("There is no scope");
+            report_internal_error("There is no scope");
         }
 
         for (int i = scopes.size() - scope_num; i >= !include_global; i--) {

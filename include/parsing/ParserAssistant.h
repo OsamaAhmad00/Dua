@@ -49,6 +49,8 @@
 #include "types/ArrayType.h"
 #include "types/PointerType.h"
 
+#include <utils/ErrorReporting.h>
+
 namespace dua
 {
 
@@ -110,7 +112,7 @@ class ParserAssistant
         auto result = pop_node();
         auto casted = dynamic_cast<T*>(result);
         if (casted == nullptr)
-            throw std::runtime_error("Unexpected node type");
+            report_internal_error("Unexpected node type");
         return casted;
     }
 

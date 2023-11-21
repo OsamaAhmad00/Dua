@@ -1,4 +1,5 @@
 #include <AST/unary/CastExpressionNode.h>
+#include <utils/ErrorReporting.h>
 
 namespace dua
 {
@@ -7,7 +8,7 @@ llvm::Value *CastExpressionNode::eval()
 {
     llvm::Value* result = compiler->cast_value(expression->eval(), target_type->llvm_type());
     if (result == nullptr)
-        throw std::runtime_error("Invalid cast operation");
+        report_error("Invalid cast operation");
     return result;
 }
 

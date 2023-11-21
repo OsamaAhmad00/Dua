@@ -1,4 +1,5 @@
 #include <AST/GlobalVariableDefinitionNode.h>
+#include <utils/ErrorReporting.h>
 
 namespace dua
 {
@@ -9,11 +10,11 @@ llvm::GlobalVariable* GlobalVariableDefinitionNode::eval()
 
     value = compiler->cast_value(value, type->llvm_type());
     if (value == nullptr)
-        throw std::runtime_error("Type mismatch");
+        report_error("Type mismatch between the global variable " + name + " and its initializer");
 
     auto constant = llvm::dyn_cast<llvm::Constant>(value);
     if (constant == nullptr)
-        throw std::runtime_error("Invalid global variable initializer");
+        report_error("The global variable " + name + "'s initializer is not a constant");
 
     module().getOrInsertGlobal(name, type->llvm_type());
     llvm::GlobalVariable* variable = module().getGlobalVariable(name);
