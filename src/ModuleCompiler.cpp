@@ -66,9 +66,6 @@ llvm::Value* ModuleCompiler::cast_value(llvm::Value* value, llvm::Type* target_t
         }
     }
 
-    if (source_type->isPointerTy() && target_type->isIntegerTy())
-        return builder.CreatePtrToInt(value, target_type);
-
     if (source_type->isIntegerTy() && target_type->isPointerTy())
         return builder.CreateIntToPtr(value, target_type);
 
@@ -90,12 +87,6 @@ llvm::Value* ModuleCompiler::cast_value(llvm::Value* value, llvm::Type* target_t
 
     if (source_type->isFloatingPointTy() && target_type->isIntegerTy())
         return builder.CreateFPToSI(value, target_type);
-
-    // If none of the above cases apply, use the BitCast instruction
-    // This will reinterpret the bits of the value as the target type, without changing them
-    // This may not preserve the semantics of the value, and should be used with caution
-    if (source_width == target_width)
-        return builder.CreateBitCast(value, target_type);
 
     if (panic_on_failure)
         throw std::runtime_error("Cast failure");
