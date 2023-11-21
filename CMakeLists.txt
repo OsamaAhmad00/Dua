@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.26)
 project(Dua)
 
-# Required for Antlr4
+# Required for antlr4
 set(CMAKE_CXX_STANDARD 17)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
@@ -17,8 +17,8 @@ llvm_map_components_to_libnames(LLVM_LIBS support core irreader)
 # End of LLVM -----------
 
 
-# Start of Antlr4 -------
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/Antlr4/cmake)
+# Start of antlr4 -------
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/antlr4/cmake)
 
 # Required if linking to static library
 add_definitions(-DANTLR4CPP_STATIC)
@@ -32,16 +32,16 @@ set(ANTLR4_WITH_STATIC_CRT OFF)
 # to a zip file containing the libary source.
 set(ANTLR4_TAG 4.13.0)
 # You can put a URL to the zip file here as well.
-set(ANTLR4_ZIP_REPOSITORY ${PROJECT_SOURCE_DIR}/Antlr4/antlr4-4.13.1.zip)
+set(ANTLR4_ZIP_REPOSITORY ${PROJECT_SOURCE_DIR}/antlr4/antlr4-4.13.1.zip)
 
-# Located at Antlr4/cmake
+# Located at antlr4/cmake
 include(ExternalAntlr4Cpp)
 
 include_directories(${ANTLR4_INCLUDE_DIRS})
 
 # Set a variable pointing to the antlr tool that supports C++
 # this is not required if the jar file can be found under PATH environment
-set(ANTLR_EXECUTABLE ${PROJECT_SOURCE_DIR}/Antlr4/antlr-4.13.1-complete.jar)
+set(ANTLR_EXECUTABLE ${PROJECT_SOURCE_DIR}/antlr4/antlr-4.13.1-complete.jar)
 
 find_package(ANTLR REQUIRED)
 
@@ -57,7 +57,7 @@ include_directories(${ANTLR_DuaLexer_OUTPUT_DIR})
 include_directories(${ANTLR_DuaParser_OUTPUT_DIR})
 
 set(ANTLR4_LIBS antlr4_static)
-# End of Antlr4 ---------
+# End of antlr4 ---------
 
 #
 
