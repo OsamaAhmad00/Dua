@@ -1,15 +1,6 @@
 #pragma once
 
-#include <utils/termcolor.hpp>
+#include <string>
 
-inline void report_error(const std::string& message)
-{
-    std::cerr << termcolor::red << "Error: " << termcolor::reset << message << '\n';
-    throw std::runtime_error(message);
-}
-
-inline void report_internal_error(const std::string& message)
-{
-    std::cerr << termcolor::red << "Internal Error: " << termcolor::reset << message << '\n';
-    throw std::runtime_error(message);
-}
+void report_error(const std::string& message);
+void report_internal_error(const std::string& message);

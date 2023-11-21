@@ -62,7 +62,7 @@ set(ANTLR4_LIBS antlr4_static)
 #
 
 # Start of Boost --------
-find_package(Boost REQUIRED)
+find_package(Boost COMPONENTS filesystem REQUIRED)
 
 if(Boost_FOUND)
     message(STATUS "Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
@@ -74,8 +74,14 @@ endif()
 
 set(DUA_SOURCES
     src/ModuleCompiler.cpp
-    src/ParserAssistant.cpp
-    src/ParserFacade.cpp
+
+    src/parsing/ParserAssistant.cpp
+    src/parsing/ParserFacade.cpp
+
+    src/utils/CodeGeneration.cpp
+    src/utils/ErrorReporting.cpp
+    src/utils/ProgramExecution.cpp
+    src/utils/VectorOperations.cpp
 
     src/AST/ArrayIndexingNode.cpp
     src/AST/ArrayType.cpp
