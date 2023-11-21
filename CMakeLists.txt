@@ -101,6 +101,8 @@ set(DUA_SOURCES
     src/AST/WhileNode.cpp
 )
 
+set(DUA_PREREQUISITE_LIBS ${LLVM_LIBS} ${ANTLR4_LIBS} ${Boost_LIBRARIES})
+
 add_executable(Dua
     main.cpp
     ${DUA_SOURCES}
@@ -108,4 +110,9 @@ add_executable(Dua
     ${ANTLR_DuaParser_CXX_OUTPUTS}
 )
 
-target_link_libraries(Dua ${LLVM_LIBS} ${ANTLR4_LIBS} ${Boost_LIBRARIES})
+target_link_libraries(Dua ${DUA_PREREQUISITE_LIBS})
+
+# Testing related
+enable_testing()
+add_library(DUA_LIB ${DUA_SOURCES})
+add_subdirectory(testing)
