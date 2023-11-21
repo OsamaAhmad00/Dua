@@ -72,12 +72,38 @@ if(Boost_FOUND)
 endif()
 # End of Boost ----------
 
+set(DUA_SOURCES
+    src/ModuleCompiler.cpp
+    src/ParserAssistant.cpp
+    src/ParserFacade.cpp
 
-FILE(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/src/*)
+    src/AST/ArrayIndexingNode.cpp
+    src/AST/ArrayType.cpp
+    src/AST/AssignmentNode.cpp
+    src/AST/ASTNode.cpp
+    src/AST/BlockNode.cpp
+    src/AST/CastExpressionNode.cpp
+    src/AST/DereferenceNode.cpp
+    src/AST/DoWhileNode.cpp
+    src/AST/ForNode.cpp
+    src/AST/FunctionCallNode.cpp
+    src/AST/FunctionDefinitionNode.cpp
+    src/AST/GlobalVariableDefinitionNode.cpp
+    src/AST/IfNode.cpp
+    src/AST/LoadedLValueNode.cpp
+    src/AST/LocalVariableDefinitionNode.cpp
+    src/AST/NumericalUnaryExpressionNodes.cpp
+    src/AST/PointerType.cpp
+    src/AST/PostfixAdditionExpressionNode.cpp
+    src/AST/ReturnNode.cpp
+    src/AST/StringValueNode.cpp
+    src/AST/VariableNode.cpp
+    src/AST/WhileNode.cpp
+)
 
 add_executable(Dua
     main.cpp
-    ${SOURCES}
+    ${DUA_SOURCES}
     ${ANTLR_DuaLexer_CXX_OUTPUTS}
     ${ANTLR_DuaParser_CXX_OUTPUTS}
 )
