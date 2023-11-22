@@ -11,5 +11,6 @@ macro (define_test name)
     add_test(NAME ${name} COMMAND ${name})
 endmacro ()
 
-define_test(Conditionals)
+define_test(WhenExpressions)
+define_test(IfExpressions)
 define_test(IfStatements)
