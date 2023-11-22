@@ -73,6 +73,9 @@ endif()
 # End of Boost ----------
 
 set(DUA_SOURCES
+    ${ANTLR_DuaLexer_CXX_OUTPUTS}
+    ${ANTLR_DuaParser_CXX_OUTPUTS}
+
     src/ModuleCompiler.cpp
 
     src/parsing/ParserAssistant.cpp
@@ -81,6 +84,7 @@ set(DUA_SOURCES
     src/utils/CodeGeneration.cpp
     src/utils/ErrorReporting.cpp
     src/utils/ProgramExecution.cpp
+    src/utils/TextManipulation.cpp
     src/utils/VectorOperations.cpp
 
     src/AST/ArrayIndexingNode.cpp
@@ -112,8 +116,6 @@ set(DUA_PREREQUISITE_LIBS ${LLVM_LIBS} ${ANTLR4_LIBS} ${Boost_LIBRARIES})
 add_executable(Dua
     main.cpp
     ${DUA_SOURCES}
-    ${ANTLR_DuaLexer_CXX_OUTPUTS}
-    ${ANTLR_DuaParser_CXX_OUTPUTS}
 )
 
 target_link_libraries(Dua ${DUA_PREREQUISITE_LIBS})

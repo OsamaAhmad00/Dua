@@ -6,21 +6,16 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <filesystem>
 #include <utils/VectorOperators.h>
+#include <utils/TextManipulation.h>
 #include <ModuleCompiler.h>
+
+namespace dua
+{
 
 std::string uuid()
 {
     boost::uuids::random_generator generator;
     return boost::uuids::to_string(generator());
-}
-
-std::string read_file(const std::string& name)
-{
-    std::ifstream stream(name);
-    std::string result, temp;
-    while (std::getline(stream, temp))
-        result += temp + '\n';
-    return result;
 }
 
 void generate_llvm_ir(const strings& filename, const strings& code)
@@ -81,4 +76,6 @@ void compile(const strings& source_files, const strings& args)
         code[i] = read_file(source_files[i]);
 
     return run_clang_on_llvm_ir(stripped, code, args);
+}
+
 }

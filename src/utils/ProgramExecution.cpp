@@ -5,42 +5,37 @@
 #include <iostream>
 #include <utils/ErrorReporting.h>
 
+
+namespace dua
+{
+
 namespace bp = boost::process;
 
-
-int get_exit_code(const std::string& program, const std::vector<std::string>& args)
+ProgramExecution execute_program(const std::string& program, const std::vector<std::string>& args)
 {
-    int result = -989898989;
-    try
-    {
-        bp::child c(bp::search_path(program), args, bp::std_out > bp::null, bp::std_err > bp::null);
-        c.wait();
-        result = c.exit_code();
-    }
-    catch (std::exception& e) {
-        std::cerr << "Encountered an error running program: " << e.what() << '\n';
-    }
-    return result;
-}
-
-std::string get_stdout(const std::string& program, const std::vector<std::string>& args)
-{
-    std::string result;
+    ProgramExecution result { "THE PROGRAM DIDN'T EXECUTE!!", -989898989};
 
     try
     {
         bp::ipstream is; //reading pipe-stream
-        bp::child c(bp::search_path(program), args, bp::std_out > is, bp::std_err > bp::null);
+        auto path = bp::search_path(program);
+        bp::child c(path, args, bp::std_out > is, bp::std_err > bp::null);
 
         std::string line;
+        result.std_out.clear();
         while (c.running() && std::getline(is, line))
-            result += line + '\n';
+            result.std_out += line + '\n';
 
         c.wait();
+
+        result.exit_code = c.exit_code();
     }
     catch (std::exception& e) {
-        std::cerr << "Encountered an error while capturing program output: " << e.what() << '\n';
+        report_internal_error(
+                std::string("Encountered an error while executing the program output: ") + e.what());
     }
 
     return result;
+}
+
 }

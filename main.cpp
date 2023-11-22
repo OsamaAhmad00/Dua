@@ -2,6 +2,8 @@
 #include <utils/termcolor.hpp>
 #include <iostream>
 
+using namespace dua;
+
 bool is_dua_file(const std::string& str)
 {
     size_t n = str.size();
@@ -52,4 +54,6 @@ int main(int argc, char* argv[])
     }
 
     compile(source_files, args);
+
+    return 0;
 }

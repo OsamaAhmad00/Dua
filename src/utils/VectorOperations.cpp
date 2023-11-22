@@ -1,5 +1,8 @@
 #include <utils/VectorOperators.h>
 
+namespace dua
+{
+
 strings operator+(const strings& v1, const strings& v2) {
     strings result(v1);
     result.insert(result.end(), v2.begin(), v2.end());
@@ -18,4 +21,6 @@ strings operator+(const std::string& s, const strings& v) {
     for (size_t i = 0; i < v.size(); i++)
         result[i] = s + v[i];
     return result;
+}
+
 }

@@ -27,7 +27,7 @@ int main()
 {
     int i = 3;
     return when {
-        i < 2 -> 4
+        i < 2 -> 4,
         else  -> 5
     };
 }
@@ -40,22 +40,22 @@ int main()
 {
     int k = 5;
     return when {
-        k > 10 -> 4
-        k < 2  -> 5
+        k > 10 -> 4,
+        k < 2  -> 5,
         else   -> 10
     };
 }
 
 
 // CASE Multi-statement when expression
-// Returns 10
+// Returns 12
 
 int main()
 {
     int k = 5;
     return when {
-        k > 10 -> 4
-        k < 2  -> { int x = 3; x *= 2; x + 4 }
+        k > 10 -> 4,
+        k < 2  -> { int x = 3; x *= 2; x + 4 },
         else   -> 12
     };
 }
