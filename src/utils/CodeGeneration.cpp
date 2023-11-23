@@ -47,11 +47,11 @@ void run_clang_on_llvm_ir(const strings& filename, const strings& code, const st
 
     try {
         generate_llvm_ir(names, code);
-    } catch (...) {
+    } catch (std::exception& e) {
         // This assumes that the compiler has already reported the error.
         std::filesystem::current_path(old_path);
         std::filesystem::remove_all(directory);
-        exit(-1);
+        throw e;
     }
 
     std::filesystem::current_path(old_path);
@@ -75,7 +75,11 @@ void compile(const strings& source_files, const strings& args)
     for (int i = 0; i < n; i++)
         code[i] = read_file(source_files[i]);
 
-    return run_clang_on_llvm_ir(stripped, code, args);
+    try {
+        run_clang_on_llvm_ir(stripped, code, args);
+    } catch (...) {
+        exit(-1);
+    }
 }
 
 }

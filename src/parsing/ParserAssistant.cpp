@@ -18,7 +18,7 @@ void ParserAssistant::create_variable_declaration()
     auto name = pop_str();
     auto type = pop_type();
     if (is_in_global_scope()) {
-        report_error("The global variable " + name + " must be initialized");
+        push_node<GlobalVariableDefinitionNode>(std::move(name), type, nullptr);
     } else {
         push_node<LocalVariableDefinitionNode>(std::move(name), type, nullptr);
     }

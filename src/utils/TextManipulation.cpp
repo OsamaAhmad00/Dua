@@ -103,4 +103,11 @@ std::string extract_header_element(const std::string& str, const std::string& na
     return "";
 }
 
+bool header_has_flag(const std::string& str, const std::string& flag)
+{
+    boost::regex name_regex("//\\s*(?i:" + flag + ")\\s*([^\\n]*)");
+    boost::smatch match;
+    return boost::regex_search(str, match, name_regex);
+}
+
 }

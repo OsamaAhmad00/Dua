@@ -6,7 +6,7 @@ namespace dua
 
 llvm::GlobalVariable* GlobalVariableDefinitionNode::eval()
 {
-    llvm::Value* value = initializer->eval();
+    llvm::Value* value = (initializer != nullptr) ? initializer->eval() : type->default_value();
 
     value = compiler->cast_value(value, type->llvm_type());
     if (value == nullptr)
@@ -21,7 +21,7 @@ llvm::GlobalVariable* GlobalVariableDefinitionNode::eval()
     variable->setInitializer((llvm::Constant*)value);
     variable->setConstant(false);
 
-    symbol_table().insert_global(name, { variable, initializer->get_cached_type() });
+    symbol_table().insert_global(name, { variable, type });
 
     return variable;
 }
