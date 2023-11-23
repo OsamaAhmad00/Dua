@@ -95,7 +95,6 @@ int main()
     return c;
 }
 
-
 // CASE Empty for loop sections
 // Returns 0
 
@@ -122,4 +121,28 @@ int main()
     for (;; i++) {
         if (i) break;
     }
+}
+
+// CASE Empty while condition
+// Returns 0
+
+int main()
+{
+    bool b = false;
+    while () {
+        if (b) break;
+        b = true;
+    }
+}
+
+// CASE Empty do-while condition
+// Returns 0
+
+int main()
+{
+    bool b = false;
+    do {
+        if (b) break;
+        b = true;
+    } while ();
 }

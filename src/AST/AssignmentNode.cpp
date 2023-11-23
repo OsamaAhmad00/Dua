@@ -7,7 +7,7 @@ namespace dua
 llvm::Value* AssignmentExpressionNode::eval()
 {
     llvm::Value* ptr = lhs->eval();
-    llvm::Type* type = lhs->get_cached_type()->llvm_type();
+    llvm::Type* type = lhs->get_element_type()->llvm_type();
     llvm::Value* result = rhs->eval();
 
     if (result->getType() != type) {

@@ -60,7 +60,7 @@ llvm::Value* IfNode::eval()
     {
         builder().SetInsertPoint(jump_to_blocks[i]);
         llvm::Value* condition = conditions[i]->eval();
-        condition = compiler->cast_value(condition, builder().getInt1Ty());
+        condition = compiler->cast_as_bool(condition);
         if (condition == nullptr)
             report_error("The provided condition can't be casted to boolean value.");
         builder().CreateCondBr(condition, body_blocks[i], jump_to_blocks[i + 1]);

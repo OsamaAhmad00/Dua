@@ -23,7 +23,7 @@ NoneValue WhileNode::eval()
 
     builder().SetInsertPoint(cond_block);
     llvm::Value* cond_res = cond_exp->eval();
-    cond_res = compiler->cast_value(cond_res, builder().getInt1Ty());
+    cond_res = compiler->cast_as_bool(cond_res);
     if (cond_res == nullptr)
         report_error("The provided condition can't be casted to boolean value.");
     builder().CreateCondBr(cond_res, body_block, end_block);

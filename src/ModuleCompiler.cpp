@@ -161,4 +161,9 @@ FunctionSignature& ModuleCompiler::get_function(const std::string& name) {
     return it->second;
 }
 
+llvm::Value *ModuleCompiler::cast_as_bool(llvm::Value *value, bool panic_on_failure) {
+    value = cast_value(value, builder.getInt64Ty(), panic_on_failure);
+    return builder.CreateICmpNE(value, builder.getInt64(0));
+}
+
 }
