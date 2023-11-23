@@ -51,7 +51,6 @@ int printf(str message, ...);
 int main()
 {
     printf("Hello, world!");
-    return 0;
 }
 ```
 
@@ -67,8 +66,9 @@ For a detailed examination of the syntax, you can take a look at the `grammar` f
 - `i32` / `int`          = 32-bit integer
 - `i16` / `short`        = 16-bit integer
 - `i8` / `byte` / `bool` = 8-bit integer
-- `f64` / `double`        = 64-bit floating point number
-- `f32` / `float`         = 64-bit floating point number
+- `f64` / `double`       = 64-bit floating point number
+- `f32` / `float`        = 64-bit floating point number
+- `str`                  = Just a syntactic sugar for `i8*`
 - `ArrType[ArrSize]`     = An array with type `ArrType` and size `ArrSize`
 - `PtrType*`             = A pointer type to a `PtrType` type
 - `void`                 = The void type
@@ -355,6 +355,54 @@ int main()
 
 ---
 
+## Testing
+
+To add new test cases, you can add a new test source file in `testing/tests`, and use the `define_test` macro in `testing\tests\CMakeLists.txt` to include the new test. Note that the source file name should be the same as the test name, plus the `.cpp` extension.
+
+You Can also make use of the already present testing framework, that is based on GoogleTest. To Use the framework you should use the `FileTestCasesRunner` class present within the `testing\tests` folder.
+
+The `FileTestCasesRunner` takes a single argument, the name of the test file, that is present in the `examples` folder. This serves the purpose of both having test cases, along with having examples of the usage of the language.
+
+Here are some notes to take into consideration while writing a test file:
+- The test file consists of cases.
+- Each case consists of a header (the first part), and a body (the second part).
+- Each line of the header is a single-line comment (prefixed with `//`).
+- The body is just the test code. It can be anything.
+
+A test case body consists of the following:
+- Required case name, written as `// CASE name of the case`
+- Optional expected exit code, written as `// Returns exit_code`
+- Optional expected stdout (stderr is not included), written as `// Outputs stdout_output`
+- Optional flag indicating that the test should panic at compile time, written as `// Compile-Panic`
+- Optional flag indicating that the test should panic at runtime, written as `// Runtime-Panic`
+
+Note that the header is case-insensitive, and you can write it in the case you like.
+
+Here is an example of a simple test file:
+```
+// CASE Basic declaration
+// Returns 1
+
+int main()
+{
+    int y;
+    y = 1;
+    return y;
+}
+
+
+// CASE Basic definition
+// Returns 4
+
+int main()
+{
+    int z = 4;
+    return z;
+}
+```
+
+---
+
 ## Project Folder Structure
 
 The project is organized as follows:
@@ -369,13 +417,13 @@ The project is organized as follows:
   - `utils`: Contains util functions such as the `termcolor` library, or `clang` related functions for final executable generation.
 - `src`: Contains all source files
 - `testing`: Contains the test files along with the tools needed for testing.
-  - To add new test cases, you can add a new test source file in `testing/tests`, and use the `define_test` macro in `testing\tests\CMakeLists.txt` to include the new test. Note that the source file name should be the same as the test name, plus the `.cpp` extension.
 
 ## Project Prerequisites
 
 - `Antlr4`: The needed files are in the `Antlr4` folder, but you need to have `Java` installed in order for the jar file to run.
-- `LLVM`
-- `Boost`
+- `LLVM`: needs to be installed on your system
+- `Boost`: needs to be installed on your system
+- `GoogleTest`: you just need to clone the project along with the submodules.
 
 ## Todo
 
