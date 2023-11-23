@@ -388,6 +388,12 @@ void ParserAssistant::create_logical_or()
 }
 
 #define get_ixx(FUNC)                                         \
+int insertion_point = 0;                                      \
+for (int i = 0; i < num.size(); i++)                          \
+    if (num[i] != '\'')                                       \
+        num[insertion_point++] = num[i];                      \
+num.resize(insertion_point);                                  \
+                                                              \
 if (num[0] == '0')                                            \
 {                                                             \
     if (num.size() > 2)                                       \
@@ -402,9 +408,9 @@ if (num[0] == '0')                                            \
 }                                                             \
 return FUNC(num);
 
-int64_t ParserAssistant::get_i64(const std::string &num) { get_ixx(std::stoll); }
-int32_t ParserAssistant::get_i32(const std::string &num) { get_ixx(std::stoi); }
-int16_t ParserAssistant::get_i16(const std::string &num) { get_ixx(std::stoi); }
-int8_t  ParserAssistant::get_i8 (const std::string &num) { get_ixx(std::stoi); }
+int64_t ParserAssistant::get_i64(std::string num) { get_ixx(std::stoll); }
+int32_t ParserAssistant::get_i32(std::string num) { get_ixx(std::stoi); }
+int16_t ParserAssistant::get_i16(std::string num) { get_ixx(std::stoi); }
+int8_t  ParserAssistant::get_i8 (std::string num) { get_ixx(std::stoi); }
 
 }

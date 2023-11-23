@@ -46,7 +46,7 @@ You just need to declare the function before usage.
 ## Example of using LibC
 
 ```
-int printf(i8* message, ...);
+int printf(str message, ...);
 
 int main()
 {
@@ -122,7 +122,7 @@ Examples:
 // Declaration
 void func(int y);
 
-// Vararg function declaration
+// Variadic function declaration
 void printf(i8* message, ...);
 
 // Block-body

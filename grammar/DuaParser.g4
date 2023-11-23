@@ -343,6 +343,7 @@ primitive_type
     | I8   { assistant.push_type<I8Type> ();  }
     | F64  { assistant.push_type<F64Type>();  }
     | F32  { assistant.push_type<F32Type>();  }
+    | Str  { assistant.push_type<I8Type>(); assistant.create_pointer_type(); }
     | Void { assistant.push_type<VoidType>(); }
     ;
 

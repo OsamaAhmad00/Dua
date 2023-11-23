@@ -170,10 +170,10 @@ public:
     void create_logical_and();
     void create_logical_or();
 
-    static int64_t get_i64(const std::string& num);
-    static int32_t get_i32(const std::string& num);
-    static int16_t get_i16(const std::string& num);
-    static int8_t  get_i8 (const std::string& num);
+    static int64_t get_i64(std::string num);
+    static int32_t get_i32(std::string num);
+    static int16_t get_i16(std::string num);
+    static int8_t  get_i8 (std::string num);
 
     template<typename T>
     void create_unary_expr() {

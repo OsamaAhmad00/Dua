@@ -75,6 +75,8 @@ I8 : ('i8'  | 'bool' | 'byte');
 F64: ('f64' | 'double');
 F32: ('f32' | 'float');
 
+Str: 'str';
+
 Void: 'void';
 
 Null: 'null';
@@ -116,6 +118,6 @@ String: '"' ('\\' . | '""' | ~["\\])* '"';
 WS: [ \t\r\n]+ -> channel(99);
 
 // Comments
-SingleLineComment : '//' ~[\r\n]* '\r'? '\n' -> channel(CommentsChannel);
-MultiLineComment  : '/*' .*? '*/'            -> channel(CommentsChannel);
+SingleLineComment : '//' ~[\r\n]* '\r'? '\n'? -> channel(CommentsChannel);
+MultiLineComment  : '/*' .*? '*/'             -> channel(CommentsChannel);
 

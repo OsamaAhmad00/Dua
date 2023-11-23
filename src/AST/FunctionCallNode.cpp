@@ -15,6 +15,9 @@ llvm::CallInst* FunctionCallNode::eval()
             // Only try to cast non-var-arg parameters
             auto param_type = signature.params[i].type->llvm_type();
             llvm_args[i] = compiler->cast_value(llvm_args[i], param_type);
+        } else if (llvm_args[i]->getType() == builder().getFloatTy()) {
+            // Variadic functions promote floats to doubles
+            llvm_args[i] = compiler->cast_value(llvm_args[i], builder().getDoubleTy());
         }
     }
 

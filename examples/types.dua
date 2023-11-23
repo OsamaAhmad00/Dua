@@ -1,5 +1,5 @@
 // CASE Basic integer types
-// Outputs 0 0 0 0 0 0 0 0 0
+// Outputs -9223372036854775808 -2147483648 -32768 -128 -9223372036854775808 -2147483648 -32768 -128 -128
 
 int printf(str message, ...);
 
@@ -7,7 +7,7 @@ int main()
 {
     // 64-bit integer
     i64 i_64 = 9'223'372'036'854'775'807;
-    long i_64_alias = i64_alias;
+    long i_64_alias = i_64;
 
     // 32-bit integer
     i32 i_32 = 2'147'483'647;
@@ -23,35 +23,35 @@ int main()
     byte i_8_alias2 = i_8;
 
     // Wraps around
-    i_64 += 2;  // = 0
-    i_32 += 2;  // = 0
-    i_16 += 2;  // = 0
-    i_8  += 2;  // = 0
-    i_64_alias += 2;  // = 0
-    i_32_alias += 2;  // = 0
-    i_16_alias += 2;  // = 0
-    i_8_alias1 += 2;  // = 0
-    i_8_alias2 += 2;  // = 0
+    i_64++;
+    i_32++;
+    i_16++;
+    i_8 ++;
+    i_64_alias++;
+    i_32_alias++;
+    i_16_alias++;
+    i_8_alias1++;
+    i_8_alias2++;
 
-    printf("%ld %d %hd %hhd ",
+    printf("%lld %d %hd %hhd ",
         i_64,
         i_32,
         i_16,
         i_8
     );
 
-    printf("%ld %d %hd %hhd %hhd",
+    printf("%lld %d %hd %hhd %hhd",
         i_64_alias,
         i_32_alias,
         i_16_alias,
         i_8_alias1,
-        i_8_alias2,
+        i_8_alias2
     );
 }
 
 
 // CASE Basic floating-point types
-// Outputs 1234.567 1234.5678 123.5678 1234.5678
+// Outputs 1234.568 1234.5678 1234.568 1234.5677
 
 int printf(str message, ...);
 
@@ -67,7 +67,7 @@ int main()
 
     printf("%.3f %.4f %.3f %.4f",
         f_64,
-        f64_alias,
+        f_64_alias,
         f_32,
         f_32_alias
     );
