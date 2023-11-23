@@ -19,8 +19,7 @@ void FileTestCasesRunner::run()
         auto expected_exit_code_str = extract_header_element(header, "Returns");
         auto expected_output = extract_header_element(header, "Outputs");
         expected_output = escape_characters(expected_output);
-        bool compile_time_panic = header_has_flag(header, "Compile-Panic");
-        bool runtime_panic = header_has_flag(header, "Runtime-Panic");
+        bool should_panic = header_has_flag(header, "Panics");
         auto code = tests.common + '\n' + body;
 
         auto temp_name = uuid();
@@ -35,11 +34,10 @@ void FileTestCasesRunner::run()
             std::vector<std::string> n = { temp_name };
             std::vector<std::string> c = { code };
             std::vector<std::string> a = { "-o", exe_name };
-            if (compile_time_panic) {
+            if (should_panic) {
                 EXPECT_ANY_THROW(run_clang_on_llvm_ir(n, c, a)) << case_description;
                 return;
-            }
-            else run_clang_on_llvm_ir(n, c, a);
+            } else run_clang_on_llvm_ir(n, c, a);
         } catch (...) {
             exit(-1);
         }
@@ -47,8 +45,7 @@ void FileTestCasesRunner::run()
         ProgramExecution execution;
 
         try {
-            if (runtime_panic) EXPECT_ANY_THROW(execution = execute_program(exe_name, args)) << case_description;
-            else execution = execute_program(exe_name, args);
+            execution = execute_program(exe_name, args);
         } catch (...) {
             std::filesystem::remove(exe_name);
             exit(-1);

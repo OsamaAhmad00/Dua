@@ -373,8 +373,8 @@ A test case body consists of the following:
 - Required case name, written as `// CASE name of the case`
 - Optional expected exit code, written as `// Returns exit_code`
 - Optional expected stdout (stderr is not included), written as `// Outputs stdout_output`
-- Optional flag indicating that the test should panic at compile time, written as `// Compile-Panic`
-- Optional flag indicating that the test should panic at runtime, written as `// Runtime-Panic`
+- Optional flag indicating that the test should panic at compile time, written as `// Panics`
+- For runtime panics, you can make sure that the program has exited with the desired exit code.
 
 Note that the header is case-insensitive, and you can write it in the case you like.
 
