@@ -15,7 +15,7 @@ struct F##WIDTH##Type : public FloatType              \
         return llvm::ConstantFP::get(llvm_type(), 0); \
     }                                                 \
                                                       \
-    llvm::Type* llvm_type() override {                \
+    llvm::Type* llvm_type() const override {          \
         return builder->get##TYPE##Ty();              \
     }                                                 \
                                                       \

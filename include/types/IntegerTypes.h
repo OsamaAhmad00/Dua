@@ -15,7 +15,7 @@ struct PREFIX##WIDTH##Type : public IntegerType     \
         return builder->getInt##WIDTH(0);           \
     }                                               \
                                                     \
-    llvm::Type* llvm_type() override {              \
+    llvm::Type* llvm_type() const override {        \
         return builder->getInt##WIDTH##Ty();        \
     }                                               \
                                                     \

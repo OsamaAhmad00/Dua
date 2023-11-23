@@ -21,10 +21,11 @@ void FileTestCasesRunner::run()
         expected_output = escape_characters(expected_output);
         auto code = tests.common + '\n' + body;
 
+        auto temp_name = uuid();
         // Windows will complain if the extension is not .exe,
         //  and it doesn't hurt when run on Unix-based systems.
-        auto exe_name = uuid() + ".exe";
-        run_clang_on_llvm_ir({ exe_name }, { code }, {"-o", exe_name});
+        auto exe_name = temp_name +  + ".exe";
+        run_clang_on_llvm_ir({ temp_name }, { code }, {"-o", exe_name});
 
         ProgramExecution execution;
 

@@ -51,6 +51,7 @@ void ParserAssistant::create_function_declaration()
         signature.params[param_count - i - 1] = {pop_str(), pop_type()};
     signature.return_type = pop_type();
     auto name = pop_str();
+
     compiler->register_function(name, std::move(signature));
     push_node<FunctionDefinitionNode>(std::move(name), nullptr);
 }

@@ -3,6 +3,7 @@
 #include <AST/TranslationUnitNode.h>
 #include <llvm/Support/Host.h>
 #include <utils/ErrorReporting.h>
+#include <llvm/IR/Verifier.h>
 
 namespace dua
 {
@@ -130,10 +131,27 @@ TypeBase* ModuleCompiler::get_winning_type(TypeBase* lhs, TypeBase* rhs)
     return nullptr;
 }
 
-void ModuleCompiler::register_function(std::string name, FunctionSignature signature) {
-    if (functions.find(name) != functions.end())
-        report_internal_error("Function " + name + " is already declared/defined");
-    functions[std::move(name)] = std::move(signature);
+void ModuleCompiler::register_function(std::string name, FunctionSignature signature)
+{
+    // Registering the function in the module so that all
+    //  functions are visible during AST evaluation.
+    llvm::Type* ret = signature.return_type->llvm_type();
+    std::vector<llvm::Type*> parameter_types;
+    for (auto& param: signature.params)
+        parameter_types.push_back(param.type->llvm_type());
+    llvm::FunctionType* type = llvm::FunctionType::get(ret, parameter_types, signature.is_var_arg);
+    llvm::Function* function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, name, module);
+    llvm::verifyFunction(*function);
+
+    auto it = functions.find(name);
+    if (it != functions.end()) {
+        // Verify that the signatures are the same
+        if (it->second != signature) {
+            report_error("Redefinition of the function " + name + " with a different signature");
+        }
+    } else {
+        functions[std::move(name)] = std::move(signature);
+    }
 }
 
 FunctionSignature& ModuleCompiler::get_function(const std::string& name) {

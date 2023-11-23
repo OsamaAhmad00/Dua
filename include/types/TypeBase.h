@@ -17,8 +17,10 @@ struct TypeBase
     //  This is a candidate for int introducing bugs.
     llvm::IRBuilder<>* builder;
     virtual llvm::Constant* default_value() = 0;
-    virtual llvm::Type* llvm_type() = 0;
+    virtual llvm::Type* llvm_type() const = 0;
     virtual TypeBase* clone() = 0;
+    virtual bool operator==(const TypeBase& other) { return llvm_type() == other.llvm_type(); }
+    virtual bool operator!=(const TypeBase& other) { return !(*this == other); }
     virtual ~TypeBase() = default;
 
     llvm::Type* operator->() { return llvm_type(); }

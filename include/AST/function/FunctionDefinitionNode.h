@@ -12,7 +12,6 @@ class FunctionDefinitionNode : public ASTNode
     ASTNode* body;  // Can be nullptr in case of declaration
 
     llvm::Function* define_function();
-    llvm::Function* declare_function();
 
 public:
 

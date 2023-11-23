@@ -17,7 +17,7 @@ public:
 
     llvm::Constant* default_value() override;
 
-    llvm::ArrayType * llvm_type() override;
+    llvm::ArrayType* llvm_type() const override;
 
     TypeBase* get_element_type() { return element_type; }
 

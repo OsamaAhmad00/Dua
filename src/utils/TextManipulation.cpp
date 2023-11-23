@@ -50,9 +50,9 @@ std::string escape_characters(const std::string& str)
     }
     if (i == str.size() - 1) {
         if (str.back() == '\\')
-            report_error("Last character can't be a \\.");
+            report_error("Last character can't be a non-escaped \\.");
         else
-            result.push_back(str[str.size() - 2]);
+            result.push_back(str.back());
     }
     return result;
 }

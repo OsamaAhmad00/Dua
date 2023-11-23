@@ -1,5 +1,4 @@
 #include <AST/function/FunctionDefinitionNode.h>
-#include <llvm/IR/Verifier.h>
 #include <types/VoidType.h>
 
 namespace dua
@@ -7,7 +6,13 @@ namespace dua
 
 llvm::Function *FunctionDefinitionNode::eval()
 {
-    return (body == nullptr) ? declare_function() : define_function();
+    // The declaration logic is moved to the parser,
+    //  so that all functions are visible everywhere
+    //  across the module, regardless of the order
+    //  of declaration/definition.
+    if (body == nullptr)
+        return module().getFunction(name);
+    return define_function();
 }
 
 llvm::Function* FunctionDefinitionNode::define_function()
@@ -16,7 +21,7 @@ llvm::Function* FunctionDefinitionNode::define_function()
     llvm::Function* function = module().getFunction(name);
 
     if (!function)
-        function = declare_function();
+        report_internal_error("Use of an undeclared function");
 
     llvm::Function* old_function = current_function();
     llvm::BasicBlock* old_block = builder().GetInsertBlock();
@@ -37,25 +42,18 @@ llvm::Function* FunctionDefinitionNode::define_function()
 
     if (signature.return_type->llvm_type() == builder().getVoidTy())
         builder().CreateRetVoid();
+    else {
+        // TODO do a more sophisticated analysis
+        auto terminator = builder().GetInsertBlock()->getTerminator();
+        if (!terminator || llvm::dyn_cast<llvm::ReturnInst>(terminator) == nullptr) {
+            builder().CreateRet(signature.return_type->default_value());
+        }
+    }
 
     symbol_table().pop_scope();
 
     builder().SetInsertPoint(old_block);
     current_function() = old_function;
-
-    return function;
-}
-
-llvm::Function* FunctionDefinitionNode::declare_function()
-{
-    auto& signature = compiler->get_function(name);
-    llvm::Type* ret = signature.return_type->llvm_type();
-    std::vector<llvm::Type*> parameter_types;
-    for (auto& param: signature.params)
-        parameter_types.push_back(param.type->llvm_type());
-    llvm::FunctionType* type = llvm::FunctionType::get(ret, parameter_types, signature.is_var_arg);
-    llvm::Function* function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, name, module());
-    llvm::verifyFunction(*function);
 
     return function;
 }

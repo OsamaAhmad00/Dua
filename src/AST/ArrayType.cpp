@@ -8,7 +8,7 @@ llvm::Constant* ArrayType::default_value() {
     return llvm::ConstantArray::get(llvm_type(), values);
 }
 
-llvm::ArrayType* ArrayType::llvm_type() {
+llvm::ArrayType* ArrayType::llvm_type() const {
     return llvm::ArrayType::get(element_type->llvm_type(), size);
 }
 

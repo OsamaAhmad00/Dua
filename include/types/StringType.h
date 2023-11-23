@@ -13,7 +13,7 @@ struct StringType : TypeBase
         return llvm::Constant::getNullValue(llvm_type());
     }
 
-    llvm::Type* llvm_type() override {
+    llvm::Type* llvm_type() const override {
         return builder->getInt8PtrTy();
     }
 

@@ -15,7 +15,7 @@ struct VoidType : TypeBase
         return nullptr;
     }
 
-    llvm::Type* llvm_type() override {
+    llvm::Type* llvm_type() const override {
         return builder->getVoidTy();
     }
 
