@@ -35,8 +35,7 @@ int main()
 // CASE Name shadowing
 // Returns 10
 
-int d;
-d = 4;
+int d = 4;
 
 int main()
 {
@@ -67,7 +66,7 @@ int main()
 
 
 // CASE Redefinition in the same scope
-// Panics
+// Compile-Panic
 
 int d;
 
