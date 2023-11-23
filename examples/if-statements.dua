@@ -1,7 +1,7 @@
 int printf(i8* message, ...);
 
 // CASE if
-// OUTPUTS Took the then branch\r\n
+// OUTPUTS Took the then branch\n
 
 int main()
 {
@@ -13,7 +13,7 @@ int main()
 }
 
 // CASE if else
-// OUTPUTS Took the else branch\r\n
+// OUTPUTS Took the else branch\n
 
 int main()
 {
@@ -27,7 +27,7 @@ int main()
 }
 
 // CASE If else if else
-// OUTPUTS Took the 2nd else if branch\r\n
+// OUTPUTS Took the 2nd else if branch\n
 
 int main()
 {

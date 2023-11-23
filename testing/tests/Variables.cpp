@@ -4,7 +4,7 @@ namespace dua
 {
 
 TEST(Variables, Variables) {
-    FileTestCasesRunner("Variables.dua").run();
+    FileTestCasesRunner("variables.dua").run();
 }
 
 }

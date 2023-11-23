@@ -10,7 +10,8 @@ namespace dua
 
 void FileTestCasesRunner::run()
 {
-    auto tests_str = read_file(std::filesystem::absolute(TESTS_PATH + filename).string());
+    auto path = std::filesystem::weakly_canonical(TESTS_PATH + filename).string();
+    auto tests_str = read_file(path);
     auto tests = split_cases(tests_str);
     for (size_t i = 0; i < tests.cases.size(); i++)
     {
@@ -21,6 +22,12 @@ void FileTestCasesRunner::run()
         expected_output = escape_characters(expected_output);
         bool should_panic = header_has_flag(header, "Panics");
         auto code = tests.common + '\n' + body;
+
+        if (!expected_output.empty() && expected_output.back() != '\n') {
+            // This is to match the output of the program execution, which
+            //  will append a \n to the output if there isn't one.
+            expected_output.push_back('\n');
+        }
 
         auto temp_name = uuid();
         // Windows will complain if the extension is not .exe,
@@ -55,7 +62,7 @@ void FileTestCasesRunner::run()
 
         if (!expected_exit_code_str.empty()) {
             int expected_exit_code = std::stoi(expected_exit_code_str);
-            EXPECT_EQ(expected_exit_code, execution.exit_code) << case_description;
+            EXPECT_EQ((expected_exit_code + 256) % 256, (execution.exit_code + 256) % 256) << case_description;
         }
 
         if (!expected_output.empty()) {

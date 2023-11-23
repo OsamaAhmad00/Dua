@@ -1,6 +1,7 @@
 #include <utils/CodeGeneration.h>
 #include <utils/termcolor.hpp>
 #include <iostream>
+#include <cstring>
 
 using namespace dua;
 

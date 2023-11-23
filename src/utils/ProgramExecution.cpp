@@ -18,19 +18,14 @@ ProgramExecution execute_program(const std::string& program, const std::vector<s
     try
     {
         bp::ipstream is; //reading pipe-stream
-        auto path = bp::search_path(program);
         // This captures stdout only, ignoring stderr.
-        bp::child c(path, args, bp::std_out > is, bp::std_err > bp::null);
+        bp::child c(program, args, bp::std_out > is, bp::std_err > bp::null);
 
-        char buf;
+        std::string line;
         result.std_out.clear();
-        while (c.running() && !is.eof()) {
-            is.read(&buf, 1);
-            result.std_out += buf;
-        }
-        // remove the extra repeated character at the end
-        if (!result.std_out.empty())
-            result.std_out.pop_back();
+        // This will add a \n to the end of the output even if there wasn't one.
+        while (c.running() && !is.eof() && std::getline(is, line))
+            result.std_out += line + '\n';
 
         c.wait();
 

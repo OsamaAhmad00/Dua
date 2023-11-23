@@ -364,13 +364,14 @@ You Can also make use of the already present testing framework, that is based on
 The `FileTestCasesRunner` takes a single argument, the name of the test file, that is present in the `examples` folder. This serves the purpose of both having test cases, along with having examples of the usage of the language.
 
 Here are some notes to take into consideration while writing a test file:
-- The test file consists of cases.
+- The test file consists a common section and cases.
+- The common section is the part between the beginning of the file and the first case. It's added at the top of every case automatically.
 - Each case consists of a header (the first part), and a body (the second part).
 - Each line of the header is a single-line comment (prefixed with `//`).
 - The body is just the test code. It can be anything.
 
 A test case body consists of the following:
-- Required case name, written as `// CASE name of the case`
+- Required case name, written as `// CASE name of the case`. This must be the first line of the header.
 - Optional expected exit code, written as `// Returns exit_code`
 - Optional expected stdout (stderr is not included), written as `// Outputs stdout_output`
 - Optional flag indicating that the test should panic at compile time, written as `// Panics`
@@ -380,6 +381,8 @@ Note that the header is case-insensitive, and you can write it in the case you l
 
 Here is an example of a simple test file:
 ```
+
+
 // CASE Basic declaration
 // Returns 1
 

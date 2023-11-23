@@ -62,7 +62,7 @@ set(ANTLR4_LIBS antlr4_static)
 #
 
 # Start of Boost --------
-find_package(Boost COMPONENTS filesystem REQUIRED)
+find_package(Boost COMPONENTS filesystem regex REQUIRED)
 
 if(Boost_FOUND)
     message(STATUS "Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
