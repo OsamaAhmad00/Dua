@@ -15,8 +15,7 @@ class FunctionDefinitionNode : public ASTNode
 
 public:
 
-    FunctionDefinitionNode(ModuleCompiler* compiler, std::string name, ASTNode* body)
-        : name(std::move(name)), body(body) { this->compiler = compiler; }
+    FunctionDefinitionNode(ModuleCompiler* compiler, std::string name, ASTNode* body);
 
     void set_body(ASTNode* body) { assert(this->body == nullptr); this->body = body; }
 

@@ -7,9 +7,10 @@ namespace dua
 
 class VariableNode : public LValueNode
 {
-    std::string name;
 
 public:
+
+    std::string name;
 
     VariableNode(ModuleCompiler* compiler, std::string name)
         : name(std::move(name)) { this->compiler = compiler; }

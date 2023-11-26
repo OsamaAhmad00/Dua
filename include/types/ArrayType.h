@@ -1,6 +1,7 @@
 #pragma once
 
 #include <types/TypeBase.h>
+#include <llvm/IR/DerivedTypes.h>
 
 namespace dua
 {
@@ -12,8 +13,8 @@ class ArrayType : public TypeBase
 
 public:
 
-    ArrayType(llvm::IRBuilder<>* builder, TypeBase* element_type, size_t size)
-        : element_type(element_type), size(size) { this->builder = builder; }
+    ArrayType(ModuleCompiler* compiler, TypeBase* element_type, size_t size)
+        : element_type(element_type), size(size) { this->compiler = compiler; }
 
     llvm::Constant* default_value() override;
 
@@ -21,7 +22,7 @@ public:
 
     TypeBase* get_element_type() { return element_type; }
 
-    ArrayType* clone() override { return new ArrayType(builder, element_type->clone(), size); }
+    ArrayType* clone() override { return new ArrayType(compiler, element_type->clone(), size); }
 
     ~ArrayType() override { delete element_type; }
 };

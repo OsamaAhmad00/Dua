@@ -4,6 +4,7 @@
 #include <llvm/Support/Host.h>
 #include <utils/ErrorReporting.h>
 #include <llvm/IR/Verifier.h>
+#include <types/PointerType.h>
 
 namespace dua
 {
@@ -12,8 +13,7 @@ ModuleCompiler::ModuleCompiler(const std::string &module_name, const std::string
     context(),
     module(module_name, context),
     builder(context),
-    temp_builder(context),
-    current_function(nullptr)
+    temp_builder(context)
 {
     module.setTargetTriple(llvm::sys::getDefaultTargetTriple());
 
@@ -133,6 +133,9 @@ TypeBase* ModuleCompiler::get_winning_type(TypeBase* lhs, TypeBase* rhs)
 
 void ModuleCompiler::register_function(std::string name, FunctionSignature signature)
 {
+    if (current_function != nullptr)
+        report_internal_error("Nested functions are not allowed");
+
     // Registering the function in the module so that all
     //  functions are visible during AST evaluation.
     llvm::Type* ret = signature.return_type->llvm_type();
@@ -154,10 +157,26 @@ void ModuleCompiler::register_function(std::string name, FunctionSignature signa
     }
 }
 
-FunctionSignature& ModuleCompiler::get_function(const std::string& name) {
+FunctionSignature& ModuleCompiler::get_function(const std::string& name)
+{
     auto it = functions.find(name);
-    if (it == functions.end())
-        report_internal_error("The function " + name + " is not declared/defined");
+
+    if (it != functions.end())
+        return it->second;
+
+    size_t dot = 0;
+    while (dot < name.size() && name[dot] != '.') dot++;
+
+    if (dot == name.size()) {
+        report_error("The function " + name + " is not declared/defined");
+    } else {
+        // A class method
+        auto class_name = name.substr(0, dot);
+        auto method_name = name.substr(dot + 1);
+        report_error("The class " + class_name + " is not defined. Can't resolve " + class_name + "::" + method_name);
+    }
+
+    // Unreachable
     return it->second;
 }
 

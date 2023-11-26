@@ -1,6 +1,7 @@
 #pragma once
 
 #include <types/TypeBase.h>
+#include <llvm/IR/DerivedTypes.h>
 
 namespace dua
 {
@@ -11,8 +12,8 @@ class PointerType : public TypeBase
 
 public:
 
-    PointerType(llvm::IRBuilder<>* builder, TypeBase* element_type)
-            : element_type(element_type) { this->builder = builder; }
+    PointerType(ModuleCompiler* compiler, TypeBase* element_type)
+            : element_type(element_type) { this->compiler = compiler; }
     llvm::Constant* default_value() override;
     llvm::PointerType * llvm_type() const override;
     TypeBase* get_element_type() { return element_type; }

@@ -12,7 +12,7 @@ public:
 
     ContinueNode(ModuleCompiler* compiler) { this->compiler = compiler; }
     NoneValue eval() override {
-        auto& s = compiler->get_continue_stack();
+        auto& s = continue_stack();
         if (s.empty())
             report_internal_error("Not inside a loop");
         builder().CreateBr(s.back());

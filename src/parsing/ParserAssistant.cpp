@@ -4,6 +4,32 @@
 namespace dua
 {
 
+#define get_ixx(FUNC)                                         \
+int insertion_point = 0;                                      \
+for (int i = 0; i < num.size(); i++)                          \
+    if (num[i] != '\'')                                       \
+        num[insertion_point++] = num[i];                      \
+num.resize(insertion_point);                                  \
+                                                              \
+if (num[0] == '0')                                            \
+{                                                             \
+    if (num.size() > 2)                                       \
+    {                                                         \
+        if (num[1] == 'x')                                    \
+            return FUNC(num.c_str() + 2, nullptr, 16);        \
+        else if (num[1] == 'b')                               \
+            return FUNC(num.c_str() + 2, nullptr, 2);         \
+    }                                                         \
+    if (num.size() > 1)                                       \
+        return FUNC(num.c_str() + 1, nullptr, 8);             \
+}                                                             \
+return FUNC(num);
+
+int64_t ParserAssistant::get_i64(std::string num) { get_ixx(std::stoll); }
+int32_t ParserAssistant::get_i32(std::string num) { get_ixx(std::stoi); }
+int16_t ParserAssistant::get_i16(std::string num) { get_ixx(std::stoi); }
+int8_t  ParserAssistant::get_i8 (std::string num) { get_ixx(std::stoi); }
+
 TranslationUnitNode* ParserAssistant::construct_result()
 {
     size_t n = nodes.size();
@@ -17,6 +43,7 @@ void ParserAssistant::create_variable_declaration()
 {
     auto name = pop_str();
     auto type = pop_type();
+    instance_types.insert(name, type);
     if (is_in_global_scope()) {
         push_node<GlobalVariableDefinitionNode>(std::move(name), type, nullptr);
     } else {
@@ -30,6 +57,7 @@ void ParserAssistant::create_variable_definition()
     auto value = pop_node();
     auto name = pop_str();
     auto type = pop_type();
+    instance_types.insert(name, type);
     if (is_in_global_scope()) {
         push_node<GlobalVariableDefinitionNode>(std::move(name), type, value);
     } else {
@@ -40,19 +68,38 @@ void ParserAssistant::create_variable_definition()
 
 void ParserAssistant::create_function_declaration()
 {
-    if (!is_in_global_scope())
+    if (!is_in_global_scope() && compiler->current_class == nullptr)
         report_error("Function declarations/definitions not allowed in a local scope");
+
     inc_statements();
+
     FunctionSignature signature;
+
     signature.is_var_arg = is_var_arg;
+
     signature.params.resize(param_count);
     // The params are pushed in reverse-order
     for (int i = 0; i < param_count; i++)
         signature.params[param_count - i - 1] = {pop_str(), pop_type()};
     signature.return_type = pop_type();
+
     auto name = pop_str();
+    if (compiler->current_class != nullptr) {
+        name = compiler->current_class->getName().str() + '.' + name;
+        auto class_name = compiler->current_class->getName().str();
+        signature.params.insert(
+            signature.params.begin(),
+            Param {
+                "self",
+                compiler->create_type<PointerType>(
+                    compiler->classes[class_name]
+                )
+            }
+        );
+    }
 
     compiler->register_function(name, std::move(signature));
+
     push_node<FunctionDefinitionNode>(std::move(name), nullptr);
 }
 
@@ -72,6 +119,7 @@ void ParserAssistant::create_function_definition_block_body()
     auto function = pop_node_as<FunctionDefinitionNode>();
     function->set_body(body);
     nodes.push_back(function);
+    dec_statements();
 }
 
 void ParserAssistant::create_function_definition_expression_body()
@@ -136,11 +184,13 @@ void ParserAssistant::create_if_expression()
 
 void ParserAssistant::enter_scope() {
     statement_counters.push_back(0);
+    instance_types.push_scope();
 }
 
 size_t ParserAssistant::leave_scope() {
     size_t result = statement_counters.back();
     statement_counters.pop_back();
+    instance_types.pop_scope();
     return result;
 }
 
@@ -387,30 +437,82 @@ void ParserAssistant::create_logical_or()
     nodes.push_back(outer);
 }
 
-#define get_ixx(FUNC)                                         \
-int insertion_point = 0;                                      \
-for (int i = 0; i < num.size(); i++)                          \
-    if (num[i] != '\'')                                       \
-        num[insertion_point++] = num[i];                      \
-num.resize(insertion_point);                                  \
-                                                              \
-if (num[0] == '0')                                            \
-{                                                             \
-    if (num.size() > 2)                                       \
-    {                                                         \
-        if (num[1] == 'x')                                    \
-            return FUNC(num.c_str() + 2, nullptr, 16);        \
-        else if (num[1] == 'b')                               \
-            return FUNC(num.c_str() + 2, nullptr, 2);         \
-    }                                                         \
-    if (num.size() > 1)                                       \
-        return FUNC(num.c_str() + 1, nullptr, 8);             \
-}                                                             \
-return FUNC(num);
+void ParserAssistant::register_class()
+{
+    auto& name = strings.back();
 
-int64_t ParserAssistant::get_i64(std::string num) { get_ixx(std::stoll); }
-int32_t ParserAssistant::get_i32(std::string num) { get_ixx(std::stoi); }
-int16_t ParserAssistant::get_i16(std::string num) { get_ixx(std::stoi); }
-int8_t  ParserAssistant::get_i8 (std::string num) { get_ixx(std::stoi); }
+    if (compiler->classes.find(name) != compiler->classes.end()) {
+        // No need to register it again
+        return;
+    }
+
+    auto cls = compiler->create_type<ClassType>(name);
+    compiler->classes[name] = cls;
+
+    llvm::StructType::create(compiler->context, name);
+}
+
+void ParserAssistant::finish_class_declaration() {
+    // Pop the name since it's not going to be used in a definition
+    pop_str();
+}
+
+void ParserAssistant::start_class_definition()
+{
+    if (compiler->current_class)
+        report_error("Nested classes are not allowed");
+
+    if (compiler->current_function)
+        report_error("Can't define a class inside a function");
+
+    auto& name = strings.back();
+    compiler->current_class = compiler->get_class(name)->llvm_type();
+    instance_types.insert("self", compiler->get_class(name));
+}
+
+void ParserAssistant::create_class()
+{
+    size_t n = leave_scope();
+
+    if (!is_in_global_scope())
+        report_error("Class defined in a non-global scope");
+
+    std::vector<ASTNode*> members(n);
+    for (size_t i = 0; i < n; i++)
+        members[n - i - 1] = pop_node();
+
+    push_node<ClassDefinitionNode>(pop_str(), std::move(members));
+
+    compiler->current_class = nullptr;
+
+    inc_statements();
+}
+
+void ParserAssistant::create_class_type() {
+    push_type<ClassType>(pop_str());
+}
+
+void ParserAssistant::create_method_call()
+{
+    auto func_call = pop_node_as<FunctionCallNode>();
+    auto instance = pop_node_as<LValueNode>();
+
+    auto var = dynamic_cast<VariableNode*>(instance);
+    TypeBase* class_type = (var != nullptr)
+            ? instance_types.get(var->name) : instance->get_element_type();
+
+    auto casted = dynamic_cast<ClassType*>(class_type);
+    if (casted == nullptr)
+        report_internal_error("Calling methods on a non-class types");
+
+    func_call->name = casted->name + '.' + func_call->name;
+    func_call->args.insert(func_call->args.begin(), instance);
+
+    nodes.push_back(func_call);
+}
+
+void ParserAssistant::create_field_access() {
+    push_node<ClassFieldNode>(pop_node_as<LValueNode>(), pop_str());
+}
 
 }

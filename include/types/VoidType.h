@@ -8,7 +8,7 @@ namespace dua
 
 struct VoidType : TypeBase
 {
-    VoidType(llvm::IRBuilder<>* builder) { this->builder = builder; }
+    VoidType(ModuleCompiler* compiler) { this->compiler = compiler; }
 
     llvm::Constant* default_value() override {
         report_internal_error("Void types has no value");
@@ -16,10 +16,10 @@ struct VoidType : TypeBase
     }
 
     llvm::Type* llvm_type() const override {
-        return builder->getVoidTy();
+        return compiler->get_builder()->getVoidTy();
     }
 
-    VoidType* clone() override { return new VoidType(builder); }
+    VoidType* clone() override { return new VoidType(compiler); }
 };
 
 }

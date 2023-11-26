@@ -1,0 +1,136 @@
+int printf(str message, ...);
+
+void print(int num) { printf("%d ", num); }
+
+class X
+{
+    int a = 10;
+    int b;
+    long c = 55;
+
+    void print()
+    {
+        printf("%d %d %lld", a, b, c);
+    }
+}
+
+
+// Case Class declaration
+
+class Y;
+
+class Y
+{
+    int a;
+    int b;
+
+    void func() {}
+}
+
+int main()
+{
+    Y y;
+    y.func();
+}
+
+
+// Case Name shadowing
+// Outputs 13 14 3
+
+int d = 3;
+
+class Y
+{
+    int d = 5;
+
+    void print1() {
+        d = 14;
+        int d;
+        d = 13;
+        printf("%d ", d);
+    }
+
+    void print2() {
+        printf("%d ", d);
+    }
+}
+
+int main()
+{
+    Y y;
+    y.print1();
+    y.print2();
+    printf("%d", d);
+}
+
+
+// Case Mutually recursive methods
+// Outputs 1 2 3 4 5
+
+class Z
+{
+    void f1(int i) {
+        if (i > 1) self.f2(i - 1);
+        print(i);
+    }
+
+    void f2(int i) {
+        if (i > 1) self.f1(i - 1);
+        print(i);
+    }
+}
+
+int main()
+{
+    Z z;
+    z.f1(4);
+    printf("5");
+}
+
+
+// Case Undefined field access
+// Panics
+
+int main()
+{
+    X x;
+    x.y = 14;
+    x.print();
+}
+
+
+// Case Nested classes
+// Panics
+
+Class Y
+{
+    Class Z
+    {
+
+    }
+}
+
+int main() { }
+
+
+// Case Define class inside a function
+// Panics
+
+void function()
+{
+    Class Z
+    {
+
+    }
+}
+
+int main() { }
+
+
+// Case Redefinition of a class
+// Panics
+
+class A { }
+class A { }
+
+int main() { }

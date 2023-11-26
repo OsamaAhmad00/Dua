@@ -12,7 +12,7 @@ public:
 
     BreakNode(ModuleCompiler* compiler) { this->compiler = compiler; }
     NoneValue eval() override {
-        auto& s = compiler->get_break_stack();
+        auto& s = break_stack();
         if (s.empty())
             report_internal_error("Not inside a loop");
         builder().CreateBr(s.back());

@@ -1,4 +1,4 @@
-#include <types/PointerType.h>
+#include "types/PointerType.h"
 
 namespace dua
 {
@@ -12,7 +12,7 @@ llvm::PointerType* PointerType::llvm_type() const {
 }
 
 PointerType *PointerType::clone() {
-    return new PointerType(builder, element_type->clone());
+    return new PointerType(compiler, element_type->clone());
 }
 
 }

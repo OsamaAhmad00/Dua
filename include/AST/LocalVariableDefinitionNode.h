@@ -15,7 +15,7 @@ class LocalVariableDefinitionNode : public ASTNode
 public:
     LocalVariableDefinitionNode(ModuleCompiler* compiler, std::string name, TypeBase* type, ASTNode* initializer)
             : name(std::move(name)), initializer(initializer) { this->compiler = compiler; this->type = type; }
-    llvm::AllocaInst* eval() override;
+    llvm::Value* eval() override;
     TypeBase* compute_type() override { return type; }
     ~LocalVariableDefinitionNode() override;
 };

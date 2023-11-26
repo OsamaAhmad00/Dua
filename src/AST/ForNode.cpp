@@ -21,8 +21,8 @@ NoneValue ForNode::eval()
     llvm::BasicBlock* body_block = create_basic_block("for_body" + std::to_string(counter), current_function());
     llvm::BasicBlock* end_block = create_basic_block("for_end" + std::to_string(counter), current_function());
 
-    compiler->get_continue_stack().push_back(update_block);
-    compiler->get_break_stack().push_back(end_block);
+    continue_stack().push_back(update_block);
+    break_stack().push_back(end_block);
 
     // From the current block.
     builder().CreateBr(cond_block);
@@ -46,8 +46,8 @@ NoneValue ForNode::eval()
 
     builder().SetInsertPoint(end_block);
 
-    compiler->get_continue_stack().pop_back();
-    compiler->get_break_stack().pop_back();
+    continue_stack().pop_back();
+    break_stack().pop_back();
 
     symbol_table().push_scope();
 

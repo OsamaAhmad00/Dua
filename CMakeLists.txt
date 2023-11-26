@@ -88,11 +88,12 @@ set(DUA_SOURCES
     src/utils/VectorOperations.cpp
 
     src/AST/ArrayIndexingNode.cpp
-    src/AST/ArrayType.cpp
     src/AST/AssignmentNode.cpp
     src/AST/ASTNode.cpp
     src/AST/BlockNode.cpp
     src/AST/CastExpressionNode.cpp
+    src/AST/ClassDefinitionNode.cpp
+    src/AST/ClassFieldNode.cpp
     src/AST/DereferenceNode.cpp
     src/AST/DoWhileNode.cpp
     src/AST/ForNode.cpp
@@ -103,12 +104,15 @@ set(DUA_SOURCES
     src/AST/LoadedLValueNode.cpp
     src/AST/LocalVariableDefinitionNode.cpp
     src/AST/NumericalUnaryExpressionNodes.cpp
-    src/AST/PointerType.cpp
     src/AST/PostfixAdditionExpressionNode.cpp
     src/AST/ReturnNode.cpp
     src/AST/StringValueNode.cpp
     src/AST/VariableNode.cpp
     src/AST/WhileNode.cpp
+
+    src/types/ArrayType.cpp
+    src/types/PointerType.cpp
+    src/types/ClassType.cpp
 )
 
 set(DUA_PREREQUISITE_LIBS ${LLVM_LIBS} ${ANTLR4_LIBS} ${Boost_LIBRARIES})

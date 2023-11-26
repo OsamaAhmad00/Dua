@@ -15,8 +15,8 @@ NoneValue DoWhileNode::eval()
     llvm::BasicBlock* cond_block = create_basic_block("do_while_cond" + std::to_string(counter), current_function());
     llvm::BasicBlock* end_block = create_basic_block("do_while_end" + std::to_string(counter), current_function());
 
-    compiler->get_continue_stack().push_back(cond_block);
-    compiler->get_break_stack().push_back(end_block);
+    continue_stack().push_back(cond_block);
+    break_stack().push_back(end_block);
 
     // From the current block.
     builder().CreateBr(body_block);
@@ -35,8 +35,8 @@ NoneValue DoWhileNode::eval()
 
     builder().SetInsertPoint(end_block);
 
-    compiler->get_continue_stack().pop_back();
-    compiler->get_break_stack().pop_back();
+    continue_stack().pop_back();
+    break_stack().pop_back();
 
     return none_value();
 }

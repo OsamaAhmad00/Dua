@@ -52,6 +52,10 @@ CloseBracket: ']';
 RightArrow: '->';
 Simicolon: ';';
 
+Class: 'class';
+Extends: 'extends';
+Dot: '.';
+
 If: 'if';
 Else: 'else';
 When: 'when';

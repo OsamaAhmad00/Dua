@@ -6,6 +6,7 @@
 #include <llvm/IR/LLVMContext.h>
 #include <SymbolTable.h>
 #include <types/TypeBase.h>
+#include <types/ClassType.h>
 #include <FunctionInfo.h>
 
 namespace dua
@@ -16,6 +17,7 @@ class ModuleCompiler
 public:
 
     friend class ASTNode;
+    friend class ParserAssistant;
 
     ModuleCompiler(const std::string& module_name, const std::string& code);
 
@@ -27,6 +29,8 @@ public:
 
     const std::string& get_result() { return result; }
 
+    ~ModuleCompiler() { for (auto cls : classes) delete cls.second; }
+
     template <typename T, typename ...Args>
     T* create_node(Args ...args)
     {
@@ -36,16 +40,16 @@ public:
     template <typename T, typename ...Args>
     T* create_type(Args ...args)
     {
-        return new T(&builder, args...);
+        return new T(this, args...);
     }
 
     void register_function(std::string name, FunctionSignature signature);
     FunctionSignature& get_function(const std::string& name);
 
     llvm::IRBuilder<>* get_builder() { return &builder; }
-    std::vector<llvm::BasicBlock*>& get_continue_stack() { return continue_stack; }
-    std::vector<llvm::BasicBlock*>& get_break_stack() { return break_stack; }
-    std::unordered_map<std::string, llvm::Constant*>& get_string_pool() { return string_pool; }
+    llvm::LLVMContext* get_context() { return &context; }
+    auto get_class(const std::string& name) { return classes[name]; }
+    auto& get_class_fields() { return class_fields; }
 
     struct Variable {
         llvm::Value* ptr;
@@ -65,8 +69,14 @@ private:
     llvm::IRBuilder<> temp_builder;
     SymbolTable<Variable> symbol_table;
     std::unordered_map<std::string, FunctionSignature> functions;
+    std::unordered_map<std::string, ClassType*> classes;
+    // Instead of having the fields be stored in the class type,
+    //  and having them getting duplicated on each clone, let's
+    //  keep the fields info in one place, and refer to it by name.
+    std::unordered_map<std::string, std::vector<ClassField>> class_fields;
     std::unordered_map<std::string, llvm::Constant*> string_pool;
-    llvm::Function* current_function;
+    llvm::Function* current_function = nullptr;
+    llvm::StructType* current_class = nullptr;
 
     // Loops
     std::vector<llvm::BasicBlock*> continue_stack;

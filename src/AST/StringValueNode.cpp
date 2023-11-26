@@ -8,7 +8,7 @@ int StringValueNode::counter = 0;
 llvm::Constant* StringValueNode::eval()
 {
     if (is_nullptr) return type->default_value();
-    auto& pool = compiler->get_string_pool();
+    auto& pool = string_pool();
     auto it = pool.find(value);
     if (it != pool.end())
         return it->second;

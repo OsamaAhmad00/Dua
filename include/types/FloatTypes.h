@@ -5,23 +5,23 @@
 namespace dua
 {
 
-#define DEFINE_FLOAT_TYPE(WIDTH, TYPE)                \
-struct F##WIDTH##Type : public FloatType              \
-{                                                     \
-    F##WIDTH##Type(llvm::IRBuilder<>* builder)        \
-        { this->builder = builder; }                  \
-                                                      \
-    llvm::Constant* default_value() override {        \
-        return llvm::ConstantFP::get(llvm_type(), 0); \
-    }                                                 \
-                                                      \
-    llvm::Type* llvm_type() const override {          \
-        return builder->get##TYPE##Ty();              \
-    }                                                 \
-                                                      \
-    F##WIDTH##Type* clone() override {                \
-        return new F##WIDTH##Type(builder);           \
-    }                                                 \
+#define DEFINE_FLOAT_TYPE(WIDTH, TYPE)                               \
+struct F##WIDTH##Type : public FloatType                             \
+{                                                                    \
+    F##WIDTH##Type(ModuleCompiler* compiler)                         \
+        { this->compiler = compiler; }                               \
+                                                                     \
+    llvm::Constant* default_value() override {                       \
+        return llvm::ConstantFP::get(llvm_type(), 0);                \
+    }                                                                \
+                                                                     \
+    llvm::Type* llvm_type() const override {                         \
+        return compiler->get_builder()->get##TYPE##Ty();             \
+    }                                                                \
+                                                                     \
+    F##WIDTH##Type* clone() override {                               \
+        return new F##WIDTH##Type(compiler);                         \
+    }                                                                \
 };
 
 struct FloatType : public TypeBase {};

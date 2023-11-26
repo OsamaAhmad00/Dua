@@ -8,6 +8,8 @@ namespace dua
 
 class FunctionCallNode : public ASTNode
 {
+    friend class ParserAssistant;
+
     std::string name;
     std::vector<ASTNode*> args;
 

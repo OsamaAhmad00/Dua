@@ -2,10 +2,11 @@
 
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Type.h>
-#include <llvm/IR/IRBuilder.h>
 
 namespace dua
 {
+
+class ModuleCompiler;
 
 struct TypeBase
 {
@@ -15,7 +16,7 @@ struct TypeBase
     //  type if it's going to live past the value node,
     //  or make sure that the value node lives long enough.
     //  This is a candidate for int introducing bugs.
-    llvm::IRBuilder<>* builder;
+    ModuleCompiler* compiler;
     virtual llvm::Constant* default_value() = 0;
     virtual llvm::Type* llvm_type() const = 0;
     virtual TypeBase* clone() = 0;

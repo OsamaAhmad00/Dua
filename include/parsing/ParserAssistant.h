@@ -7,6 +7,7 @@
 #include "AST/GlobalVariableDefinitionNode.h"
 #include "AST/LocalVariableDefinitionNode.h"
 #include "AST/AssignmentExpressionNode.h"
+#include "AST/ClassDefinitionNode.h"
 #include "AST/CompoundAssignmentExpressionNode.h"
 #include "AST/ExpressionStatementNode.h"
 #include "AST/BlockNode.h"
@@ -41,6 +42,7 @@
 #include "AST/lvalue/VariableNode.h"
 #include "AST/lvalue/ArrayIndexingNode.h"
 #include "AST/lvalue/DereferenceNode.h"
+#include "AST/lvalue/ClassFieldNode.h"
 #include "AST/lvalue/LoadedLValueNode.h"
 
 #include "types/IntegerTypes.h"
@@ -48,6 +50,7 @@
 #include "types/StringType.h"
 #include "types/ArrayType.h"
 #include "types/PointerType.h"
+#include "types/ClassType.h"
 
 #include <utils/ErrorReporting.h>
 
@@ -73,6 +76,13 @@ class ParserAssistant
     std::vector<uint64_t> numbers;
     std::vector<ASTNode *> nodes;
     std::vector<TypeBase *> types;
+
+    // Used to track the types of class instances, in order to
+    //  be able to construct the right method call, given only
+    //  the variable name. Another way to solve this problem is
+    //  to defer the function resolution until the AST evaluation,
+    //  but the solution here is much simpler.
+    SymbolTable<TypeBase*> instance_types;
 
     // A stack for counting the number of statements
     //  inside the current scope, and for determining
@@ -140,6 +150,11 @@ public:
     template<typename T, typename...Args>
     void push_type(Args...args) { types.push_back(compiler->create_type<T>(args...)); }
 
+    static int64_t get_i64(std::string num);
+    static int32_t get_i32(std::string num);
+    static int16_t get_i16(std::string num);
+    static int8_t  get_i8 (std::string num);
+
     void create_variable_declaration();
     void create_variable_definition();
     void create_function_declaration();
@@ -169,11 +184,9 @@ public:
     void create_array_indexing();
     void create_logical_and();
     void create_logical_or();
-
-    static int64_t get_i64(std::string num);
-    static int32_t get_i32(std::string num);
-    static int16_t get_i16(std::string num);
-    static int8_t  get_i8 (std::string num);
+    void create_class_type();
+    void create_method_call();
+    void create_field_access();
 
     template<typename T>
     void create_unary_expr() {
@@ -210,6 +223,11 @@ public:
     size_t leave_fun_call();
     void inc_args();
     void create_function_call();
+
+    void register_class();
+    void finish_class_declaration();
+    void start_class_definition();
+    void create_class();
 
     bool is_in_global_scope();
 

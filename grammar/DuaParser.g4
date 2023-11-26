@@ -43,6 +43,36 @@ global_elements
 global_element
     : variable_decl_or_def
     | function_decl_or_def
+    | class_decl_or_def
+    ;
+
+class_decl_or_def
+    : class_declaration
+    | class_definition
+    ;
+
+class_declaration
+    : class_decl_no_semicolon ';' { assistant.finish_class_declaration(); }
+    ;
+
+class_decl_no_semicolon
+    : Class identifier { assistant.register_class(); }
+    ;
+
+class_definition
+    : class_decl_no_semicolon
+       scope_begin { assistant.start_class_definition(); }
+       class_elements scope_end { assistant.create_class(); }
+    ;
+
+class_elements
+    : class_elements class_element
+    | class_element
+    ;
+
+class_element
+    : variable_decl_or_def
+    | function_decl_or_def
     ;
 
 variable_decl_or_def
@@ -174,6 +204,7 @@ expression
     | lvalue '^='  expression  { assistant.create_compound_assignment<XorNode>(); }
     | lvalue '|='  expression  { assistant.create_compound_assignment<BitwiseOrNode>(); }
     | lvalue { assistant.create_loaded_lvalue(); }
+    | lvalue '.' function_call { assistant.create_method_call(); }
     ;
 
 cast_expression
@@ -295,6 +326,7 @@ lvalue
     | Identifier { assistant.push_node<VariableNode>($Identifier.text); }
     | lvalue '[' expression ']' { assistant.create_array_indexing(); }
     | '*' expression { assistant.create_dereference(); }
+    | lvalue '.' identifier { assistant.create_field_access(); }
     ;
 
 // A convinience production that pushes the identifier's text.
@@ -331,7 +363,7 @@ float
 
 type
     : primitive_type
-    // | Identifier            // User-defined types
+    | identifier            { assistant.create_class_type(); }
     | type '[' size ']'     { assistant.create_array_type(); }
     | type '*'              { assistant.create_pointer_type(); }
     ;
