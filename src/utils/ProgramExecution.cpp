@@ -24,8 +24,13 @@ ProgramExecution execute_program(const std::string& program, const std::vector<s
         std::string line;
         result.std_out.clear();
         // This will add a \n to the end of the output even if there wasn't one.
-        while (c.running() && !is.eof() && std::getline(is, line))
+        while (c.running() && !is.eof() && std::getline(is, line)) {
+            // FIXME this is to avoid the \r windows puts before the \n.
+            //  This will produce wrong results if the text is intended
+            //  to have a \r at the end.
+            if (line.back() == '\r') line.pop_back();
             result.std_out += line + '\n';
+        }
 
         c.wait();
 

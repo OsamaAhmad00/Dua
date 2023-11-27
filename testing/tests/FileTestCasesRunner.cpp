@@ -1,4 +1,5 @@
 #include "FileTestCasesRunner.h"
+#include "utils/ErrorReporting.h"
 #include <utils/TextManipulation.h>
 #include <utils/CodeGeneration.h>
 #include <utils/ProgramExecution.h>
@@ -19,7 +20,12 @@ void FileTestCasesRunner::run()
         auto name = extract_header_element(header, "Case");
         auto expected_exit_code_str = extract_header_element(header, "Returns");
         auto expected_output = extract_header_element(header, "Outputs");
-        expected_output = escape_characters(expected_output);
+        if (expected_output.size() >= 2) {
+            expected_output = escape_characters(expected_output.substr(1, expected_output.size() - 2));
+        } else if (!expected_output.empty()) {
+            report_error(name + ": in test case " + std::to_string(i + 1) +
+                         ", the expected output should be in-between \"\".");
+        }
         bool should_panic = header_has_flag(header, "Panics");
         auto code = tests.common + '\n' + body;
 

@@ -42,13 +42,13 @@ int main ()
 
 
 // CASE Variable arguments declaration
-// Outputs Hello, world!
+// Outputs "Hello, world!\n"
 
 int printf(i8* message, ...);
 
 int main()
 {
-    printf("Hello, world!");
+    printf("Hello, world!\n");
 }
 
 

@@ -1,5 +1,5 @@
 // CASE Basic integer types
-// Outputs -9223372036854775808 -2147483648 -32768 -128 -9223372036854775808 -2147483648 -32768 -128 -128
+// Outputs "-9223372036854775808 -2147483648 -32768 -128 -9223372036854775808 -2147483648 -32768 -128 -128"
 
 int printf(str message, ...);
 
@@ -51,7 +51,7 @@ int main()
 
 
 // CASE Basic floating-point types
-// Outputs 1234.568 1234.5678 1234.568 1234.5677
+// Outputs "1234.568 1234.5678 1234.568 1234.5677"
 
 int printf(str message, ...);
 
@@ -75,7 +75,7 @@ int main()
 
 
 // CASE Basic string type
-// Outputs Hello, world!
+// Outputs "Hello, world!"
 
 int printf(str message, ...);
 
