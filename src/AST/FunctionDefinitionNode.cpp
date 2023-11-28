@@ -63,9 +63,10 @@ llvm::Function* FunctionDefinitionNode::define_function()
         auto type = dynamic_cast<PointerType*>(signature.params[0].type)->get_element_type();
         symbol_table().insert("self", { function->args().begin(), type });
     }
+
     for (; i < signature.params.size(); i++) {
         const auto& arg = function->args().begin() + i;
-        auto& param = signature.params[i++];
+        auto& param = signature.params[i];
         arg->setName(param.name);
         create_local_variable(param.name, param.type, arg);
     }

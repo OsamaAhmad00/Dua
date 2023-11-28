@@ -1,4 +1,4 @@
-#include <AST/GlobalVariableDefinitionNode.h>
+#include "AST/variable/GlobalVariableDefinitionNode.h"
 #include <utils/ErrorReporting.h>
 
 namespace dua
@@ -24,11 +24,6 @@ llvm::GlobalVariable* GlobalVariableDefinitionNode::eval()
     symbol_table().insert_global(name, { variable, type });
 
     return variable;
-}
-
-GlobalVariableDefinitionNode::~GlobalVariableDefinitionNode()
-{
-    delete initializer;
 }
 
 }

@@ -2,6 +2,33 @@ int printf(str message, ...);
 
 void print(int num) { printf("%d", num); }
 
+// Case Constructor with parameters call
+// Outputs "Aa1b2c3Ba9b8c7CD"
+
+class X
+{
+    void constructor(int a, int b, int c)
+    {
+        printf("a%db%dc%d", a, b, c);
+    }
+}
+
+class Y
+{
+    // No constructor is defined
+}
+
+int main()
+{
+    printf("A");
+    X x1(1, 2, 3);
+    printf("B");
+    X x2(9, 8, 7);
+    printf("C");
+    Y y;
+    printf("D");
+}
+
 
 // Case Destructor call
 // Outputs "5X"
@@ -22,13 +49,15 @@ class X
 
 class Y
 {
-    // No destructor is defined
     int z;
+    void constructor(int a, int b) { }
+
+    // No destructor is defined
 }
 
 int main()
 {
     X x;
     print(x.x);
-    Y y;
+    Y y(3, 4);
 }

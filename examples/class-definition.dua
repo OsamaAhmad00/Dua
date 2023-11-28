@@ -34,6 +34,12 @@ int main()
 }
 
 
+// Case Empty class
+
+class Y { }
+int main() { }
+
+
 // Case Name shadowing
 // Outputs "13 14 3"
 

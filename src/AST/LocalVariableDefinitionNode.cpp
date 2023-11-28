@@ -1,9 +1,9 @@
-#include <AST/LocalVariableDefinitionNode.h>
+#include "AST/variable/LocalVariableDefinitionNode.h"
 
 namespace dua
 {
 
-llvm::Value *LocalVariableDefinitionNode::eval()
+llvm::Value* LocalVariableDefinitionNode::eval()
 {
     llvm::Value* init_value = initializer ? initializer->eval() : type->default_value();
     if (current_function() != nullptr)
@@ -33,11 +33,6 @@ llvm::Value *LocalVariableDefinitionNode::eval()
     });
 
     return none_value();
-}
-
-LocalVariableDefinitionNode::~LocalVariableDefinitionNode()
-{
-    delete initializer;
 }
 
 }

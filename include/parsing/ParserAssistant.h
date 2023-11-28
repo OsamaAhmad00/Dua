@@ -4,13 +4,14 @@
 
 #include "AST/TranslationUnitNode.h"
 
-#include "AST/GlobalVariableDefinitionNode.h"
-#include "AST/LocalVariableDefinitionNode.h"
+#include "AST/variable/GlobalVariableDefinitionNode.h"
+#include "AST/variable/LocalVariableDefinitionNode.h"
 #include "AST/AssignmentExpressionNode.h"
 #include "AST/CompoundAssignmentExpressionNode.h"
 #include "AST/ExpressionStatementNode.h"
 #include "AST/BlockNode.h"
 #include "AST/IfNode.h"
+#include "AST/SequentialEvalNode.h"
 
 #include "AST/class/ClassDefinitionNode.h"
 #include "AST/class/MethodCallNode.h"

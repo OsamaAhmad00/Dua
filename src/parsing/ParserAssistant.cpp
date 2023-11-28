@@ -506,7 +506,16 @@ void ParserAssistant::create_field_access() {
 
 void ParserAssistant::create_constructor_call()
 {
-
+    // Function name
+    push_str("constructor");
+    // Just for convenience
+    create_function_call();
+    auto func_call = pop_node_as<FunctionCallNode>();
+    auto decl = pop_node_as<VariableDefinitionNode>();
+    auto instance = compiler->create_node<VariableNode>(decl->get_name());
+    auto constructor = compiler->create_node<MethodCallNode>(instance, std::move(func_call->name), std::move(func_call->args), false);
+    delete func_call;
+    push_node<SequentialEvalNode>(std::vector<ASTNode*>{decl, constructor}, 0);
 }
 
 }

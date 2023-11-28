@@ -19,7 +19,6 @@ llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, TypeBa
     }
     auto variable = ModuleCompiler::Variable { instance, type };
     symbol_table().insert(name, variable);
-    compiler->call_method_if_exists(variable, "constructor");
     return instance;
 }
 

@@ -62,12 +62,17 @@ class_decl_no_semicolon
 class_definition
     : class_decl_no_semicolon
        scope_begin { assistant.start_class_definition(); }
-       class_elements scope_end { assistant.create_class(); }
+       class_elements_or_none scope_end { assistant.create_class(); }
+    ;
+
+class_elements_or_none
+    : class_elements
+    | /* empty */
     ;
 
 class_elements
     : class_elements class_element
-    | class_element
+    | /* empty */
     ;
 
 class_element
@@ -79,9 +84,12 @@ variable_decl_or_def
     : variable_decl_or_def_no_simicolon ';'
     ;
 
+// Variable definition is put first so that it has higher precedence.
+//  This is to have no-args class definitinos to be considered as
+//  definitions instead of declarations.
 variable_decl_or_def_no_simicolon
-    : variable_decl_no_simicolon
-    | variable_def_no_simicolon
+    : variable_def_no_simicolon
+    | variable_decl_no_simicolon
     ;
 
 function_decl_or_def
@@ -95,7 +103,16 @@ variable_decl_no_simicolon
 
 variable_def_no_simicolon
     : type identifier '=' expression { assistant.create_variable_definition(); }
-    | class_type identifier '(' arg_list ')' { assistant.create_constructor_call(); }
+    | object_decl optional_constructor_args { assistant.create_constructor_call(); }
+    ;
+
+optional_constructor_args
+    : '(' arg_list ')'
+    | /* empty */ { assistant.enter_fun_call(); }
+    ;
+
+object_decl
+    : class_type identifier { assistant.create_variable_declaration(); }
     ;
 
 function_decl_no_simicolon
@@ -364,13 +381,13 @@ float
 
 type
     : primitive_type
-    | class_type            { assistant.create_class_type(); }
+    | class_type
     | type '[' size ']'     { assistant.create_array_type(); }
     | type '*'              { assistant.create_pointer_type(); }
     ;
 
 class_type
-    : identifier
+    : identifier { assistant.create_class_type(); }
     ;
 
 primitive_type
