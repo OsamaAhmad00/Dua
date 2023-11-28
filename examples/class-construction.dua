@@ -1,0 +1,34 @@
+int printf(str message, ...);
+
+void print(int num) { printf("%d", num); }
+
+
+// Case Destructor call
+// Outputs "5X"
+
+class X
+{
+    int x = 3;
+    void constructor()
+    {
+        x = 5;
+    }
+
+    void destructor()
+    {
+        printf("X");
+    }
+}
+
+class Y
+{
+    // No destructor is defined
+    int z;
+}
+
+int main()
+{
+    X x;
+    print(x.x);
+    Y y;
+}

@@ -13,7 +13,10 @@ ModuleCompiler::ModuleCompiler(const std::string &module_name, const std::string
     context(),
     module(module_name, context),
     builder(context),
-    temp_builder(context)
+    temp_builder(context),
+    constructor_callback(CallMethodIfExists(this, "constructor")),
+    destructor_callback(CallMethodIfExists(this, "destructor")),
+    symbol_table(&constructor_callback, &destructor_callback)
 {
     module.setTargetTriple(llvm::sys::getDefaultTargetTriple());
 

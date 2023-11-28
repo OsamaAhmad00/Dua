@@ -56,6 +56,22 @@ public:
         TypeBase* type;
     };
 
+    struct CallMethodIfExists {
+        ModuleCompiler* compiler;
+        std::string name;
+        CallMethodIfExists(ModuleCompiler* compiler, std::string name)
+            : compiler(compiler), name(std::move(name)) {}
+        void operator()(const Variable& variable) const {
+            if (auto class_type = dynamic_cast<ClassType*>(variable.type); class_type != nullptr) {
+                std::string constructor = class_type->name + "." + name;
+                if (compiler->functions.find(constructor) != compiler->functions.end()) {
+                    auto func = compiler->module.getFunction(constructor);
+                    compiler->builder.CreateCall(func, variable.ptr);
+                }
+            }
+        }
+    };
+
 private:
 
     llvm::LLVMContext context;
@@ -81,6 +97,9 @@ private:
     // Loops
     std::vector<llvm::BasicBlock*> continue_stack;
     std::vector<llvm::BasicBlock*> break_stack;
+
+    std::function<void(const Variable&)> constructor_callback;
+    std::function<void(const Variable&)> destructor_callback;
 
     std::string result;
 };

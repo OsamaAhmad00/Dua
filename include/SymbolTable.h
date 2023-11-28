@@ -12,7 +12,14 @@ namespace dua
 template<typename T>
 class Scope
 {
+
 public:
+
+    Scope(std::function<void(const T&)>* on_insertion_callback = nullptr,
+          std::function<void(const T&)>* on_deletion_callback = nullptr)
+          : on_insertion_callback(on_insertion_callback),
+            on_deletion_callback(on_deletion_callback) {}
+
     Scope& insert(const std::string& name, const T& t) {
         if (contains(name)) {
             report_error("The symbol " + name + " is already defined");
@@ -33,6 +40,9 @@ public:
     }
 
 private:
+    template <typename U> friend class SymbolTable;
+    std::function<void(const T&)>* on_insertion_callback = nullptr;
+    std::function<void(const T&)>* on_deletion_callback = nullptr;
     std::unordered_map<std::string, T> map;
 };
 
@@ -41,7 +51,17 @@ class SymbolTable
 {
 public:
 
-    SymbolTable() { push_scope(); }
+    SymbolTable(std::function<void(const T&)>* on_insertion_callback = nullptr,
+                std::function<void(const T&)>* on_deletion_callback = nullptr,
+                bool apply_for_global_scope = false)
+                : on_insertion_callback(on_insertion_callback),
+                  on_deletion_callback(on_deletion_callback)
+    {
+        if (apply_for_global_scope)
+            push_scope(Scope<T>(on_insertion_callback, on_deletion_callback));
+        else
+            push_scope();
+    }
 
     size_t size() const { return scopes.size(); }
 
@@ -49,7 +69,10 @@ public:
         if (scopes.empty()) {
             report_internal_error("There is no scope");
         }
-        scopes[scopes.size() - scope_num].insert(name, t);
+        auto& scope = scopes[scopes.size() - scope_num];
+        if (scope.on_insertion_callback != nullptr)
+            (*scope.on_insertion_callback)(t);
+        scope.insert(name, t);
         return *this;
     }
 
@@ -101,17 +124,32 @@ public:
     }
 
     SymbolTable& push_scope() {
-        push_scope(Scope<T>());
+        push_scope(Scope<T>(on_insertion_callback, on_deletion_callback));
         return *this;
     }
 
     Scope<T> pop_scope() {
-        Scope<T> top = scopes.back();
+        Scope<T> top = std::move(scopes.back());
         scopes.pop_back();
+        if (top.on_deletion_callback != nullptr) {
+            for (auto &element: top.map) {
+                (*top.on_deletion_callback)(element.second);
+            }
+        }
         return top;
     }
 
+    void set_insertion_callback(std::function<void(const T&)>* on_insertion_callback) {
+        this->on_insertion_callback = on_insertion_callback;
+    }
+
+    void set_deletion_callback(std::function<void(const T&)>* on_deletion_callback) {
+        this->on_deletion_callback = on_deletion_callback;
+    }
+
 private:
+    std::function<void(const T&)>* on_insertion_callback = nullptr;
+    std::function<void(const T&)>* on_deletion_callback = nullptr;
     std::vector<Scope<T>> scopes;
 };
 

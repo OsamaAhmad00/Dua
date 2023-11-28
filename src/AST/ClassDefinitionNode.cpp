@@ -1,5 +1,5 @@
 #include <AST/ClassDefinitionNode.h>
-#include <AST/function/FunctionDefinitionNode.h>
+#include <AST/LocalVariableDefinitionNode.h>
 
 namespace dua
 {
@@ -8,10 +8,10 @@ size_t put_fields_first(std::vector<ASTNode*>& members)
 {
     // Returns the split point between fields and methods,
     //  pointing to the first method in the list.
-    size_t result = members.size() - 1;
-    for (size_t i = 0; i < result; i++)
-        if (dynamic_cast<FunctionDefinitionNode*>(members[i]) != nullptr)
-            std::swap(members[i--], members[result--]);
+    size_t result = 0;
+    for (size_t i = members.size() - 1; i >= result && i != (size_t)-1; i--)
+        if (dynamic_cast<LocalVariableDefinitionNode*>(members[i]) != nullptr)
+            std::swap(members[i++], members[result++]);
     return result;
 }
 
