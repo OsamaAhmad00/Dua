@@ -12,13 +12,15 @@ llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, TypeBa
 {
     llvm::BasicBlock* entry = &current_function()->getEntryBlock();
     temp_builder().SetInsertPoint(entry, entry->begin());
-    llvm::AllocaInst* variable = temp_builder().CreateAlloca(type->llvm_type(), 0, name);
+    llvm::AllocaInst* instance = temp_builder().CreateAlloca(type->llvm_type(), 0, name);
     if (init) {
         init = compiler->cast_value(init, type->llvm_type());
-        builder().CreateStore(init, variable);
+        builder().CreateStore(init, instance);
     }
-    symbol_table().insert(name, { variable, type });
-    return variable;
+    auto variable = ModuleCompiler::Variable { instance, type };
+    symbol_table().insert(name, variable);
+    compiler->call_method_if_exists(variable, "constructor");
+    return instance;
 }
 
 NoneValue ASTNode::none_value() { return builder().getInt32(0); }

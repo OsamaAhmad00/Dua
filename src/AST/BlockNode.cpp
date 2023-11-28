@@ -22,7 +22,7 @@ llvm::Value* BlockNode::eval()
 
     auto result =  elements.back()->eval();
 
-    symbol_table().pop_scope();
+    compiler->destruct_all_variables(symbol_table().pop_scope());
 
     return result;
 }

@@ -13,10 +13,7 @@ ModuleCompiler::ModuleCompiler(const std::string &module_name, const std::string
     context(),
     module(module_name, context),
     builder(context),
-    temp_builder(context),
-    constructor_callback(CallMethodIfExists(this, "constructor")),
-    destructor_callback(CallMethodIfExists(this, "destructor")),
-    symbol_table(&constructor_callback, &destructor_callback)
+    temp_builder(context)
 {
     module.setTargetTriple(llvm::sys::getDefaultTargetTriple());
 
@@ -187,5 +184,23 @@ llvm::Value *ModuleCompiler::cast_as_bool(llvm::Value *value, bool panic_on_fail
     value = cast_value(value, builder.getInt64Ty(), panic_on_failure);
     return builder.CreateICmpNE(value, builder.getInt64(0));
 }
+
+void ModuleCompiler::call_method_if_exists(const Variable& variable, const std::string& name)
+{
+    if (auto class_type = dynamic_cast<ClassType *>(variable.type); class_type != nullptr) {
+        std::string constructor = class_type->name + "." + name;
+        if (functions.find(constructor) != functions.end()) {
+            auto func = module.getFunction(constructor);
+            builder.CreateCall(func, variable.ptr);
+        }
+    }
+}
+
+void ModuleCompiler::destruct_all_variables(const Scope<Variable> &scope)
+{
+    for (auto& variable : scope.map)
+        call_method_if_exists(variable.second, "destructor");
+}
+
 
 }

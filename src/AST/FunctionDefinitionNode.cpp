@@ -80,9 +80,9 @@ llvm::Function* FunctionDefinitionNode::define_function()
         }
     }
 
-    symbol_table().pop_scope();
+    compiler->destruct_all_variables(symbol_table().pop_scope());
     if (current_class() != nullptr)
-        symbol_table().pop_scope();
+        compiler->destruct_all_variables(symbol_table().pop_scope());
 
     builder().SetInsertPoint(old_block);
     current_function() = old_function;
