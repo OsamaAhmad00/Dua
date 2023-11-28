@@ -103,6 +103,7 @@ set(DUA_SOURCES
     src/AST/IfNode.cpp
     src/AST/LoadedLValueNode.cpp
     src/AST/LocalVariableDefinitionNode.cpp
+    src/AST/MethodCallNode.cpp
     src/AST/NumericalUnaryExpressionNodes.cpp
     src/AST/PostfixAdditionExpressionNode.cpp
     src/AST/ReturnNode.cpp

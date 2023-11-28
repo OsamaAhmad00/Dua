@@ -496,23 +496,17 @@ void ParserAssistant::create_method_call()
 {
     auto func_call = pop_node_as<FunctionCallNode>();
     auto instance = pop_node_as<LValueNode>();
-
-    auto var = dynamic_cast<VariableNode*>(instance);
-    TypeBase* class_type = (var != nullptr)
-            ? instance_types.get(var->name) : instance->get_element_type();
-
-    auto casted = dynamic_cast<ClassType*>(class_type);
-    if (casted == nullptr)
-        report_internal_error("Calling methods on a non-class types");
-
-    func_call->name = casted->name + '.' + func_call->name;
-    func_call->args.insert(func_call->args.begin(), instance);
-
-    nodes.push_back(func_call);
+    push_node<MethodCallNode>(instance, std::move(func_call->name), std::move(func_call->args));
+    delete func_call;
 }
 
 void ParserAssistant::create_field_access() {
     push_node<ClassFieldNode>(pop_node_as<LValueNode>(), pop_str());
+}
+
+void ParserAssistant::create_constructor_call()
+{
+
 }
 
 }

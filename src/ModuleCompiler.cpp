@@ -202,5 +202,28 @@ void ModuleCompiler::destruct_all_variables(const Scope<Variable> &scope)
         call_method_if_exists(variable.second, "destructor");
 }
 
+bool ModuleCompiler::has_function(const std::string &name) const {
+    return functions.find(name) != functions.end();
+}
+
+llvm::CallInst* ModuleCompiler::call_function(const std::string &name, std::vector<llvm::Value*> args)
+{
+    llvm::Function* function = module.getFunction(name);
+    auto& signature = get_function(name);
+
+    for (size_t i = args.size() - 1; i != (size_t)-1; i--) {
+        if (i < signature.params.size()) {
+            // Only try to cast non-var-arg parameters
+            auto param_type = signature.params[i].type->llvm_type();
+            args[i] = cast_value(args[i], param_type);
+        } else if (args[i]->getType() == builder.getFloatTy()) {
+            // Variadic functions promote floats to doubles
+            args[i] = cast_value(args[i], builder.getDoubleTy());
+        }
+    }
+
+    return builder.CreateCall(function, std::move(args));
+}
+
 
 }

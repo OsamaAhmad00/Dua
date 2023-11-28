@@ -56,6 +56,8 @@ public:
         TypeBase* type;
     };
 
+    bool has_function(const std::string& name) const;
+    llvm::CallInst* call_function(const std::string& name, std::vector<llvm::Value*> args = {});
     void call_method_if_exists(const Variable& variable, const std::string& name);
     void destruct_all_variables(const Scope<Variable>& scope);
 

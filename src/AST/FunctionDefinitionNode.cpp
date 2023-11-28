@@ -1,5 +1,6 @@
 #include <AST/function/FunctionDefinitionNode.h>
 #include <types/VoidType.h>
+#include "types/PointerType.h"
 
 namespace dua
 {
@@ -59,7 +60,8 @@ llvm::Function* FunctionDefinitionNode::define_function()
         //  the self pointer is pushed to the stack, the variable
         //  on the stack would have a type of class** instead of class*.
         i++;
-        symbol_table().insert("self", { function->args().begin(), signature.params[0].type });
+        auto type = dynamic_cast<PointerType*>(signature.params[0].type)->get_element_type();
+        symbol_table().insert("self", { function->args().begin(), type });
     }
     for (; i < signature.params.size(); i++) {
         const auto& arg = function->args().begin() + i;
@@ -70,6 +72,13 @@ llvm::Function* FunctionDefinitionNode::define_function()
 
     body->eval();
 
+    auto scope = symbol_table().pop_scope();
+    scope.map.erase("self");
+    compiler->destruct_all_variables(scope);
+
+    if (current_class() != nullptr)
+        symbol_table().pop_scope();
+
     if (signature.return_type->llvm_type() == builder().getVoidTy())
         builder().CreateRetVoid();
     else {
@@ -79,10 +88,6 @@ llvm::Function* FunctionDefinitionNode::define_function()
             builder().CreateRet(signature.return_type->default_value());
         }
     }
-
-    compiler->destruct_all_variables(symbol_table().pop_scope());
-    if (current_class() != nullptr)
-        compiler->destruct_all_variables(symbol_table().pop_scope());
 
     builder().SetInsertPoint(old_block);
     current_function() = old_function;

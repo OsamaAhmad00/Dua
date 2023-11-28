@@ -7,11 +7,13 @@
 #include "AST/GlobalVariableDefinitionNode.h"
 #include "AST/LocalVariableDefinitionNode.h"
 #include "AST/AssignmentExpressionNode.h"
-#include "AST/ClassDefinitionNode.h"
 #include "AST/CompoundAssignmentExpressionNode.h"
 #include "AST/ExpressionStatementNode.h"
 #include "AST/BlockNode.h"
 #include "AST/IfNode.h"
+
+#include "AST/class/ClassDefinitionNode.h"
+#include "AST/class/MethodCallNode.h"
 
 #include "AST/loops/ForNode.h"
 #include "AST/loops/WhileNode.h"
@@ -187,6 +189,7 @@ public:
     void create_class_type();
     void create_method_call();
     void create_field_access();
+    void create_constructor_call();
 
     template<typename T>
     void create_unary_expr() {

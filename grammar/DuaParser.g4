@@ -95,6 +95,7 @@ variable_decl_no_simicolon
 
 variable_def_no_simicolon
     : type identifier '=' expression { assistant.create_variable_definition(); }
+    | class_type identifier '(' arg_list ')' { assistant.create_constructor_call(); }
     ;
 
 function_decl_no_simicolon
@@ -363,9 +364,13 @@ float
 
 type
     : primitive_type
-    | identifier            { assistant.create_class_type(); }
+    | class_type            { assistant.create_class_type(); }
     | type '[' size ']'     { assistant.create_array_type(); }
     | type '*'              { assistant.create_pointer_type(); }
+    ;
+
+class_type
+    : identifier
     ;
 
 primitive_type

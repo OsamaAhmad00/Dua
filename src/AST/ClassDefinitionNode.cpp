@@ -1,4 +1,4 @@
-#include <AST/ClassDefinitionNode.h>
+#include "AST/class/ClassDefinitionNode.h"
 #include <AST/LocalVariableDefinitionNode.h>
 
 namespace dua
