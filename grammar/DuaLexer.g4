@@ -83,6 +83,8 @@ Str: 'str';
 
 Void: 'void';
 
+Var: 'var';
+
 Null: 'null';
 True: 'true';
 False: 'false';

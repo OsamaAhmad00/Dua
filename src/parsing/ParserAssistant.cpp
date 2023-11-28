@@ -39,11 +39,13 @@ TranslationUnitNode* ParserAssistant::construct_result()
     return compiler->create_node<TranslationUnitNode>(std::move(elements));
 }
 
+void ParserAssistant::reset_symbol_table() { compiler->symbol_table = decltype(compiler->symbol_table){}; }
+
 void ParserAssistant::create_variable_declaration()
 {
     auto name = pop_str();
     auto type = pop_type();
-    instance_types.insert(name, type);
+    compiler->symbol_table.insert(name, { nullptr, type });
     if (is_in_global_scope()) {
         push_node<GlobalVariableDefinitionNode>(std::move(name), type, nullptr);
     } else {
@@ -57,7 +59,7 @@ void ParserAssistant::create_variable_definition()
     auto value = pop_node();
     auto name = pop_str();
     auto type = pop_type();
-    instance_types.insert(name, type);
+    compiler->symbol_table.insert(name, { nullptr, type });
     if (is_in_global_scope()) {
         push_node<GlobalVariableDefinitionNode>(std::move(name), type, value);
     } else {
@@ -184,13 +186,13 @@ void ParserAssistant::create_if_expression()
 
 void ParserAssistant::enter_scope() {
     statement_counters.push_back(0);
-    instance_types.push_scope();
+    compiler->symbol_table.push_scope();
 }
 
 size_t ParserAssistant::leave_scope() {
     size_t result = statement_counters.back();
     statement_counters.pop_back();
-    instance_types.pop_scope();
+    compiler->symbol_table.pop_scope();
     return result;
 }
 
@@ -467,7 +469,7 @@ void ParserAssistant::start_class_definition()
 
     auto& name = strings.back();
     compiler->current_class = compiler->get_class(name)->llvm_type();
-    instance_types.insert("self", compiler->get_class(name));
+    compiler->symbol_table.insert("self", { nullptr, compiler->get_class(name) });
 }
 
 void ParserAssistant::create_class()
@@ -516,6 +518,13 @@ void ParserAssistant::create_constructor_call()
     auto constructor = compiler->create_node<MethodCallNode>(instance, std::move(func_call->name), std::move(func_call->args), false);
     delete func_call;
     push_node<SequentialEvalNode>(std::vector<ASTNode*>{decl, constructor}, 0);
+}
+
+void ParserAssistant::create_inferred_definition()
+{
+    TypeBase* type = nodes.back()->get_cached_type();
+    types.push_back(type->clone());
+    create_variable_definition();
 }
 
 }

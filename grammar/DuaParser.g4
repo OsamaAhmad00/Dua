@@ -27,7 +27,7 @@ public:
 }
 
 starting_symbol
-    : module EOF
+    : module EOF { assistant.reset_symbol_table(); }
     ;
 
 module
@@ -104,6 +104,7 @@ variable_decl_no_simicolon
 variable_def_no_simicolon
     : type identifier '=' expression { assistant.create_variable_definition(); }
     | object_decl optional_constructor_args { assistant.create_constructor_call(); }
+    | Var identifier '=' expression { assistant.create_inferred_definition(); }
     ;
 
 optional_constructor_args

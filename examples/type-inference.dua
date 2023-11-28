@@ -1,0 +1,21 @@
+int printf(str message, ...);
+
+void print(int num) { printf("%d", num); }
+
+
+// Case Basic type inference
+// Outputs "35 Hello"
+
+int main()
+{
+    var x = 3;
+    print(x);
+
+    var y = &x;
+    var z = &y;
+    **z = 5;
+    print(x);
+
+    var message = " Hello";
+    printf(message);
+}

@@ -80,13 +80,6 @@ class ParserAssistant
     std::vector<ASTNode *> nodes;
     std::vector<TypeBase *> types;
 
-    // Used to track the types of class instances, in order to
-    //  be able to construct the right method call, given only
-    //  the variable name. Another way to solve this problem is
-    //  to defer the function resolution until the AST evaluation,
-    //  but the solution here is much simpler.
-    SymbolTable<TypeBase*> instance_types;
-
     // A stack for counting the number of statements
     //  inside the current scope, and for determining
     //  whether we're in a local or the global scope.
@@ -191,6 +184,7 @@ public:
     void create_method_call();
     void create_field_access();
     void create_constructor_call();
+    void create_inferred_definition();
 
     template<typename T>
     void create_unary_expr() {
@@ -236,6 +230,8 @@ public:
     bool is_in_global_scope();
 
     TranslationUnitNode* construct_result();
+
+    void reset_symbol_table();
 
     void set_module_compiler(ModuleCompiler* compiler) { this->compiler = compiler; }
 };

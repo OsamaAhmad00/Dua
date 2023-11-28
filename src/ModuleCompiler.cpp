@@ -90,6 +90,11 @@ llvm::Value* ModuleCompiler::cast_value(llvm::Value* value, llvm::Type* target_t
     if (source_type->isFloatingPointTy() && target_type->isIntegerTy())
         return builder.CreateFPToSI(value, target_type);
 
+    source_type->print(llvm::outs());
+    llvm::outs() << '\n';
+    target_type->print(llvm::outs());
+    llvm::outs() << '\n';
+
     if (panic_on_failure)
         report_error("Casting couldn't be done");
 

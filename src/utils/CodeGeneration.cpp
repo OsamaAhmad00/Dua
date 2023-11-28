@@ -30,10 +30,10 @@ void generate_llvm_ir(const strings& filename, const strings& code)
     }
 }
 
-void run_clang(const std::vector<std::string>& args)
+int run_clang(const std::vector<std::string>& args)
 {
     std::string concatenated = boost::algorithm::join(args, " ");
-    std::system(("clang -Wno-override-module " + concatenated).c_str());
+    return std::system(("clang -Wno-override-module " + concatenated).c_str());
 }
 
 void run_clang_on_llvm_ir(const strings& filename, const strings& code, const strings& args)
