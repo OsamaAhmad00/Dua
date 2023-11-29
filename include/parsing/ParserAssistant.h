@@ -12,6 +12,7 @@
 #include "AST/BlockNode.h"
 #include "AST/IfNode.h"
 #include "AST/SequentialEvalNode.h"
+#include "AST/SizeOfNode.h"
 
 #include "AST/class/ClassDefinitionNode.h"
 #include "AST/class/MethodCallNode.h"
@@ -185,6 +186,8 @@ public:
     void create_field_access();
     void create_constructor_call();
     void create_inferred_definition();
+    void create_size_of_type();
+    void create_size_of_expression();
 
     template<typename T>
     void create_unary_expr() {

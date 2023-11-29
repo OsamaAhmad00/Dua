@@ -11,7 +11,7 @@ llvm::Value* VariableNode::eval() {
 
 TypeBase* VariableNode::compute_type() {
     delete type;
-    return type = compiler->create_type<PointerType>(symbol_table().get(name).type);
+    return type = compiler->create_type<PointerType>(symbol_table().get(name).type->clone());
 }
 
 TypeBase *VariableNode::get_element_type() {

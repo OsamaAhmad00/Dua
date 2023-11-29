@@ -527,4 +527,16 @@ void ParserAssistant::create_inferred_definition()
     create_variable_definition();
 }
 
+void ParserAssistant::create_size_of_type()
+{
+    push_node<SizeOfNode>(pop_type());
+}
+
+void ParserAssistant::create_size_of_expression()
+{
+    types.push_back(nodes.back()->get_cached_type()->clone());
+    delete pop_node();
+    create_size_of_type();
+}
+
 }

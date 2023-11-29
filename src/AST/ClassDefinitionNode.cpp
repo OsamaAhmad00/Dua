@@ -49,7 +49,7 @@ llvm::Value *ClassDefinitionNode::eval()
     std::vector<llvm::Type*> body(split_point);
     for (size_t i = 0; i < split_point; i++)
         body[i] = fields[i].type->llvm_type();
-    current_class()->setBody(body);
+    current_class()->setBody(body, false);
 
     // Now evaluate methods
     for (size_t i = split_point; i < members.size(); i++)

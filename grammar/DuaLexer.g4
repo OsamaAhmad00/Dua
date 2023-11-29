@@ -85,6 +85,8 @@ Void: 'void';
 
 Var: 'var';
 
+SizeOf: 'sizeof';
+
 Null: 'null';
 True: 'true';
 False: 'false';
