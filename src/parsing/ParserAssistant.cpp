@@ -517,7 +517,12 @@ void ParserAssistant::create_constructor_call()
     auto instance = compiler->create_node<VariableNode>(decl->get_name());
     auto constructor = compiler->create_node<MethodCallNode>(instance, std::move(func_call->name), std::move(func_call->args), false);
     delete func_call;
-    push_node<SequentialEvalNode>(std::vector<ASTNode*>{decl, constructor}, 0);
+    if (dynamic_cast<LocalVariableDefinitionNode*>(decl) != nullptr) {
+        push_node<SequentialEvalNode>(std::vector<ASTNode *>{decl, constructor}, 0);
+    } else {
+        nodes.push_back(decl);
+        compiler->deferred_nodes.push_back(constructor);
+    }
 }
 
 void ParserAssistant::create_inferred_definition()

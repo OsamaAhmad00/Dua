@@ -12,6 +12,8 @@
 namespace dua
 {
 
+class ASTNode;
+
 class ModuleCompiler
 {
 public:
@@ -75,6 +77,11 @@ private:
     SymbolTable<Variable> symbol_table;
     std::unordered_map<std::string, FunctionSignature> functions;
     std::unordered_map<std::string, ClassType*> classes;
+    // Nodes that are deferred to be evaluated after the evaluation
+    //  of the whole tree. The nodes will be evaluated at the beginning
+    //  of the entry point, in the order of insertions. This is useful
+    //  for calling constructors of global objects for example.
+    std::vector<ASTNode*> deferred_nodes;
     // Instead of having the fields be stored in the class type,
     //  and having them getting duplicated on each clone, let's
     //  keep the fields info in one place, and refer to it by name.
@@ -82,6 +89,7 @@ private:
     std::unordered_map<std::string, llvm::Constant*> string_pool;
     llvm::Function* current_function = nullptr;
     llvm::StructType* current_class = nullptr;
+
 
     // Loops
     std::vector<llvm::BasicBlock*> continue_stack;

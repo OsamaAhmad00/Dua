@@ -3,7 +3,7 @@ int printf(str message, ...);
 void print(int num) { printf("%d", num); }
 
 // Case Constructor with parameters call
-// Outputs "Aa1b2c3Ba9b8c7CD"
+// Outputs "a1b2c3Aa4b4c4Ba9b8c7CD"
 
 class X
 {
@@ -18,10 +18,12 @@ class Y
     // No constructor is defined
 }
 
+X x(1, 2, 3);
+
 int main()
 {
     printf("A");
-    X x1(1, 2, 3);
+    X x1(4, 4, 4);
     printf("B");
     X x2(9, 8, 7);
     printf("C");

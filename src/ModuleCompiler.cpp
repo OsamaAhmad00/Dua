@@ -25,17 +25,14 @@ ModuleCompiler::ModuleCompiler(const std::string &module_name, const std::string
     // Generate LLVM IR
     ast->eval();
 
-    // Print code to stdout
-    // module.print(llvm::outs(), nullptr);
+    auto& insertion_point = module.getFunction("main")->front().front();
+    builder.SetInsertPoint(&insertion_point);
+    for (auto node : deferred_nodes)
+        node->eval();
 
-    // Save code to file
-    // std::error_code error;
-    // llvm::raw_fd_ostream out(module_name + ".ll", error);
-    // module.print(out, nullptr);
-
-     llvm::raw_string_ostream stream(result);
-     module.print(stream, nullptr);
-     result = stream.str();
+    llvm::raw_string_ostream stream(result);
+    module.print(stream, nullptr);
+    result = stream.str();
 
     delete ast;
 }
