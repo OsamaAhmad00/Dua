@@ -534,9 +534,14 @@ void ParserAssistant::create_size_of_type()
 
 void ParserAssistant::create_size_of_expression()
 {
+    create_type_of();
+    create_size_of_type();
+}
+
+void ParserAssistant::create_type_of()
+{
     types.push_back(nodes.back()->get_cached_type()->clone());
     delete pop_node();
-    create_size_of_type();
 }
 
 }

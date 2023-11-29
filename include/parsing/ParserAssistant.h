@@ -188,6 +188,7 @@ public:
     void create_inferred_definition();
     void create_size_of_type();
     void create_size_of_expression();
+    void create_type_of();
 
     template<typename T>
     void create_unary_expr() {

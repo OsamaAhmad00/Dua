@@ -1,0 +1,23 @@
+
+int printf(str message, ...);
+
+void print(int num) { printf("%d", num); }
+
+
+// Case Basic typeof
+// Outputs "848"
+
+class Z { }
+
+int main()
+{
+    typeof(3) x;
+    print(sizeof(x));
+
+    typeof(5I) y;
+    print(sizeof(y));
+
+    Z z;
+    typeof(&z) ptr = &z;
+    print(sizeof(typeof(ptr)));
+}

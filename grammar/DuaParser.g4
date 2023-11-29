@@ -385,8 +385,9 @@ float
 type
     : primitive_type
     | class_type
-    | type '[' size ']'     { assistant.create_array_type(); }
-    | type '*'              { assistant.create_pointer_type(); }
+    | type '[' size ']'          { assistant.create_array_type(); }
+    | type '*'                   { assistant.create_pointer_type(); }
+    | TypeOf '(' expression ')'  { assistant.create_type_of(); }
     ;
 
 class_type

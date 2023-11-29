@@ -87,6 +87,8 @@ Var: 'var';
 
 SizeOf: 'sizeof';
 
+TypeOf: 'typeof';
+
 Null: 'null';
 True: 'true';
 False: 'false';
