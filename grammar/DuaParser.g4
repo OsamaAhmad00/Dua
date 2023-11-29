@@ -181,8 +181,10 @@ expression
     | when_expression
     | cast_expression
     | '(' expression ')'
-    | SizeOf '(' type ')' { assistant.create_size_of_type(); }
-    | SizeOf '(' expression ')' { assistant.create_size_of_expression(); }
+    | SizeOf '(' type ')'         { assistant.create_size_of_type();        }
+    | SizeOf '(' expression ')'   { assistant.create_size_of_expression();  }
+    | TypeName '(' type ')'       { assistant.create_typename_type();       }
+    | TypeName '(' expression ')' { assistant.create_typename_expression(); }
     | lvalue '++' { assistant.create_post_inc(); }
     | lvalue '--' { assistant.create_post_dec(); }
     | '+'  expression  // do nothing

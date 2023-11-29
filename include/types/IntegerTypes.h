@@ -22,6 +22,10 @@ struct PREFIX##WIDTH##Type : public IntegerType                \
     PREFIX##WIDTH##Type* clone() override {                    \
         return new PREFIX##WIDTH##Type(compiler);              \
     }                                                          \
+                                                               \
+    std::string to_string() const override {                   \
+        return "i"#WIDTH;                                      \
+    }                                                          \
 };
 
 struct IntegerType : public TypeBase {};

@@ -189,6 +189,8 @@ public:
     void create_size_of_type();
     void create_size_of_expression();
     void create_type_of();
+    void create_typename_type();
+    void create_typename_expression();
 
     template<typename T>
     void create_unary_expr() {

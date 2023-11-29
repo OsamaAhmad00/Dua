@@ -40,6 +40,8 @@ public:
 
     ClassType* clone() override;
 
+    std::string to_string() const override { return name; }
+
     ~ClassType() override = default;
 };
 

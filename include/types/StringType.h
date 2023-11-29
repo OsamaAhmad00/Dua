@@ -17,6 +17,8 @@ struct StringType : TypeBase
         return compiler->get_builder()->getInt8PtrTy();
     }
 
+    std::string to_string() const override { return "String"; }
+
     StringType* clone() override { return new StringType(compiler); }
 };
 

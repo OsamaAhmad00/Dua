@@ -19,6 +19,8 @@ struct VoidType : TypeBase
         return compiler->get_builder()->getVoidTy();
     }
 
+    std::string to_string() const override { return "Void"; }
+
     VoidType* clone() override { return new VoidType(compiler); }
 };
 

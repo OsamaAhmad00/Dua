@@ -89,6 +89,8 @@ SizeOf: 'sizeof';
 
 TypeOf: 'typeof';
 
+TypeName: 'typename';
+
 Null: 'null';
 True: 'true';
 False: 'false';

@@ -24,6 +24,8 @@ public:
 
     ArrayType* clone() override { return new ArrayType(compiler, element_type->clone(), size); }
 
+    std::string to_string() const override { return element_type->to_string() + "[" + std::to_string(size) + "]"; }
+
     ~ArrayType() override { delete element_type; }
 };
 

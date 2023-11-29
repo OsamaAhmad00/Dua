@@ -1,0 +1,22 @@
+
+int printf(str message, ...);
+
+void print(str message) { printf("%s\n", message); }
+
+
+// Case Basic typename
+// Outputs "i32[42]*\ni8*\ni64\ni32\n"
+
+
+int main()
+{
+    int[42]* ptr;
+    print(typename(ptr));
+
+    str message = "hello";
+    print(typename(message));
+
+    print(typename(i64));
+
+    print(typename(55I));
+}

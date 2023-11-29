@@ -549,4 +549,31 @@ void ParserAssistant::create_type_of()
     delete pop_node();
 }
 
+void ParserAssistant::create_typename_type() {
+    auto type = pop_type();
+
+    auto llvm_type = type->llvm_type();
+    if (llvm_type == nullptr) {
+        // This can happen for example in the case typename(x).
+        //  This will leave the parser confused about whether
+        //  x is a variable name (an expression), or a class
+        //  type. If the type is nullptr, this means that this
+        //  is not a valid class type, thus, this is a variable.
+        auto cls = dynamic_cast<ClassType*>(type);
+        if (cls == nullptr)
+            report_internal_error("sizeof operator called on an invalid type");
+        auto real_type = compiler->symbol_table.get(cls->name).type;
+        push_node<StringValueNode>(real_type->to_string());
+    } else {
+        push_node<StringValueNode>(type->to_string());
+    }
+
+    delete type;
+}
+
+void ParserAssistant::create_typename_expression() {
+    create_type_of();
+    create_typename_type();
+}
+
 }
