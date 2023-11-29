@@ -20,7 +20,9 @@ void FileTestCasesRunner::run()
         auto name = extract_header_element(header, "Case");
         auto expected_exit_code_str = extract_header_element(header, "Returns");
         auto expected_output = extract_header_element(header, "Outputs");
+        bool expected_output_is_empty = true;
         if (expected_output.size() >= 2) {
+            expected_output_is_empty = false;
             expected_output = escape_characters(expected_output.substr(1, expected_output.size() - 2));
         } else if (!expected_output.empty()) {
             report_error(name + ": in test case " + std::to_string(i + 1) +
@@ -71,7 +73,7 @@ void FileTestCasesRunner::run()
             EXPECT_EQ((expected_exit_code + 256) % 256, (execution.exit_code + 256) % 256) << case_description;
         }
 
-        if (!expected_output.empty()) {
+        if (!expected_output_is_empty) {
             EXPECT_EQ(expected_output, execution.std_out) << case_description;
         }
 
