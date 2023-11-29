@@ -1,7 +1,6 @@
 #pragma once
 
 #include <AST/ASTNode.h>
-#include <FunctionInfo.h>
 
 namespace dua
 {

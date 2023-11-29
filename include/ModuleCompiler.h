@@ -7,12 +7,24 @@
 #include <SymbolTable.h>
 #include <types/TypeBase.h>
 #include <types/ClassType.h>
-#include <FunctionInfo.h>
+#include "types/FunctionType.h"
 
 namespace dua
 {
 
 class ASTNode;
+
+struct FunctionInfo
+{
+    FunctionType type;
+    std::vector<std::string> param_names;
+};
+
+struct Variable
+{
+    llvm::Value* ptr;
+    TypeBase* type;
+};
 
 class ModuleCompiler
 {
@@ -31,7 +43,10 @@ public:
 
     const std::string& get_result() { return result; }
 
-    ~ModuleCompiler() { for (auto cls : classes) delete cls.second; }
+    ~ModuleCompiler() {
+        for (auto& cls : classes)
+            delete cls.second;
+    }
 
     template <typename T, typename ...Args>
     T* create_node(Args ...args)
@@ -45,23 +60,22 @@ public:
         return new T(this, args...);
     }
 
-    void register_function(std::string name, FunctionSignature signature);
-    FunctionSignature& get_function(const std::string& name);
+    void register_function(std::string name, FunctionInfo signature);
+    FunctionInfo& get_function(const std::string& name);
 
     llvm::IRBuilder<>* get_builder() { return &builder; }
     llvm::LLVMContext* get_context() { return &context; }
     auto get_class(const std::string& name) { return classes[name]; }
     auto& get_class_fields() { return class_fields; }
 
-    struct Variable {
-        llvm::Value* ptr;
-        TypeBase* type;
-    };
-
     bool has_function(const std::string& name) const;
+    void define_function_alias(const std::string& from, const std::string& to);
     llvm::CallInst* call_function(const std::string& name, std::vector<llvm::Value*> args = {});
     void call_method_if_exists(const Variable& variable, const std::string& name);
     void destruct_all_variables(const Scope<Variable>& scope);
+
+    void push_scope();
+    Scope<Variable> pop_scope();
 
 private:
 
@@ -75,7 +89,8 @@ private:
     //  of their declaration location in the code.
     llvm::IRBuilder<> temp_builder;
     SymbolTable<Variable> symbol_table;
-    std::unordered_map<std::string, FunctionSignature> functions;
+    SymbolTable<std::string> function_aliases;
+    std::unordered_map<std::string, FunctionInfo> functions;
     std::unordered_map<std::string, ClassType*> classes;
     // Nodes that are deferred to be evaluated after the evaluation
     //  of the whole tree. The nodes will be evaluated at the beginning

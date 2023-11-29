@@ -27,7 +27,7 @@ llvm::Function *FunctionDefinitionNode::eval()
 
 llvm::Function* FunctionDefinitionNode::define_function()
 {
-    auto& signature = compiler->get_function(name);
+    auto& info = compiler->get_function(name);
     llvm::Function* function = module().getFunction(name);
 
     if (!function)
@@ -41,7 +41,7 @@ llvm::Function* FunctionDefinitionNode::define_function()
 
     if (current_class() != nullptr) {
         // class fields
-        symbol_table().push_scope();
+        compiler->push_scope();
         auto& fields = compiler->get_class(current_class()->getName().str())->fields();
         auto self = function->args().begin();
         for (size_t i = 0; i < fields.size(); i++) {
@@ -51,42 +51,41 @@ llvm::Function* FunctionDefinitionNode::define_function()
     }
 
     // local variables
-    symbol_table().push_scope();
+    compiler->push_scope();
 
     size_t i = 0;
-    if (!signature.params.empty() && signature.params[0].name == "self") {
+    if (!info.param_names.empty() && info.param_names[0] == "self") {
         // The self variable doesn't need to be manipulated, thus,
         //  it doesn't need to be pushed on the stack. Moreover, if
         //  the self pointer is pushed to the stack, the variable
         //  on the stack would have a type of class** instead of class*.
         i++;
-        auto type = dynamic_cast<PointerType*>(signature.params[0].type)->get_element_type();
+        auto type = dynamic_cast<PointerType*>(info.type.param_types[0])->get_element_type();
         symbol_table().insert("self", { function->args().begin(), type });
     }
 
-    for (; i < signature.params.size(); i++) {
+    for (; i < info.param_names.size(); i++) {
         const auto& arg = function->args().begin() + i;
-        auto& param = signature.params[i];
-        arg->setName(param.name);
-        create_local_variable(param.name, param.type, arg);
+        arg->setName(info.param_names[i]);
+        create_local_variable(info.param_names[i], info.type.param_types[i], arg);
     }
 
     body->eval();
 
-    auto scope = symbol_table().pop_scope();
+    auto scope = compiler->pop_scope();
     scope.map.erase("self");
     compiler->destruct_all_variables(scope);
 
     if (current_class() != nullptr)
-        symbol_table().pop_scope();
+        compiler->pop_scope();
 
-    if (signature.return_type->llvm_type() == builder().getVoidTy())
+    if (info.type.return_type->llvm_type() == builder().getVoidTy())
         builder().CreateRetVoid();
     else {
         // TODO perform a more sophisticated analysis
         auto terminator = builder().GetInsertBlock()->getTerminator();
         if (!terminator || llvm::dyn_cast<llvm::ReturnInst>(terminator) == nullptr) {
-            builder().CreateRet(signature.return_type->default_value());
+            builder().CreateRet(info.type.return_type->default_value());
         }
     }
 

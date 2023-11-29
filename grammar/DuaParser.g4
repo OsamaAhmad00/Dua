@@ -109,7 +109,7 @@ variable_def_no_simicolon
 
 optional_constructor_args
     : '(' arg_list ')'
-    | /* empty */ { assistant.enter_fun_call(); }
+    | /* empty */ { assistant.enter_arg_list(); }
     ;
 
 object_decl
@@ -118,7 +118,7 @@ object_decl
 
 function_decl_no_simicolon
     : type identifier
-        '(' param_list ')' { assistant.create_function_declaration(); }
+        '(' param_list var_arg_or_none ')' { assistant.create_function_declaration(); }
     ;
 
 function_declaration
@@ -130,14 +130,14 @@ function_definition
     | function_decl_no_simicolon '=' expression ';' { assistant.create_function_definition_expression_body(); }
     ;
 
-param_list
-    : comma_separated_params var_arg_or_none
-    | /* empty */ { assistant.param_count = 0; assistant.is_var_arg = false; }
+param_list @init { assistant.enter_arg_list(); }
+    : comma_separated_params
+    | /* empty */
     ;
 
 var_arg_or_none
-    : ',' '...'   { assistant.is_var_arg = true;  }
-    | /* empty */ { assistant.is_var_arg = false; }
+    : ',' '...'   { assistant.push_var_arg(true);  }
+    | /* empty */ { assistant.push_var_arg(false); }
     ;
 
 param
@@ -145,8 +145,8 @@ param
     ;
 
 comma_separated_params
-    : param { assistant.param_count = 1; }
-    | comma_separated_params ',' param { assistant.param_count += 1; }
+    : param { assistant.inc_args(); }
+    | comma_separated_params ',' param { assistant.inc_args(); }
     ;
 
 block_statement
@@ -185,6 +185,7 @@ expression
     | SizeOf '(' expression ')'   { assistant.create_size_of_expression();  }
     | TypeName '(' type ')'       { assistant.create_typename_type();       }
     | TypeName '(' expression ')' { assistant.create_typename_expression(); }
+    | FuncRef '(' identifier ')'  { assistant.create_function_reference();  }
     | lvalue '++' { assistant.create_post_inc(); }
     | lvalue '--' { assistant.create_post_dec(); }
     | '+'  expression  // do nothing
@@ -319,7 +320,7 @@ do_while
     : 'do' statement 'while' '(' expression_or_none_loop ')' ';' { assistant.create_do_while(); }
     ;
 
-arg_list @init { assistant.enter_fun_call(); }
+arg_list @init { assistant.enter_arg_list(); }
     : comma_separated_arguments
     | /* empty */
     ;
@@ -384,12 +385,23 @@ float
     | F32Val { assistant.push_node<F32ValueNode>(stof($F32Val.text)); }
     ;
 
+comma_separated_types
+    : comma_separated_types ',' type { assistant.inc_args(); }
+    | type { assistant.inc_args(); }
+    ;
+
+types_list @init { assistant.enter_arg_list(); }
+    : comma_separated_types
+    | /* empty */
+    ;
+
 type
     : primitive_type
     | class_type
-    | type '[' size ']'          { assistant.create_array_type(); }
-    | type '*'                   { assistant.create_pointer_type(); }
-    | TypeOf '(' expression ')'  { assistant.create_type_of(); }
+    | type '(' types_list var_arg_or_none ')'   { assistant.create_function_type(); }
+    | type '[' size ']'                         { assistant.create_array_type();    }
+    | type '*'                                  { assistant.create_pointer_type();  }
+    | TypeOf '(' expression ')'                 { assistant.create_type_of();       }
     ;
 
 class_type

@@ -16,7 +16,6 @@ llvm::CallInst* MethodCallNode::eval()
 {
     if (!has_converted_to_method)
     {
-        auto t = instance->get_cached_type();
         auto type = instance->get_element_type();
         auto casted = dynamic_cast<ClassType*>(type);
         if (casted != nullptr) {

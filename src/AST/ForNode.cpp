@@ -8,7 +8,7 @@ int ForNode::_counter = 0;
 
 NoneValue ForNode::eval()
 {
-    symbol_table().push_scope();
+    compiler->push_scope();
 
     for (ASTNode* node : initializations)
         node->eval();
@@ -49,7 +49,7 @@ NoneValue ForNode::eval()
     continue_stack().pop_back();
     break_stack().pop_back();
 
-    symbol_table().push_scope();
+    compiler->push_scope();
 
     return none_value();
 }

@@ -13,7 +13,7 @@ llvm::CallInst* FunctionCallNode::eval()
 
 TypeBase *FunctionCallNode::compute_type() {
     delete type;
-    return type = compiler->get_function(name).return_type->clone();
+    return type = compiler->get_function(name).type.return_type->clone();
 }
 
 FunctionCallNode::~FunctionCallNode() {

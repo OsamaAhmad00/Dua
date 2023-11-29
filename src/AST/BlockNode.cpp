@@ -11,7 +11,7 @@ BlockNode& BlockNode::append(ASTNode *element)
 
 llvm::Value* BlockNode::eval()
 {
-    symbol_table().push_scope();
+    compiler->push_scope();
 
     if (elements.empty())
         return none_value();
@@ -22,7 +22,7 @@ llvm::Value* BlockNode::eval()
 
     auto result =  elements.back()->eval();
 
-    compiler->destruct_all_variables(symbol_table().pop_scope());
+    compiler->destruct_all_variables(compiler->pop_scope());
 
     return result;
 }

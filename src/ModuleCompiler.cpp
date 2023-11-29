@@ -133,33 +133,33 @@ TypeBase* ModuleCompiler::get_winning_type(TypeBase* lhs, TypeBase* rhs)
     return nullptr;
 }
 
-void ModuleCompiler::register_function(std::string name, FunctionSignature signature)
+void ModuleCompiler::register_function(std::string name, FunctionInfo info)
 {
     if (current_function != nullptr)
         report_internal_error("Nested functions are not allowed");
 
     // Registering the function in the module so that all
     //  functions are visible during AST evaluation.
-    llvm::Type* ret = signature.return_type->llvm_type();
+    llvm::Type* ret = info.type.return_type->llvm_type();
     std::vector<llvm::Type*> parameter_types;
-    for (auto& param: signature.params)
-        parameter_types.push_back(param.type->llvm_type());
-    llvm::FunctionType* type = llvm::FunctionType::get(ret, parameter_types, signature.is_var_arg);
+    for (auto& type: info.type.param_types)
+        parameter_types.push_back(type->llvm_type());
+    llvm::FunctionType* type = llvm::FunctionType::get(ret, parameter_types, info.type.is_var_arg);
     llvm::Function* function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, name, module);
     llvm::verifyFunction(*function);
 
     auto it = functions.find(name);
     if (it != functions.end()) {
         // Verify that the signatures are the same
-        if (it->second != signature) {
+        if (it->second.type != info.type) {
             report_error("Redefinition of the function " + name + " with a different signature");
         }
     } else {
-        functions[std::move(name)] = std::move(signature);
+        functions[std::move(name)] = std::move(info);
     }
 }
 
-FunctionSignature& ModuleCompiler::get_function(const std::string& name)
+FunctionInfo& ModuleCompiler::get_function(const std::string& name)
 {
     auto it = functions.find(name);
 
@@ -208,15 +208,20 @@ bool ModuleCompiler::has_function(const std::string &name) const {
     return functions.find(name) != functions.end();
 }
 
+
+void ModuleCompiler::define_function_alias(const std::string &from, const std::string &to) {
+    function_aliases.insert(from, to);
+}
+
 llvm::CallInst* ModuleCompiler::call_function(const std::string &name, std::vector<llvm::Value*> args)
 {
     llvm::Function* function = module.getFunction(name);
-    auto& signature = get_function(name);
+    auto& info = get_function(name);
 
     for (size_t i = args.size() - 1; i != (size_t)-1; i--) {
-        if (i < signature.params.size()) {
+        if (i < info.param_names.size()) {
             // Only try to cast non-var-arg parameters
-            auto param_type = signature.params[i].type->llvm_type();
+            auto param_type = info.type.param_types[i]->llvm_type();
             args[i] = cast_value(args[i], param_type);
         } else if (args[i]->getType() == builder.getFloatTy()) {
             // Variadic functions promote floats to doubles
@@ -227,5 +232,14 @@ llvm::CallInst* ModuleCompiler::call_function(const std::string &name, std::vect
     return builder.CreateCall(function, std::move(args));
 }
 
+void ModuleCompiler::push_scope() {
+    symbol_table.push_scope();
+    function_aliases.push_scope();
+}
+
+Scope<Variable> ModuleCompiler::pop_scope() {
+    function_aliases.pop_scope();
+    return symbol_table.pop_scope();
+}
 
 }

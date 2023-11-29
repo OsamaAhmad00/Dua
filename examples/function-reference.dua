@@ -1,0 +1,15 @@
+int printf(str message, ...);
+
+
+// Case Basic function reference
+// Outputs "Hello, world!"
+
+void call_func(int(str, ...) func, str message)
+{
+    func(message);
+}
+
+int main()
+{
+    call_func(funcref(printf), "Hello, world!");
+}

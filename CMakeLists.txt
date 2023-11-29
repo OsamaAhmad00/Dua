@@ -99,6 +99,7 @@ set(DUA_SOURCES
     src/AST/ForNode.cpp
     src/AST/FunctionCallNode.cpp
     src/AST/FunctionDefinitionNode.cpp
+    src/AST/FunctionRefNode.cpp
     src/AST/GlobalVariableDefinitionNode.cpp
     src/AST/IfNode.cpp
     src/AST/LoadedLValueNode.cpp
@@ -114,6 +115,7 @@ set(DUA_SOURCES
     src/types/ArrayType.cpp
     src/types/PointerType.cpp
     src/types/ClassType.cpp
+    src/types/FunctionType.cpp
 )
 
 set(DUA_PREREQUISITE_LIBS ${LLVM_LIBS} ${ANTLR4_LIBS} ${Boost_LIBRARIES})

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <AST/function/FunctionCallNode.h>
-#include <FunctionInfo.h>
 #include "AST/lvalue/LValueNode.h"
 
 namespace dua

@@ -108,9 +108,9 @@ int main()
 // Case Nested classes
 // Panics
 
-Class Y
+class Y
 {
-    Class Z
+    class Z
     {
 
     }
@@ -124,7 +124,7 @@ int main() { }
 
 void function()
 {
-    Class Z
+    class Z
     {
 
     }

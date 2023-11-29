@@ -1,5 +1,5 @@
 #include "parsing/ParserAssistant.h"
-#include "utils/TextManipulation.h"
+
 
 namespace dua
 {
@@ -75,32 +75,34 @@ void ParserAssistant::create_function_declaration()
 
     inc_statements();
 
-    FunctionSignature signature;
+    FunctionInfo info { .type = { compiler } };
 
-    signature.is_var_arg = is_var_arg;
+    info.type.is_var_arg = pop_var_arg();
+    auto param_count = leave_arg_list();
 
-    signature.params.resize(param_count);
+    info.type.param_types.resize(param_count);
+    info.param_names.resize(param_count);
     // The params are pushed in reverse-order
-    for (int i = 0; i < param_count; i++)
-        signature.params[param_count - i - 1] = {pop_str(), pop_type()};
-    signature.return_type = pop_type();
+    for (int i = 0; i < param_count; i++) {
+        info.param_names[param_count - i - 1] = pop_str();
+        info.type.param_types[param_count - i - 1] = pop_type();
+    }
+    info.type.return_type = pop_type();
 
     auto name = pop_str();
     if (compiler->current_class != nullptr) {
         name = compiler->current_class->getName().str() + '.' + name;
         auto class_name = compiler->current_class->getName().str();
-        signature.params.insert(
-            signature.params.begin(),
-            Param {
-                "self",
-                compiler->create_type<PointerType>(
-                    compiler->classes[class_name]
-                )
-            }
+        info.type.param_types.insert(
+        info.type.param_types.begin(),
+            compiler->create_type<PointerType>(
+                compiler->classes[class_name]->clone()
+            )
         );
+        info.param_names.insert(info.param_names.begin(), "self");
     }
 
-    compiler->register_function(name, std::move(signature));
+    compiler->register_function(name, std::move(info));
 
     push_node<FunctionDefinitionNode>(std::move(name), nullptr);
 }
@@ -186,13 +188,13 @@ void ParserAssistant::create_if_expression()
 
 void ParserAssistant::enter_scope() {
     statement_counters.push_back(0);
-    compiler->symbol_table.push_scope();
+    compiler->push_scope();
 }
 
 size_t ParserAssistant::leave_scope() {
     size_t result = statement_counters.back();
     statement_counters.pop_back();
-    compiler->symbol_table.pop_scope();
+    compiler->pop_scope();
     return result;
 }
 
@@ -259,11 +261,11 @@ void ParserAssistant::create_assignment()
     push_node<AssignmentExpressionNode>(lhs, rhs);
 }
 
-void ParserAssistant::enter_fun_call() {
+void ParserAssistant::enter_arg_list() {
     argument_counters.push_back(0);
 }
 
-size_t ParserAssistant::leave_fun_call() {
+size_t ParserAssistant::leave_arg_list() {
     size_t result = argument_counters.back();
     argument_counters.pop_back();
     return result;
@@ -273,10 +275,20 @@ void ParserAssistant::inc_args() {
     argument_counters.back() += 1;
 }
 
+void ParserAssistant::push_var_arg(bool value) {
+    var_arg_stack.push_back(value);
+}
+
+bool ParserAssistant::pop_var_arg() {
+    bool result = var_arg_stack.back();
+    var_arg_stack.pop_back();
+    return result;
+}
+
 void ParserAssistant::create_function_call()
 {
     std::string name = pop_str();
-    size_t n = leave_fun_call();
+    size_t n = leave_arg_list();
     std::vector<ASTNode*> args(n);
     for (size_t i = 0; i < n; i++)
         args[n - i - 1] = pop_node();
@@ -574,6 +586,22 @@ void ParserAssistant::create_typename_type() {
 void ParserAssistant::create_typename_expression() {
     create_type_of();
     create_typename_type();
+}
+
+void ParserAssistant::create_function_type()
+{
+    size_t param_count = leave_arg_list();
+    bool is_var_arg = pop_var_arg();
+    std::vector<TypeBase*> param_types(param_count);
+    for (size_t i = 0; i < param_count; i++)
+        param_types[param_count - i - 1] = pop_type();
+    TypeBase* return_type = pop_type();
+    push_type<FunctionType>(return_type, std::move(param_types), is_var_arg);
+}
+
+void ParserAssistant::create_function_reference()
+{
+    push_node<FunctionRefNode>(pop_str());
 }
 
 }

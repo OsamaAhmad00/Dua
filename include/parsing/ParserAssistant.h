@@ -41,6 +41,7 @@
 #include "AST/values/FloatValueNodes.h"
 #include "AST/values/IntegerValueNodes.h"
 #include "AST/values/StringValueNode.h"
+#include "AST/function/FunctionRefNode.h"
 
 #include "AST/lvalue/LValueNode.h"
 #include "AST/lvalue/VariableNode.h"
@@ -55,8 +56,11 @@
 #include "types/ArrayType.h"
 #include "types/PointerType.h"
 #include "types/ClassType.h"
+#include "types/FunctionType.h"
 
-#include <utils/ErrorReporting.h>
+#include "utils/TextManipulation.h"
+#include "utils/ErrorReporting.h"
+
 
 namespace dua
 {
@@ -92,9 +96,10 @@ class ParserAssistant
     std::vector<size_t> branch_counters;
     std::vector<bool> has_else;
 
-    // Used to determine the number of arguments
-    //  in a function call expression.
+    // Used to determine the number of parameters
+    //  or arguments in function expressions.
     std::vector<size_t> argument_counters;
+    std::vector<bool> var_arg_stack;
 
     std::string pop_str() {
         auto result = std::move(strings.back());
@@ -130,12 +135,6 @@ class ParserAssistant
     }
 
 public:
-
-    // Used while parsing functions.
-    // If nested functions are supported, we would
-    //  need to use a stack of these values instead.
-    bool is_var_arg = false;
-    size_t param_count = 0;
 
     void push_str(std::string str) { strings.push_back(std::move(str)); }
 
@@ -191,6 +190,8 @@ public:
     void create_type_of();
     void create_typename_type();
     void create_typename_expression();
+    void create_function_type();
+    void create_function_reference();
 
     template<typename T>
     void create_unary_expr() {
@@ -223,9 +224,11 @@ public:
     void inc_statements();
     void dec_statements();
 
-    void enter_fun_call();
-    size_t leave_fun_call();
+    void enter_arg_list();
+    size_t leave_arg_list();
     void inc_args();
+    void push_var_arg(bool value);
+    bool pop_var_arg();
     void create_function_call();
 
     void register_class();

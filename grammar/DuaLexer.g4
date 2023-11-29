@@ -91,6 +91,8 @@ TypeOf: 'typeof';
 
 TypeName: 'typename';
 
+FuncRef: 'funcref';
+
 Null: 'null';
 True: 'true';
 False: 'false';
