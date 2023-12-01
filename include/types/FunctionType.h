@@ -1,20 +1,20 @@
 #pragma once
 
-#include <types/TypeBase.h>
+#include <types/Type.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <vector>
 
 namespace dua
 {
 
-struct FunctionType : public TypeBase
+struct FunctionType : public Type
 {
-    TypeBase* return_type;
-    std::vector<TypeBase*> param_types;
+    Type* return_type;
+    std::vector<Type*> param_types;
     bool is_var_arg;
 
-    FunctionType(ModuleCompiler* compiler = nullptr, TypeBase* return_type = nullptr,
-                 std::vector<TypeBase*> param_types = {}, bool is_var_arg = false)
+    FunctionType(ModuleCompiler* compiler = nullptr, Type* return_type = nullptr,
+                 std::vector<Type*> param_types = {}, bool is_var_arg = false)
             : return_type(return_type), param_types(std::move(param_types)), is_var_arg(is_var_arg)
     {
         this->compiler = compiler;

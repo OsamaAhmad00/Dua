@@ -22,7 +22,7 @@ public:                                                                         
     llvm::Constant *eval() override                                              \
         { return llvm::ConstantFP::get(get_cached_type()->llvm_type(), value); } \
                                                                                  \
-    TypeBase* compute_type() override {                                          \
+    Type* compute_type() override {                                          \
         if (type == nullptr)                                                     \
             return type = compiler->create_type<F##WIDTH##Type>();               \
         return type;                                                             \

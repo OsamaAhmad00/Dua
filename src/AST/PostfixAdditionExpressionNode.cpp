@@ -13,7 +13,7 @@ llvm::Value *PostfixAdditionExpressionNode::eval()
     return value;
 }
 
-TypeBase *PostfixAdditionExpressionNode::compute_type() {
+Type *PostfixAdditionExpressionNode::compute_type() {
     delete type;
     return type = lvalue->get_cached_type()->clone();
 }

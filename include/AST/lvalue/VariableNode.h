@@ -17,9 +17,9 @@ public:
 
     llvm::Value* eval() override;
 
-    TypeBase* compute_type() override;
+    Type* compute_type() override;
 
-    TypeBase* get_element_type() override;
+    Type* get_element_type() override;
 
     virtual bool is_function() const;
 };

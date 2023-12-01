@@ -32,7 +32,7 @@ public:
         return result;
     }
 
-    TypeBase* compute_type() override {
+    Type* compute_type() override {
         delete type;
         return type = nodes[return_node]->get_cached_type();
     }

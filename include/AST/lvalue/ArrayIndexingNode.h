@@ -16,8 +16,8 @@ public:
     ArrayIndexingNode(ModuleCompiler* compiler, LValueNode* lvalue, ASTNode* index)
             : lvalue(lvalue), index(index) { this->compiler = compiler; };
     llvm::Value* eval() override;
-    TypeBase* compute_type() override;
-    TypeBase* get_element_type() override;
+    Type* compute_type() override;
+    Type* get_element_type() override;
     ~ArrayIndexingNode() override;
 };
 

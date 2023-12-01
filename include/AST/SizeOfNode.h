@@ -9,11 +9,11 @@ namespace dua
 class SizeOfNode : public ASTNode
 {
 
-    TypeBase* target_type;
+    Type* target_type;
 
 public:
 
-    SizeOfNode(ModuleCompiler* compiler, TypeBase* target_type)
+    SizeOfNode(ModuleCompiler* compiler, Type* target_type)
             : target_type(target_type)
     {
         this->compiler = compiler;
@@ -40,7 +40,7 @@ public:
         return builder().getInt64(size);
     }
 
-    TypeBase* compute_type() override {
+    Type* compute_type() override {
         if (type == nullptr) type = compiler->create_type<I64Type>();
         return type;
     }

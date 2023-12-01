@@ -1,12 +1,12 @@
 #pragma once
 
-#include <types/TypeBase.h>
+#include <types/Type.h>
 #include <utils/ErrorReporting.h>
 
 namespace dua
 {
 
-struct VoidType : TypeBase
+struct VoidType : Type
 {
     VoidType(ModuleCompiler* compiler) { this->compiler = compiler; }
 

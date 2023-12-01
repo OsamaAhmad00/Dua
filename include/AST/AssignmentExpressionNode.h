@@ -16,7 +16,7 @@ public:
     AssignmentExpressionNode(ModuleCompiler* compiler, LValueNode* lhs, ASTNode* rhs)
         : lhs(lhs), rhs(rhs) { this->compiler = compiler; };
     llvm::Value* eval() override;
-    TypeBase* compute_type() override;
+    Type* compute_type() override;
     ~AssignmentExpressionNode() override;
 };
 

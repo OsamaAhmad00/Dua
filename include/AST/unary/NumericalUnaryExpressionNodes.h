@@ -14,7 +14,7 @@ public:
     NegativeExpressionNode(ModuleCompiler* compiler, ASTNode* expression)
         : expression(expression) { this->compiler = compiler; }
     llvm::Value* eval() override;
-    TypeBase* compute_type() override { delete type; return type = expression->get_cached_type()->clone(); }
+    Type* compute_type() override { delete type; return type = expression->get_cached_type()->clone(); }
     ~NegativeExpressionNode() override { delete expression; }
 };
 
@@ -27,7 +27,7 @@ public:
     NotExpressionNode(ModuleCompiler* compiler, ASTNode* expression)
         : expression(expression) { this->compiler = compiler; }
     llvm::Value* eval() override;
-    TypeBase* compute_type() override { delete type; return type = expression->get_cached_type()->clone(); }
+    Type* compute_type() override { delete type; return type = expression->get_cached_type()->clone(); }
     ~NotExpressionNode() override { delete expression; }
 };
 
@@ -40,7 +40,7 @@ public:
     BitwiseComplementExpressionNode(ModuleCompiler* compiler, ASTNode* expression)
         : expression(expression) { this->compiler = compiler; }
     llvm::Value* eval() override;
-    TypeBase* compute_type() override { delete type; return type = expression->get_cached_type()->clone(); }
+    Type* compute_type() override { delete type; return type = expression->get_cached_type()->clone(); }
     ~BitwiseComplementExpressionNode() override { delete expression; }
 };
 

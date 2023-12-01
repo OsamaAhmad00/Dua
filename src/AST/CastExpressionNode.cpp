@@ -18,7 +18,7 @@ CastExpressionNode::~CastExpressionNode()
     delete expression;
 }
 
-TypeBase *CastExpressionNode::compute_type() {
+Type *CastExpressionNode::compute_type() {
     delete type;
     return type = target_type->clone();
 }

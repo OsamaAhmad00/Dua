@@ -18,7 +18,7 @@ public:
 
     llvm::Value* eval() override;
 
-    TypeBase* compute_type() override;
+    Type* compute_type() override;
 
     llvm::Value* get_instance();
 

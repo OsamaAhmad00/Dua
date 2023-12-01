@@ -17,10 +17,10 @@ protected:
 
 public:
 
-    VariableDefinitionNode(ModuleCompiler* compiler, std::string name, TypeBase* type, ASTNode* initializer)
+    VariableDefinitionNode(ModuleCompiler* compiler, std::string name, Type* type, ASTNode* initializer)
             : name(std::move(name)), initializer(initializer) { this->compiler = compiler; this->type = type; }
     llvm::Value* eval() override = 0;
-    TypeBase* compute_type() override { return type; }
+    Type* compute_type() override { return type; }
     const std::string& get_name() const { return name; }
     ~VariableDefinitionNode() override { delete initializer; };
 };

@@ -4,7 +4,7 @@
 namespace dua
 {
 
-inline bool equal_types(TypeBase* t1, TypeBase* t2) {
+inline bool equal_types(Type* t1, Type* t2) {
     return (bool)t1 == (bool)t2 && (!t1 || *t1 == *t2);
 }
 
@@ -23,8 +23,8 @@ llvm::FunctionType* FunctionType::llvm_type() const
 
 FunctionType *FunctionType::clone()
 {
-    TypeBase* ret = return_type->clone();
-    std::vector<TypeBase*> params(param_types.size());
+    Type* ret = return_type->clone();
+    std::vector<Type*> params(param_types.size());
     for (size_t i = 0; i < param_types.size(); i++)
         params[i] = param_types[i]->clone();
     return new FunctionType(compiler, ret, std::move(params), is_var_arg);

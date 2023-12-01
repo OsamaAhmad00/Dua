@@ -1,6 +1,6 @@
 #pragma once
 
-#include <types/TypeBase.h>
+#include <types/Type.h>
 
 namespace dua
 {
@@ -28,7 +28,7 @@ struct F##WIDTH##Type : public FloatType                             \
     }                                                                \
 };
 
-struct FloatType : public TypeBase {};
+struct FloatType : public Type {};
 
 DEFINE_FLOAT_TYPE(64, Double)
 DEFINE_FLOAT_TYPE(32, Float)

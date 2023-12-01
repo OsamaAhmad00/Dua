@@ -15,7 +15,7 @@ struct LoadedLValueNode : public ASTNode
 
     llvm::Value* eval() override;
 
-    TypeBase* compute_type() override;
+    Type* compute_type() override;
 
     ~LoadedLValueNode() override { delete lvalue; }
 };

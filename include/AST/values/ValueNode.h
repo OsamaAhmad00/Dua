@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AST/ASTNode.h>
-#include <types/TypeBase.h>
+#include <types/Type.h>
 
 namespace dua
 {

@@ -14,7 +14,7 @@ public:
     ExpressionStatementNode(ModuleCompiler* compiler, ASTNode* expression)
             : expression(expression) { this->compiler = compiler; };
     NoneValue eval() override { expression->eval(); return none_value(); };
-    TypeBase* compute_type() override { if (type == nullptr) type = compiler->create_type<VoidType>(); return type; }
+    Type* compute_type() override { if (type == nullptr) type = compiler->create_type<VoidType>(); return type; }
     ~ExpressionStatementNode() override { delete expression; }
 };
 

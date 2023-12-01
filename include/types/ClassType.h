@@ -1,6 +1,6 @@
 #pragma once
 
-#include <types/TypeBase.h>
+#include <types/Type.h>
 #include <llvm/IR/DerivedTypes.h>
 
 namespace dua
@@ -9,11 +9,11 @@ namespace dua
 struct ClassField
 {
     std::string name;
-    TypeBase* type;
+    Type* type;
     llvm::Constant* default_value;
 };
 
-class ClassType : public TypeBase
+class ClassType : public Type
 {
 
 public:

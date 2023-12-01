@@ -14,13 +14,13 @@ llvm::Value *ArrayIndexingNode::eval()
     );
 }
 
-TypeBase *ArrayIndexingNode::compute_type()
+Type *ArrayIndexingNode::compute_type()
 {
     delete type;
     return type = lvalue->get_cached_type()->clone();
 }
 
-TypeBase *ArrayIndexingNode::get_element_type() {
+Type *ArrayIndexingNode::get_element_type() {
     auto element_type = lvalue->get_element_type();
     if (auto arr_type = dynamic_cast<ArrayType*>(element_type); arr_type != nullptr)
         return arr_type->get_element_type();

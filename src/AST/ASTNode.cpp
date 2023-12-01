@@ -8,7 +8,7 @@ llvm::BasicBlock* ASTNode::create_basic_block(const std::string& name, llvm::Fun
     return llvm::BasicBlock::Create(context(), name, function);
 }
 
-llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, TypeBase* type, llvm::Value* init)
+llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, Type* type, llvm::Value* init)
 {
     llvm::BasicBlock* entry = &current_function()->getEntryBlock();
     temp_builder().SetInsertPoint(entry, entry->begin());
@@ -23,14 +23,14 @@ llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, TypeBa
 
 NoneValue ASTNode::none_value() { return builder().getInt32(0); }
 
-TypeBase *ASTNode::get_cached_type()
+Type *ASTNode::get_cached_type()
 {
     if (type == nullptr)
         compute_type();
     return type;
 }
 
-TypeBase *ASTNode::compute_type() {
+Type *ASTNode::compute_type() {
     if (type == nullptr)
         return type = compiler->create_type<VoidType>();
     return type;

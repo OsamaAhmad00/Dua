@@ -10,7 +10,7 @@ struct FieldInfo
     ClassField& info;
 };
 
-ClassType* get_class(TypeBase* type)
+ClassType* get_class(Type* type)
 {
     auto casted = dynamic_cast<ClassType*>(type);
     if (casted == nullptr)
@@ -18,7 +18,7 @@ ClassType* get_class(TypeBase* type)
     return casted;
 }
 
-FieldInfo get_field(TypeBase* type, const std::string& field)
+FieldInfo get_field(Type* type, const std::string& field)
 {
     auto casted = get_class(type);
     auto& fields = casted->fields();
@@ -45,11 +45,11 @@ llvm::Value* ClassFieldNode::eval()
     return builder().CreateStructGEP(class_type->llvm_type(), get_instance(), field.index, name);
 }
 
-TypeBase* ClassFieldNode::compute_type()
+Type* ClassFieldNode::compute_type()
 {
     delete type;
     auto full_name = get_full_name();
-    TypeBase* t;
+    Type* t;
     if (compiler->has_function(full_name))
         t = compiler->get_function(full_name).type.clone();
     else {

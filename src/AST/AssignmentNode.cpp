@@ -42,7 +42,7 @@ llvm::Value* AssignmentExpressionNode::eval()
     return ptr;
 }
 
-TypeBase *AssignmentExpressionNode::compute_type() {
+Type *AssignmentExpressionNode::compute_type() {
     delete type;
     return type = lhs->get_cached_type()->clone();
 }

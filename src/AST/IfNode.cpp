@@ -114,7 +114,7 @@ llvm::Value* IfNode::eval()
     return phi;
 }
 
-TypeBase *IfNode::compute_type() {
+Type *IfNode::compute_type() {
     delete type;
     if (is_expression)
         return type = branches.front()->get_cached_type()->clone();

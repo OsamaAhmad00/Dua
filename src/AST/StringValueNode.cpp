@@ -17,7 +17,7 @@ llvm::Constant* StringValueNode::eval()
     return result;
 }
 
-TypeBase *StringValueNode::compute_type() {
+Type *StringValueNode::compute_type() {
     if (type == nullptr) return type = compiler->create_type<StringType>();
     return type;
 }

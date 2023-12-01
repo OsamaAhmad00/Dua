@@ -21,7 +21,7 @@ public:
 
     llvm::CallInst* eval() override;
 
-    TypeBase* compute_type() override;
+    Type* compute_type() override;
 
     ~FunctionCallNode() override;
 };

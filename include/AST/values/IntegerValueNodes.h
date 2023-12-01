@@ -23,7 +23,7 @@ public:                                                                  \
         return builder().getInt##WIDTH(value);                           \
     }                                                                    \
                                                                          \
-    TypeBase* compute_type() override {                                  \
+    Type* compute_type() override {                                  \
         if (type == nullptr)                                             \
             return type = compiler->create_type<I##WIDTH##Type>();       \
         return type;                                                     \

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <ModuleCompiler.h>
-#include <types/TypeBase.h>
+#include <types/Type.h>
 
 namespace dua
 {
@@ -22,16 +22,16 @@ public:
     virtual llvm::Value* eval() = 0;
 
     // The typing system
-    TypeBase* get_cached_type();
-    virtual TypeBase* compute_type();
+    Type* get_cached_type();
+    virtual Type* compute_type();
 
 protected:
 
     llvm::BasicBlock* create_basic_block(const std::string& name, llvm::Function* function);
-    llvm::AllocaInst* create_local_variable(const std::string& name, TypeBase* type, llvm::Value* init);
+    llvm::AllocaInst* create_local_variable(const std::string& name, Type* type, llvm::Value* init);
     NoneValue none_value();
 
-    TypeBase* type = nullptr;
+    Type* type = nullptr;
     ModuleCompiler* compiler = nullptr;
 
     // Convenience methods to access the internal state,

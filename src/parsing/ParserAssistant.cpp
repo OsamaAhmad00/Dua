@@ -64,7 +64,7 @@ void ParserAssistant::create_empty_method_if_doesnt_exist(ClassType* cls, std::s
         FunctionType {
                 compiler,
                 compiler->create_type<VoidType>(),
-                std::vector<TypeBase *>{ compiler->create_type<PointerType>(cls->clone()) },
+                std::vector<Type *>{ compiler->create_type<PointerType>(cls->clone()) },
                 false
         },
         { "self" }
@@ -572,7 +572,7 @@ void ParserAssistant::create_constructor_call()
 
 void ParserAssistant::create_inferred_definition()
 {
-    TypeBase* type = nodes.back()->get_cached_type();
+    Type* type = nodes.back()->get_cached_type();
     types.push_back(type->clone());
     create_variable_definition();
 }
@@ -625,10 +625,10 @@ void ParserAssistant::create_function_type()
 {
     size_t param_count = leave_arg_list();
     bool is_var_arg = pop_var_arg();
-    std::vector<TypeBase*> param_types(param_count);
+    std::vector<Type*> param_types(param_count);
     for (size_t i = 0; i < param_count; i++)
         param_types[param_count - i - 1] = pop_type();
-    TypeBase* return_type = pop_type();
+    Type* return_type = pop_type();
     push_type<FunctionType>(return_type, std::move(param_types), is_var_arg);
 }
 

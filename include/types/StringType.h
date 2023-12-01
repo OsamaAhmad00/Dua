@@ -1,11 +1,11 @@
 #pragma once
 
-#include <types/TypeBase.h>
+#include <types/Type.h>
 
 namespace dua
 {
 
-struct StringType : TypeBase
+struct StringType : Type
 {
     StringType(ModuleCompiler* compiler) { this->compiler = compiler; }
 

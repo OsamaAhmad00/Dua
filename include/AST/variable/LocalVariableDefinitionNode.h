@@ -9,7 +9,7 @@ class LocalVariableDefinitionNode : public VariableDefinitionNode
 {
 public:
 
-    LocalVariableDefinitionNode(ModuleCompiler* compiler, std::string name, TypeBase* type, ASTNode* initializer)
+    LocalVariableDefinitionNode(ModuleCompiler* compiler, std::string name, Type* type, ASTNode* initializer)
             : VariableDefinitionNode(compiler, std::move(name), type, initializer) {}
     llvm::Value* eval() override;
 };

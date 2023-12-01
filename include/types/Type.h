@@ -8,7 +8,7 @@ namespace dua
 
 class ModuleCompiler;
 
-struct TypeBase
+struct Type
 {
     // FIXME the lifetime of the a type is the same as
     //  the lifetime of the ValueNode encompassing it.
@@ -19,11 +19,11 @@ struct TypeBase
     ModuleCompiler* compiler;
     virtual llvm::Constant* default_value() = 0;
     virtual llvm::Type* llvm_type() const = 0;
-    virtual TypeBase* clone() = 0;
+    virtual Type* clone() = 0;
     virtual std::string to_string() const = 0;
-    virtual bool operator==(const TypeBase& other) { return llvm_type() == other.llvm_type(); }
-    virtual bool operator!=(const TypeBase& other) { return !(*this == other); }
-    virtual ~TypeBase() = default;
+    virtual bool operator==(const Type& other) { return llvm_type() == other.llvm_type(); }
+    virtual bool operator!=(const Type& other) { return !(*this == other); }
+    virtual ~Type() = default;
 
     llvm::Type* operator->() { return llvm_type(); }
     operator llvm::Type*() { return llvm_type(); }

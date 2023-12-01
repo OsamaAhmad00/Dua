@@ -1,6 +1,6 @@
 #pragma once
 
-#include <types/TypeBase.h>
+#include <types/Type.h>
 
 namespace dua
 {
@@ -28,7 +28,7 @@ struct PREFIX##WIDTH##Type : public IntegerType                \
     }                                                          \
 };
 
-struct IntegerType : public TypeBase {};
+struct IntegerType : public Type {};
 
 DEFINE_INTEGER_TYPE(I, 64)
 DEFINE_INTEGER_TYPE(I, 32)

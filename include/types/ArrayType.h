@@ -1,26 +1,26 @@
 #pragma once
 
-#include <types/TypeBase.h>
+#include <types/Type.h>
 #include <llvm/IR/DerivedTypes.h>
 
 namespace dua
 {
 
-class ArrayType : public TypeBase
+class ArrayType : public Type
 {
     size_t size;
-    TypeBase* element_type;
+    Type* element_type;
 
 public:
 
-    ArrayType(ModuleCompiler* compiler, TypeBase* element_type, size_t size)
+    ArrayType(ModuleCompiler* compiler, Type* element_type, size_t size)
         : element_type(element_type), size(size) { this->compiler = compiler; }
 
     llvm::Constant* default_value() override;
 
     llvm::ArrayType* llvm_type() const override;
 
-    TypeBase* get_element_type() { return element_type; }
+    Type* get_element_type() { return element_type; }
 
     ArrayType* clone() override { return new ArrayType(compiler, element_type->clone(), size); }
 

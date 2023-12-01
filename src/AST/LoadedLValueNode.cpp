@@ -16,7 +16,7 @@ llvm::Value* LoadedLValueNode::eval()
     return builder().CreateLoad(element_type->llvm_type(), ptr);
 }
 
-TypeBase *LoadedLValueNode::compute_type()
+Type *LoadedLValueNode::compute_type()
 {
     delete type;
     auto result = lvalue->get_cached_type();

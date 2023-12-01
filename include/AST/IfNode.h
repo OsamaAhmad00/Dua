@@ -37,7 +37,7 @@ public:
 
     bool has_else() { return branches.size() == conditions.size() + 1; }
 
-    TypeBase* compute_type() override;
+    Type* compute_type() override;
 
     ~IfNode() override;
 };

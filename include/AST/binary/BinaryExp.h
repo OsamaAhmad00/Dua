@@ -37,7 +37,7 @@ public:                                                                         
         );                                                                            \
     }                                                                                 \
                                                                                       \
-    TypeBase* compute_type() override {                                               \
+    Type* compute_type() override {                                               \
         delete type;                                                                  \
         auto ltype = lhs->get_cached_type();                                          \
         auto rtype = rhs->get_cached_type();                                          \

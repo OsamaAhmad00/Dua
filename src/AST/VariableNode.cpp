@@ -20,10 +20,10 @@ llvm::Value* VariableNode::eval()
     return nullptr;
 }
 
-TypeBase* VariableNode::compute_type()
+Type* VariableNode::compute_type()
 {
     delete type;
-    TypeBase* t;
+    Type* t;
     if (symbol_table().contains(name)) {
         t = symbol_table().get(name).type->clone();
     } else {
@@ -32,7 +32,7 @@ TypeBase* VariableNode::compute_type()
     return type = compiler->create_type<PointerType>(t);
 }
 
-TypeBase *VariableNode::get_element_type()
+Type *VariableNode::get_element_type()
 {
     return ((PointerType*)get_cached_type())->get_element_type();
 }

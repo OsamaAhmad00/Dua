@@ -27,7 +27,7 @@ public:
         return value;
     }
 
-    TypeBase* compute_type() override { delete type; return type = lhs->get_cached_type()->clone(); };
+    Type* compute_type() override { delete type; return type = lhs->get_cached_type()->clone(); };
 
     ~CompoundAssignmentExpressionNode() override { delete lhs; delete rhs; };
 };

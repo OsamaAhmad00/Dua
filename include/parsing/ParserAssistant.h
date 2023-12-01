@@ -81,7 +81,7 @@ class ParserAssistant
     std::vector<std::string> strings;
     std::vector<uint64_t> numbers;
     std::vector<ASTNode *> nodes;
-    std::vector<TypeBase *> types;
+    std::vector<Type *> types;
 
     // A stack for counting the number of statements
     //  inside the current scope, and for determining
@@ -126,8 +126,8 @@ class ParserAssistant
         return casted;
     }
 
-    TypeBase *pop_type() {
-        TypeBase *result = types.back();
+    Type *pop_type() {
+        Type *result = types.back();
         types.pop_back();
         return result;
     }
