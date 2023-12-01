@@ -17,7 +17,8 @@ llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, Type* 
         init = compiler->cast_value(init, type->llvm_type());
         builder().CreateStore(init, instance);
     }
-    symbol_table().insert(name, { instance, type });
+    Variable variable = { instance, type };
+    symbol_table().insert(name, variable);
     return instance;
 }
 

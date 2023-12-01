@@ -73,7 +73,7 @@ void ParserAssistant::create_empty_method_if_doesnt_exist(ClassType* cls, std::s
     compiler->register_function(name, std::move(signature));
 
     auto function = compiler->module.getFunction(name);
-    auto bb = llvm::BasicBlock::Create(compiler->context, "entry_point", function);
+    auto bb = llvm::BasicBlock::Create(compiler->context, "entry", function);
     compiler->temp_builder.SetInsertPoint(bb);
     compiler->temp_builder.CreateRetVoid();
 }

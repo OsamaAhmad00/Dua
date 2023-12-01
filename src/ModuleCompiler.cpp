@@ -22,13 +22,12 @@ ModuleCompiler::ModuleCompiler(const std::string &module_name, const std::string
     // Parse
     TranslationUnitNode* ast = parser.parse(code);
 
+    create_dua_init_function();
+
     // Generate LLVM IR
     ast->eval();
 
-    auto& insertion_point = module.getFunction("main")->front().front();
-    builder.SetInsertPoint(&insertion_point);
-    for (auto node : deferred_nodes)
-        node->eval();
+    complete_dua_init_function();
 
     llvm::raw_string_ostream stream(result);
     module.print(stream, nullptr);
@@ -244,6 +243,41 @@ void ModuleCompiler::push_scope() {
 
 Scope<Variable> ModuleCompiler::pop_scope() {
     return symbol_table.pop_scope();
+}
+
+void ModuleCompiler::create_dua_init_function()
+{
+    auto info = FunctionInfo {
+        FunctionType { this, create_type<VoidType>() },
+        {}
+    };
+
+    register_function(".dua.init", std::move(info));
+
+    auto function = module.getFunction(".dua.init");
+    llvm::BasicBlock::Create(context, "entry", function);
+}
+
+void ModuleCompiler::complete_dua_init_function()
+{
+    auto& init_ip = module.getFunction(".dua.init")->getEntryBlock();
+    builder.SetInsertPoint(&init_ip);
+    for (auto node : deferred_nodes)
+        node->eval();
+
+    auto dua_init = module.getFunction(".dua.init");
+    if (dua_init->begin()->begin() == dua_init->begin()->end()) {
+        // The function is empty. Delete it for clarity.
+        dua_init->removeFromParent();
+    } else {
+        // Return
+        builder.CreateRetVoid();
+
+        // Call from main.
+        auto& main_ip = module.getFunction("main")->getEntryBlock().front();
+        builder.SetInsertPoint(&main_ip);
+        builder.CreateCall(dua_init);
+    }
 }
 
 }

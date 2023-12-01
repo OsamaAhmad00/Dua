@@ -65,6 +65,22 @@ int main()
 }
 
 
+// CASE Global variable initialization with non-constant expression
+// Returns 5
+
+int fib(int i)
+{
+    if (i <= 1) return 1;
+    return fib(i - 1) + fib(i - 2);
+}
+
+int f = fib(4);
+
+int main()
+{
+    return f;
+}
+
 // CASE Redefinition in the same scope
 // Panics
 

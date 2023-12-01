@@ -65,6 +65,7 @@ public:
 
     llvm::IRBuilder<>* get_builder() { return &builder; }
     llvm::LLVMContext* get_context() { return &context; }
+    void push_deferred_node(ASTNode* node) { deferred_nodes.push_back(node); }
     auto get_class(const std::string& name) { return classes[name]; }
     auto& get_class_fields() { return class_fields; }
 
@@ -77,6 +78,9 @@ public:
 
     void push_scope();
     Scope<Variable> pop_scope();
+
+    void create_dua_init_function();
+    void complete_dua_init_function();
 
 private:
 
@@ -95,7 +99,10 @@ private:
     // Nodes that are deferred to be evaluated after the evaluation
     //  of the whole tree. The nodes will be evaluated at the beginning
     //  of the entry point, in the order of insertions. This is useful
-    //  for calling constructors of global objects for example.
+    //  for calling constructors of global objects for example, or for
+    //  assigning them a non-constant value. All the deferred nodes will
+    //  be evaluated inside a function called ".dua.init", which is called
+    //  at the beginning of the main function.
     std::vector<ASTNode*> deferred_nodes;
     // Instead of having the fields be stored in the class type,
     //  and having them getting duplicated on each clone, let's

@@ -69,7 +69,7 @@ void compile(const strings& source_files, const strings& args)
     for (size_t i = 0; i < n; i++) {
         // without the path prefix .dua suffix
         std::string filename = std::filesystem::path(source_files[i]).filename().string();
-        stripped[i] = filename.substr(0, source_files[i].size() - 4);
+        stripped[i] = filename.substr(0, filename.size() - 4);
     }
 
     strings code(n);
