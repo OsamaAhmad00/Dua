@@ -28,7 +28,7 @@ public:
 protected:
 
     llvm::BasicBlock* create_basic_block(const std::string& name, llvm::Function* function);
-    llvm::AllocaInst* create_local_variable(const std::string& name, Type* type, llvm::Value* init);
+    llvm::AllocaInst* create_local_variable(const std::string& name, Type* type, llvm::Value* init, std::vector<llvm::Value*> args = {});
     NoneValue none_value();
 
     Type* type = nullptr;

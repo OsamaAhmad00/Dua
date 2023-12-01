@@ -73,7 +73,7 @@ public:
     void cast_function_args(std::vector<llvm::Value*>& args, const FunctionType& type);
     llvm::CallInst* call_function(const std::string &name, std::vector<llvm::Value*> args = {});
     llvm::CallInst* call_function(llvm::Value* ptr, const FunctionType& type, std::vector<llvm::Value*> args = {});
-    void call_method_if_exists(const Variable& variable, const std::string& name);
+    void call_method_if_exists(const Variable& variable, const std::string& name, std::vector<llvm::Value*>&& args = {});
     void destruct_all_variables(const Scope<Variable>& scope);
 
     void push_scope();

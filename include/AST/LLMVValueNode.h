@@ -13,7 +13,7 @@ public:
 
     LLVMValueNode(ModuleCompiler* compiler, llvm::Value* value, Type* type)
             : value(value) { this->compiler = compiler; this->type = type; };
-    NoneValue eval() override { return value; };
+    llvm::Value* eval() override { return value; };
     Type* compute_type() override { return type; }
 };
 

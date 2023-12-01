@@ -6,13 +6,18 @@ namespace dua
 llvm::Value* LocalVariableDefinitionNode::eval()
 {
     llvm::Value* init_value = initializer ? initializer->eval() : type->default_value();
-    if (current_function() != nullptr)
-        return create_local_variable(name, type, init_value);
+    if (current_function() != nullptr) {
+        std::vector<llvm::Value*> llvm_args(args.size());
+        for (int i = 0; i < args.size(); i++)
+            llvm_args[i] = args[i]->eval();
+        return create_local_variable(name, type, init_value, std::move(llvm_args));
+    }
 
     if (current_class() == nullptr)
         report_internal_error("Local variable definition in a non-local scope");
 
     // A class is being processed at the moment
+    // This is a field definition, not a local variable definition.
 
     auto class_name = current_class()->getName().str();
 

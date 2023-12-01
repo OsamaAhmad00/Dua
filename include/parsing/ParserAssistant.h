@@ -144,6 +144,8 @@ public:
     template<typename T, typename...Args>
     void push_type(Args...args) { types.push_back(compiler->create_type<T>(args...)); }
 
+    void push_null_node() { nodes.push_back(nullptr); }
+
     static int64_t get_i64(std::string num);
     static int32_t get_i32(std::string num);
     static int16_t get_i16(std::string num);

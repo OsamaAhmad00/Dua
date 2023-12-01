@@ -102,18 +102,14 @@ variable_decl_no_simicolon
     ;
 
 variable_def_no_simicolon
-    : type identifier '=' expression { assistant.create_variable_definition(); }
-    | object_decl optional_constructor_args { assistant.create_constructor_call(); }
-    | Var identifier '=' expression { assistant.create_inferred_definition(); }
+    : type identifier '=' expression { assistant.enter_arg_list(); assistant.create_variable_definition(); }
+    | Var  identifier '=' expression { assistant.enter_arg_list(); assistant.create_inferred_definition(); }
+    | class_type identifier { assistant.push_null_node(); } optional_constructor_args { assistant.create_variable_definition(); }
     ;
 
 optional_constructor_args
     : '(' arg_list ')'
     | /* empty */ { assistant.enter_arg_list(); }
-    ;
-
-object_decl
-    : class_type identifier { assistant.create_variable_declaration(); }
     ;
 
 function_decl_no_simicolon

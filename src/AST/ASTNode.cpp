@@ -8,7 +8,7 @@ llvm::BasicBlock* ASTNode::create_basic_block(const std::string& name, llvm::Fun
     return llvm::BasicBlock::Create(context(), name, function);
 }
 
-llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, Type* type, llvm::Value* init)
+llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, Type* type, llvm::Value* init, std::vector<llvm::Value*> args)
 {
     llvm::BasicBlock* entry = &current_function()->getEntryBlock();
     temp_builder().SetInsertPoint(entry, entry->begin());
@@ -19,6 +19,7 @@ llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, Type* 
     }
     Variable variable = { instance, type };
     symbol_table().insert(name, variable);
+    compiler->call_method_if_exists(variable, "constructor", std::move(args));
     return instance;
 }
 

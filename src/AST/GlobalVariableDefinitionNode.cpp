@@ -1,6 +1,4 @@
 #include <AST/variable/GlobalVariableDefinitionNode.h>
-#include <AST/AssignmentExpressionNode.h>
-#include <AST/lvalue/VariableNode.h>
 #include <AST/LLMVValueNode.h>
 #include <utils/ErrorReporting.h>
 
@@ -14,44 +12,44 @@ llvm::GlobalVariable* GlobalVariableDefinitionNode::eval()
     if (result != nullptr)
         return result;
 
-    llvm::Constant* constant;
+    module().getOrInsertGlobal(name, type->llvm_type());
+    llvm::GlobalVariable* variable = module().getGlobalVariable(name);
+
+    // We're in the global scope now, and the evaluation has to be done inside
+    // some basic block. Will move temporarily to the beginning of the main function.
+    auto old_position = builder().saveIP();
+    builder().SetInsertPoint(&module().getFunction(".dua.init")->getEntryBlock());
+
+    llvm::Constant* constant = type->default_value();
 
     if (initializer != nullptr)
     {
-        // We're in the global scope now, and the evaluation has to be done inside
-        // some basic block. Will move temporarily to the beginning of the main function.
-        auto old_position = builder().saveIP();
-        builder().SetInsertPoint(&module().getFunction(".dua.init")->getEntryBlock());
-
         auto value = initializer->eval();
+        delete initializer;
 
         value = compiler->cast_value(value, type->llvm_type());
         if (value == nullptr)
             report_error("Type mismatch between the global variable " + name + " and its initializer");
 
-        constant = llvm::dyn_cast<llvm::Constant>(value);
-        if (constant == nullptr)
-        {
-            // Moving ownership of the initializer to the assignment expression
-            auto assignment = compiler->create_node<AssignmentExpressionNode>(
-                    compiler->create_node<VariableNode>(name),
-                    compiler->create_node<LLVMValueNode>(value, initializer->get_cached_type()->clone())
-            );
-            initializer = nullptr;
-
-            compiler->push_deferred_node(assignment);
-
-            constant = type->default_value();
+        auto casted = llvm::dyn_cast<llvm::Constant>(value);
+        // If it's not a constant, then the initialization happens in the
+        // .dua.init function. Otherwise, initialized with the constant value.
+        if (casted == nullptr) {
+            builder().CreateStore(value, variable);
+        } else {
+            constant = casted;
         }
-
-        // Restore the old position back
-        builder().restoreIP(old_position);
-    } else {
-        constant = type->default_value();
     }
 
-    module().getOrInsertGlobal(name, type->llvm_type());
-    llvm::GlobalVariable* variable = module().getGlobalVariable(name);
+    std::vector<llvm::Value*> llvm_args(args.size());
+    for (int i = 0; i < args.size(); i++)
+        llvm_args[i] = args[i]->eval();
+
+    compiler->call_method_if_exists({ variable, type }, "constructor", std::move(llvm_args));
+
+    // Restore the old position back
+    builder().restoreIP(old_position);
+
     variable->setInitializer(constant);
     variable->setConstant(false);
 

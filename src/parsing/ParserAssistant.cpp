@@ -104,15 +104,21 @@ void ParserAssistant::create_variable_declaration()
 
 void ParserAssistant::create_variable_definition()
 {
-    auto value = pop_node();
+    // Either args or initializer
+    auto args = pop_args();
+    auto initializer = pop_node();
     auto name = pop_str();
     auto type = pop_type();
+
+    // A temporary insertion into the symbol table for name resolution
+    //  during parsing. The symbol table will be reset at the end.
     compiler->symbol_table.insert(name, { nullptr, type });
-    if (is_in_global_scope()) {
-        push_node<GlobalVariableDefinitionNode>(std::move(name), type, value);
-    } else {
-        push_node<LocalVariableDefinitionNode>(std::move(name), type, value);
-    }
+
+    if (is_in_global_scope())
+        push_node<GlobalVariableDefinitionNode>(std::move(name), type, initializer, std::move(args));
+    else
+        push_node<LocalVariableDefinitionNode> (std::move(name), type, initializer, std::move(args));
+
     inc_statements();
 }
 

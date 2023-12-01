@@ -11,8 +11,9 @@ class GlobalVariableDefinitionNode : public VariableDefinitionNode
 
 public:
 
-    GlobalVariableDefinitionNode(ModuleCompiler* compiler, std::string name, Type* type, ASTNode* initializer)
-        : VariableDefinitionNode(compiler, std::move(name), type, initializer) {}
+    GlobalVariableDefinitionNode(ModuleCompiler* compiler, std::string name, Type* type,
+                                 ASTNode* initializer, std::vector<ASTNode*> args = {})
+        : VariableDefinitionNode(compiler, std::move(name), type, initializer, std::move(args)) {}
 
     llvm::GlobalVariable* eval() override;
 };

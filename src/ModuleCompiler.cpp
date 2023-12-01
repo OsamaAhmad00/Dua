@@ -186,13 +186,13 @@ llvm::Value *ModuleCompiler::cast_as_bool(llvm::Value *value, bool panic_on_fail
     return builder.CreateICmpNE(value, builder.getInt64(0));
 }
 
-void ModuleCompiler::call_method_if_exists(const Variable& variable, const std::string& name)
+void ModuleCompiler::call_method_if_exists(const Variable& variable, const std::string& name, std::vector<llvm::Value*>&& args)
 {
     if (auto class_type = dynamic_cast<ClassType *>(variable.type); class_type != nullptr) {
-        std::string constructor = class_type->name + "." + name;
-        if (functions.find(constructor) != functions.end()) {
-            auto func = module.getFunction(constructor);
-            builder.CreateCall(func, variable.ptr);
+        std::string full_name = class_type->name + "." + name;
+        if (functions.find(full_name) != functions.end()) {
+            args.insert(args.begin(), variable.ptr);
+            call_function(full_name, std::move(args));
         }
     }
 }
