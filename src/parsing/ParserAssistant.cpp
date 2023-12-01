@@ -39,7 +39,55 @@ TranslationUnitNode* ParserAssistant::construct_result()
     return compiler->create_node<TranslationUnitNode>(std::move(elements));
 }
 
+void ParserAssistant::finish_parsing()
+{
+    reset_symbol_table();
+    create_missing_methods();
+}
+
+void ParserAssistant::create_missing_methods()
+{
+    for (auto& cls : compiler->classes) {
+        create_empty_method_if_doesnt_exist(cls.second, "constructor");
+        create_empty_method_if_doesnt_exist(cls.second, "destructor");
+    }
+}
+
+void ParserAssistant::create_empty_method_if_doesnt_exist(ClassType* cls, std::string&& name)
+{
+    name = cls->name + "." + name;
+
+    if (compiler->has_function(name))
+        return;
+
+    auto signature = FunctionInfo {
+        FunctionType {
+                compiler,
+                compiler->create_type<VoidType>(),
+                std::vector<TypeBase *>{ compiler->create_type<PointerType>(cls->clone()) },
+                false
+        },
+        { "self" }
+    };
+
+    compiler->register_function(name, std::move(signature));
+
+    auto function = compiler->module.getFunction(name);
+    auto bb = llvm::BasicBlock::Create(compiler->context, "entry_point", function);
+    compiler->temp_builder.SetInsertPoint(bb);
+    compiler->temp_builder.CreateRetVoid();
+}
+
 void ParserAssistant::reset_symbol_table() { compiler->symbol_table = decltype(compiler->symbol_table){}; }
+
+std::vector<ASTNode *> ParserAssistant::pop_args()
+{
+    size_t n = leave_arg_list();
+    std::vector<ASTNode*> args(n);
+    for (size_t i = 0; i < n; i++)
+        args[n - i - 1] = pop_node();
+    return args;
+}
 
 void ParserAssistant::create_variable_declaration()
 {
@@ -287,12 +335,7 @@ bool ParserAssistant::pop_var_arg() {
 
 void ParserAssistant::create_function_call()
 {
-    std::string name = pop_str();
-    size_t n = leave_arg_list();
-    std::vector<ASTNode*> args(n);
-    for (size_t i = 0; i < n; i++)
-        args[n - i - 1] = pop_node();
-    push_node<FunctionCallNode>(std::move(name), std::move(args));
+    push_node<FunctionCallNode>(pop_node(), pop_args());
 }
 
 void ParserAssistant::create_cast()
@@ -506,29 +549,19 @@ void ParserAssistant::create_class_type() {
     push_type<ClassType>(pop_str());
 }
 
-void ParserAssistant::create_method_call()
-{
-    auto func_call = pop_node_as<FunctionCallNode>();
-    auto instance = pop_node_as<LValueNode>();
-    push_node<MethodCallNode>(instance, std::move(func_call->name), std::move(func_call->args));
-    delete func_call;
-}
-
 void ParserAssistant::create_field_access() {
     push_node<ClassFieldNode>(pop_node_as<LValueNode>(), pop_str());
 }
 
 void ParserAssistant::create_constructor_call()
 {
-    // Function name
-    push_str("constructor");
-    // Just for convenience
-    create_function_call();
-    auto func_call = pop_node_as<FunctionCallNode>();
+    auto args = pop_args();
     auto decl = pop_node_as<VariableDefinitionNode>();
     auto instance = compiler->create_node<VariableNode>(decl->get_name());
-    auto constructor = compiler->create_node<MethodCallNode>(instance, std::move(func_call->name), std::move(func_call->args), false);
-    delete func_call;
+    auto field = compiler->create_node<LoadedLValueNode>(compiler->create_node<ClassFieldNode>(instance, "constructor"));
+    auto constructor = compiler->create_node<FunctionCallNode>(field, std::move(args));
+
+    // If it's a global variable, then the constructor call should be deferred.
     if (dynamic_cast<LocalVariableDefinitionNode*>(decl) != nullptr) {
         push_node<SequentialEvalNode>(std::vector<ASTNode *>{decl, constructor}, 0);
     } else {
@@ -597,11 +630,6 @@ void ParserAssistant::create_function_type()
         param_types[param_count - i - 1] = pop_type();
     TypeBase* return_type = pop_type();
     push_type<FunctionType>(return_type, std::move(param_types), is_var_arg);
-}
-
-void ParserAssistant::create_function_reference()
-{
-    push_node<FunctionRefNode>(pop_str());
 }
 
 }

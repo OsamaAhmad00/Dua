@@ -27,7 +27,7 @@ public:
 }
 
 starting_symbol
-    : module EOF { assistant.reset_symbol_table(); }
+    : module EOF { assistant.finish_parsing(); }
     ;
 
 module
@@ -72,7 +72,7 @@ class_elements_or_none
 
 class_elements
     : class_elements class_element
-    | /* empty */
+    | class_element
     ;
 
 class_element
@@ -175,8 +175,8 @@ statement
 expression
     : number
     | String { assistant.push_str($String.text); assistant.create_string_value(); }
+    | expression '(' arg_list ')' { assistant.create_function_call(); }
     | block_expression
-    | function_call
     | if_expression
     | when_expression
     | cast_expression
@@ -185,7 +185,6 @@ expression
     | SizeOf '(' expression ')'   { assistant.create_size_of_expression();  }
     | TypeName '(' type ')'       { assistant.create_typename_type();       }
     | TypeName '(' expression ')' { assistant.create_typename_expression(); }
-    | FuncRef '(' identifier ')'  { assistant.create_function_reference();  }
     | lvalue '++' { assistant.create_post_inc(); }
     | lvalue '--' { assistant.create_post_dec(); }
     | '+'  expression  // do nothing
@@ -228,7 +227,6 @@ expression
     | lvalue '^='  expression  { assistant.create_compound_assignment<XorNode>(); }
     | lvalue '|='  expression  { assistant.create_compound_assignment<BitwiseOrNode>(); }
     | lvalue { assistant.create_loaded_lvalue(); }
-    | lvalue '.' function_call { assistant.create_method_call(); }
     ;
 
 cast_expression
@@ -339,10 +337,6 @@ expression_or_none_loop
 
 block_expression
     : scope_begin statements expression scope_end { assistant.inc_statements(); assistant.create_block(); }
-    ;
-
-function_call
-    : identifier '(' arg_list ')' { assistant.create_function_call(); }
     ;
 
 lvalue

@@ -140,3 +140,15 @@ class A { }
 class A { }
 
 int main() { }
+
+
+// Case Field and method with same name
+// Panics
+
+class B
+{
+    long l;
+    int l() { return 5; }
+}
+
+int main() {}

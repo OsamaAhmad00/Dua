@@ -26,7 +26,7 @@ struct FunctionType : public TypeBase
 
     llvm::Constant* default_value() override;
 
-    llvm::PointerType* llvm_type() const override;
+    llvm::FunctionType* llvm_type() const override;
 
     FunctionType* clone() override;
 

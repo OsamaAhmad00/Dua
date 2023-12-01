@@ -4,12 +4,73 @@ int printf(str message, ...);
 // Case Basic function reference
 // Outputs "Hello, world!"
 
-void call_func(int(str, ...) func, str message)
+void call_func(int(str, ...)* func, str message)
 {
     func(message);
 }
 
 int main()
 {
-    call_func(funcref(printf), "Hello, world!");
+    call_func(printf, "Hello, world!");
 }
+
+
+// Case Class function reference member
+// Outputs "Hello, world!"
+
+class X
+{
+    var print1 = printf;
+    int(str, ...)* _print;
+
+    void print2(str message) {
+        self._print = printf;
+        self._print(message);
+    }
+}
+
+int main()
+{
+    X x;
+    x.print1("Hello, ");
+    x.print2("world!");
+}
+
+
+// Case Method reference
+// Outputs "10"
+
+class L
+{
+    int num = 10;
+    void print() {
+        printf("%d", num);
+    }
+}
+
+int main()
+{
+    L l;
+    var func = l.print;
+    func(&l);
+}
+
+
+// Case Using the typeof operator
+// Outputs "10"
+
+int main()
+{
+    typeof(printf) print = printf;
+    print("%d", 10);
+}
+
+
+// TODO Wrong function type reference
+// Panics
+//
+// int main()
+// {
+//     void(int, int)* print = printf;
+//     print(1, 2);
+// }

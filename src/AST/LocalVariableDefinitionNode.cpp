@@ -14,6 +14,11 @@ llvm::Value* LocalVariableDefinitionNode::eval()
 
     // A class is being processed at the moment
 
+    auto class_name = current_class()->getName().str();
+
+    if (compiler->has_function(class_name + "." + name))
+        report_error("The identifier " + class_name + "::" + name + " is defined as both a field and a method");
+
     llvm::Constant* const_init = nullptr;
     if (init_value) {
         const_init = llvm::dyn_cast<llvm::Constant>(init_value);
@@ -21,7 +26,6 @@ llvm::Value* LocalVariableDefinitionNode::eval()
             report_error("Can't initialize class fields with a non-constant expression");
     }
 
-    auto class_name = current_class()->getName().str();
     auto default_value = const_init
             ? (llvm::Constant*)compiler->cast_value(const_init, type->llvm_type())
             : type->default_value();

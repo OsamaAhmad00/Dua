@@ -133,7 +133,7 @@ TypeBase* ModuleCompiler::get_winning_type(TypeBase* lhs, TypeBase* rhs)
     return nullptr;
 }
 
-void ModuleCompiler::register_function(std::string name, FunctionInfo info)
+void ModuleCompiler::register_function(std::string name, FunctionInfo&& info)
 {
     if (current_function != nullptr)
         report_internal_error("Nested functions are not allowed");
@@ -208,37 +208,41 @@ bool ModuleCompiler::has_function(const std::string &name) const {
     return functions.find(name) != functions.end();
 }
 
-
-void ModuleCompiler::define_function_alias(const std::string &from, const std::string &to) {
-    function_aliases.insert(from, to);
-}
-
-llvm::CallInst* ModuleCompiler::call_function(const std::string &name, std::vector<llvm::Value*> args)
+void ModuleCompiler::cast_function_args(std::vector<llvm::Value*>& args, const FunctionType& type)
 {
-    llvm::Function* function = module.getFunction(name);
-    auto& info = get_function(name);
-
     for (size_t i = args.size() - 1; i != (size_t)-1; i--) {
-        if (i < info.param_names.size()) {
+        if (i < type.param_types.size()) {
             // Only try to cast non-var-arg parameters
-            auto param_type = info.type.param_types[i]->llvm_type();
+            auto param_type = type.param_types[i]->llvm_type();
             args[i] = cast_value(args[i], param_type);
         } else if (args[i]->getType() == builder.getFloatTy()) {
             // Variadic functions promote floats to doubles
             args[i] = cast_value(args[i], builder.getDoubleTy());
         }
     }
+}
 
-    return builder.CreateCall(function, std::move(args));
+llvm::CallInst* ModuleCompiler::call_function(const std::string &name, std::vector<llvm::Value*> args)
+{
+    auto function = module.getFunction(name);
+    if (function == nullptr)
+        report_error("The function " + name + " is not defined");
+    auto& info = get_function(name);
+    cast_function_args(args, info.type);
+    return builder.CreateCall(function, args);
+}
+
+llvm::CallInst* ModuleCompiler::call_function(llvm::Value* ptr, const FunctionType& type, std::vector<llvm::Value*> args)
+{
+    cast_function_args(args, type);
+    return builder.CreateCall(type.llvm_type(), ptr, args);
 }
 
 void ModuleCompiler::push_scope() {
     symbol_table.push_scope();
-    function_aliases.push_scope();
 }
 
 Scope<Variable> ModuleCompiler::pop_scope() {
-    function_aliases.pop_scope();
     return symbol_table.pop_scope();
 }
 

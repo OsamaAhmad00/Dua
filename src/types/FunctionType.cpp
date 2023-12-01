@@ -12,13 +12,13 @@ llvm::Constant* FunctionType::default_value() {
     return llvm::Constant::getNullValue(llvm_type());
 }
 
-llvm::PointerType* FunctionType::llvm_type() const
+llvm::FunctionType* FunctionType::llvm_type() const
 {
     llvm::Type* ret = return_type->llvm_type();
     std::vector<llvm::Type*> params(param_types.size());
     for (size_t i = 0; i < param_types.size(); i++)
         params[i] = param_types[i]->llvm_type();
-    return llvm::FunctionType::get(ret, params, is_var_arg)->getPointerTo();
+    return llvm::FunctionType::get(ret, std::move(params), is_var_arg);
 }
 
 FunctionType *FunctionType::clone()

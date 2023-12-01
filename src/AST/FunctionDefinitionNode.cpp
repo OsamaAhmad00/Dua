@@ -31,7 +31,7 @@ llvm::Function* FunctionDefinitionNode::define_function()
     llvm::Function* function = module().getFunction(name);
 
     if (!function)
-        report_internal_error("Use of an undeclared function");
+        report_internal_error("definition of an undeclared function");
 
     llvm::Function* old_function = current_function();
     llvm::BasicBlock* old_block = builder().GetInsertBlock();

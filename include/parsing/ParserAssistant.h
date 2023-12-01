@@ -15,7 +15,6 @@
 #include "AST/SizeOfNode.h"
 
 #include "AST/class/ClassDefinitionNode.h"
-#include "AST/class/MethodCallNode.h"
 
 #include "AST/loops/ForNode.h"
 #include "AST/loops/WhileNode.h"
@@ -41,7 +40,6 @@
 #include "AST/values/FloatValueNodes.h"
 #include "AST/values/IntegerValueNodes.h"
 #include "AST/values/StringValueNode.h"
-#include "AST/function/FunctionRefNode.h"
 
 #include "AST/lvalue/LValueNode.h"
 #include "AST/lvalue/VariableNode.h"
@@ -151,6 +149,8 @@ public:
     static int16_t get_i16(std::string num);
     static int8_t  get_i8 (std::string num);
 
+    std::vector<ASTNode*> pop_args();
+
     void create_variable_declaration();
     void create_variable_definition();
     void create_function_declaration();
@@ -181,7 +181,6 @@ public:
     void create_logical_and();
     void create_logical_or();
     void create_class_type();
-    void create_method_call();
     void create_field_access();
     void create_constructor_call();
     void create_inferred_definition();
@@ -191,7 +190,6 @@ public:
     void create_typename_type();
     void create_typename_expression();
     void create_function_type();
-    void create_function_reference();
 
     template<typename T>
     void create_unary_expr() {
@@ -240,6 +238,9 @@ public:
 
     TranslationUnitNode* construct_result();
 
+    void finish_parsing();
+    void create_missing_methods();
+    void create_empty_method_if_doesnt_exist(ClassType* cls, std::string&& name);
     void reset_symbol_table();
 
     void set_module_compiler(ModuleCompiler* compiler) { this->compiler = compiler; }

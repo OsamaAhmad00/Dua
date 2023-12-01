@@ -11,13 +11,13 @@ class FunctionCallNode : public ASTNode
 
 protected:
 
-    std::string name;
+    ASTNode* func;
     std::vector<ASTNode*> args;
 
 public:
 
-    FunctionCallNode(ModuleCompiler* compiler, std::string name, std::vector<ASTNode*> args = {})
-        : name(std::move(name)), args(std::move(args)) { this->compiler = compiler; }
+    FunctionCallNode(ModuleCompiler* compiler, ASTNode* func, std::vector<ASTNode*> args = {})
+        : func(func), args(std::move(args)) { this->compiler = compiler; }
 
     llvm::CallInst* eval() override;
 

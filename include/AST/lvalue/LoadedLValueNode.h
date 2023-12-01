@@ -5,17 +5,18 @@
 namespace dua
 {
 
-class LoadedLValueNode : public ASTNode
+struct LoadedLValueNode : public ASTNode
 {
 
     LValueNode* lvalue;
 
-public:
-
     LoadedLValueNode(ModuleCompiler* compiler, LValueNode* lvalue)
         : lvalue(lvalue) { this->compiler = compiler; }
+
     llvm::Value* eval() override;
+
     TypeBase* compute_type() override;
+
     ~LoadedLValueNode() override { delete lvalue; }
 };
 

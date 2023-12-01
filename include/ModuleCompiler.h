@@ -60,7 +60,7 @@ public:
         return new T(this, args...);
     }
 
-    void register_function(std::string name, FunctionInfo signature);
+    void register_function(std::string name, FunctionInfo&& signature);
     FunctionInfo& get_function(const std::string& name);
 
     llvm::IRBuilder<>* get_builder() { return &builder; }
@@ -69,8 +69,9 @@ public:
     auto& get_class_fields() { return class_fields; }
 
     bool has_function(const std::string& name) const;
-    void define_function_alias(const std::string& from, const std::string& to);
-    llvm::CallInst* call_function(const std::string& name, std::vector<llvm::Value*> args = {});
+    void cast_function_args(std::vector<llvm::Value*>& args, const FunctionType& type);
+    llvm::CallInst* call_function(const std::string &name, std::vector<llvm::Value*> args = {});
+    llvm::CallInst* call_function(llvm::Value* ptr, const FunctionType& type, std::vector<llvm::Value*> args = {});
     void call_method_if_exists(const Variable& variable, const std::string& name);
     void destruct_all_variables(const Scope<Variable>& scope);
 
@@ -89,7 +90,6 @@ private:
     //  of their declaration location in the code.
     llvm::IRBuilder<> temp_builder;
     SymbolTable<Variable> symbol_table;
-    SymbolTable<std::string> function_aliases;
     std::unordered_map<std::string, FunctionInfo> functions;
     std::unordered_map<std::string, ClassType*> classes;
     // Nodes that are deferred to be evaluated after the evaluation
