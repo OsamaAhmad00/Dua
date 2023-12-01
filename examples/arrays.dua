@@ -1,0 +1,58 @@
+int printf(str message, ...);
+
+
+// Case Default value
+// Outputs "00000"
+
+int main()
+{
+    int[5] arr;
+
+    for (int i = 0; i < 5; i++)
+        printf("%d", arr[i]);
+}
+
+
+// Case Default value, multi-dimensional
+// Outputs "000000000000000000000000"
+
+int main()
+{
+    int[2][3][4] arr;
+
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 3; j++)
+            for (int k = 0; k < 2; k++)
+                printf("%d", arr[i]);
+}
+
+
+// Case Single-dimensional arrays
+// Outputs "0123456789"
+
+int main()
+{
+    int[10] arr;
+
+    for (int i = 0; i < 10; i++)
+        arr[9 - i] = i;
+
+    for (int i = 9; i >= 0; i--)
+        printf("%d", arr[i]);
+}
+
+
+// Case Multi-dimensional arrays
+// Outputs "121236"
+
+int main()
+{
+    int[10][5] arr;
+
+    for (int i = 0; i < 5; i++)
+        for (int j = 0; j < 10; j++)
+            arr[i][j] = i * j;
+
+    printf("%d%d%d", arr[3][4], arr[2][6], arr[4][9]);
+}
+
