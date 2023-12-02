@@ -33,7 +33,7 @@ int main()
 
 
 // Case Object allocation
-// Outputs "Hello123"
+// Outputs "Hello123Bye"
 
 class X
 {
@@ -44,6 +44,11 @@ class X
         printf("Hello");
         print(i);
     }
+
+    void destructor()
+    {
+        printf("Bye");
+    }
 }
 
 int main()
@@ -51,4 +56,5 @@ int main()
     var x = new X(1);
     x->num = 23;
     print(x->num);
+    delete x;
 }

@@ -21,11 +21,14 @@ public:
 
     NoneValue eval() override
     {
-        if (dynamic_cast<PointerType*>(expr->get_cached_type()) == nullptr)
+        auto ptr = dynamic_cast<PointerType*>(expr->get_cached_type());
+        if (ptr == nullptr)
             report_error("The delete operator only accepts a pointer type, not a "
                 + expr->get_cached_type()->to_string());
 
-        compiler->call_function("free", { expr->eval() });
+        auto value = expr->eval();
+        compiler->call_method_if_exists({ value, ptr->get_element_type() }, "destructor");
+        compiler->call_function("free", { value });
 
         return none_value();
     }
