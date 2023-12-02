@@ -70,7 +70,7 @@ void FileTestCasesRunner::run()
 
         if (!expected_exit_code_str.empty()) {
             int expected_exit_code = std::stoi(expected_exit_code_str);
-            EXPECT_EQ((expected_exit_code + 256) % 256, (execution.exit_code + 256) % 256) << case_description;
+            EXPECT_EQ((expected_exit_code % 256 + 256) % 256, (execution.exit_code % 256 + 256) % 256) << case_description;
         }
 
         if (!expected_output_is_empty) {
