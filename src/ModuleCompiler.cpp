@@ -64,6 +64,9 @@ llvm::Value* ModuleCompiler::cast_value(llvm::Value* value, llvm::Type* target_t
         }
     }
 
+    if (source_type->isPointerTy() && target_type->isPointerTy())
+        return builder.CreateBitCast(value, target_type);
+
     if (source_type->isIntegerTy() && target_type->isPointerTy())
         return builder.CreateIntToPtr(value, target_type);
 
