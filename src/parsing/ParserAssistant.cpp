@@ -544,7 +544,7 @@ void ParserAssistant::create_class()
     for (size_t i = 0; i < n; i++)
         members[n - i - 1] = pop_node();
 
-    push_node<ClassDefinitionNode>(pop_str(), std::move(members));
+    push_node<ClassDefinitionNode>(pop_str(), std::move(members), std::move(fields_args));
 
     compiler->current_class = nullptr;
 
@@ -557,23 +557,6 @@ void ParserAssistant::create_class_type() {
 
 void ParserAssistant::create_field_access() {
     push_node<ClassFieldNode>(pop_node(), pop_str());
-}
-
-void ParserAssistant::create_constructor_call()
-{
-    auto args = pop_args();
-    auto decl = pop_node_as<VariableDefinitionNode>();
-    auto instance = compiler->create_node<VariableNode>(decl->get_name());
-    auto field = compiler->create_node<LoadedLValueNode>(compiler->create_node<ClassFieldNode>(instance, "constructor"));
-    auto constructor = compiler->create_node<FunctionCallNode>(field, std::move(args));
-
-    // If it's a global variable, then the constructor call should be deferred.
-    if (dynamic_cast<LocalVariableDefinitionNode*>(decl) != nullptr) {
-        push_node<SequentialEvalNode>(std::vector<ASTNode *>{decl, constructor}, 0);
-    } else {
-        nodes.push_back(decl);
-        compiler->deferred_nodes.push_back(constructor);
-    }
 }
 
 void ParserAssistant::create_inferred_definition()
@@ -673,9 +656,27 @@ void ParserAssistant::create_free()
 }
 
 void ParserAssistant::create_pointer_field_access() {
-
     push_node<ClassFieldNode>(pop_node(), pop_str());
 }
 
+void ParserAssistant::prepare_constructor()
+{
+    if (compiler->current_class == nullptr)
+        report_error("Constructors can only be defined inside classes");
+    push_type<VoidType>();
+    push_str("constructor");
+}
+
+void ParserAssistant::prepare_destructor()
+{
+    if (compiler->current_class == nullptr)
+        report_error("Destructors can only be defined inside classes");
+    push_type<VoidType>();
+    push_str("destructor");
+}
+
+void ParserAssistant::add_field_constructor_args() {
+    fields_args.push_back({ pop_str(), pop_args() });
+}
 
 }

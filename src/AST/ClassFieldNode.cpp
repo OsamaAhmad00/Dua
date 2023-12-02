@@ -4,12 +4,6 @@
 namespace dua
 {
 
-struct FieldInfo
-{
-    size_t index;
-    ClassField& info;
-};
-
 static ClassType* get_class(Type* type)
 {
     auto casted = dynamic_cast<ClassType*>(type);
@@ -27,21 +21,6 @@ static ClassType* get_class_from_ptr(ASTNode* node)
     return get_class(ptr->get_element_type());
 }
 
-FieldInfo get_field(ClassType* type, const std::string& field)
-{
-    auto& fields = type->fields();
-    for (size_t i = 0; i < fields.size(); i++) {
-        if (fields[i].name == field) {
-            return { i, fields[i] };
-        }
-    }
-
-    report_error("Class " + type->name + " doesn't contain a member with the name " + field);
-
-    // Unreachable
-    return { 0, fields[0] };
-}
-
 llvm::Value* ClassFieldNode::eval()
 {
     auto full_name = get_full_name();
@@ -49,8 +28,7 @@ llvm::Value* ClassFieldNode::eval()
         return module().getFunction(full_name);
 
     auto class_type = get_class_from_ptr(instance);
-    auto field = get_field(class_type, name);
-    return builder().CreateStructGEP(class_type->llvm_type(), get_instance(), field.index, name);
+    return class_type->get_field(get_instance(), name);
 }
 
 Type* ClassFieldNode::compute_type()
@@ -62,7 +40,7 @@ Type* ClassFieldNode::compute_type()
         t = compiler->get_function(full_name).type.clone();
     else {
         auto class_type = get_class_from_ptr(instance);
-        t = get_field(class_type, name).info.type->clone();
+        t = class_type->get_field(name).type->clone();
     }
     return type = compiler->create_type<PointerType>(t);
 }

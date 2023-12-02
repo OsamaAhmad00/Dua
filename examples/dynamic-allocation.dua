@@ -39,13 +39,13 @@ class X
 {
     int num;
 
-    void constructor(int i)
+    constructor(int i)
     {
         printf("Hello");
         print(i);
     }
 
-    void destructor()
+    destructor()
     {
         printf("Bye");
     }

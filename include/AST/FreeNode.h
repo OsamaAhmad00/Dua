@@ -27,7 +27,7 @@ public:
                 + expr->get_cached_type()->to_string());
 
         auto value = expr->eval();
-        compiler->call_method_if_exists({ value, ptr->get_element_type() }, "destructor");
+        compiler->call_destructor({ value, ptr->get_element_type() });
         compiler->call_function("free", { value });
 
         return none_value();

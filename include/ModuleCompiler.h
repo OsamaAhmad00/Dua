@@ -14,6 +14,12 @@ namespace dua
 
 class ASTNode;
 
+struct FieldConstructorArgs
+{
+    std::string name;
+    std::vector<ASTNode*> args;
+};
+
 struct FunctionInfo
 {
     FunctionType type;
@@ -68,12 +74,17 @@ public:
     void push_deferred_node(ASTNode* node) { deferred_nodes.push_back(node); }
     auto get_class(const std::string& name) { return classes[name]; }
     auto& get_class_fields() { return class_fields; }
+    void add_fields_constructor_args(std::string class_name, std::vector<FieldConstructorArgs> args);
+    std::vector<FieldConstructorArgs>& get_fields_args(const std::string& class_name);
 
     bool has_function(const std::string& name) const;
     void cast_function_args(std::vector<llvm::Value*>& args, const FunctionType& type);
     llvm::CallInst* call_function(const std::string &name, std::vector<llvm::Value*> args = {});
     llvm::CallInst* call_function(llvm::Value* ptr, const FunctionType& type, std::vector<llvm::Value*> args = {});
-    void call_method_if_exists(const Variable& variable, const std::string& name, std::vector<llvm::Value*>&& args = {});
+    void call_method_if_exists(const Variable& variable, const std::string& name, std::vector<llvm::Value*> args = {});
+
+    void call_constructor(const Variable& variable, std::vector<llvm::Value*> args);
+    void call_destructor(const Variable& variable);
     void destruct_all_variables(const Scope<Variable>& scope);
 
     void push_scope();
@@ -108,10 +119,10 @@ private:
     //  and having them getting duplicated on each clone, let's
     //  keep the fields info in one place, and refer to it by name.
     std::unordered_map<std::string, std::vector<ClassField>> class_fields;
+    std::unordered_map<std::string, std::vector<FieldConstructorArgs>> fields_args;
     std::unordered_map<std::string, llvm::Constant*> string_pool;
     llvm::Function* current_function = nullptr;
     llvm::StructType* current_class = nullptr;
-
 
     // Loops
     std::vector<llvm::BasicBlock*> continue_stack;

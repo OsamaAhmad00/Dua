@@ -102,6 +102,8 @@ class ParserAssistant
     std::vector<size_t> argument_counters;
     std::vector<bool> var_arg_stack;
 
+    std::vector<FieldConstructorArgs> fields_args;
+
     // Flags
     bool declared_malloc = false;
     bool declared_free = false;
@@ -141,7 +143,9 @@ class ParserAssistant
 
 public:
 
-    void push_str(std::string str) { strings.push_back(std::move(str)); }
+    void push_str(std::string str) {
+        strings.push_back(std::move(str));
+    }
 
     void push_num(uint64_t num) { numbers.push_back(num); }
 
@@ -201,6 +205,8 @@ public:
     void create_function_type();
     void create_malloc();
     void create_free();
+    void prepare_constructor();
+    void prepare_destructor();
     void create_pointer_field_access();
 
     template<typename T>
@@ -221,6 +227,8 @@ public:
         auto lhs = pop_node_as<LValueNode>();
         push_node<CompoundAssignmentExpressionNode<T>>(lhs, rhs);
     }
+
+    void add_field_constructor_args();
 
     void enter_conditional();
     size_t leave_conditional();

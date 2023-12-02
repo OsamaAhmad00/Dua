@@ -9,6 +9,12 @@
 namespace dua
 {
 
+struct FieldInfo
+{
+    size_t index;
+    ClassField& info;
+};
+
 ModuleCompiler::ModuleCompiler(const std::string &module_name, const std::string &code) :
     context(),
     module(module_name, context),
@@ -189,7 +195,7 @@ llvm::Value *ModuleCompiler::cast_as_bool(llvm::Value *value, bool panic_on_fail
     return builder.CreateICmpNE(value, builder.getInt64(0));
 }
 
-void ModuleCompiler::call_method_if_exists(const Variable& variable, const std::string& name, std::vector<llvm::Value*>&& args)
+void ModuleCompiler::call_method_if_exists(const Variable& variable, const std::string& name, std::vector<llvm::Value*> args)
 {
     if (auto class_type = dynamic_cast<ClassType *>(variable.type); class_type != nullptr) {
         std::string full_name = class_type->name + "." + name;
@@ -202,8 +208,9 @@ void ModuleCompiler::call_method_if_exists(const Variable& variable, const std::
 
 void ModuleCompiler::destruct_all_variables(const Scope<Variable> &scope)
 {
+    // TODO enforce an order on the destruction
     for (auto& variable : scope.map)
-        call_method_if_exists(variable.second, "destructor");
+        call_destructor(variable.second);
 }
 
 bool ModuleCompiler::has_function(const std::string &name) const {
@@ -281,6 +288,81 @@ void ModuleCompiler::complete_dua_init_function()
         builder.SetInsertPoint(&main_ip);
         builder.CreateCall(dua_init);
     }
+}
+
+void ModuleCompiler::add_fields_constructor_args(std::string class_name, std::vector<FieldConstructorArgs> args) {
+    fields_args[std::move(class_name)] = std::move(args);
+}
+
+void ModuleCompiler::call_constructor(const Variable &variable, std::vector<llvm::Value*> args)
+{
+    if (!variable.ptr->getType()->isPointerTy())
+        report_internal_error("Trying to initialize a non-lvalue item");
+
+    auto class_type = dynamic_cast<ClassType*>(variable.type);
+
+    if (class_type == nullptr)
+    {
+        // Initializing a primitive type.
+        if (args.empty())
+            return;
+
+        else if (args.size() != 1)
+            report_error("Cannot initialize a primitive value with more than one value");
+
+        auto value = cast_value(args[0], variable.type->llvm_type());
+        builder.CreateStore(value, variable.ptr);
+
+        return;
+    }
+
+    // Initializing an object
+
+    std::string name = class_type->name + ".constructor";
+    if (!has_function(name)) {
+        // Constructor is not defined. Noting to do here
+        return;
+    }
+
+    // Fields constructors are called in the function definition
+    //  node. This is to ensure that the parameters are defined
+    //  and are visible to these constructors, so that they can
+    //  be passed as well. This is to have the constructor calls
+    //  happen inside the constructor, not in every caller site.
+    //  These calls will happen at the top of the constructor,
+    //  thus, initializing the fields first.
+
+    args.insert(args.begin(), variable.ptr);
+    call_function(name, args);
+}
+
+void ModuleCompiler::call_destructor(const Variable &variable)
+{
+    auto class_type = dynamic_cast<ClassType*>(variable.type);
+    if (class_type == nullptr)
+        return;
+
+    std::string name = class_type->name + ".destructor";
+    if (!has_function(name))
+        return;
+
+    // Call the destructors of fields first
+    // TODO enforce an order on the destruction
+    for (const auto& field : class_type->fields()) {
+        // TODO don't search for the field twice, once for the type and once for the ptr
+        auto type = class_type->get_field(field.name).type;
+        auto ptr = class_type->get_field(variable.ptr, field.name);
+        call_destructor({ ptr, type });
+    }
+
+    call_function(name, { variable.ptr });
+}
+
+std::vector<FieldConstructorArgs> &ModuleCompiler::get_fields_args(const std::string &class_name) {
+    auto it = fields_args.find(class_name);
+    if (it == fields_args.end())
+        report_internal_error("Class " + class_name + " is not defined yet");
+    return it->second;
 }
 
 }

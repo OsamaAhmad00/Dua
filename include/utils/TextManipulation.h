@@ -20,5 +20,6 @@ TestFile split_cases(const std::string& str);
 std::pair<std::string, std::string> split_header_body(const std::string& str);
 std::string extract_header_element(const std::string& str, const std::string& name);
 bool header_has_flag(const std::string& str, const std::string& flag);
+bool ends_with(std::string const & value, std::string const & ending);
 
 }

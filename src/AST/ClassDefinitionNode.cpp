@@ -1,5 +1,7 @@
 #include "AST/class/ClassDefinitionNode.h"
 #include "AST/variable/LocalVariableDefinitionNode.h"
+#include "AST/function/FunctionDefinitionNode.h"
+#include "utils/TextManipulation.h"
 
 namespace dua
 {
@@ -17,6 +19,9 @@ size_t put_fields_first(std::vector<ASTNode*>& members)
 
 llvm::Value *ClassDefinitionNode::eval()
 {
+    if (result != nullptr)
+        return result;
+
     if (classes().find(name) == classes().end())
         report_internal_error("Definition of the class " + name + " before registering it");
 
@@ -53,12 +58,21 @@ llvm::Value *ClassDefinitionNode::eval()
     current_class()->setBody(body, false);
 
     // Now evaluate methods
-    for (size_t i = split_point; i < members.size(); i++)
+    for (size_t i = split_point; i < members.size(); i++) {
+        auto& func_name = ((FunctionDefinitionNode*)members[i])->name;
+        if (ends_with(func_name, ".constructor")) {
+            compiler->push_deferred_node(members[i]);
+            continue;
+        }
         members[i]->eval();
+    }
+
+    compiler->add_fields_constructor_args(name, std::move(fields_args));
 
     current_class() = old_class;
     current_function() = old_function;
-    return none_value();
+
+    return result = none_value();
 }
 
 ClassDefinitionNode::~ClassDefinitionNode()

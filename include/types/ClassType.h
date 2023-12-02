@@ -42,6 +42,12 @@ public:
 
     std::string to_string() const override { return name; }
 
+    ClassField& get_field(const std::string& name);
+
+    llvm::Value* get_field(llvm::Value* instance, const std::string& name);
+
+    llvm::Value* get_field(llvm::Value* instance, size_t index);
+
     ~ClassType() override = default;
 };
 

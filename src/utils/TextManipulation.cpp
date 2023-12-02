@@ -110,4 +110,10 @@ bool header_has_flag(const std::string& str, const std::string& flag)
     return boost::regex_search(str, match, name_regex);
 }
 
+bool ends_with(std::string const & value, std::string const & ending)
+{
+    if (ending.size() > value.size()) return false;
+    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+}
+
 }

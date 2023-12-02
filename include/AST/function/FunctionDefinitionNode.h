@@ -7,12 +7,13 @@ namespace dua
 
 class FunctionDefinitionNode : public ASTNode
 {
-    std::string name;
     ASTNode* body;  // Can be nullptr in case of declaration
 
     llvm::Function* define_function();
 
 public:
+
+    std::string name;
 
     FunctionDefinitionNode(ModuleCompiler* compiler, std::string name, ASTNode* body);
 

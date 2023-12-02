@@ -7,7 +7,7 @@ void print(int num) { printf("%d", num); }
 
 class X
 {
-    void constructor(int a, int b, int c)
+    constructor(int a, int b, int c)
     {
         printf("a%db%dc%d", a, b, c);
     }
@@ -38,12 +38,12 @@ int main()
 class X
 {
     int x = 3;
-    void constructor()
+    constructor()
     {
-        x = 5;
+        self.x = 5;
     }
 
-    void destructor()
+    destructor()
     {
         printf("X");
     }
@@ -52,7 +52,7 @@ class X
 class Y
 {
     int z;
-    void constructor(int a, int b) { }
+    constructor(int a, int b) { }
 
     // No destructor is defined
 }
@@ -62,4 +62,105 @@ int main()
     X x;
     print(x.x);
     Y y(3, 4);
+}
+
+
+// Case Nested constructor calls
+// Outputs "562567"
+
+class X
+{
+    Y y;
+
+    constructor(int i, int j) : y()
+    {
+        print(i);
+        print(j);
+    }
+
+}
+
+class Y
+{
+    constructor()
+    {
+        print(5);
+    }
+}
+
+class Z
+{
+    X x;
+    Y y;
+
+    constructor(int i, int j) : x(i, 2), y()
+    {
+        print(i);
+        print(j);
+    }
+}
+
+int main()
+{
+    Z z(6, 7);
+}
+
+
+// Case Nested destructor calls
+// Outputs "121123121"
+
+class X
+{
+    Y y;
+
+    destructor()
+    {
+        print(3);
+    }
+}
+
+class Y
+{
+    Z z;
+
+    destructor()
+    {
+        print(2);
+    }
+}
+
+class Z
+{
+    destructor()
+    {
+        print(1);
+    }
+}
+
+int main()
+{
+    { { Y y; } { Z z; } }
+
+    { X x; }
+    { Y y; }
+    { Z z; }
+}
+
+
+// Case Constructor with primitive types
+// Outputs "12"
+
+class X
+{
+    int i;
+    int j;
+
+    constructor(int _i, int _j) : i(_i), j(_j) {}
+}
+
+int main()
+{
+    X x(1, 2);
+    print(x.i);
+    print(x.j);
 }

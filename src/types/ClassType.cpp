@@ -31,4 +31,28 @@ std::vector<ClassField> &ClassType::fields() {
     return compiler->get_class_fields()[name];
 }
 
+ClassField& ClassType::get_field(const std::string &name) {
+    for (auto & field : fields()) {
+        if (field.name == name)
+            return field;
+    }
+    report_error("Class " + this->name + " doesn't contain a member with the name " + name);
+
+    // Unreachable
+    return fields().front();
+}
+
+llvm::Value *ClassType::get_field(llvm::Value *instance, const std::string &name) {
+    for (size_t i = 0; i < fields().size(); i++) {
+        if (fields()[i].name == name)
+            return get_field(instance, i);
+    }
+    report_error("Class " + this->name + " doesn't contain a member with the name " + name);
+    return nullptr;
+}
+
+llvm::Value *ClassType::get_field(llvm::Value *instance, size_t index) {
+    return compiler->get_builder()->CreateStructGEP(llvm_type(), instance, index, fields()[index].name);
+}
+
 }

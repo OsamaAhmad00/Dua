@@ -45,7 +45,7 @@ llvm::GlobalVariable* GlobalVariableDefinitionNode::eval()
     for (int i = 0; i < args.size(); i++)
         llvm_args[i] = args[i]->eval();
 
-    compiler->call_method_if_exists({ variable, type }, "constructor", std::move(llvm_args));
+    compiler->call_constructor({ variable, type }, std::move(llvm_args));
 
     // Restore the old position back
     builder().restoreIP(old_position);

@@ -20,7 +20,7 @@ llvm::Value *MallocNode::eval()
     std::vector<llvm::Value*> llvm_args(args.size());
     for (int i = 0; i < args.size(); i++)
         llvm_args[i] = args[i]->eval();
-    compiler->call_method_if_exists({ instance, get_element_type() }, "constructor", std::move(llvm_args));
+    compiler->call_constructor({ instance, get_element_type() }, std::move(llvm_args));
 
     return instance;
 }

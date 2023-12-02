@@ -91,6 +91,9 @@ TypeOf: 'typeof';
 
 TypeName: 'typename';
 
+Constructor: 'constructor';
+Destructor: 'destructor';
+
 New: 'new';
 Delete: 'delete';
 

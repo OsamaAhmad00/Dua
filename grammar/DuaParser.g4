@@ -78,6 +78,32 @@ class_elements
 class_element
     : variable_decl_or_def
     | function_decl_or_def
+    | constructor
+    | destructor
+    ;
+
+constructor
+    : { assistant.prepare_constructor(); } Constructor '(' param_list ')' { assistant.push_var_arg(false); }
+        { assistant.create_function_declaration(); } optional_fields_constructor_params function_body
+    ;
+
+optional_fields_constructor_params
+    : ':' fields_constructor_params
+    | /* empty */
+    ;
+
+fields_constructor_params
+    : fields_constructor_params ',' field_constructor_params { assistant.add_field_constructor_args(); }
+    | field_constructor_params { assistant.add_field_constructor_args(); }
+    ;
+
+field_constructor_params
+    : identifier '(' arg_list ')'
+    ;
+
+destructor
+    : { assistant.prepare_destructor(); }  Destructor '(' ')' { assistant.push_var_arg(false); }
+        { assistant.enter_arg_list(); assistant.create_function_declaration(); } function_body
     ;
 
 variable_decl_or_def
@@ -101,10 +127,11 @@ variable_decl_no_simicolon
     : type identifier { assistant.create_variable_declaration(); }
     ;
 
+// Every definition takes 4 arguments: type, name, expr, args. Some of them may be empty (null or empty args)
 variable_def_no_simicolon
     : type identifier '=' expression { assistant.enter_arg_list(); assistant.create_variable_definition(); }
     | Var  identifier '=' expression { assistant.enter_arg_list(); assistant.create_inferred_definition(); }
-    | class_type identifier { assistant.push_null_node(); } optional_constructor_args { assistant.create_variable_definition(); }
+    | type identifier { assistant.push_null_node(); } optional_constructor_args { assistant.create_variable_definition(); }
     ;
 
 optional_constructor_args
@@ -122,8 +149,12 @@ function_declaration
     ;
 
 function_definition
-    : function_decl_no_simicolon block_statement { assistant.create_function_definition_block_body(); }
-    | function_decl_no_simicolon '=' expression ';' { assistant.create_function_definition_expression_body(); }
+    : function_decl_no_simicolon function_body
+    ;
+
+function_body
+    : block_statement { assistant.create_function_definition_block_body(); }
+    | '=' expression ';' { assistant.create_function_definition_expression_body(); }
     ;
 
 param_list @init { assistant.enter_arg_list(); }

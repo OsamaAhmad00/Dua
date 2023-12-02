@@ -45,7 +45,7 @@ int main()
     int d = 5;
     {
         // Shadows both d's
-        int d = 10;
+        int d(10);
         result = d;
     }
 
@@ -110,7 +110,7 @@ int main()
 {
     int x = 1;
     var p = &x;
-    var pp = &p;
+    var pp(&p);
     var ppp = &pp;
 
     print(x);
