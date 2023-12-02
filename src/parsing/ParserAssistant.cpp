@@ -556,7 +556,7 @@ void ParserAssistant::create_class_type() {
 }
 
 void ParserAssistant::create_field_access() {
-    push_node<ClassFieldNode>(pop_node_as<LValueNode>(), pop_str());
+    push_node<ClassFieldNode>(pop_node(), pop_str());
 }
 
 void ParserAssistant::create_constructor_call()
@@ -637,5 +637,45 @@ void ParserAssistant::create_function_type()
     Type* return_type = pop_type();
     push_type<FunctionType>(return_type, std::move(param_types), is_var_arg);
 }
+
+void ParserAssistant::create_malloc() {
+    if (!declared_malloc)
+    {
+        auto type = FunctionType {
+            compiler,
+            compiler->create_type<PointerType>(compiler->create_type<I64Type>()),
+            std::vector<Type*>{ compiler->create_type<I64Type>() }
+        };
+
+        compiler->register_function("malloc", {std::move(type), { "size" }});
+
+        declared_malloc = true;
+    }
+    push_node<MallocNode>(pop_type(), pop_args());
+}
+
+void ParserAssistant::create_free()
+{
+    if (!declared_free)
+    {
+        auto type = FunctionType {
+                compiler,
+                compiler->create_type<VoidType>(),
+                std::vector<Type*>{ compiler->create_type<PointerType>(compiler->create_type<I64Type>()) }
+        };
+
+        compiler->register_function("free", {std::move(type), { "size" }});
+
+        declared_free = true;
+    }
+    push_node<FreeNode>(pop_node());
+    inc_statements();
+}
+
+void ParserAssistant::create_pointer_field_access() {
+
+    push_node<ClassFieldNode>(pop_node(), pop_str());
+}
+
 
 }

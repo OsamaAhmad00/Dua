@@ -13,6 +13,8 @@
 #include "AST/IfNode.h"
 #include "AST/SequentialEvalNode.h"
 #include "AST/SizeOfNode.h"
+#include "AST/DeferredActionNode.h"
+#include "AST/FreeNode.h"
 
 #include "AST/class/ClassDefinitionNode.h"
 
@@ -47,6 +49,7 @@
 #include "AST/lvalue/DereferenceNode.h"
 #include "AST/lvalue/ClassFieldNode.h"
 #include "AST/lvalue/LoadedLValueNode.h"
+#include "AST/lvalue/MallocNode.h"
 
 #include "types/IntegerTypes.h"
 #include "types/FloatTypes.h"
@@ -98,6 +101,10 @@ class ParserAssistant
     //  or arguments in function expressions.
     std::vector<size_t> argument_counters;
     std::vector<bool> var_arg_stack;
+
+    // Flags
+    bool declared_malloc = false;
+    bool declared_free = false;
 
     std::string pop_str() {
         auto result = std::move(strings.back());
@@ -192,6 +199,9 @@ public:
     void create_typename_type();
     void create_typename_expression();
     void create_function_type();
+    void create_malloc();
+    void create_free();
+    void create_pointer_field_access();
 
     template<typename T>
     void create_unary_expr() {

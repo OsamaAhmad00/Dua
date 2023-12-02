@@ -163,6 +163,7 @@ statement
     | expression_statement
     | variable_decl_or_def
     | return_statement
+    | Delete expression ';' { assistant.create_free(); }
     | Continue { assistant.create_continue(); }
     | Break { assistant.create_break(); }
     | ';'  { assistant.create_empty_statement(); }
@@ -177,6 +178,7 @@ expression
     | when_expression
     | cast_expression
     | '(' expression ')'
+    | New type optional_constructor_args       { assistant.create_malloc(); }
     | SizeOf '(' type ')'         { assistant.create_size_of_type();        }
     | SizeOf '(' expression ')'   { assistant.create_size_of_expression();  }
     | TypeName '(' type ')'       { assistant.create_typename_type();       }
@@ -341,6 +343,7 @@ lvalue
     | lvalue '[' expression ']' { assistant.create_array_indexing(); }
     | '*' expression { assistant.create_dereference(); }
     | lvalue '.' identifier { assistant.create_field_access(); }
+    | lvalue { assistant.create_loaded_lvalue(); } '->' identifier { assistant.create_field_access(); }
     ;
 
 // A convinience production that pushes the identifier's text.

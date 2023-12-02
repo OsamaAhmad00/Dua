@@ -9,11 +9,11 @@ class ClassFieldNode : public VariableNode
 {
     llvm::Value* instance_eval = nullptr;
 
-    LValueNode* instance;
+    ASTNode* instance;
 
 public:
 
-    ClassFieldNode(ModuleCompiler* compiler, LValueNode* instance, std::string field_name)
+    ClassFieldNode(ModuleCompiler* compiler, ASTNode* instance, std::string field_name)
             : VariableNode(compiler, std::move(field_name)), instance(instance) { }
 
     llvm::Value* eval() override;

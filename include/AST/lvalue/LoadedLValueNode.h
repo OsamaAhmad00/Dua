@@ -7,7 +7,6 @@ namespace dua
 
 struct LoadedLValueNode : public ASTNode
 {
-
     LValueNode* lvalue;
 
     LoadedLValueNode(ModuleCompiler* compiler, LValueNode* lvalue)

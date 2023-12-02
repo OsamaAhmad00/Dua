@@ -91,6 +91,9 @@ TypeOf: 'typeof';
 
 TypeName: 'typename';
 
+New: 'new';
+Delete: 'delete';
+
 Null: 'null';
 True: 'true';
 False: 'false';
