@@ -37,9 +37,10 @@ llvm::Value *ClassDefinitionNode::eval()
     //  the order of definition in the class
     size_t split_point = put_fields_first(members);
 
-    auto &fields = compiler->get_class(name)->fields();
-    if (!fields.empty())
+    if (current_class()->isSized())
         report_error("Redefinition of a class");
+
+    auto &fields = compiler->get_class(name)->fields();
     fields.reserve(split_point);
 
     // Evaluate fields first

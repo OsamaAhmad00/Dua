@@ -51,7 +51,7 @@ void FileTestCasesRunner::run()
             std::vector<std::string> a = { "-o", exe_name };
             if (should_panic) {
                 EXPECT_ANY_THROW(run_clang_on_llvm_ir(n, c, a)) << case_description;
-                return;
+                continue;
             } else run_clang_on_llvm_ir(n, c, a);
         } catch (...) {
             exit(-1);

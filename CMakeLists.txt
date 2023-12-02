@@ -99,11 +99,12 @@ set(DUA_SOURCES
     src/AST/ForNode.cpp
     src/AST/FunctionCallNode.cpp
     src/AST/FunctionDefinitionNode.cpp
-        src/AST/GlobalVariableDefinitionNode.cpp
+    src/AST/GlobalVariableDefinitionNode.cpp
     src/AST/IfNode.cpp
     src/AST/LoadedLValueNode.cpp
     src/AST/LocalVariableDefinitionNode.cpp
-        src/AST/NumericalUnaryExpressionNodes.cpp
+    src/AST/MallocNode.cpp
+    src/AST/NumericalUnaryExpressionNodes.cpp
     src/AST/PostfixAdditionExpressionNode.cpp
     src/AST/ReturnNode.cpp
     src/AST/StringValueNode.cpp

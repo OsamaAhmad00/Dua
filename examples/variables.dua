@@ -98,3 +98,24 @@ int main()
         int d;
     }
 }
+
+
+// CASE Addresses
+// Outputs "123"
+
+int printf(str message, ...);
+void print(int num) { printf("%d", num); }
+
+int main()
+{
+    int x = 1;
+    var p = &x;
+    var pp = &p;
+    var ppp = &pp;
+
+    print(x);
+    *p = 2;
+    print(**pp);
+    ****&ppp = 3;
+    print(*p);
+}

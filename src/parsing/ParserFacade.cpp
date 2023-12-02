@@ -5,6 +5,14 @@
 namespace dua
 {
 
+class ThrowExceptionErrorStrategy : public antlr4::DefaultErrorStrategy
+{
+    void reportError(antlr4::Parser *recognizer, const antlr4::RecognitionException &e) override {
+        DefaultErrorStrategy::reportError(recognizer, e);
+        report_error("Parsing error");
+    }
+};
+
 TranslationUnitNode* ParserFacade::parse(const std::string& str) const
 {
     antlr4::ANTLRInputStream input(str);
@@ -17,6 +25,8 @@ TranslationUnitNode* ParserFacade::parse(const std::string& str) const
 
     // Create a parser from the token stream
     DuaParser parser(&tokens);
+    auto handler = std::make_shared<ThrowExceptionErrorStrategy>();
+    parser.setErrorHandler(handler);
     parser.set_module_compiler(&module_compiler);
 
     return parser.parse();
