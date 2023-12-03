@@ -2,17 +2,12 @@
 #include <utils/termcolor.hpp>
 #include <iostream>
 #include <cstring>
+#include <utils/TextManipulation.h>
 
 using namespace dua;
 
-bool is_dua_file(const std::string& str)
-{
-    size_t n = str.size();
-    return n > 4  // ".dua"
-        && str[n-4] == '.'
-        && str[n-3] == 'd'
-        && str[n-2] == 'u'
-        && str[n-1] == 'a';
+bool is_dua_file(const std::string& str) {
+    return ends_with(str, ".dua");
 }
 
 int main(int argc, char* argv[])
