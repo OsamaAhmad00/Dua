@@ -63,3 +63,29 @@ int main()
     print(sizeof(Y));
     print(sizeof(y));
 }
+
+
+// Case Packed class
+// Outputs "2017"
+
+class Unpacked
+{
+    int a;
+    int b;
+    long c;
+    byte d;
+}
+
+class Packed packed
+{
+    int a;
+    int b;
+    long c;
+    byte d;
+}
+
+int main()
+{
+    print(sizeof(Unpacked));
+    print(sizeof(Packed));
+}

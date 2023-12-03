@@ -76,7 +76,6 @@ void FileTestCasesRunner::run()
         if (!expected_output_is_empty) {
             EXPECT_EQ(expected_output, execution.std_out) << case_description;
         }
-
     }
 }
 

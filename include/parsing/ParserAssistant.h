@@ -143,6 +143,9 @@ class ParserAssistant
 
 public:
 
+    // Public flags
+    bool is_packed = false;
+
     void push_str(std::string str) {
         strings.push_back(std::move(str));
     }

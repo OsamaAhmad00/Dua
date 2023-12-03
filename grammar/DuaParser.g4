@@ -60,9 +60,14 @@ class_decl_no_semicolon
     ;
 
 class_definition
-    : class_decl_no_semicolon
+    : class_decl_no_semicolon optional_packed
        scope_begin { assistant.start_class_definition(); }
        class_elements_or_none scope_end { assistant.create_class(); }
+    ;
+
+optional_packed
+    : Packed        { assistant.is_packed = true;  }
+    | /* empty */   { assistant.is_packed = false; }
     ;
 
 class_elements_or_none

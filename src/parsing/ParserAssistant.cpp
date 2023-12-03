@@ -544,7 +544,7 @@ void ParserAssistant::create_class()
     for (size_t i = 0; i < n; i++)
         members[n - i - 1] = pop_node();
 
-    push_node<ClassDefinitionNode>(pop_str(), std::move(members), std::move(fields_args));
+    push_node<ClassDefinitionNode>(pop_str(), std::move(members), std::move(fields_args), is_packed);
 
     compiler->current_class = nullptr;
 

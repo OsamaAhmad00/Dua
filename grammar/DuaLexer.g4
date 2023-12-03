@@ -91,6 +91,8 @@ TypeOf: 'typeof';
 
 TypeName: 'typename';
 
+Packed: 'packed';
+
 Constructor: 'constructor';
 Destructor: 'destructor';
 
