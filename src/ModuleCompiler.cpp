@@ -347,13 +347,13 @@ void ModuleCompiler::call_destructor(const Variable &variable)
         return;
 
     // Call the destructors of fields first
-    // TODO enforce an order on the destruction
-    for (const auto& field : class_type->fields()) {
+    // Fields are destructed in the reverse order of definition.
+    std::for_each(class_type->fields().rbegin(), class_type->fields().rend(), [&](auto& field) {
         // TODO don't search for the field twice, once for the type and once for the ptr
         auto type = class_type->get_field(field.name).type;
         auto ptr = class_type->get_field(variable.ptr, field.name);
         call_destructor({ ptr, type });
-    }
+    });
 
     call_function(name, { variable.ptr });
 }

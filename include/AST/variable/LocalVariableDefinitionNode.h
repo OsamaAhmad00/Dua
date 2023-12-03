@@ -7,6 +7,8 @@ namespace dua
 
 class LocalVariableDefinitionNode : public VariableDefinitionNode
 {
+    llvm::Constant* get_constant(llvm::Value* value, llvm::Type* target_type, const std::string& field_name);
+
 public:
 
     LocalVariableDefinitionNode(ModuleCompiler* compiler, std::string name,

@@ -73,21 +73,10 @@ llvm::Function* FunctionDefinitionNode::define_function()
 
     std::string constructor_suffix = ".constructor";
     if (ends_with(name, constructor_suffix)) {
-        // This is a constructor call
+        // This is a constructor call.
         auto class_name = name.substr(0, name.size() - constructor_suffix.size());
         auto class_type = compiler->get_class(class_name);
-        // Call the constructors of the fields first, then the constructor of this class
-        // Constructors are called in the order of definition.
-        auto& class_fields_args = compiler->get_fields_args(class_type->name);
-        for (const auto& field : class_fields_args) {
-            // TODO don't search for the field twice, once for the type and once for the ptr
-            auto type = class_type->get_field(field.name).type;
-            auto ptr = class_type->get_field(symbol_table().get("self").ptr, field.name);
-            std::vector<llvm::Value*> args(field.args.size());
-            for (size_t j = 0; j < args.size(); j++)
-                args[j] = field.args[j]->eval();
-            compiler->call_constructor({ ptr, type }, std::move(args));
-        }
+        initialize_constructor(class_type);
     }
 
     body->eval();
@@ -113,6 +102,38 @@ llvm::Function* FunctionDefinitionNode::define_function()
     current_function() = old_function;
 
     return function;
+}
+
+void FunctionDefinitionNode::initialize_constructor(ClassType *class_type)
+{
+    // Call the constructors of the fields first, then the constructor of this class.
+    // Constructors are called in the order of definition of fields in the class.
+    auto& class_fields_args = compiler->get_fields_args(class_type->name);
+
+    for (auto& field : class_type->fields())
+    {
+        bool found = false;
+        auto type = class_type->get_field(field.name).type;
+        auto ptr = class_type->get_field(symbol_table().get("self").ptr, field.name);
+        std::vector<llvm::Value*> args;
+
+        // Check if there exists arguments passed to the constructor first
+        for (auto& field_arg : class_fields_args) {
+            if (field.name == field_arg.name) {
+                found = true;
+                args.resize(field_arg.args.size());
+                for (size_t j = 0; j < args.size(); j++)
+                    args[j] = field_arg.args[j]->eval();
+                break;
+            }
+        }
+
+        // If not, check if there is a default initializer list
+        if (!found)
+            args.insert(args.end(), field.default_args.begin(), field.default_args.end());
+
+        compiler->call_constructor({ ptr, type }, std::move(args));
+    }
 }
 
 FunctionDefinitionNode::~FunctionDefinitionNode()

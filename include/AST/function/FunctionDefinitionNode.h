@@ -11,6 +11,8 @@ class FunctionDefinitionNode : public ASTNode
 
     llvm::Function* define_function();
 
+    void initialize_constructor(ClassType* class_type);
+
 public:
 
     std::string name;

@@ -12,6 +12,9 @@ llvm::GlobalVariable* GlobalVariableDefinitionNode::eval()
     if (result != nullptr)
         return result;
 
+    if (initializer != nullptr && !args.empty())
+        report_error("Can't have both an initializer and an initializer list (in " + name + ")");
+
     module().getOrInsertGlobal(name, type->llvm_type());
     llvm::GlobalVariable* variable = module().getGlobalVariable(name);
 
@@ -20,7 +23,7 @@ llvm::GlobalVariable* GlobalVariableDefinitionNode::eval()
     auto old_position = builder().saveIP();
     builder().SetInsertPoint(&module().getFunction(".dua.init")->getEntryBlock());
 
-    llvm::Constant* constant = type->default_value();
+    llvm::Constant* constant = nullptr;
 
     if (initializer != nullptr)
     {
@@ -40,17 +43,19 @@ llvm::GlobalVariable* GlobalVariableDefinitionNode::eval()
             constant = casted;
         }
     }
+    else if (!args.empty())
+    {
+        std::vector<llvm::Value*> llvm_args(args.size());
+        for (int i = 0; i < args.size(); i++)
+            llvm_args[i] = args[i]->eval();
 
-    std::vector<llvm::Value*> llvm_args(args.size());
-    for (int i = 0; i < args.size(); i++)
-        llvm_args[i] = args[i]->eval();
-
-    compiler->call_constructor({ variable, type }, std::move(llvm_args));
+        compiler->call_constructor({ variable, type }, std::move(llvm_args));
+    }
 
     // Restore the old position back
     builder().restoreIP(old_position);
 
-    variable->setInitializer(constant);
+    variable->setInitializer(constant ? constant : type->default_value());
     variable->setConstant(false);
 
     symbol_table().insert_global(name, { variable, type });

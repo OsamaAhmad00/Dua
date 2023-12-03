@@ -11,6 +11,7 @@ struct ClassField
     std::string name;
     Type* type;
     llvm::Constant* default_value;
+    std::vector<llvm::Constant*> default_args;
 };
 
 class ClassType : public Type

@@ -10,11 +10,14 @@ size_t put_fields_first(std::vector<ASTNode*>& members)
 {
     // Returns the split point between fields and methods,
     //  pointing to the first method in the list.
-    size_t result = 0;
-    for (size_t i = members.size() - 1; i >= result && i != (size_t)-1; i--)
+    // Fields are put at the beginning, in order of definition
+    size_t result = -1;
+    for (size_t i = 0; i < members.size(); i++) {
+        if (i == result) continue;
         if (dynamic_cast<LocalVariableDefinitionNode*>(members[i]) != nullptr)
-            std::swap(members[i++], members[result++]);
-    return result;
+            std::swap(members[i--], members[++result]);
+    }
+    return result + 1;
 }
 
 llvm::Value *ClassDefinitionNode::eval()

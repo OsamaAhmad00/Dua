@@ -164,3 +164,112 @@ int main()
     print(x.i);
     print(x.j);
 }
+
+
+// Case Initializing a member class with a default value
+// Outputs "123"
+
+class X
+{
+    Y y(1, 2, 3);
+}
+
+class Y
+{
+    constructor(int i, int j, int k)
+    {
+        print(i);
+        print(j);
+        print(k);
+    }
+}
+
+int main()
+{
+    X x;
+}
+
+
+// Case Initializing a member class, both with a default value, and in the constructor
+// Outputs "343"
+
+class X
+{
+    int x = 3;
+    Y y(1, 2);
+
+    constructor() : y(3, 4) { }
+}
+
+class Y
+{
+    constructor(int i, int j) { print(i); print(j); }
+}
+
+int main()
+{
+    X x;
+    print(x.x);
+}
+
+
+// Case Order of construction
+// Outputs "123"
+
+class X
+{
+    A a;
+    B b;
+    C c;
+}
+
+class A
+{
+    constructor() { print(1); }
+}
+
+class B
+{
+    constructor() { print(2); }
+}
+
+class C
+{
+    constructor() { print(3); }
+}
+
+int main()
+{
+    X x;
+}
+
+
+// Case Order of destruction
+// Outputs "321"
+
+class X
+{
+    A a;
+    B b;
+    C c;
+}
+
+class A
+{
+    destructor() { print(1); }
+}
+
+class B
+{
+    destructor() { print(2); }
+}
+
+class C
+{
+    destructor() { print(3); }
+}
+
+int main()
+{
+    X x;
+}

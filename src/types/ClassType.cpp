@@ -12,10 +12,14 @@ ClassType::ClassType(ModuleCompiler *compiler, std::string name, std::vector<Cla
     compiler->get_class_fields()[name] = std::move(fields);
 }
 
-llvm::Constant *ClassType::default_value() {
+llvm::Constant *ClassType::default_value()
+{
     std::vector<llvm::Constant*> initializers(fields().size());
-    for (int i = 0 ; i < initializers.size(); i++)
+
+    for (int i = 0 ; i < initializers.size(); i++) {
         initializers[i] = fields()[i].default_value;
+    }
+
     return llvm::ConstantStruct::get(llvm_type(), std::move(initializers));
 }
 
