@@ -24,7 +24,7 @@ static ClassType* get_class_from_ptr(ASTNode* node)
 llvm::Value* ClassFieldNode::eval()
 {
     auto full_name = get_full_name();
-    if (compiler->has_function(full_name))
+    if (name_resolver().has_function(full_name))
         return module().getFunction(full_name);
 
     auto class_type = get_class_from_ptr(instance);
@@ -36,8 +36,8 @@ Type* ClassFieldNode::compute_type()
     delete type;
     auto full_name = get_full_name();
     Type* t;
-    if (compiler->has_function(full_name))
-        t = compiler->get_function(full_name).type.clone();
+    if (name_resolver().has_function(full_name))
+        t = name_resolver().get_function(full_name).type.clone();
     else {
         auto class_type = get_class_from_ptr(instance);
         t = class_type->get_field(name).type->clone();
@@ -58,7 +58,7 @@ std::string ClassFieldNode::get_full_name() const
 }
 
 bool ClassFieldNode::is_function() const {
-    return compiler->has_function(get_full_name());
+    return name_resolver().has_function(get_full_name());
 }
 
 }

@@ -6,10 +6,10 @@ namespace dua
 {
 
 ClassType::ClassType(ModuleCompiler *compiler, std::string name, std::vector<ClassField> fields)
-        : name(std::move(name))
+        : name(name)
 {
     this->compiler = compiler;
-    compiler->get_class_fields()[name] = std::move(fields);
+    compiler->name_resolver.class_fields[std::move(name)] = std::move(fields);
 }
 
 llvm::Constant *ClassType::default_value()
@@ -32,7 +32,7 @@ ClassType *ClassType::clone() {
 }
 
 std::vector<ClassField> &ClassType::fields() {
-    return compiler->get_class_fields()[name];
+    return compiler->name_resolver.class_fields[name];
 }
 
 ClassField& ClassType::get_field(const std::string &name) {

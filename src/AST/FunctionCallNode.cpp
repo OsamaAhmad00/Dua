@@ -42,7 +42,7 @@ llvm::CallInst* FunctionCallNode::eval()
     if (is_method)
         llvm_args[0] = field->get_instance();
 
-    return compiler->call_function(func->eval(), *get_function_type(func), llvm_args);
+    return name_resolver().call_function(func->eval(), *get_function_type(func), llvm_args);
 }
 
 Type *FunctionCallNode::compute_type() {

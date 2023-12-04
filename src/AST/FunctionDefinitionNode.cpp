@@ -28,7 +28,7 @@ llvm::Function *FunctionDefinitionNode::eval()
 
 llvm::Function* FunctionDefinitionNode::define_function()
 {
-    auto& info = compiler->get_function(name);
+    auto& info = name_resolver().get_function(name);
     llvm::Function* function = module().getFunction(name);
 
     if (!function)
@@ -42,17 +42,17 @@ llvm::Function* FunctionDefinitionNode::define_function()
 
     if (current_class() != nullptr) {
         // class fields
-        compiler->push_scope();
-        auto& fields = compiler->get_class(current_class()->getName().str())->fields();
+        name_resolver().push_scope();
+        auto& fields = name_resolver().get_class(current_class()->getName().str())->fields();
         auto self = function->args().begin();
         for (size_t i = 0; i < fields.size(); i++) {
             auto ptr = builder().CreateStructGEP(current_class(), self, i, fields[i].name);
-            symbol_table().insert(fields[i].name, { ptr, fields[i].type });
+            name_resolver().symbol_table.insert(fields[i].name, { ptr, fields[i].type });
         }
     }
 
     // local variables
-    compiler->push_scope();
+    name_resolver().push_scope();
 
     size_t i = 0;
     if (!info.param_names.empty() && info.param_names[0] == "self") {
@@ -62,7 +62,7 @@ llvm::Function* FunctionDefinitionNode::define_function()
         //  on the stack would have a type of class** instead of class*.
         i++;
         auto type = dynamic_cast<PointerType*>(info.type.param_types[0])->get_element_type();
-        symbol_table().insert("self", { function->args().begin(), type });
+        name_resolver().symbol_table.insert("self", { function->args().begin(), type });
     }
 
     for (; i < info.param_names.size(); i++) {
@@ -75,18 +75,18 @@ llvm::Function* FunctionDefinitionNode::define_function()
     if (ends_with(name, constructor_suffix)) {
         // This is a constructor call.
         auto class_name = name.substr(0, name.size() - constructor_suffix.size());
-        auto class_type = compiler->get_class(class_name);
+        auto class_type = name_resolver().get_class(class_name);
         initialize_constructor(class_type);
     }
 
     body->eval();
 
-    auto scope = compiler->pop_scope();
+    auto scope = name_resolver().pop_scope();
     scope.map.erase("self");
-    compiler->destruct_all_variables(scope);
+    name_resolver().destruct_all_variables(scope);
 
     if (current_class() != nullptr)
-        compiler->pop_scope();
+        name_resolver().pop_scope();
 
     if (info.type.return_type->llvm_type() == builder().getVoidTy())
         builder().CreateRetVoid();
@@ -108,13 +108,13 @@ void FunctionDefinitionNode::initialize_constructor(ClassType *class_type)
 {
     // Call the constructors of the fields first, then the constructor of this class.
     // Constructors are called in the order of definition of fields in the class.
-    auto& class_fields_args = compiler->get_fields_args(class_type->name);
+    auto& class_fields_args = name_resolver().get_fields_args(class_type->name);
 
     for (auto& field : class_type->fields())
     {
         bool found = false;
         auto type = class_type->get_field(field.name).type;
-        auto ptr = class_type->get_field(symbol_table().get("self").ptr, field.name);
+        auto ptr = class_type->get_field(name_resolver().symbol_table.get("self").ptr, field.name);
         std::vector<llvm::Value*> args;
 
         // Check if there exists arguments passed to the constructor first
@@ -132,7 +132,7 @@ void FunctionDefinitionNode::initialize_constructor(ClassType *class_type)
         if (!found)
             args.insert(args.end(), field.default_args.begin(), field.default_args.end());
 
-        compiler->call_constructor({ ptr, type }, std::move(args));
+        name_resolver().call_constructor({ ptr, type }, std::move(args));
     }
 }
 

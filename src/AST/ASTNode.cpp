@@ -18,8 +18,8 @@ llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, Type* 
         builder().CreateStore(init, instance);
     }
     Variable variable = { instance, type };
-    symbol_table().insert(name, variable);
-    compiler->call_constructor(variable, std::move(args));
+    name_resolver().symbol_table.insert(name, variable);
+    name_resolver().call_constructor(variable, std::move(args));
     return instance;
 }
 

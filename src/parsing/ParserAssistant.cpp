@@ -47,7 +47,7 @@ void ParserAssistant::finish_parsing()
 
 void ParserAssistant::create_missing_methods()
 {
-    for (auto& cls : compiler->classes) {
+    for (auto& cls : compiler->name_resolver.classes) {
         create_empty_method_if_doesnt_exist(cls.second, "constructor");
         create_empty_method_if_doesnt_exist(cls.second, "destructor");
     }
@@ -57,7 +57,7 @@ void ParserAssistant::create_empty_method_if_doesnt_exist(ClassType* cls, std::s
 {
     name = cls->name + "." + name;
 
-    if (compiler->has_function(name))
+    if (compiler->name_resolver.has_function(name))
         return;
 
     auto signature = FunctionInfo {
@@ -70,7 +70,7 @@ void ParserAssistant::create_empty_method_if_doesnt_exist(ClassType* cls, std::s
         { "self" }
     };
 
-    compiler->register_function(name, std::move(signature));
+    compiler->name_resolver.register_function(name, std::move(signature));
 
     compiler->push_deferred_node(
         compiler->create_node<FunctionDefinitionNode>(
@@ -79,7 +79,9 @@ void ParserAssistant::create_empty_method_if_doesnt_exist(ClassType* cls, std::s
     );
 }
 
-void ParserAssistant::reset_symbol_table() { compiler->symbol_table = decltype(compiler->symbol_table){}; }
+void ParserAssistant::reset_symbol_table() {
+    compiler->name_resolver.symbol_table = decltype(compiler->name_resolver.symbol_table){};
+}
 
 std::vector<ASTNode *> ParserAssistant::pop_args()
 {
@@ -94,7 +96,7 @@ void ParserAssistant::create_variable_declaration()
 {
     auto name = pop_str();
     auto type = pop_type();
-    compiler->symbol_table.insert(name, { nullptr, type });
+    compiler->name_resolver.symbol_table.insert(name, { nullptr, type });
     if (is_in_global_scope()) {
         push_node<GlobalVariableDefinitionNode>(std::move(name), type, nullptr);
     } else {
@@ -113,7 +115,7 @@ void ParserAssistant::create_variable_definition()
 
     // A temporary insertion into the symbol table for name resolution
     //  during parsing. The symbol table will be reset at the end.
-    compiler->symbol_table.insert(name, { nullptr, type });
+    compiler->name_resolver.symbol_table.insert(name, { nullptr, type });
 
     if (is_in_global_scope())
         push_node<GlobalVariableDefinitionNode>(std::move(name), type, initializer, std::move(args));
@@ -151,13 +153,13 @@ void ParserAssistant::create_function_declaration()
         info.type.param_types.insert(
         info.type.param_types.begin(),
             compiler->create_type<PointerType>(
-                compiler->classes[class_name]->clone()
+                compiler->name_resolver.classes[class_name]->clone()
             )
         );
         info.param_names.insert(info.param_names.begin(), "self");
     }
 
-    compiler->register_function(name, std::move(info));
+    compiler->name_resolver.register_function(name, std::move(info));
 
     push_node<FunctionDefinitionNode>(std::move(name), nullptr);
 }
@@ -243,13 +245,13 @@ void ParserAssistant::create_if_expression()
 
 void ParserAssistant::enter_scope() {
     statement_counters.push_back(0);
-    compiler->push_scope();
+    compiler->name_resolver.push_scope();
 }
 
 size_t ParserAssistant::leave_scope() {
     size_t result = statement_counters.back();
     statement_counters.pop_back();
-    compiler->pop_scope();
+    compiler->name_resolver.pop_scope();
     return result;
 }
 
@@ -505,13 +507,13 @@ void ParserAssistant::register_class()
 {
     auto& name = strings.back();
 
-    if (compiler->classes.find(name) != compiler->classes.end()) {
+    if (compiler->name_resolver.classes.find(name) != compiler->name_resolver.classes.end()) {
         // No need to register it again
         return;
     }
 
     auto cls = compiler->create_type<ClassType>(name);
-    compiler->classes[name] = cls;
+    compiler->name_resolver.classes[name] = cls;
 
     llvm::StructType::create(compiler->context, name);
 }
@@ -530,8 +532,8 @@ void ParserAssistant::start_class_definition()
         report_error("Can't define a class inside a function");
 
     auto& name = strings.back();
-    compiler->current_class = compiler->get_class(name)->llvm_type();
-    compiler->symbol_table.insert("self", { nullptr, compiler->get_class(name) });
+    compiler->current_class = compiler->name_resolver.get_class(name)->llvm_type();
+    compiler->name_resolver.symbol_table.insert("self", { nullptr, compiler->name_resolver.get_class(name) });
 }
 
 void ParserAssistant::create_class()
@@ -597,7 +599,7 @@ void ParserAssistant::create_typename_type() {
         auto cls = dynamic_cast<ClassType*>(type);
         if (cls == nullptr)
             report_internal_error("sizeof operator called on an invalid type");
-        auto real_type = compiler->symbol_table.get(cls->name).type;
+        auto real_type = compiler->name_resolver.symbol_table.get(cls->name).type;
         push_node<StringValueNode>(real_type->to_string());
     } else {
         push_node<StringValueNode>(type->to_string());
@@ -631,7 +633,7 @@ void ParserAssistant::create_malloc() {
             std::vector<Type*>{ compiler->create_type<I64Type>() }
         };
 
-        compiler->register_function("malloc", {std::move(type), { "size" }});
+        compiler->name_resolver.register_function("malloc", {std::move(type), { "size" }});
 
         declared_malloc = true;
     }
@@ -648,7 +650,7 @@ void ParserAssistant::create_free()
                 std::vector<Type*>{ compiler->create_type<PointerType>(compiler->create_type<I64Type>()) }
         };
 
-        compiler->register_function("free", {std::move(type), { "size" }});
+        compiler->name_resolver.register_function("free", {std::move(type), { "size" }});
 
         declared_free = true;
     }

@@ -49,7 +49,7 @@ llvm::GlobalVariable* GlobalVariableDefinitionNode::eval()
         for (int i = 0; i < args.size(); i++)
             llvm_args[i] = args[i]->eval();
 
-        compiler->call_constructor({ variable, type }, std::move(llvm_args));
+        name_resolver().call_constructor({ variable, type }, std::move(llvm_args));
     }
 
     // Restore the old position back
@@ -58,7 +58,7 @@ llvm::GlobalVariable* GlobalVariableDefinitionNode::eval()
     variable->setInitializer(constant ? constant : type->default_value());
     variable->setConstant(false);
 
-    symbol_table().insert_global(name, { variable, type });
+    name_resolver().symbol_table.insert_global(name, { variable, type });
 
     return result = variable;
 }

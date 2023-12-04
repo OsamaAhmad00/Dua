@@ -6,7 +6,7 @@
 namespace dua
 {
 
-#define STATE_MEMBER_GETTER(NAME) auto& NAME() { return compiler->NAME; }
+#define STATE_MEMBER_GETTER(NAME) auto& NAME() const { return compiler->NAME; }
 
 // Just an indicator that the return
 //  value is not going to be used.
@@ -40,12 +40,10 @@ protected:
     STATE_MEMBER_GETTER(module)
     STATE_MEMBER_GETTER(builder)
     STATE_MEMBER_GETTER(temp_builder)
-    STATE_MEMBER_GETTER(symbol_table)
-    STATE_MEMBER_GETTER(functions)
     STATE_MEMBER_GETTER(current_function)
     STATE_MEMBER_GETTER(current_class)
+    STATE_MEMBER_GETTER(name_resolver)
     STATE_MEMBER_GETTER(string_pool)
-    STATE_MEMBER_GETTER(classes)
     STATE_MEMBER_GETTER(continue_stack)
     STATE_MEMBER_GETTER(break_stack)
 };

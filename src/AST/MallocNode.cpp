@@ -15,12 +15,12 @@ llvm::Value *MallocNode::eval()
     auto alloc_type = get_element_type()->llvm_type();
     auto size = llvm::DataLayout(&module()).getTypeAllocSize(alloc_type);
 
-    auto instance = compiler->call_function("malloc", { builder().getInt64(size) });
+    auto instance = name_resolver().call_function("malloc", { builder().getInt64(size) });
 
     std::vector<llvm::Value*> llvm_args(args.size());
     for (int i = 0; i < args.size(); i++)
         llvm_args[i] = args[i]->eval();
-    compiler->call_constructor({ instance, get_element_type() }, std::move(llvm_args));
+    name_resolver().call_constructor({ instance, get_element_type() }, std::move(llvm_args));
 
     return instance;
 }

@@ -4,33 +4,13 @@
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/LLVMContext.h>
-#include <SymbolTable.hpp>
 #include <types/Type.hpp>
-#include <types/ClassType.hpp>
-#include "types/FunctionType.hpp"
+#include <NameResolver.hpp>
 
 namespace dua
 {
 
 class ASTNode;
-
-struct FieldConstructorArgs
-{
-    std::string name;
-    std::vector<ASTNode*> args;
-};
-
-struct FunctionInfo
-{
-    FunctionType type;
-    std::vector<std::string> param_names;
-};
-
-struct Variable
-{
-    llvm::Value* ptr;
-    Type* type;
-};
 
 class ModuleCompiler
 {
@@ -38,6 +18,8 @@ public:
 
     friend class ASTNode;
     friend class ParserAssistant;
+    friend class NameResolver;
+    friend class ClassType;
 
     ModuleCompiler(const std::string& module_name, const std::string& code);
 
@@ -49,64 +31,40 @@ public:
 
     const std::string& get_result() { return result; }
 
-    ~ModuleCompiler() {
-        for (auto& cls : classes)
-            delete cls.second;
-    }
-
     template <typename T, typename ...Args>
-    T* create_node(Args ...args)
-    {
+    T* create_node(Args ...args) {
         return new T(this, args...);
     }
 
     template <typename T, typename ...Args>
-    T* create_type(Args ...args)
-    {
+    T* create_type(Args ...args) {
         return new T(this, args...);
     }
-
-    void register_function(std::string name, FunctionInfo&& signature);
-    FunctionInfo& get_function(const std::string& name);
 
     llvm::IRBuilder<>* get_builder() { return &builder; }
     llvm::LLVMContext* get_context() { return &context; }
     void push_deferred_node(ASTNode* node) { deferred_nodes.push_back(node); }
-    auto get_class(const std::string& name) { return classes[name]; }
-    auto& get_class_fields() { return class_fields; }
-    void add_fields_constructor_args(std::string class_name, std::vector<FieldConstructorArgs> args);
-    std::vector<FieldConstructorArgs>& get_fields_args(const std::string& class_name);
 
-    bool has_function(const std::string& name) const;
-    void cast_function_args(std::vector<llvm::Value*>& args, const FunctionType& type);
-    llvm::CallInst* call_function(const std::string &name, std::vector<llvm::Value*> args = {});
-    llvm::CallInst* call_function(llvm::Value* ptr, const FunctionType& type, std::vector<llvm::Value*> args = {});
-    void call_method_if_exists(const Variable& variable, const std::string& name, std::vector<llvm::Value*> args = {});
-
-    void call_constructor(const Variable& variable, std::vector<llvm::Value*> args);
-    void call_destructor(const Variable& variable);
-    void destruct_all_variables(const Scope<Variable>& scope);
-
-    void push_scope();
-    Scope<Variable> pop_scope();
-
+    // .dua.init function is a function that gets called before the entry point
+    //  (at the beginning of the entry point), in which initializations and
+    //  deferred nodes get executed.
     void create_dua_init_function();
     void complete_dua_init_function();
 
 private:
 
+    // LLVM API for constructing IR
     llvm::LLVMContext context;
     llvm::Module module;
     llvm::IRBuilder<> builder;
+
     // Its insertion point is not guaranteed to be anywhere
     //  and thus, can be used at any point in time. This can
     //  be useful for example in inserting all the alloca
     //  instructions in the entry block of a function, regardless
     //  of their declaration location in the code.
     llvm::IRBuilder<> temp_builder;
-    SymbolTable<Variable> symbol_table;
-    std::unordered_map<std::string, FunctionInfo> functions;
-    std::unordered_map<std::string, ClassType*> classes;
+
     // Nodes that are deferred to be evaluated after the evaluation
     //  of the whole tree. The nodes will be evaluated at the beginning
     //  of the entry point, in the order of insertions. This is useful
@@ -115,19 +73,26 @@ private:
     //  be evaluated inside a function called ".dua.init", which is called
     //  at the beginning of the main function.
     std::vector<ASTNode*> deferred_nodes;
-    // Instead of having the fields be stored in the class type,
-    //  and having them getting duplicated on each clone, let's
-    //  keep the fields info in one place, and refer to it by name.
-    std::unordered_map<std::string, std::vector<ClassField>> class_fields;
-    std::unordered_map<std::string, std::vector<FieldConstructorArgs>> fields_args;
+
+    // Used to avoid unnecessary allocations for same strings
     std::unordered_map<std::string, llvm::Constant*> string_pool;
+
+    // The function being processed currently
     llvm::Function* current_function = nullptr;
+
+    // The class being processed currently
     llvm::StructType* current_class = nullptr;
 
     // Loops
     std::vector<llvm::BasicBlock*> continue_stack;
     std::vector<llvm::BasicBlock*> break_stack;
 
+    // Used to resolve names of identifiers, whether
+    //  it's a variable or a function/method
+    NameResolver name_resolver;
+
+    // A cache of the resulting LLVM IR, used to
+    //  avoid performing the same computations
     std::string result;
 };
 

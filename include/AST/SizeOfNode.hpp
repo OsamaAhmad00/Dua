@@ -33,7 +33,7 @@ public:
             auto cls = dynamic_cast<ClassType*>(target_type);
             if (cls == nullptr)
                 report_internal_error("sizeof operator called on an invalid type");
-            type = symbol_table().get(cls->name).type->llvm_type();
+            type = name_resolver().symbol_table.get(cls->name).type->llvm_type();
         }
 
         long long size = (type->isSized()) ? dl.getTypeSizeInBits(type) / 8 : 0;

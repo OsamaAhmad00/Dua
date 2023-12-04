@@ -39,7 +39,7 @@ llvm::Value* LocalVariableDefinitionNode::eval()
     // This is a field definition, not a local variable definition.
 
     auto class_name = current_class()->getName().str();
-    if (compiler->has_function(class_name + "." + name))
+    if (name_resolver().has_function(class_name + "." + name))
         report_error("The identifier " + full_name + " is defined as both a field and a method");
 
     llvm::Constant* default_value = init_value ?
@@ -52,7 +52,7 @@ llvm::Value* LocalVariableDefinitionNode::eval()
             default_args[i] = get_constant(args[i]->eval(), args[i]->get_cached_type()->llvm_type(), full_name);
     }
 
-    compiler->get_class(class_name)->fields().push_back({
+    name_resolver().get_class(class_name)->fields().push_back({
         name,
         type->clone(),
         default_value,

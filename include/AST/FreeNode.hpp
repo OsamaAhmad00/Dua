@@ -27,8 +27,8 @@ public:
                 + expr->get_cached_type()->to_string());
 
         auto value = expr->eval();
-        compiler->call_destructor({ value, ptr->get_element_type() });
-        compiler->call_function("free", { value });
+        name_resolver().call_destructor({ value, ptr->get_element_type() });
+        name_resolver().call_function("free", { value });
 
         return none_value();
     }

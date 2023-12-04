@@ -25,7 +25,7 @@ llvm::Value *ClassDefinitionNode::eval()
     if (result != nullptr)
         return result;
 
-    if (classes().find(name) == classes().end())
+    if (name_resolver().classes.find(name) == name_resolver().classes.end())
         report_internal_error("Definition of the class " + name + " before registering it");
 
     auto old_class = current_class();
@@ -48,7 +48,7 @@ llvm::Value *ClassDefinitionNode::eval()
     if (current_class()->isSized())
         report_error("Redefinition of a class");
 
-    auto &fields = compiler->get_class(name)->fields();
+    auto &fields = name_resolver().get_class(name)->fields();
     fields.reserve(split_point);
 
     // Evaluate fields first
@@ -70,7 +70,7 @@ llvm::Value *ClassDefinitionNode::eval()
         members[i]->eval();
     }
 
-    compiler->add_fields_constructor_args(name, std::move(fields_args));
+    name_resolver().add_fields_constructor_args(name, std::move(fields_args));
 
     current_class() = old_class;
     current_function() = old_function;
