@@ -1,0 +1,69 @@
+// Case No imports
+// Returns 0
+
+int main()
+{
+    return 0;
+}
+
+
+// Case Import in a comment
+// Returns 0
+
+int main()
+{
+    // import "abc.dua"
+    return 0;
+}
+
+
+// Case Import from file 1
+// Returns 10
+
+import   "import-files/returns-10.dua"
+
+
+// Case Import from file 2
+// Outputs "123"
+
+import "import-files/outputs-123.dua"
+
+
+// Case Import from file 3
+// Returns 10
+
+int main()
+{
+    import        "import-files/return-10-statement.dua"
+}
+
+
+// Case Import not at the beginning of the line
+// Panics
+
+int main()
+{ import "return-10-statement.dua" }
+
+
+// Case Incomplete import 1
+// Panics
+
+import "outputs-123.dua
+
+int main() { }
+
+
+// Case Incomplete import 2
+// Panics
+
+import outputs-123.dua"
+
+int main() { }
+
+
+// Case Import not existing file
+// Panics
+
+import "abc.dua"
+
+int main() { }

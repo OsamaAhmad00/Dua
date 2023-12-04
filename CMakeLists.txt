@@ -77,6 +77,7 @@ set(DUA_SOURCES
     ${ANTLR_DuaParser_CXX_OUTPUTS}
 
     src/ModuleCompiler.cpp
+    src/Preprocessor.cpp
 
     src/parsing/ParserAssistant.cpp
     src/parsing/ParserFacade.cpp

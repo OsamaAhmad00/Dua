@@ -1,0 +1,6 @@
+int printf(str message, ...);
+
+int main()
+{
+    printf("123");
+}

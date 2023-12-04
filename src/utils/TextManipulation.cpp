@@ -18,7 +18,7 @@ std::string read_file(const std::string& name)
         while (std::getline(stream, temp))
             result += temp + '\n';
     } else {
-        report_internal_error("Couldn't read the contents of the file at " + name);
+        report_error("Couldn't read the contents of the file at " + name);
     }
     return result;
 }

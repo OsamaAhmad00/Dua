@@ -1,10 +1,19 @@
 #include "FileTestCasesRunner.h"
-#include "utils/ErrorReporting.h"
+#include <utils/ErrorReporting.h>
+#include <Preprocessor.h>
 #include <utils/TextManipulation.h>
 #include <utils/CodeGeneration.h>
 #include <utils/ProgramExecution.h>
 #include <filesystem>
 #include <gtest/gtest.h>
+
+#define CONDITIONAL_THROW(CONDITION, STATEMENT)          \
+    if (CONDITION) {                                     \
+        EXPECT_ANY_THROW(STATEMENT) << case_description; \
+        continue;                                        \
+    } else {                                             \
+        EXPECT_NO_THROW(STATEMENT) << case_description;  \
+    }                                                    \
 
 namespace dua
 {
@@ -29,7 +38,19 @@ void FileTestCasesRunner::run()
                          ", the expected output should be in-between \"\".");
         }
         bool should_panic = header_has_flag(header, "Panics");
-        auto code = tests.common + '\n' + body;
+
+        std::string case_description = "The wrong test case is test case number "
+                                       + std::to_string(i + 1) + ", with the name of '" + name + "'";
+
+        Preprocessor preprocessor;
+        std::string code = tests.common + '\n' + body;
+        try{
+            code = preprocessor.process(path, code);
+        } catch (std::exception& e) {
+            if (should_panic) EXPECT_ANY_THROW(throw "Paniced at the preprocessing stage") << case_description;
+            else              EXPECT_NO_THROW (throw "Paniced at the preprocessing stage") << case_description;
+            continue;
+        }
 
         if (!expected_output.empty() && expected_output.back() != '\n') {
             // This is to match the output of the program execution, which
@@ -42,20 +63,10 @@ void FileTestCasesRunner::run()
         //  and it doesn't hurt when run on Unix-based systems.
         auto exe_name = temp_name +  + ".exe";
 
-        std::string case_description = "The wrong test case is test case number "
-                                       + std::to_string(i + 1) + ", with the name of '" + name + "'";
-
-        try {
-            std::vector<std::string> n = { temp_name };
-            std::vector<std::string> c = { code };
-            std::vector<std::string> a = { "-o", exe_name };
-            if (should_panic) {
-                EXPECT_ANY_THROW(run_clang_on_llvm_ir(n, c, a)) << case_description;
-                continue;
-            } else run_clang_on_llvm_ir(n, c, a);
-        } catch (...) {
-            exit(-1);
-        }
+        std::vector<std::string> n = { temp_name };
+        std::vector<std::string> c = { code };
+        std::vector<std::string> a = { "-o", exe_name };
+        CONDITIONAL_THROW(should_panic, run_clang_on_llvm_ir(n, c, a))
 
         ProgramExecution execution;
 

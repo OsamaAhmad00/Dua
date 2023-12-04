@@ -8,6 +8,7 @@
 #include <utils/VectorOperators.h>
 #include <utils/TextManipulation.h>
 #include <ModuleCompiler.h>
+#include <Preprocessor.h>
 
 namespace dua
 {
@@ -72,9 +73,10 @@ void compile(const strings& source_files, const strings& args)
         stripped[i] = filename.substr(0, filename.size() - 4);
     }
 
+    Preprocessor preprocessor;
     strings code(n);
     for (int i = 0; i < n; i++)
-        code[i] = read_file(source_files[i]);
+        code[i] = preprocessor.process(source_files[i], read_file(source_files[i]));
 
     try {
         run_clang_on_llvm_ir(stripped, code, args);

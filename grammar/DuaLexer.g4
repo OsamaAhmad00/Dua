@@ -103,6 +103,11 @@ Null: 'null';
 True: 'true';
 False: 'false';
 
+// This word is put here, just to prevent its
+// existence in the source code. This is to
+// make sure that the code is preprocessed first
+Import: 'import';
+
 I64Val: Integer;
 I32Val: Integer 'I';
 I16Val: Integer 'S';
