@@ -1,6 +1,6 @@
-#include <Preprocessor.h>
-#include <utils/ErrorReporting.h>
-#include <utils/TextManipulation.h>
+#include <Preprocessor.hpp>
+#include <utils/ErrorReporting.hpp>
+#include <utils/TextManipulation.hpp>
 #include <string>
 #include <sstream>
 #include <filesystem>

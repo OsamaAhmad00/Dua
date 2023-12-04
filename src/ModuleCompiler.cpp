@@ -1,10 +1,10 @@
-#include <ModuleCompiler.h>
-#include "parsing/ParserFacade.h"
-#include <AST/TranslationUnitNode.h>
+#include <ModuleCompiler.hpp>
+#include <parsing/ParserFacade.hpp>
+#include <AST/TranslationUnitNode.hpp>
 #include <llvm/Support/Host.h>
-#include <utils/ErrorReporting.h>
+#include <utils/ErrorReporting.hpp>
 #include <llvm/IR/Verifier.h>
-#include <types/PointerType.h>
+#include <types/PointerType.hpp>
 
 namespace dua
 {

@@ -1,5 +1,5 @@
-#include <AST/ASTNode.h>
-#include "types/VoidType.h"
+#include <AST/ASTNode.hpp>
+#include "types/VoidType.hpp"
 
 namespace dua
 {

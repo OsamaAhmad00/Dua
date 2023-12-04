@@ -1,4 +1,4 @@
-#include "types/PointerType.h"
+#include "types/PointerType.hpp"
 
 namespace dua
 {

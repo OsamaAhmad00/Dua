@@ -1,4 +1,4 @@
-#include <utils/ErrorReporting.h>
+#include <utils/ErrorReporting.hpp>
 #include <utils/termcolor.hpp>
 
 namespace dua

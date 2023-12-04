@@ -1,8 +1,8 @@
 #include <boost/process.hpp> // This has to be at the top
-#include <utils/ProgramExecution.h>
+#include <utils/ProgramExecution.hpp>
 #include <string>
 #include <vector>
-#include <utils/ErrorReporting.h>
+#include <utils/ErrorReporting.hpp>
 #include <thread>
 
 

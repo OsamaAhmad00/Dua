@@ -1,4 +1,4 @@
-#include <AST/lvalue/MallocNode.h>
+#include <AST/lvalue/MallocNode.hpp>
 
 namespace dua
 {

@@ -1,5 +1,5 @@
-#include <AST/unary/CastExpressionNode.h>
-#include <utils/ErrorReporting.h>
+#include <AST/unary/CastExpressionNode.hpp>
+#include <utils/ErrorReporting.hpp>
 
 namespace dua
 {

@@ -1,6 +1,6 @@
-#include <types/ClassType.h>
+#include <types/ClassType.hpp>
 #include <llvm/IR/Constants.h>
-#include <ModuleCompiler.h>
+#include <ModuleCompiler.hpp>
 
 namespace dua
 {

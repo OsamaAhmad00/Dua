@@ -1,5 +1,5 @@
-#include <AST/lvalue/VariableNode.h>
-#include <types/PointerType.h>
+#include <AST/lvalue/VariableNode.hpp>
+#include <types/PointerType.hpp>
 
 namespace dua
 {

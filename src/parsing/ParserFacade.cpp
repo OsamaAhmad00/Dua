@@ -1,6 +1,6 @@
 #include "DuaParser.h"
 #include "DuaLexer.h"
-#include "parsing/ParserFacade.h"
+#include "parsing/ParserFacade.hpp"
 
 namespace dua
 {

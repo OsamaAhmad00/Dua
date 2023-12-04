@@ -1,5 +1,5 @@
-#include <AST/lvalue/LoadedLValueNode.h>
-#include <types/PointerType.h>
+#include <AST/lvalue/LoadedLValueNode.hpp>
+#include <types/PointerType.hpp>
 
 namespace dua
 {

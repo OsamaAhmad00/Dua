@@ -1,4 +1,4 @@
-#include <utils/VectorOperators.h>
+#include <utils/VectorOperators.hpp>
 
 namespace dua
 {

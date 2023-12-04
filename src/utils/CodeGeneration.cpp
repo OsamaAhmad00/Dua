@@ -1,14 +1,14 @@
-#include <utils/CodeGeneration.h>
+#include <utils/CodeGeneration.hpp>
 #include <cstdlib>
 #include <fstream>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <filesystem>
-#include <utils/VectorOperators.h>
-#include <utils/TextManipulation.h>
-#include <ModuleCompiler.h>
-#include <Preprocessor.h>
+#include <utils/VectorOperators.hpp>
+#include <utils/TextManipulation.hpp>
+#include <ModuleCompiler.hpp>
+#include <Preprocessor.hpp>
 
 namespace dua
 {

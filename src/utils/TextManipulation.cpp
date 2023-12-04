@@ -1,7 +1,7 @@
-#include <utils/TextManipulation.h>
+#include <utils/TextManipulation.hpp>
 #include <fstream>
 #include <iostream>
-#include <utils/ErrorReporting.h>
+#include <utils/ErrorReporting.hpp>
 #include <boost/regex.hpp>
 
 namespace dua

@@ -1,5 +1,5 @@
-#include "AST/loops/DoWhileNode.h"
-#include <utils/ErrorReporting.h>
+#include "AST/loops/DoWhileNode.hpp"
+#include <utils/ErrorReporting.hpp>
 
 namespace dua
 {

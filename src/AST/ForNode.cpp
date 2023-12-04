@@ -1,5 +1,5 @@
-#include "AST/loops/ForNode.h"
-#include <utils/ErrorReporting.h>
+#include "AST/loops/ForNode.hpp"
+#include <utils/ErrorReporting.hpp>
 
 namespace dua
 {

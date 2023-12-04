@@ -1,9 +1,9 @@
-#include "FileTestCasesRunner.h"
-#include <utils/ErrorReporting.h>
-#include <Preprocessor.h>
-#include <utils/TextManipulation.h>
-#include <utils/CodeGeneration.h>
-#include <utils/ProgramExecution.h>
+#include "FileTestCasesRunner.hpp"
+#include <utils/ErrorReporting.hpp>
+#include <Preprocessor.hpp>
+#include <utils/TextManipulation.hpp>
+#include <utils/CodeGeneration.hpp>
+#include <utils/ProgramExecution.hpp>
 #include <filesystem>
 #include <gtest/gtest.h>
 

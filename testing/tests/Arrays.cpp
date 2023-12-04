@@ -1,4 +1,4 @@
-#include "FileTestCasesRunner.h"
+#include "FileTestCasesRunner.hpp"
 
 namespace dua
 {

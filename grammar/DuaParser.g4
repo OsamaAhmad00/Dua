@@ -5,7 +5,7 @@ options {
 }
 
 @parser::postinclude {
-#include <parsing/ParserAssistant.h>
+#include <parsing/ParserAssistant.hpp>
 }
 
 @parser::members

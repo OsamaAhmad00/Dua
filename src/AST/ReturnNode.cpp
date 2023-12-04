@@ -1,5 +1,5 @@
-#include <AST/function/ReturnNode.h>
-#include <types/VoidType.h>
+#include <AST/function/ReturnNode.hpp>
+#include <types/VoidType.hpp>
 
 namespace dua
 {

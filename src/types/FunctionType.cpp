@@ -1,4 +1,4 @@
-#include <types/FunctionType.h>
+#include <types/FunctionType.hpp>
 
 
 namespace dua

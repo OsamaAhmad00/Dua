@@ -1,5 +1,5 @@
-#include "AST/lvalue/ClassFieldNode.h"
-#include "types/PointerType.h"
+#include "AST/lvalue/ClassFieldNode.hpp"
+#include "types/PointerType.hpp"
 
 namespace dua
 {

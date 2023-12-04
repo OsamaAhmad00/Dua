@@ -1,4 +1,4 @@
-#include <AST/BlockNode.h>
+#include <AST/BlockNode.hpp>
 
 namespace dua
 {

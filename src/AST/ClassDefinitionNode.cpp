@@ -1,7 +1,7 @@
-#include "AST/class/ClassDefinitionNode.h"
-#include "AST/variable/LocalVariableDefinitionNode.h"
-#include "AST/function/FunctionDefinitionNode.h"
-#include "utils/TextManipulation.h"
+#include "AST/class/ClassDefinitionNode.hpp"
+#include "AST/variable/LocalVariableDefinitionNode.hpp"
+#include "AST/function/FunctionDefinitionNode.hpp"
+#include "utils/TextManipulation.hpp"
 
 namespace dua
 {

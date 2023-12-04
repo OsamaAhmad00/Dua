@@ -1,4 +1,4 @@
-#include <AST/unary/NumericalUnaryExpressionNodes.h>
+#include <AST/unary/NumericalUnaryExpressionNodes.hpp>
 
 namespace dua
 {

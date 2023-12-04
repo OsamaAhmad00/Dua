@@ -1,8 +1,8 @@
-#include <utils/CodeGeneration.h>
+#include <utils/CodeGeneration.hpp>
 #include <utils/termcolor.hpp>
 #include <iostream>
 #include <cstring>
-#include <utils/TextManipulation.h>
+#include <utils/TextManipulation.hpp>
 
 using namespace dua;
 

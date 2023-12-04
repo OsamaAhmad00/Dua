@@ -1,5 +1,5 @@
-#include "AST/lvalue/ArrayIndexingNode.h"
-#include "types/ArrayType.h"
+#include "AST/lvalue/ArrayIndexingNode.hpp"
+#include "types/ArrayType.hpp"
 
 namespace dua
 {

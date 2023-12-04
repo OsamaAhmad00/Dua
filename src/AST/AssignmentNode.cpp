@@ -1,5 +1,5 @@
-#include <AST/AssignmentExpressionNode.h>
-#include <utils/ErrorReporting.h>
+#include <AST/AssignmentExpressionNode.hpp>
+#include <utils/ErrorReporting.hpp>
 
 namespace dua
 {

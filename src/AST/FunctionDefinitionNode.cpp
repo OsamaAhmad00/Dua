@@ -1,7 +1,7 @@
-#include <AST/function/FunctionDefinitionNode.h>
-#include <types/VoidType.h>
-#include <types/PointerType.h>
-#include <utils/TextManipulation.h>
+#include <AST/function/FunctionDefinitionNode.hpp>
+#include <types/VoidType.hpp>
+#include <types/PointerType.hpp>
+#include <utils/TextManipulation.hpp>
 
 namespace dua
 {

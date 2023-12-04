@@ -1,4 +1,4 @@
-#include "AST/variable/LocalVariableDefinitionNode.h"
+#include "AST/variable/LocalVariableDefinitionNode.hpp"
 
 namespace dua
 {

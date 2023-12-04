@@ -1,5 +1,5 @@
 #include <llvm/IR/Constants.h>
-#include "types/ArrayType.h"
+#include "types/ArrayType.hpp"
 
 namespace dua
 {

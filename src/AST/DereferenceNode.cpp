@@ -1,6 +1,6 @@
-#include "AST/lvalue/DereferenceNode.h"
-#include "types/PointerType.h"
-#include <utils/ErrorReporting.h>
+#include "AST/lvalue/DereferenceNode.hpp"
+#include "types/PointerType.hpp"
+#include <utils/ErrorReporting.hpp>
 
 namespace dua
 {

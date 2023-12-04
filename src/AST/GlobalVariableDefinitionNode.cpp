@@ -1,6 +1,6 @@
-#include <AST/variable/GlobalVariableDefinitionNode.h>
-#include <AST/LLMVValueNode.h>
-#include <utils/ErrorReporting.h>
+#include <AST/variable/GlobalVariableDefinitionNode.hpp>
+#include <AST/LLMVValueNode.hpp>
+#include <utils/ErrorReporting.hpp>
 
 namespace dua
 {
