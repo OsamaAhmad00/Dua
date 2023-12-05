@@ -5,12 +5,14 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/LLVMContext.h>
 #include <types/Type.hpp>
-#include <NameResolver.hpp>
+#include <types/FunctionType.hpp>
+#include "resolution/NameResolver.hpp"
 
 namespace dua
 {
 
 class ASTNode;
+
 
 class ModuleCompiler
 {
@@ -19,6 +21,7 @@ public:
     friend class ASTNode;
     friend class ParserAssistant;
     friend class NameResolver;
+    friend class FunctionNameResolver;
     friend class ClassType;
 
     ModuleCompiler(const std::string& module_name, const std::string& code);

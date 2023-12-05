@@ -77,8 +77,10 @@ set(DUA_SOURCES
     ${ANTLR_DuaParser_CXX_OUTPUTS}
 
     src/ModuleCompiler.cpp
-    src/NameResolver.cpp
     src/Preprocessor.cpp
+
+    src/resolution/NameResolver.cpp
+    src/resolution/FunctionNameResolver.cpp
 
     src/parsing/ParserAssistant.cpp
     src/parsing/ParserFacade.cpp
