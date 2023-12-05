@@ -60,7 +60,7 @@ llvm::Value* IfNode::eval()
     {
         builder().SetInsertPoint(jump_to_blocks[i]);
         llvm::Value* condition = conditions[i]->eval();
-        condition = compiler->cast_as_bool(condition);
+        condition = typing_system().cast_as_bool(compiler->create_value(condition, conditions[i]->get_type()));
         if (condition == nullptr)
             report_error("The provided condition can't be casted to boolean value.");
         builder().CreateCondBr(condition, body_blocks[i], jump_to_blocks[i + 1]);
@@ -73,7 +73,7 @@ llvm::Value* IfNode::eval()
     //  track of where the block each branch has ended
     //  at after the evaluation.
     std::vector<llvm::BasicBlock*> phi_blocks;
-    std::vector<llvm::Value*> values;
+    std::vector<Value> values;
 
     // A quick hack to include the else block in the loop
     if (else_block) body_blocks.push_back(else_block);
@@ -83,7 +83,7 @@ llvm::Value* IfNode::eval()
         if (builder().GetInsertBlock()->empty() || !builder().GetInsertBlock()->back().isTerminator())
             builder().CreateBr(end_block);
         if (is_expression) {
-            values.push_back(value);
+            values.push_back(compiler->create_value(value, branches[i]->get_type()));
             phi_blocks.push_back(builder().GetInsertBlock());
         }
     }
@@ -93,40 +93,31 @@ llvm::Value* IfNode::eval()
     if (!is_expression)
         return none_value();
 
-    auto type = get_cached_type()->llvm_type();
+    auto type = get_type();
     for (auto& value : values) {
-        value = compiler->cast_value(value, type);
-        if (value == nullptr) {
+        auto casted = typing_system().cast_value(value, type);
+        if (casted == nullptr) {
             report_error("Mismatch in the types of the branches");
         }
     }
 
     llvm::PHINode* phi = builder().CreatePHI(
-        values.front()->getType(),
+        values.front().ptr->getType(),
         values.size(),
         operation_name + std::to_string(counter) + "_result"
     );
 
     for (size_t i = 0; i < values.size(); i++) {
-        phi->addIncoming(values[i], phi_blocks[i]);
+        phi->addIncoming(values[i].ptr, phi_blocks[i]);
     }
 
     return phi;
 }
 
-Type *IfNode::compute_type() {
-    delete type;
-    if (is_expression)
-        return type = branches.front()->get_cached_type()->clone();
+const Type *IfNode::get_type() {
+    if (type != nullptr) return type;
+    if (is_expression) return type = branches.front()->get_type();
     return type = compiler->create_type<VoidType>();
-}
-
-IfNode::~IfNode()
-{
-    for (auto ptr : conditions)
-        delete ptr;
-    for (auto ptr : branches)
-        delete ptr;
 }
 
 }

@@ -4,18 +4,18 @@
 namespace dua
 {
 
-static ClassType* get_class(Type* type)
+static const ClassType* get_class(const Type* type)
 {
-    auto casted = dynamic_cast<ClassType*>(type);
+    auto casted = dynamic_cast<const ClassType*>(type);
     if (casted == nullptr)
         report_error("Member access on a non-class (" + type->to_string() + ") type");
     return casted;
 }
 
-static ClassType* get_class_from_ptr(ASTNode* node)
+const static ClassType* get_class_from_ptr(ASTNode* node)
 {
-    auto type = node->get_cached_type();
-    auto ptr = dynamic_cast<PointerType*>(type);
+    auto type = node->get_type();
+    auto ptr = dynamic_cast<const PointerType*>(type);
     if (ptr == nullptr)
         report_internal_error("Field access on a non-pointer (" + type->to_string() + ") type");
     return get_class(ptr->get_element_type());
@@ -28,27 +28,27 @@ llvm::Value* ClassFieldNode::eval()
         return module().getFunction(full_name);
 
     auto class_type = get_class_from_ptr(instance);
-    return class_type->get_field(get_instance(), name);
+    return class_type->get_field(get_instance().ptr, name);
 }
 
-Type* ClassFieldNode::compute_type()
+const Type* ClassFieldNode::get_type()
 {
-    delete type;
+    if (type != nullptr) return type;
     auto full_name = get_full_name();
-    Type* t;
+    const Type* t;
     if (name_resolver().has_function(full_name))
-        t = name_resolver().get_function(full_name).type.clone();
+        t = name_resolver().get_function(full_name).type;
     else {
         auto class_type = get_class_from_ptr(instance);
-        t = class_type->get_field(name).type->clone();
+        t = class_type->get_field(name).type;
     }
     return type = compiler->create_type<PointerType>(t);
 }
 
-llvm::Value *ClassFieldNode::get_instance()
+Value ClassFieldNode::get_instance() const
 {
-    if (instance_eval != nullptr) return instance_eval;
-    return instance_eval = instance->eval();
+    if (instance_eval.ptr != nullptr) return instance_eval;
+    return instance_eval = compiler->create_value(instance->eval(), instance->get_type());
 }
 
 std::string ClassFieldNode::get_full_name() const

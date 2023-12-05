@@ -9,12 +9,12 @@ namespace dua
 
 struct FunctionType : public Type
 {
-    Type* return_type;
-    std::vector<Type*> param_types;
+    const Type* return_type;
+    std::vector<const Type*> param_types;
     bool is_var_arg;
 
-    FunctionType(ModuleCompiler* compiler = nullptr, Type* return_type = nullptr,
-                 std::vector<Type*> param_types = {}, bool is_var_arg = false)
+    FunctionType(ModuleCompiler* compiler = nullptr, const Type* return_type = nullptr,
+                 std::vector<const Type*> param_types = {}, bool is_var_arg = false)
             : return_type(return_type), param_types(std::move(param_types)), is_var_arg(is_var_arg)
     {
         this->compiler = compiler;
@@ -24,19 +24,15 @@ struct FunctionType : public Type
 
     FunctionType& operator=(FunctionType&& other);
 
-    llvm::Constant* default_value() override;
+    llvm::Constant* default_value() const override;
 
     llvm::FunctionType* llvm_type() const override;
-
-    FunctionType* clone() override;
 
     std::string to_string() const override;
 
     bool operator==(const FunctionType& other) const;
 
     bool operator!=(const FunctionType& other) const { return !(*this == other); };
-
-    ~FunctionType() override;
 };
 
 }

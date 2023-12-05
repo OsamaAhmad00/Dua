@@ -12,7 +12,7 @@ ClassType::ClassType(ModuleCompiler *compiler, std::string name, std::vector<Cla
     compiler->name_resolver.class_fields[std::move(name)] = std::move(fields);
 }
 
-llvm::Constant *ClassType::default_value()
+llvm::Constant *ClassType::default_value() const
 {
     std::vector<llvm::Constant*> initializers(fields().size());
 
@@ -27,15 +27,11 @@ llvm::StructType* ClassType::llvm_type() const {
     return llvm::StructType::getTypeByName(*compiler->get_context(), name);
 }
 
-ClassType *ClassType::clone() {
-    return new ClassType(compiler, name, fields());
-}
-
-std::vector<ClassField> &ClassType::fields() {
+const std::vector<ClassField> &ClassType::fields() const {
     return compiler->name_resolver.class_fields[name];
 }
 
-ClassField& ClassType::get_field(const std::string &name) {
+const ClassField& ClassType::get_field(const std::string &name) const {
     for (auto & field : fields()) {
         if (field.name == name)
             return field;
@@ -46,7 +42,7 @@ ClassField& ClassType::get_field(const std::string &name) {
     return fields().front();
 }
 
-llvm::Value *ClassType::get_field(llvm::Value *instance, const std::string &name) {
+llvm::Value *ClassType::get_field(llvm::Value *instance, const std::string &name) const {
     for (size_t i = 0; i < fields().size(); i++) {
         if (fields()[i].name == name)
             return get_field(instance, i);
@@ -55,7 +51,7 @@ llvm::Value *ClassType::get_field(llvm::Value *instance, const std::string &name
     return nullptr;
 }
 
-llvm::Value *ClassType::get_field(llvm::Value *instance, size_t index) {
+llvm::Value *ClassType::get_field(llvm::Value *instance, size_t index) const {
     return compiler->get_builder()->CreateStructGEP(llvm_type(), instance, index, fields()[index].name);
 }
 

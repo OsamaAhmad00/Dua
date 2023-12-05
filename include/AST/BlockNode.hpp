@@ -13,10 +13,12 @@ public:
 
     BlockNode(ModuleCompiler* compiler, std::vector<ASTNode*> elements)
         : elements(std::move(elements)) { this->compiler = compiler; };
+
     BlockNode& append(ASTNode* element);
+
     llvm::Value* eval() override;
-    Type* compute_type() override;
-    ~BlockNode() override;
+
+    const Type* get_type() override;
 };
 
 }

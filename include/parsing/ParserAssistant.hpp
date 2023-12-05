@@ -83,8 +83,8 @@ class ParserAssistant
     //  machine, but with each datatype in a separate stack.
     std::vector<std::string> strings;
     std::vector<uint64_t> numbers;
-    std::vector<ASTNode *> nodes;
-    std::vector<Type *> types;
+    std::vector<ASTNode*> nodes;
+    std::vector<const Type*> types;
 
     // A stack for counting the number of statements
     //  inside the current scope, and for determining
@@ -135,8 +135,8 @@ class ParserAssistant
         return casted;
     }
 
-    Type *pop_type() {
-        Type *result = types.back();
+    const Type *pop_type() {
+        const Type *result = types.back();
         types.pop_back();
         return result;
     }
@@ -263,7 +263,7 @@ public:
 
     void finish_parsing();
     void create_missing_methods();
-    void create_empty_method_if_doesnt_exist(ClassType* cls, std::string&& name);
+    void create_empty_method_if_doesnt_exist(const ClassType* cls, std::string&& name);
     void reset_symbol_table();
 
     void set_module_compiler(ModuleCompiler* compiler) { this->compiler = compiler; }

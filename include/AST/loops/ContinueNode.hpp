@@ -11,6 +11,7 @@ struct ContinueNode : public ASTNode
 public:
 
     ContinueNode(ModuleCompiler* compiler) { this->compiler = compiler; }
+
     NoneValue eval() override {
         auto& s = continue_stack();
         if (s.empty())

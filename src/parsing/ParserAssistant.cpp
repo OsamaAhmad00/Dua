@@ -53,7 +53,7 @@ void ParserAssistant::create_missing_methods()
     }
 }
 
-void ParserAssistant::create_empty_method_if_doesnt_exist(ClassType* cls, std::string&& name)
+void ParserAssistant::create_empty_method_if_doesnt_exist(const ClassType* cls, std::string&& name)
 {
     name = cls->name + "." + name;
 
@@ -61,12 +61,11 @@ void ParserAssistant::create_empty_method_if_doesnt_exist(ClassType* cls, std::s
         return;
 
     auto signature = FunctionInfo {
-        FunctionType {
-                compiler,
+        compiler->create_type<FunctionType>(
                 compiler->create_type<VoidType>(),
-                std::vector<Type *>{ compiler->create_type<PointerType>(cls->clone()) },
+                std::vector<const Type*>{ compiler->create_type<PointerType>(cls) },
                 false
-        },
+        ),
         { "self" }
     };
 
@@ -96,7 +95,7 @@ void ParserAssistant::create_variable_declaration()
 {
     auto name = pop_str();
     auto type = pop_type();
-    compiler->name_resolver.symbol_table.insert(name, { nullptr, type });
+    compiler->name_resolver.symbol_table.insert(name, compiler->create_value(nullptr, type));
     if (is_in_global_scope()) {
         push_node<GlobalVariableDefinitionNode>(std::move(name), type, nullptr);
     } else {
@@ -115,7 +114,7 @@ void ParserAssistant::create_variable_definition()
 
     // A temporary insertion into the symbol table for name resolution
     //  during parsing. The symbol table will be reset at the end.
-    compiler->name_resolver.symbol_table.insert(name, { nullptr, type });
+    compiler->name_resolver.symbol_table.insert(name, compiler->create_value(nullptr, type));
 
     if (is_in_global_scope())
         push_node<GlobalVariableDefinitionNode>(std::move(name), type, initializer, std::move(args));
@@ -132,32 +131,36 @@ void ParserAssistant::create_function_declaration()
 
     inc_statements();
 
-    FunctionInfo info { .type = { compiler } };
-
-    info.type.is_var_arg = pop_var_arg();
+    auto is_var_arg = pop_var_arg();
     auto param_count = leave_arg_list();
+    std::vector<const Type*> param_types(param_count);
+    std::vector<std::string> param_names(param_count);
 
-    info.type.param_types.resize(param_count);
-    info.param_names.resize(param_count);
     // The params are pushed in reverse-order
     for (int i = 0; i < param_count; i++) {
-        info.param_names[param_count - i - 1] = pop_str();
-        info.type.param_types[param_count - i - 1] = pop_type();
+        param_names[param_count - i - 1] = pop_str();
+        param_types[param_count - i - 1] = pop_type();
     }
-    info.type.return_type = pop_type();
+
+    auto return_type = pop_type();
 
     auto name = pop_str();
     if (compiler->current_class != nullptr) {
         name = compiler->current_class->getName().str() + '.' + name;
         auto class_name = compiler->current_class->getName().str();
-        info.type.param_types.insert(
-        info.type.param_types.begin(),
+        param_types.insert(
+        param_types.begin(),
             compiler->create_type<PointerType>(
-                compiler->name_resolver.classes[class_name]->clone()
+                compiler->name_resolver.classes[class_name]
             )
         );
-        info.param_names.insert(info.param_names.begin(), "self");
+        param_names.insert(param_names.begin(), "self");
     }
+
+    FunctionInfo info {
+            compiler->create_type<FunctionType>(return_type, std::move(param_types), is_var_arg),
+            std::move(param_names)
+    };
 
     compiler->name_resolver.register_function(name, std::move(info));
 
@@ -533,7 +536,7 @@ void ParserAssistant::start_class_definition()
 
     auto& name = strings.back();
     compiler->current_class = compiler->name_resolver.get_class(name)->llvm_type();
-    compiler->name_resolver.symbol_table.insert("self", { nullptr, compiler->name_resolver.get_class(name) });
+    compiler->name_resolver.symbol_table.insert("self", compiler->create_value(nullptr, compiler->name_resolver.get_class(name)));
 }
 
 void ParserAssistant::create_class()
@@ -564,8 +567,8 @@ void ParserAssistant::create_field_access() {
 
 void ParserAssistant::create_inferred_definition()
 {
-    Type* type = nodes.back()->get_cached_type();
-    types.push_back(type->clone());
+    const Type* type = nodes.back()->get_type();
+    types.push_back(type);
     create_variable_definition();
 }
 
@@ -582,13 +585,12 @@ void ParserAssistant::create_size_of_expression()
 
 void ParserAssistant::create_type_of()
 {
-    types.push_back(nodes.back()->get_cached_type()->clone());
-    delete pop_node();
+    types.push_back(nodes.back()->get_type());
+    pop_node();
 }
 
 void ParserAssistant::create_typename_type() {
     auto type = pop_type();
-
     auto llvm_type = type->llvm_type();
     if (llvm_type == nullptr) {
         // This can happen for example in the case typename(x).
@@ -596,7 +598,7 @@ void ParserAssistant::create_typename_type() {
         //  x is a variable name (an expression), or a class
         //  type. If the type is nullptr, this means that this
         //  is not a valid class type, thus, this is a variable.
-        auto cls = dynamic_cast<ClassType*>(type);
+        auto cls = dynamic_cast<const ClassType*>(type);
         if (cls == nullptr)
             report_internal_error("sizeof operator called on an invalid type");
         auto real_type = compiler->name_resolver.symbol_table.get(cls->name).type;
@@ -604,8 +606,6 @@ void ParserAssistant::create_typename_type() {
     } else {
         push_node<StringValueNode>(type->to_string());
     }
-
-    delete type;
 }
 
 void ParserAssistant::create_typename_expression() {
@@ -617,23 +617,22 @@ void ParserAssistant::create_function_type()
 {
     size_t param_count = leave_arg_list();
     bool is_var_arg = pop_var_arg();
-    std::vector<Type*> param_types(param_count);
+    std::vector<const Type*> param_types(param_count);
     for (size_t i = 0; i < param_count; i++)
         param_types[param_count - i - 1] = pop_type();
-    Type* return_type = pop_type();
+    const Type* return_type = pop_type();
     push_type<FunctionType>(return_type, std::move(param_types), is_var_arg);
 }
 
 void ParserAssistant::create_malloc() {
     if (!declared_malloc)
     {
-        auto type = FunctionType {
-            compiler,
+        auto type = compiler->create_type<FunctionType> (
             compiler->create_type<PointerType>(compiler->create_type<I64Type>()),
-            std::vector<Type*>{ compiler->create_type<I64Type>() }
-        };
+            std::vector<const Type*>{ compiler->create_type<I64Type>() }
+        );
 
-        compiler->name_resolver.register_function("malloc", {std::move(type), { "size" }});
+        compiler->name_resolver.register_function("malloc", {type, { "size" }});
 
         declared_malloc = true;
     }
@@ -644,11 +643,10 @@ void ParserAssistant::create_free()
 {
     if (!declared_free)
     {
-        auto type = FunctionType {
-                compiler,
-                compiler->create_type<VoidType>(),
-                std::vector<Type*>{ compiler->create_type<PointerType>(compiler->create_type<I64Type>()) }
-        };
+        auto type = compiler->create_type<FunctionType> (
+            compiler->create_type<VoidType>(),
+            std::vector<const Type*>{ compiler->create_type<PointerType>(compiler->create_type<I64Type>()) }
+        );
 
         compiler->name_resolver.register_function("free", {std::move(type), { "size" }});
 

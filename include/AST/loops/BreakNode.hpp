@@ -11,6 +11,7 @@ struct BreakNode : public ASTNode
 public:
 
     BreakNode(ModuleCompiler* compiler) { this->compiler = compiler; }
+
     NoneValue eval() override {
         auto& s = break_stack();
         if (s.empty())

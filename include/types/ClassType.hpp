@@ -6,12 +6,14 @@
 namespace dua
 {
 
+class Value;
+
 struct ClassField
 {
     std::string name;
-    Type* type;
+    const Type* type;
     llvm::Constant* default_value;
-    std::vector<llvm::Constant*> default_args;
+    std::vector<Value> default_args;
 };
 
 class ClassType : public Type
@@ -33,23 +35,19 @@ public:
 
     ClassType(ModuleCompiler* compiler, std::string name, std::vector<ClassField> fields = {});
 
-    llvm::Constant* default_value() override;
+    llvm::Constant* default_value() const override;
 
     llvm::StructType* llvm_type() const override;
 
-    std::vector<ClassField>& fields();
-
-    ClassType* clone() override;
+    const std::vector<ClassField>& fields() const;
 
     std::string to_string() const override { return name; }
 
-    ClassField& get_field(const std::string& name);
+    const ClassField& get_field(const std::string& name) const;
 
-    llvm::Value* get_field(llvm::Value* instance, const std::string& name);
+    llvm::Value* get_field(llvm::Value* instance, const std::string& name) const;
 
-    llvm::Value* get_field(llvm::Value* instance, size_t index);
-
-    ~ClassType() override = default;
+    llvm::Value* get_field(llvm::Value* instance, size_t index) const;
 };
 
 }

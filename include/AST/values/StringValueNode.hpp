@@ -17,11 +17,14 @@ public:
 
     StringValueNode(ModuleCompiler* compiler)
         : is_nullptr(true) { this->compiler = compiler; }
+
     StringValueNode(ModuleCompiler* compiler, std::string value)
         : is_nullptr(false), value(std::move(value))
         { this->compiler = compiler; }
+
     llvm::Constant* eval() override;
-    Type* compute_type() override;
+
+    const Type* get_type() override;
 };
 
 }

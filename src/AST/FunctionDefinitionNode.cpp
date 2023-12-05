@@ -47,7 +47,7 @@ llvm::Function* FunctionDefinitionNode::define_function()
         auto self = function->args().begin();
         for (size_t i = 0; i < fields.size(); i++) {
             auto ptr = builder().CreateStructGEP(current_class(), self, i, fields[i].name);
-            name_resolver().symbol_table.insert(fields[i].name, { ptr, fields[i].type });
+            name_resolver().symbol_table.insert(fields[i].name, compiler->create_value(ptr, fields[i].type));
         }
     }
 
@@ -56,19 +56,21 @@ llvm::Function* FunctionDefinitionNode::define_function()
 
     size_t i = 0;
     if (!info.param_names.empty() && info.param_names[0] == "self") {
+        // FIXME don't allow parameters to be named "self"
         // The self variable doesn't need to be manipulated, thus,
         //  it doesn't need to be pushed on the stack. Moreover, if
         //  the self pointer is pushed to the stack, the variable
         //  on the stack would have a type of class** instead of class*.
         i++;
-        auto type = dynamic_cast<PointerType*>(info.type.param_types[0])->get_element_type();
-        name_resolver().symbol_table.insert("self", { function->args().begin(), type });
+        auto type = dynamic_cast<const PointerType*>(info.type->param_types[0])->get_element_type();
+        name_resolver().symbol_table.insert("self", compiler->create_value(function->args().begin(), type));
     }
 
     for (; i < info.param_names.size(); i++) {
         const auto& arg = function->args().begin() + i;
         arg->setName(info.param_names[i]);
-        create_local_variable(info.param_names[i], info.type.param_types[i], arg);
+        auto value = compiler->create_value(arg, info.type->param_types[i]);
+        create_local_variable(info.param_names[i], info.type->param_types[i], &value);
     }
 
     std::string constructor_suffix = ".constructor";
@@ -88,13 +90,13 @@ llvm::Function* FunctionDefinitionNode::define_function()
     if (current_class() != nullptr)
         name_resolver().pop_scope();
 
-    if (info.type.return_type->llvm_type() == builder().getVoidTy())
+    if (info.type->return_type->llvm_type() == builder().getVoidTy())
         builder().CreateRetVoid();
     else {
         // TODO perform a more sophisticated analysis
         auto terminator = builder().GetInsertBlock()->getTerminator();
         if (!terminator || llvm::dyn_cast<llvm::ReturnInst>(terminator) == nullptr) {
-            builder().CreateRet(info.type.return_type->default_value());
+            builder().CreateRet(info.type->return_type->default_value());
         }
     }
 
@@ -104,7 +106,7 @@ llvm::Function* FunctionDefinitionNode::define_function()
     return function;
 }
 
-void FunctionDefinitionNode::initialize_constructor(ClassType *class_type)
+void FunctionDefinitionNode::initialize_constructor(const ClassType *class_type)
 {
     // Call the constructors of the fields first, then the constructor of this class.
     // Constructors are called in the order of definition of fields in the class.
@@ -115,7 +117,7 @@ void FunctionDefinitionNode::initialize_constructor(ClassType *class_type)
         bool found = false;
         auto type = class_type->get_field(field.name).type;
         auto ptr = class_type->get_field(name_resolver().symbol_table.get("self").ptr, field.name);
-        std::vector<llvm::Value*> args;
+        std::vector<Value> args;
 
         // Check if there exists arguments passed to the constructor first
         for (auto& field_arg : class_fields_args) {
@@ -123,22 +125,18 @@ void FunctionDefinitionNode::initialize_constructor(ClassType *class_type)
                 found = true;
                 args.resize(field_arg.args.size());
                 for (size_t j = 0; j < args.size(); j++)
-                    args[j] = field_arg.args[j]->eval();
+                    args[j] = compiler->create_value(field_arg.args[j]->eval(), field_arg.args[j]->get_type());
                 break;
             }
         }
 
         // If not, check if there is a default initializer list
-        if (!found)
+        if (!found) {
             args.insert(args.end(), field.default_args.begin(), field.default_args.end());
+        }
 
-        name_resolver().call_constructor({ ptr, type }, std::move(args));
+        name_resolver().call_constructor(compiler->create_value(ptr, type), std::move(args));
     }
-}
-
-FunctionDefinitionNode::~FunctionDefinitionNode()
-{
-    delete body;
 }
 
 }

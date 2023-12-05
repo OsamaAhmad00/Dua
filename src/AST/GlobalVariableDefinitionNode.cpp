@@ -1,5 +1,5 @@
 #include <AST/variable/GlobalVariableDefinitionNode.hpp>
-#include <AST/LLMVValueNode.hpp>
+#include "AST/values/LLMVValueNode.hpp"
 #include <utils/ErrorReporting.hpp>
 
 namespace dua
@@ -27,29 +27,28 @@ llvm::GlobalVariable* GlobalVariableDefinitionNode::eval()
 
     if (initializer != nullptr)
     {
-        auto value = initializer->eval();
-        delete initializer;
+        auto value = compiler->create_value(initializer->eval(), initializer->get_type());
 
-        value = compiler->cast_value(value, type->llvm_type());
-        if (value == nullptr)
+        auto llvm_value = typing_system().cast_value(value, type);
+        if (llvm_value == nullptr)
             report_error("Type mismatch between the global variable " + name + " and its initializer");
 
-        auto casted = llvm::dyn_cast<llvm::Constant>(value);
+        auto casted = llvm::dyn_cast<llvm::Constant>(llvm_value);
         // If it's not a constant, then the initialization happens in the
         // .dua.init function. Otherwise, initialized with the constant value.
         if (casted == nullptr) {
-            builder().CreateStore(value, variable);
+            builder().CreateStore(llvm_value, variable);
         } else {
             constant = casted;
         }
     }
     else if (!args.empty())
     {
-        std::vector<llvm::Value*> llvm_args(args.size());
+        std::vector<Value> evaluated(args.size());
         for (int i = 0; i < args.size(); i++)
-            llvm_args[i] = args[i]->eval();
+            evaluated[i] = compiler->create_value(args[i]->eval(), args[i]->get_type());
 
-        name_resolver().call_constructor({ variable, type }, std::move(llvm_args));
+        name_resolver().call_constructor(compiler->create_value(variable, type), std::move(evaluated));
     }
 
     // Restore the old position back
@@ -58,7 +57,7 @@ llvm::GlobalVariable* GlobalVariableDefinitionNode::eval()
     variable->setInitializer(constant ? constant : type->default_value());
     variable->setConstant(false);
 
-    name_resolver().symbol_table.insert_global(name, { variable, type });
+    name_resolver().symbol_table.insert_global(name, compiler->create_value(variable, type));
 
     return result = variable;
 }

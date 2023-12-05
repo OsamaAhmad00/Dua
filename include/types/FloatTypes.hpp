@@ -11,7 +11,7 @@ struct F##WIDTH##Type : public FloatType                             \
     F##WIDTH##Type(ModuleCompiler* compiler)                         \
         { this->compiler = compiler; }                               \
                                                                      \
-    llvm::Constant* default_value() override {                       \
+    llvm::Constant* default_value() const override {                 \
         return llvm::ConstantFP::get(llvm_type(), 0);                \
     }                                                                \
                                                                      \
@@ -19,12 +19,8 @@ struct F##WIDTH##Type : public FloatType                             \
         return compiler->get_builder()->get##TYPE##Ty();             \
     }                                                                \
                                                                      \
-    F##WIDTH##Type* clone() override {                               \
-        return new F##WIDTH##Type(compiler);                         \
-    }                                                                \
-                                                                     \
     std::string to_string() const override {                         \
-        return "f"#WIDTH;                                        \
+        return "f"#WIDTH;                                            \
     }                                                                \
 };
 

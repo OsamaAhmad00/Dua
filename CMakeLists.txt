@@ -78,6 +78,7 @@ set(DUA_SOURCES
 
     src/ModuleCompiler.cpp
     src/Preprocessor.cpp
+    src/Value.cpp
 
     src/resolution/NameResolver.cpp
     src/resolution/FunctionNameResolver.cpp
@@ -115,6 +116,7 @@ set(DUA_SOURCES
     src/AST/VariableNode.cpp
     src/AST/WhileNode.cpp
 
+    src/types/Type.cpp
     src/types/ArrayType.cpp
     src/types/PointerType.cpp
     src/types/ClassType.cpp

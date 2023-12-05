@@ -4,11 +4,11 @@
 namespace dua
 {
 
-inline bool equal_types(Type* t1, Type* t2) {
+inline bool equal_types(const Type* t1, const Type* t2) {
     return (bool)t1 == (bool)t2 && (!t1 || *t1 == *t2);
 }
 
-llvm::Constant* FunctionType::default_value() {
+llvm::Constant* FunctionType::default_value() const {
     return llvm::Constant::getNullValue(llvm_type());
 }
 
@@ -19,15 +19,6 @@ llvm::FunctionType* FunctionType::llvm_type() const
     for (size_t i = 0; i < param_types.size(); i++)
         params[i] = param_types[i]->llvm_type();
     return llvm::FunctionType::get(ret, std::move(params), is_var_arg);
-}
-
-FunctionType *FunctionType::clone()
-{
-    Type* ret = return_type->clone();
-    std::vector<Type*> params(param_types.size());
-    for (size_t i = 0; i < param_types.size(); i++)
-        params[i] = param_types[i]->clone();
-    return new FunctionType(compiler, ret, std::move(params), is_var_arg);
 }
 
 std::string FunctionType::to_string() const
@@ -69,13 +60,6 @@ FunctionType &FunctionType::operator=(FunctionType &&other)
     other.param_types.clear();
     other.return_type = nullptr;
     return *this;
-}
-
-FunctionType::~FunctionType()
-{
-    delete return_type;
-    for (auto& param : param_types)
-        delete param;
 }
 
 }

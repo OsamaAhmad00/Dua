@@ -20,21 +20,21 @@ llvm::Value* VariableNode::eval()
     return nullptr;
 }
 
-Type* VariableNode::compute_type()
+const Type* VariableNode::get_type()
 {
-    delete type;
-    Type* t;
+    if (type != nullptr) return type;
+    const Type* t;
     if (name_resolver().symbol_table.contains(name)) {
-        t = name_resolver().symbol_table.get(name).type->clone();
+        t = name_resolver().symbol_table.get(name).type;
     } else {
-        t = name_resolver().get_function(name).type.clone();
+        t = name_resolver().get_function(name).type;
     }
     return type = compiler->create_type<PointerType>(t);
 }
 
-Type *VariableNode::get_element_type()
+const Type *VariableNode::get_element_type()
 {
-    return ((PointerType*)get_cached_type())->get_element_type();
+    return ((PointerType*)get_type())->get_element_type();
 }
 
 bool VariableNode::is_function() const {

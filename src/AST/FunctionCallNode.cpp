@@ -6,16 +6,16 @@
 namespace dua
 {
 
-FunctionType* get_function_type(ASTNode* func)
+const FunctionType* get_function_type(ASTNode* func)
 {
-    auto type = func->get_cached_type();
+    auto type = func->get_type();
 
-    auto function_type = dynamic_cast<FunctionType*>(type);;
+    auto function_type = dynamic_cast<const FunctionType*>(type);;
 
     if (function_type == nullptr) {
-        auto function_pointer = dynamic_cast<PointerType *>(type);
+        auto function_pointer = dynamic_cast<const PointerType *>(type);
         if (function_pointer != nullptr)
-            function_type = dynamic_cast<FunctionType *>(function_pointer->get_element_type());
+            function_type = dynamic_cast<const FunctionType *>(function_pointer->get_element_type());
     }
 
     if (function_type == nullptr)
@@ -34,26 +34,22 @@ llvm::CallInst* FunctionCallNode::eval()
 
     n += is_method;
 
-    std::vector<llvm::Value*> llvm_args(n);
+    std::vector<Value> evaluated(n);
 
-    for (size_t i = n - 1; i != ((size_t)-1 + is_method); i--)
-        llvm_args[i] = args[i - is_method]->eval();
+    for (size_t i = n - 1; i != ((size_t)-1 + is_method); i--) {
+        auto arg = args[i - is_method];
+        evaluated[i] = compiler->create_value(arg->eval(), arg->get_type());
+    }
 
     if (is_method)
-        llvm_args[0] = field->get_instance();
+        evaluated[0] = field->get_instance();
 
-    return name_resolver().call_function(func->eval(), *get_function_type(func), llvm_args);
+    return name_resolver().call_function(func->eval(), get_function_type(func), std::move(evaluated));
 }
 
-Type *FunctionCallNode::compute_type() {
-    delete type;
-    return type = get_function_type(func)->return_type->clone();
-}
-
-FunctionCallNode::~FunctionCallNode() {
-    for (ASTNode* arg : args)
-        delete arg;
-    delete func;
+const Type *FunctionCallNode::get_type() {
+    if (type != nullptr) return type;
+    return type = get_function_type(func)->return_type;
 }
 
 }

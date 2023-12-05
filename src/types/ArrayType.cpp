@@ -4,7 +4,7 @@
 namespace dua
 {
 
-llvm::Constant* ArrayType::default_value() {
+llvm::Constant* ArrayType::default_value() const {
     std::vector<llvm::Constant*> values(size, element_type->default_value());
     return llvm::ConstantArray::get(llvm_type(), values);
 }

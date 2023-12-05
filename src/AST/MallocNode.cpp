@@ -1,9 +1,10 @@
 #include <AST/lvalue/MallocNode.hpp>
+#include "types/IntegerTypes.hpp"
 
 namespace dua
 {
 
-MallocNode::MallocNode(dua::ModuleCompiler *compiler, dua::Type *type, std::vector<ASTNode*> args)
+MallocNode::MallocNode(dua::ModuleCompiler *compiler, const Type *type, std::vector<ASTNode*> args)
     : args(std::move(args))
 {
     this->compiler = compiler;
@@ -15,26 +16,25 @@ llvm::Value *MallocNode::eval()
     auto alloc_type = get_element_type()->llvm_type();
     auto size = llvm::DataLayout(&module()).getTypeAllocSize(alloc_type);
 
-    auto instance = name_resolver().call_function("malloc", { builder().getInt64(size) });
+    auto instance = name_resolver().call_function(
+        "malloc",
+         { compiler->create_value(builder().getInt64(size), compiler->create_type<I64Type>()) }
+    );
 
-    std::vector<llvm::Value*> llvm_args(args.size());
+    std::vector<Value> evaluated(args.size());
     for (int i = 0; i < args.size(); i++)
-        llvm_args[i] = args[i]->eval();
-    name_resolver().call_constructor({ instance, get_element_type() }, std::move(llvm_args));
+        evaluated[i] = compiler->create_value(args[i]->eval(), args[i]->get_type());
+    name_resolver().call_constructor(compiler->create_value(instance, get_element_type()), std::move(evaluated));
 
     return instance;
 }
 
-Type *MallocNode::compute_type() {
+const Type *MallocNode::get_type() {
     return type;
 }
 
-Type *MallocNode::get_element_type() {
+const Type *MallocNode::get_element_type() {
      return ((PointerType*)type)->get_element_type();
-}
-
-MallocNode::~MallocNode() {
-    for (auto& arg : args) delete arg;
 }
 
 }

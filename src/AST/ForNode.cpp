@@ -34,7 +34,7 @@ NoneValue ForNode::eval()
 
     builder().SetInsertPoint(cond_block);
     llvm::Value* cond_res = cond_exp->eval();
-    cond_res = compiler->cast_as_bool(cond_res);
+    cond_res = typing_system().cast_as_bool(compiler->create_value(cond_res, cond_exp->get_type()));
     if (cond_res == nullptr)
         report_error("The provided condition can't be casted to boolean value.");
     builder().CreateCondBr(cond_res, body_block, end_block);
@@ -52,15 +52,6 @@ NoneValue ForNode::eval()
     name_resolver().push_scope();
 
     return none_value();
-}
-
-ForNode::~ForNode()
-{
-    for (auto exp : initializations)
-        delete exp;
-    delete cond_exp;
-    delete body_exp;
-    delete update_exp;
 }
 
 }

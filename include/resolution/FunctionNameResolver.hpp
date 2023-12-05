@@ -10,11 +10,11 @@ namespace dua
 {
 
 class ModuleCompiler;
-struct Variable;
+struct Value;
 
 struct FunctionInfo
 {
-    FunctionType type;
+    const FunctionType* type;
     std::vector<std::string> param_names;
 };
 

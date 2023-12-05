@@ -32,15 +32,10 @@ public:
         return result;
     }
 
-    Type* compute_type() override {
-        delete type;
-        return type = nodes[return_node]->get_cached_type();
+    const Type* get_type() override {
+        return type = nodes[return_node]->get_type();
     }
 
-    ~SequentialEvalNode() override {
-        for (auto node : nodes)
-            delete node;
-    }
 };
 
 }

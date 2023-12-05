@@ -18,14 +18,14 @@ protected:
 
 public:
 
-    VariableDefinitionNode(ModuleCompiler* compiler, std::string name, Type* type,
+    VariableDefinitionNode(ModuleCompiler* compiler, std::string name, const Type* type,
                            ASTNode* initializer, std::vector<ASTNode*> args)
             : name(std::move(name)), initializer(initializer), args(std::move(args))
     { this->compiler = compiler; this->type = type; }
+
     llvm::Value* eval() override = 0;
-    Type* compute_type() override { return type; }
+
     const std::string& get_name() const { return name; }
-    ~VariableDefinitionNode() override { delete initializer; for (auto& arg : args) delete arg; };
 };
 
 }

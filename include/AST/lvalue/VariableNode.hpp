@@ -17,11 +17,11 @@ public:
 
     llvm::Value* eval() override;
 
-    Type* compute_type() override;
+    const Type* get_type() override;
 
-    Type* get_element_type() override;
+    const Type* get_element_type() override;
 
-    virtual bool is_function() const;
+    [[nodiscard]] virtual bool is_function() const;
 };
 
 }

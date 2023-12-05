@@ -19,15 +19,13 @@ public:
         : values(std::move(values)), size(size), element_type(element_type) { this->compiler = compiler; }
 
     llvm::Constant* eval() override {
-        return llvm::ConstantArray::get((llvm::ArrayType*)(get_cached_type()->llvm_type()), values);
+        return llvm::ConstantArray::get((llvm::ArrayType*)(get_type()->llvm_type()), values);
     }
 
-    Type* compute_type() override {
+    const Type* get_type() override {
         if (type == nullptr) return type = compiler->create_type<ArrayType>(element_type, size);
         return type;
     }
-
-    ~ArrayValueNode() override { delete element_type; }
 };
 
 }

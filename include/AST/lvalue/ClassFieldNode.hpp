@@ -7,7 +7,7 @@ namespace dua
 
 class ClassFieldNode : public VariableNode
 {
-    llvm::Value* instance_eval = nullptr;
+    mutable Value instance_eval { nullptr, nullptr, nullptr };
 
     ASTNode* instance;
 
@@ -18,15 +18,13 @@ public:
 
     llvm::Value* eval() override;
 
-    Type* compute_type() override;
+    [[nodiscard]] const Type* get_type() override;
 
-    llvm::Value* get_instance();
+    [[nodiscard]] Value get_instance() const;
 
-    std::string get_full_name() const;
+    [[nodiscard]] std::string get_full_name() const;
 
-    bool is_function() const override;
-
-    ~ClassFieldNode() override { delete instance; }
+    [[nodiscard]] bool is_function() const override;
 };
 
 }

@@ -18,8 +18,8 @@ public:
 
     DoWhileNode(ModuleCompiler* compiler, ASTNode* cond_exp, ASTNode* body_exp)
             : cond_exp(cond_exp), body_exp(body_exp) { this->compiler = compiler; }
+
     NoneValue eval() override;
-    ~DoWhileNode() override;
 };
 
 }

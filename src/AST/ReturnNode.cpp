@@ -8,11 +8,10 @@ llvm::ReturnInst* ReturnNode::eval()
 {
     if (expression == nullptr)
         return builder().CreateRetVoid();
-    auto result = expression->eval();
-    auto casted = compiler->cast_value(result, current_function()->getReturnType());
+    auto result = compiler->create_value(expression->eval(), expression->get_type());
+    auto return_type = name_resolver().get_function(current_function()->getName().str()).type->return_type;
+    auto casted = typing_system().cast_value(result, return_type);
     return builder().CreateRet(casted);
 }
-
-ReturnNode::~ReturnNode() { delete expression; }
 
 }

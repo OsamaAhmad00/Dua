@@ -8,31 +8,25 @@ llvm::BasicBlock* ASTNode::create_basic_block(const std::string& name, llvm::Fun
     return llvm::BasicBlock::Create(context(), name, function);
 }
 
-llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, Type* type, llvm::Value* init, std::vector<llvm::Value*> args)
+llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, const Type* type, Value* init, std::vector<Value> args)
 {
     llvm::BasicBlock* entry = &current_function()->getEntryBlock();
     temp_builder().SetInsertPoint(entry, entry->begin());
     llvm::AllocaInst* instance = temp_builder().CreateAlloca(type->llvm_type(), 0, name);
     if (init) {
-        init = compiler->cast_value(init, type->llvm_type());
-        builder().CreateStore(init, instance);
+        auto val = typing_system().cast_value(*init, type);
+        builder().CreateStore(val, instance);
     }
-    Variable variable = { instance, type };
-    name_resolver().symbol_table.insert(name, variable);
-    name_resolver().call_constructor(variable, std::move(args));
+    auto value = compiler->create_value(instance, type);
+    name_resolver().symbol_table.insert(name, value);
+    name_resolver().call_constructor(value, std::move(args));
     return instance;
 }
 
 NoneValue ASTNode::none_value() { return builder().getInt32(0); }
 
-Type *ASTNode::get_cached_type()
+const Type* ASTNode::get_type()
 {
-    if (type == nullptr)
-        compute_type();
-    return type;
-}
-
-Type *ASTNode::compute_type() {
     if (type == nullptr)
         return type = compiler->create_type<VoidType>();
     return type;

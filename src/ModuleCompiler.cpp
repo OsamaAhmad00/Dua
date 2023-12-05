@@ -176,4 +176,10 @@ void ModuleCompiler::complete_dua_init_function()
     }
 }
 
+ModuleCompiler::~ModuleCompiler()
+{
+    for (auto node : nodes)
+        delete node;
+}
+
 }

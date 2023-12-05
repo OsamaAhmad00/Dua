@@ -12,12 +12,6 @@ struct FieldInfo
 
 NameResolver::NameResolver(ModuleCompiler *compiler) : compiler(compiler), function_resolver(compiler) {}
 
-NameResolver::~NameResolver()
-{
-    for (auto& cls : classes)
-        delete cls.second;
-}
-
 llvm::IRBuilder<>& NameResolver::builder() const
 {
     return compiler->builder;
@@ -35,7 +29,7 @@ std::vector<FieldConstructorArgs> &NameResolver::get_fields_args(const std::stri
     return it->second;
 }
 
-void NameResolver::destruct_all_variables(const Scope<Variable> &scope)
+void NameResolver::destruct_all_variables(const Scope<Value> &scope)
 {
     // TODO enforce an order on the destruction
     for (auto& variable : scope.map)
@@ -47,12 +41,12 @@ void NameResolver::push_scope()
     symbol_table.push_scope();
 }
 
-Scope<Variable> NameResolver::pop_scope()
+Scope<Value> NameResolver::pop_scope()
 {
     return symbol_table.pop_scope();
 }
 
-ClassType *NameResolver::get_class(const std::string &name) {
+const ClassType *NameResolver::get_class(const std::string &name) {
      return classes[name];
 }
 
@@ -68,20 +62,20 @@ bool NameResolver::has_function(const std::string &name) const {
     return function_resolver.has_function(name);
 }
 
-llvm::CallInst *NameResolver::call_function(const std::string &name, std::vector<llvm::Value*> args) {
+llvm::CallInst *NameResolver::call_function(const std::string &name, std::vector<Value> args) {
     return function_resolver.call_function(name, std::move(args));
 }
 
-llvm::CallInst* NameResolver::call_function(llvm::Value *ptr, const FunctionType &type, std::vector<llvm::Value*> args) {
+llvm::CallInst* NameResolver::call_function(llvm::Value *ptr, const FunctionType* type, std::vector<Value> args) {
     return function_resolver.call_function(ptr, type, std::move(args));
 }
 
-void NameResolver::call_constructor(const Variable &variable, std::vector<llvm::Value*> args) {
-    return function_resolver.call_constructor(variable, std::move(args));
+void NameResolver::call_constructor(const Value &value, std::vector<Value> args) {
+    return function_resolver.call_constructor(value, std::move(args));
 }
 
-void NameResolver::call_destructor(const Variable &variable) {
-    return function_resolver.call_destructor(variable);
+void NameResolver::call_destructor(const Value &value) {
+    return function_resolver.call_destructor(value);
 }
 
 }

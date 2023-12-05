@@ -11,7 +11,7 @@ class GlobalVariableDefinitionNode : public VariableDefinitionNode
 
 public:
 
-    GlobalVariableDefinitionNode(ModuleCompiler* compiler, std::string name, Type* type,
+    GlobalVariableDefinitionNode(ModuleCompiler* compiler, std::string name, const Type* type,
                                  ASTNode* initializer, std::vector<ASTNode*> args = {})
         : VariableDefinitionNode(compiler, std::move(name), type, initializer, std::move(args)) {}
 

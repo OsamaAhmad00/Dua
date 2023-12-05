@@ -5,27 +5,27 @@
 namespace dua
 {
 
-PointerType* assert_ptr(Type* type) {
-    auto ptr = dynamic_cast<PointerType*>(type);
+const PointerType* assert_ptr(const Type* type) {
+    auto ptr = dynamic_cast<const PointerType*>(type);
     if (!ptr) report_error("Can't dereference a non-pointer type expression");
     return ptr;
 }
 
 llvm::Value* DereferenceNode::eval()
 {
-    assert_ptr(address->get_cached_type());
+    assert_ptr(address->get_type());
     return address->eval();
 }
 
-Type *DereferenceNode::compute_type()
+const Type* DereferenceNode::get_type()
 {
-    delete type;
-    return type = assert_ptr(address->get_cached_type()->clone());
+    if (type != nullptr) return type;
+    return type = assert_ptr(address->get_type());
 }
 
-Type* DereferenceNode::get_element_type()
+const Type* DereferenceNode::get_element_type()
 {
-    auto ptr = assert_ptr(get_cached_type());
+    auto ptr = assert_ptr(get_type());
     return ptr->get_element_type();
 }
 

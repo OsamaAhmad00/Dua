@@ -18,20 +18,21 @@ public:
 
     friend class ModuleCompiler;
 
-    virtual ~ASTNode() { delete type; };
+    virtual ~ASTNode() = default;
+
     virtual llvm::Value* eval() = 0;
 
-    // The typing system
-    Type* get_cached_type();
-    virtual Type* compute_type();
+    virtual const Type* get_type();
 
 protected:
 
     llvm::BasicBlock* create_basic_block(const std::string& name, llvm::Function* function);
-    llvm::AllocaInst* create_local_variable(const std::string& name, Type* type, llvm::Value* init, std::vector<llvm::Value*> args = {});
+
+    llvm::AllocaInst* create_local_variable(const std::string& name, const Type* type, Value* init, std::vector<Value> args = {});
+
     NoneValue none_value();
 
-    Type* type = nullptr;
+    const Type* type = nullptr;
     ModuleCompiler* compiler = nullptr;
 
     // Convenience methods to access the internal state,

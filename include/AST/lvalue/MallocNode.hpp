@@ -13,15 +13,13 @@ class MallocNode : public LValueNode
 
 public:
 
-    MallocNode(ModuleCompiler* compiler, Type* type, std::vector<ASTNode*> args);
+    MallocNode(ModuleCompiler* compiler, const Type* type, std::vector<ASTNode*> args);
 
     llvm::Value* eval() override;
 
-    Type* compute_type() override;
+    const Type* get_type() override;
 
-    Type* get_element_type() override;
-
-    ~MallocNode() override;
+    const Type* get_element_type() override;
 };
 
 }

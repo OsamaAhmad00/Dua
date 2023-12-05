@@ -22,8 +22,6 @@ public:
         { this->compiler = compiler; }
 
     llvm::Value* eval() override;
-
-    ~ClassDefinitionNode() override;
 };
 
 }

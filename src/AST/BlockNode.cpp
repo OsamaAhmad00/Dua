@@ -27,15 +27,8 @@ llvm::Value* BlockNode::eval()
     return result;
 }
 
-Type *BlockNode::compute_type() {
-    delete type;
-    return type = elements.back()->get_cached_type()->clone();
-}
-
-BlockNode::~BlockNode()
-{
-    for (auto element: elements)
-        delete element;
+const Type* BlockNode::get_type() {
+    return elements.back()->get_type();
 }
 
 }

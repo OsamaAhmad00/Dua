@@ -22,8 +22,8 @@ public:
               ASTNode* cond_exp, ASTNode* body_exp, ASTNode* update_exp)
             : initializations(std::move(initializations)), cond_exp(cond_exp),
               body_exp(body_exp), update_exp(update_exp) { this->compiler = compiler; }
+
     NoneValue eval() override;
-    ~ForNode() override;
 };
 
 }

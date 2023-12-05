@@ -11,7 +11,7 @@ class FunctionDefinitionNode : public ASTNode
 
     llvm::Function* define_function();
 
-    void initialize_constructor(ClassType* class_type);
+    void initialize_constructor(const ClassType* class_type);
 
 public:
 
@@ -22,8 +22,6 @@ public:
     void set_body(ASTNode* body) { assert(this->body == nullptr); this->body = body; }
 
     llvm::Function* eval() override;
-
-    ~FunctionDefinitionNode() override;
 };
 
 }

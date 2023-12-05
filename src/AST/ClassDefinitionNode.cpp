@@ -48,10 +48,12 @@ llvm::Value *ClassDefinitionNode::eval()
     if (current_class()->isSized())
         report_error("Redefinition of a class");
 
-    auto &fields = name_resolver().get_class(name)->fields();
+    // A non-const direct access
+    auto &fields = name_resolver().class_fields[name];
     fields.reserve(split_point);
 
     // Evaluate fields first
+    // The fields will register themselves
     for (size_t i = 0; i < split_point; i++)
         members[i]->eval();
 
@@ -76,12 +78,6 @@ llvm::Value *ClassDefinitionNode::eval()
     current_function() = old_function;
 
     return result = none_value();
-}
-
-ClassDefinitionNode::~ClassDefinitionNode()
-{
-    for (auto node : members)
-        delete node;
 }
 
 }

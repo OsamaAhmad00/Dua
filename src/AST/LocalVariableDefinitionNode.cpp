@@ -3,13 +3,13 @@
 namespace dua
 {
 
-llvm::Constant* LocalVariableDefinitionNode::get_constant(llvm::Value* value, llvm::Type* target_type, const std::string& field_name)
+llvm::Constant* LocalVariableDefinitionNode::get_constant(Value value, const Type* target_type, const std::string& field_name)
 {
-    auto const_init = llvm::dyn_cast<llvm::Constant>(value);
-    if (const_init == nullptr)
+    value.ptr = llvm::dyn_cast<llvm::Constant>(value.ptr);
+    if (value.ptr == nullptr)
         report_error("Can't initialize class fields with a non-constant expression (in " + field_name + ")");
 
-    auto casted = (llvm::Constant*)compiler->cast_value(const_init, target_type, false);
+    auto casted = (llvm::Constant*)typing_system().cast_value(value, target_type, false);
 
     if (casted == nullptr)
         report_error("Initializing the field " + field_name + " with a mismatching type expression");
@@ -24,12 +24,14 @@ llvm::Value* LocalVariableDefinitionNode::eval()
     if (initializer != nullptr && !args.empty())
         report_error("Can't have both an initializer and an initializer list (in " + full_name + ")");
 
-    llvm::Value* init_value = initializer ? initializer->eval() : type->default_value();
+    Value init_value = initializer
+            ? compiler->create_value(initializer->eval(), initializer->get_type())
+            : compiler->create_value(type->default_value(), type);
     if (current_function() != nullptr) {
-        std::vector<llvm::Value*> llvm_args(args.size());
+        std::vector<Value> evaluated(args.size());
         for (int i = 0; i < args.size(); i++)
-            llvm_args[i] = args[i]->eval();
-        return create_local_variable(name, type, init_value, std::move(llvm_args));
+            evaluated[i] = compiler->create_value(args[i]->eval(), args[i]->get_type());
+        return create_local_variable(name, type, &init_value, std::move(evaluated));
     }
 
     if (current_class() == nullptr)
@@ -42,19 +44,28 @@ llvm::Value* LocalVariableDefinitionNode::eval()
     if (name_resolver().has_function(class_name + "." + name))
         report_error("The identifier " + full_name + " is defined as both a field and a method");
 
-    llvm::Constant* default_value = init_value ?
-            get_constant(init_value, type->llvm_type(), full_name) : type->default_value();
+    llvm::Constant* default_value = initializer ?
+            get_constant(init_value, type, full_name) : type->default_value();
 
-    std::vector<llvm::Constant*> default_args;
+    std::vector<Value> default_args;
     if (!args.empty()) {
         default_args.resize(args.size());
         for (size_t i = 0; i < args.size(); i++)
-            default_args[i] = get_constant(args[i]->eval(), args[i]->get_cached_type()->llvm_type(), full_name);
+        {
+            auto constant = get_constant(
+                    compiler->create_value(args[i]->eval(), args[i]->get_type()),
+                    args[i]->get_type(),
+                    full_name
+            );
+
+            default_args[i] = compiler->create_value(constant, args[i]->get_type());
+        }
     }
 
-    name_resolver().get_class(class_name)->fields().push_back({
+    // non-const direct access
+    name_resolver().class_fields[class_name].push_back({
         name,
-        type->clone(),
+        type,
         default_value,
         std::move(default_args)
     });

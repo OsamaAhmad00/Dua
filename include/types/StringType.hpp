@@ -9,7 +9,7 @@ struct StringType : Type
 {
     StringType(ModuleCompiler* compiler) { this->compiler = compiler; }
 
-    llvm::Constant * default_value() override {
+    llvm::Constant * default_value() const override {
         return llvm::Constant::getNullValue(llvm_type());
     }
 
@@ -18,8 +18,6 @@ struct StringType : Type
     }
 
     std::string to_string() const override { return "String"; }
-
-    StringType* clone() override { return new StringType(compiler); }
 };
 
 }

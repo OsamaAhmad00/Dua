@@ -6,7 +6,9 @@
 #include <llvm/IR/LLVMContext.h>
 #include <types/Type.hpp>
 #include <types/FunctionType.hpp>
-#include "resolution/NameResolver.hpp"
+#include <resolution/NameResolver.hpp>
+#include <TypingSystem.hpp>
+#include <Value.hpp>
 
 namespace dua
 {
@@ -22,26 +24,35 @@ public:
     friend class ParserAssistant;
     friend class NameResolver;
     friend class FunctionNameResolver;
+    friend class TypingSystem;
+    friend class Value;
+    friend class Type;
     friend class ClassType;
 
     ModuleCompiler(const std::string& module_name, const std::string& code);
-
-    // Returns the result type of an operation involving the two types.
-    Type* get_winning_type(Type* lhs, Type* rhs);
-
-    llvm::Value* cast_value(llvm::Value* value, llvm::Type* target_type, bool panic_on_failure=true);
-    llvm::Value* cast_as_bool(llvm::Value* value, bool panic_on_failure=true);
 
     const std::string& get_result() { return result; }
 
     template <typename T, typename ...Args>
     T* create_node(Args ...args) {
-        return new T(this, args...);
+        auto node = new T(this, args...);
+        nodes.push_back(node);
+        return node;
     }
 
     template <typename T, typename ...Args>
-    T* create_type(Args ...args) {
-        return new T(this, args...);
+    const T* create_type(Args ...args) {
+        return typing_system.create_type<T>(args...);
+    }
+
+    template <typename T>
+    Value create_value(llvm::Value* value, const T* type) {
+        return { &typing_system, value, type };
+    }
+
+    template <typename T, typename ...Args>
+    Value create_value(llvm::Value* value, Args ...args) {
+        return create_value(value, create_type(args...));
     }
 
     llvm::IRBuilder<>* get_builder() { return &builder; }
@@ -53,6 +64,8 @@ public:
     //  deferred nodes get executed.
     void create_dua_init_function();
     void complete_dua_init_function();
+
+    ~ModuleCompiler();
 
 private:
 
@@ -93,6 +106,12 @@ private:
     // Used to resolve names of identifiers, whether
     //  it's a variable or a function/method
     NameResolver name_resolver;
+
+    // Used to create types, check for types, and convert between types
+    TypingSystem typing_system;
+
+    // Used to track allocated nodes to delete later
+    std::vector<ASTNode*> nodes;
 
     // A cache of the resulting LLVM IR, used to
     //  avoid performing the same computations

@@ -13,10 +13,12 @@ public:
 
     DereferenceNode(ModuleCompiler* compiler, ASTNode* address)
             : address(address) { this->compiler = compiler; this->type = type; }
+
     llvm::Value* eval() override;
-    Type* compute_type() override;
-    Type* get_element_type() override;
-    ~DereferenceNode() override { delete address; }
+
+    const Type* get_type() override;
+
+    const Type* get_element_type() override;
 };
 
 }

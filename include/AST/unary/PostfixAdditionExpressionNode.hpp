@@ -14,9 +14,10 @@ public:
 
     PostfixAdditionExpressionNode(ModuleCompiler* compiler, LValueNode* lvalue, int64_t amount)
             : lvalue(lvalue), amount(amount) { this->compiler = compiler; }
+
     llvm::Value * eval() override;
-    Type* compute_type() override;
-    ~PostfixAdditionExpressionNode() override;
+
+    const Type* get_type() override;
 };
 
 }

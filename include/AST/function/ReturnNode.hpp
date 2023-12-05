@@ -15,8 +15,6 @@ public:
         : expression(expression) { this->compiler = compiler; }
 
     llvm::ReturnInst* eval() override;
-
-    ~ReturnNode() override;
 };
 
 }

@@ -37,9 +37,7 @@ public:
 
     bool has_else() { return branches.size() == conditions.size() + 1; }
 
-    Type* compute_type() override;
-
-    ~IfNode() override;
+    const Type* get_type() override;
 };
 
 }

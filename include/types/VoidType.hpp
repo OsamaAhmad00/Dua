@@ -10,7 +10,7 @@ struct VoidType : Type
 {
     VoidType(ModuleCompiler* compiler) { this->compiler = compiler; }
 
-    llvm::Constant* default_value() override {
+    llvm::Constant* default_value() const override {
         report_internal_error("Void types has no value");
         return nullptr;
     }
@@ -20,8 +20,6 @@ struct VoidType : Type
     }
 
     std::string to_string() const override { return "Void"; }
-
-    VoidType* clone() override { return new VoidType(compiler); }
 };
 
 }

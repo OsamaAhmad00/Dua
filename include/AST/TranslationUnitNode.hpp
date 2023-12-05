@@ -12,7 +12,8 @@ class TranslationUnitNode : public ASTNode
 
 public:
 
-    TranslationUnitNode(ModuleCompiler* compiler) { this->compiler = compiler; }
+    explicit TranslationUnitNode(ModuleCompiler* compiler) { this->compiler = compiler; }
+
     TranslationUnitNode(ModuleCompiler* compiler, std::vector<ASTNode*> elements)
         : elements(std::move(elements)) { this->compiler = compiler; }
 

@@ -20,9 +20,9 @@ public:                                                                         
         : F##WIDTH##ValueNode(compiler, 0.0) {}                                  \
                                                                                  \
     llvm::Constant *eval() override                                              \
-        { return llvm::ConstantFP::get(get_cached_type()->llvm_type(), value); } \
+        { return llvm::ConstantFP::get(get_type()->llvm_type(), value); }        \
                                                                                  \
-    Type* compute_type() override {                                          \
+    const Type* get_type() override {                                            \
         if (type == nullptr)                                                     \
             return type = compiler->create_type<F##WIDTH##Type>();               \
         return type;                                                             \
@@ -30,6 +30,7 @@ public:                                                                         
 };
 
 DEFINE_FLOAT_VALUE_NODE(double, 64)
+
 DEFINE_FLOAT_VALUE_NODE(float, 32)
 
 }

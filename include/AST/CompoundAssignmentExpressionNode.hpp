@@ -22,14 +22,17 @@ public:
         auto lhs_ptr = lhs->eval();
         auto lhs_value = builder().CreateLoad(lhs->get_element_type()->llvm_type(), lhs_ptr);
         auto rhs_value = rhs->eval();
-        auto value = OpNode::perform(compiler, lhs_value, rhs_value, lhs->get_element_type()->llvm_type());
+        auto value = OpNode::perform(
+            compiler,
+            compiler->create_value(lhs_value, lhs->get_type()),
+            compiler->create_value(rhs_value, rhs->get_type()),
+            lhs->get_element_type()
+        );
         builder().CreateStore(value, lhs_ptr);
         return value;
     }
 
-    Type* compute_type() override { delete type; return type = lhs->get_cached_type()->clone(); };
-
-    ~CompoundAssignmentExpressionNode() override { delete lhs; delete rhs; };
+    const Type* get_type() override { return type = lhs->get_type(); };
 };
 
 }

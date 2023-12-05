@@ -9,11 +9,11 @@ namespace dua
 class SizeOfNode : public ASTNode
 {
 
-    Type* target_type;
+    const Type* target_type;
 
 public:
 
-    SizeOfNode(ModuleCompiler* compiler, Type* target_type)
+    SizeOfNode(ModuleCompiler* compiler, const Type* target_type)
             : target_type(target_type)
     {
         this->compiler = compiler;
@@ -30,7 +30,7 @@ public:
             //  x is a variable name (an expression), or a class
             //  type. If the type is nullptr, this means that this
             //  is not a valid class type, thus, this is a variable.
-            auto cls = dynamic_cast<ClassType*>(target_type);
+            auto cls = dynamic_cast<const ClassType*>(target_type);
             if (cls == nullptr)
                 report_internal_error("sizeof operator called on an invalid type");
             type = name_resolver().symbol_table.get(cls->name).type->llvm_type();
@@ -40,13 +40,9 @@ public:
         return builder().getInt64(size);
     }
 
-    Type* compute_type() override {
+    const Type* get_type() override {
         if (type == nullptr) type = compiler->create_type<I64Type>();
         return type;
-    }
-
-    ~SizeOfNode() override {
-        delete target_type;
     }
 };
 

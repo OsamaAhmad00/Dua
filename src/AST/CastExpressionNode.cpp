@@ -6,21 +6,15 @@ namespace dua
 
 llvm::Value *CastExpressionNode::eval()
 {
-    llvm::Value* result = compiler->cast_value(expression->eval(), target_type->llvm_type());
+    llvm::Value* result = typing_system().cast_value(
+            compiler->create_value(expression->eval(), expression->get_type()), target_type);
     if (result == nullptr)
         report_error("Invalid cast operation");
     return result;
 }
 
-CastExpressionNode::~CastExpressionNode()
-{
-    delete target_type;
-    delete expression;
-}
-
-Type *CastExpressionNode::compute_type() {
-    delete type;
-    return type = target_type->clone();
+const Type *CastExpressionNode::get_type() {
+    return target_type;
 }
 
 }
