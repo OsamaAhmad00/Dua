@@ -56,3 +56,24 @@ int main()
     printf("%d%d%d", arr[3][4], arr[2][6], arr[4][9]);
 }
 
+
+// Case Array literals
+// Outputs "12345"
+
+int main()
+{
+    var arr = long { 1, 2, 3, 4, 5 };
+    for (int i = 0; i < 5; i++)
+        printf("%lld", arr[i]);
+}
+
+
+// Case Array literals with implicit cast
+// Outputs "12345"
+
+int main()
+{
+    var arr = int { 1.22, 2, 3S, 4, 5 };
+    for (int i = 0; i < 5; i++)
+        printf("%d", arr[i]);
+}

@@ -719,4 +719,8 @@ void ParserAssistant::add_field_constructor_args() {
     fields_args.push_back({ pop_str(), pop_args() });
 }
 
+void ParserAssistant::create_array_literal() {
+    push_node<ArrayValueNode>(pop_args(), pop_type());
+}
+
 }

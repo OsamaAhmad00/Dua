@@ -12,6 +12,7 @@ llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, const 
 {
     llvm::BasicBlock* entry = &current_function()->getEntryBlock();
     temp_builder().SetInsertPoint(entry, entry->begin());
+    size_t sss = args.size();
     llvm::AllocaInst* instance = temp_builder().CreateAlloca(type->llvm_type(), 0, name);
     if (init) {
         auto val = typing_system().cast_value(*init, type);

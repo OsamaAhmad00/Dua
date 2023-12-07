@@ -214,6 +214,7 @@ statement
 expression
     : number
     | String { assistant.push_str($String.text); assistant.create_string_value(); }
+    | type '{' arg_list '}' { assistant.create_array_literal(); }
     | block_expression
     | if_expression
     | when_expression

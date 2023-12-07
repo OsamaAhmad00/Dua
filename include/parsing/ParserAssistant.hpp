@@ -214,6 +214,7 @@ public:
     void finish_constructor();
     void prepare_destructor();
     void create_pointer_field_access();
+    void create_array_literal();
 
     template<typename T>
     void create_unary_expr() {
