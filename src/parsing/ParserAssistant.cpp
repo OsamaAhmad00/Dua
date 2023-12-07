@@ -42,6 +42,8 @@ TranslationUnitNode* ParserAssistant::construct_result()
 void ParserAssistant::finish_parsing()
 {
     reset_symbol_table();
+    compiler->current_class = nullptr;
+    compiler->current_function = nullptr;
     create_missing_methods();
 }
 
@@ -60,21 +62,27 @@ void ParserAssistant::create_empty_method_if_doesnt_exist(const ClassType* cls, 
     if (compiler->name_resolver.has_function(name))
         return;
 
+    auto type = compiler->create_type<FunctionType>(
+        compiler->create_type<VoidType>(),
+        std::vector<const Type*>{ compiler->create_type<PointerType>(cls) },
+        false
+    );
+
     auto signature = FunctionInfo {
-        compiler->create_type<FunctionType>(
-                compiler->create_type<VoidType>(),
-                std::vector<const Type*>{ compiler->create_type<PointerType>(cls) },
-                false
-        ),
+        type,
         { "self" }
     };
 
-    compiler->name_resolver.register_function(name, std::move(signature));
+    name = compiler->name_resolver.get_full_function_name(name, type->param_types);
+
+    compiler->name_resolver.register_function(name, std::move(signature), true);
 
     compiler->push_deferred_node(
         compiler->create_node<FunctionDefinitionNode>(
             name,
-            compiler->create_node<BlockNode>(std::vector<ASTNode*>{}))
+            compiler->create_node<BlockNode>(std::vector<ASTNode*>{}),
+            type
+        )
     );
 }
 
@@ -157,14 +165,20 @@ void ParserAssistant::create_function_declaration()
         param_names.insert(param_names.begin(), "self");
     }
 
+    if (!no_mangle)
+        name = compiler->name_resolver.get_full_function_name(name, param_types);
+    else if (compiler->current_class != nullptr)
+        report_error("Can't use the no_mangle keyword for methods");
+
+    auto function_type = compiler->create_type<FunctionType>(return_type, std::move(param_types), is_var_arg);
     FunctionInfo info {
-            compiler->create_type<FunctionType>(return_type, std::move(param_types), is_var_arg),
-            std::move(param_names)
+        function_type,
+        std::move(param_names)
     };
 
-    compiler->name_resolver.register_function(name, std::move(info));
+    compiler->name_resolver.register_function(name, std::move(info), true);
 
-    push_node<FunctionDefinitionNode>(std::move(name), nullptr);
+    push_node<FunctionDefinitionNode>(std::move(name), nullptr, function_type);
 }
 
 void ParserAssistant::create_block()
@@ -345,9 +359,25 @@ bool ParserAssistant::pop_var_arg() {
     return result;
 }
 
-void ParserAssistant::create_function_call()
+void ParserAssistant::create_function_call() {
+    push_node<FunctionCallNode>(pop_str(), pop_args());
+}
+
+void ParserAssistant::create_method_call()
 {
-    push_node<FunctionCallNode>(pop_node(), pop_args());
+    auto func_name = pop_str();
+    auto instance_name = pop_str();
+    auto instance = compiler->name_resolver.symbol_table.get(instance_name);
+    auto class_type = dynamic_cast<const ClassType*>(instance.type);
+    auto full_name = class_type->name + "." + func_name;
+    auto args = pop_args();
+    args.insert(args.begin(), compiler->create_node<VariableNode>(instance_name));
+    push_node<FunctionCallNode>(full_name, std::move(args));
+}
+
+void ParserAssistant::create_expr_function_call()
+{
+    push_node<ExprFunctionCallNode>(pop_node(), pop_args());
 }
 
 void ParserAssistant::create_cast()
@@ -550,7 +580,7 @@ void ParserAssistant::create_class()
     for (size_t i = 0; i < n; i++)
         members[n - i - 1] = pop_node();
 
-    push_node<ClassDefinitionNode>(pop_str(), std::move(members), std::move(fields_args), is_packed);
+    push_node<ClassDefinitionNode>(pop_str(), std::move(members), is_packed);
 
     compiler->current_class = nullptr;
 
@@ -632,7 +662,7 @@ void ParserAssistant::create_malloc() {
             std::vector<const Type*>{ compiler->create_type<I64Type>() }
         );
 
-        compiler->name_resolver.register_function("malloc", {type, { "size" }});
+        compiler->name_resolver.register_function("malloc", {type, { "size" }}, true);
 
         declared_malloc = true;
     }
@@ -648,7 +678,7 @@ void ParserAssistant::create_free()
             std::vector<const Type*>{ compiler->create_type<PointerType>(compiler->create_type<I64Type>()) }
         );
 
-        compiler->name_resolver.register_function("free", {std::move(type), { "size" }});
+        compiler->name_resolver.register_function("free", {std::move(type), { "size" }}, true);
 
         declared_free = true;
     }
@@ -666,6 +696,14 @@ void ParserAssistant::prepare_constructor()
         report_error("Constructors can only be defined inside classes");
     push_type<VoidType>();
     push_str("constructor");
+    no_mangle = false;
+}
+
+void ParserAssistant::finish_constructor()
+{
+    auto constructor = pop_node_as<FunctionDefinitionNode>();
+    compiler->name_resolver.add_fields_constructor_args(constructor->name, std::move(fields_args));
+    nodes.push_back(constructor);
 }
 
 void ParserAssistant::prepare_destructor()
@@ -674,6 +712,7 @@ void ParserAssistant::prepare_destructor()
         report_error("Destructors can only be defined inside classes");
     push_type<VoidType>();
     push_str("destructor");
+    no_mangle = false;
 }
 
 void ParserAssistant::add_field_constructor_args() {

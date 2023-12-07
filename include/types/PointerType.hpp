@@ -23,7 +23,7 @@ public:
 
     std::string to_string() const override { return element_type->to_string() + "*"; }
 
-    std::string as_key() const override { return element_type->to_string() + "ptr"; }
+    std::string as_key() const override { return element_type->as_key() + "ptr"; }
 
     bool operator==(const Type& other) override;
 };

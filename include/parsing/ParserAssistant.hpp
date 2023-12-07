@@ -24,6 +24,7 @@
 #include "AST/loops/ContinueNode.hpp"
 #include "AST/loops/BreakNode.hpp"
 
+#include "AST/function/ExprFunctionCallNode.hpp"
 #include "AST/function/FunctionCallNode.hpp"
 #include "AST/function/FunctionDefinitionNode.hpp"
 #include "AST/function/ReturnNode.hpp"
@@ -53,7 +54,6 @@
 
 #include "types/IntegerTypes.hpp"
 #include "types/FloatTypes.hpp"
-#include "types/StringType.hpp"
 #include "types/ArrayType.hpp"
 #include "types/PointerType.hpp"
 #include "types/ClassType.hpp"
@@ -145,6 +145,9 @@ public:
 
     // Public flags
     bool is_packed = false;
+    // Don't mangle the name of the function. If this is true,
+    //  function overloading won't be applicable for the function.
+    bool no_mangle = false;
 
     void push_str(std::string str) {
         strings.push_back(std::move(str));
@@ -198,7 +201,6 @@ public:
     void create_logical_or();
     void create_class_type();
     void create_field_access();
-    void create_constructor_call();
     void create_inferred_definition();
     void create_size_of_type();
     void create_size_of_expression();
@@ -209,6 +211,7 @@ public:
     void create_malloc();
     void create_free();
     void prepare_constructor();
+    void finish_constructor();
     void prepare_destructor();
     void create_pointer_field_access();
 
@@ -251,6 +254,8 @@ public:
     void push_var_arg(bool value);
     bool pop_var_arg();
     void create_function_call();
+    void create_method_call();
+    void create_expr_function_call();
 
     void register_class();
     void finish_class_declaration();

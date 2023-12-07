@@ -1,0 +1,27 @@
+#pragma once
+
+#include <AST/ASTNode.hpp>
+
+namespace dua
+{
+
+class ExprFunctionCallNode : public ASTNode
+{
+    friend class ParserAssistant;
+
+protected:
+
+    ASTNode* func;
+    std::vector<ASTNode*> args;
+
+public:
+
+    ExprFunctionCallNode(ModuleCompiler* compiler, ASTNode* func, std::vector<ASTNode*> args = {})
+        : func(func), args(std::move(args)) { this->compiler = compiler; }
+
+    llvm::CallInst* eval() override;
+
+    const Type* get_type() override;
+};
+
+}

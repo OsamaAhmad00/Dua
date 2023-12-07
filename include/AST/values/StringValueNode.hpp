@@ -1,7 +1,6 @@
 #pragma once
 
 #include <AST/values/ValueNode.hpp>
-#include <types/StringType.hpp>
 
 namespace dua
 {

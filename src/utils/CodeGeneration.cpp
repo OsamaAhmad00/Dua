@@ -75,10 +75,10 @@ void compile(const strings& source_files, const strings& args)
 
     Preprocessor preprocessor;
     strings code(n);
-    for (int i = 0; i < n; i++)
-        code[i] = preprocessor.process(source_files[i], read_file(source_files[i]));
 
     try {
+        for (int i = 0; i < n; i++)
+            code[i] = preprocessor.process(source_files[i], read_file(source_files[i]));
         run_clang_on_llvm_ir(stripped, code, args);
     } catch (...) {
         exit(-1);

@@ -1,163 +1,336 @@
 #include <resolution/FunctionNameResolver.hpp>
 #include <ModuleCompiler.hpp>
 #include <llvm/IR/Verifier.h>
+#include "types/FloatTypes.hpp"
+#include "types/PointerType.hpp"
 
 namespace dua
 {
 
-    FunctionNameResolver::FunctionNameResolver(ModuleCompiler *compiler) : compiler(compiler) {}
+std::vector<const Type*> get_types(const std::vector<Value>& args)
+{
+    std::vector<const Type*> types(args.size());
+    for (size_t i = 0; i < args.size(); i++)
+        types[i] = args[i].type;
+    return types;
+}
 
-    void FunctionNameResolver::register_function(std::string name, FunctionInfo info)
-    {
-        if (compiler->current_function != nullptr)
-            report_internal_error("Nested functions are not allowed");
+void report_function_not_defined(const std::string& name)
+{
+    size_t dot = 0;
+    while (dot < name.size() && name[dot] != '.') dot++;
 
-        // Registering the function in the module so that all
-        //  functions are visible during AST evaluation.
-        llvm::Type* ret = info.type.return_type->llvm_type();
-        std::vector<llvm::Type*> parameter_types;
-        for (auto& type: info.type.param_types)
-            parameter_types.push_back(type->llvm_type());
-        llvm::FunctionType* type = llvm::FunctionType::get(ret, parameter_types, info.type.is_var_arg);
-        llvm::Function* function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, name, compiler->module);
-        llvm::verifyFunction(*function);
-
-        auto it = functions.find(name);
-        if (it != functions.end()) {
-            // Verify that the signatures are the same
-            if (it->second.type != info.type) {
-                report_error("Redefinition of the function " + name + " with a different signature");
-            }
-        } else {
-            functions[std::move(name)] = std::move(info);
-        }
+    if (dot == name.size()) {
+        report_error("The function " + name + " is not declared/defined");
+    } else {
+        // A class method
+        auto class_name = name.substr(0, dot);
+        auto method_name = name.substr(dot + 1);
+        report_error("The class " + class_name + " is not defined. Can't resolve " + class_name + "::" + method_name);
     }
+}
 
-    FunctionInfo &FunctionNameResolver::get_function(const std::string &name)
-    {
-        auto it = functions.find(name);
+FunctionNameResolver::FunctionNameResolver(ModuleCompiler *compiler) : compiler(compiler) {}
 
-        if (it != functions.end())
-            return it->second;
+void FunctionNameResolver::register_function(std::string name, FunctionInfo info, bool no_mangle)
+{
+    if (compiler->current_function != nullptr)
+        report_internal_error("Nested functions are not allowed");
 
-        size_t dot = 0;
-        while (dot < name.size() && name[dot] != '.') dot++;
+    // Registering the function in the module so that all
+    //  functions are visible during AST evaluation.
+    llvm::Type* ret = info.type->return_type->llvm_type();
 
-        if (dot == name.size()) {
-            report_error("The function " + name + " is not declared/defined");
-        } else {
-            // A class method
-            auto class_name = name.substr(0, dot);
-            auto method_name = name.substr(dot + 1);
-            report_error("The class " + class_name + " is not defined. Can't resolve " + class_name + "::" + method_name);
+    std::vector<llvm::Type*> parameter_types;
+    for (auto& type: info.type->param_types)
+        parameter_types.push_back(type->llvm_type());
+
+    if (!no_mangle)
+        name = get_full_function_name(name, info.type->param_types);
+
+    llvm::FunctionType* type = llvm::FunctionType::get(ret, parameter_types, info.type->is_var_arg);
+    llvm::Function* function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, name, compiler->module);
+    llvm::verifyFunction(*function);
+
+    auto it = functions.find(name);
+    if (it != functions.end()) {
+        // Verify that the signatures are the same
+        if (it->second.type != info.type) {
+            report_error("Redefinition of the function " + name + " with a different signature");
         }
+    } else {
+        functions[std::move(name)] = std::move(info);
+    }
+}
 
-        // Unreachable
+FunctionInfo& FunctionNameResolver::get_function_no_overloading(const std::string &name)
+{
+    auto it = functions.find(name);
+    if (it != functions.end())
         return it->second;
+    report_function_not_defined(name);
+
+    // Unreachable
+    return it->second;
+}
+
+std::string FunctionNameResolver::get_function(std::string name)
+{
+    name += '.';
+    auto begin = functions.lower_bound(name);
+    name.back()++;
+    auto end = functions.lower_bound(name);
+    name.pop_back();
+
+    auto non_mangled = functions.find(name);
+
+    if (begin == end) {
+        if (non_mangled == functions.end())
+            report_function_not_defined(name);
+        return name;
     }
 
-    bool FunctionNameResolver::has_function(const std::string &name) const
+    // There exists more than one overload
+    if (non_mangled != functions.end() || --end != begin)
+        report_error("Can't have a reference to the overloaded function " + name + " only from the name");
+
+    return begin->first;
+}
+
+FunctionInfo& FunctionNameResolver::get_function(const std::string &name, const std::vector<const Type*> &param_types)
+{
+    auto full_name = get_winning_function(name, param_types);
+    auto it = functions.find(full_name);
+    if (it != functions.end())
+        return it->second;
+    report_function_not_defined(name);
+
+    // Unreachable
+    return it->second;
+}
+
+FunctionInfo &FunctionNameResolver::get_function(const std::string &name, const std::vector<Value> &args) {
+    return get_function(name, get_types(args));
+}
+
+bool FunctionNameResolver::has_function(const std::string &name) const
+{
+    // Non-mangled functions
+    if (functions.find(name) != functions.end())
+        return true;
+
+    // Function names given by the user can't contain the '.' character.
+    //  This character is added by the compiler to give different names
+    //  based on the types of the parameters for functions defined with
+    //  the same name. It's sufficient to search for this prefix only
+    //  to determine the existence of a function, with no regard to the
+    //  parameter types. Note that functions with no parameters are a
+    //  special case, but still has a '.' appended to them.
+    auto key = name + ".";
+    auto begin = functions.lower_bound(key);
+    key.back()++;
+    auto end = functions.lower_bound(key);
+    return begin != end;
+}
+
+void FunctionNameResolver::cast_function_args(std::vector<Value> &args, const FunctionType* type) const
+{
+    for (size_t i = args.size() - 1; i != (size_t)-1; i--) {
+        if (i < type->param_types.size()) {
+            // Only try to cast non-var-arg parameters
+            auto param_type = type->param_types[i];
+            args[i] = compiler->create_value(
+                    compiler->typing_system.cast_value(args[i], param_type),
+                    param_type
+            );
+        } else if (args[i].ptr->getType() == builder().getFloatTy()) {
+            // Variadic functions promote floats to doubles
+            auto double_type = compiler->create_type<F64Type>();
+            args[i] = compiler->create_value(
+                    compiler->typing_system.cast_value(args[i], double_type),
+                    double_type
+            );
+        }
+    }
+}
+
+llvm::CallInst* FunctionNameResolver::call_function(const std::string &name, std::vector<Value> args)
+{
+    auto full_name = get_winning_function(name, get_types(args));
+
+    auto function = compiler->module.getFunction(full_name);
+    if (function == nullptr)
+        report_error("The function " + name + " is not defined");
+
+    auto& info = get_function_no_overloading(full_name);
+
+    cast_function_args(args, info.type);
+    std::vector<llvm::Value*> llvm_args(args.size());
+    for (size_t i = 0; i < args.size(); i++)
+        llvm_args[i] = args[i].ptr;
+
+    return builder().CreateCall(function, std::move(llvm_args));
+}
+
+llvm::CallInst* FunctionNameResolver::call_function(llvm::Value *ptr, const FunctionType* type, std::vector<Value> args)
+{
+    cast_function_args(args, type);
+    std::vector<llvm::Value*> llvm_args(args.size());
+    for (size_t i = 0; i < args.size(); i++)
+        llvm_args[i] = args[i].ptr;
+    return builder().CreateCall(type->llvm_type(), ptr, std::move(llvm_args));
+}
+
+void FunctionNameResolver::call_constructor(const Value &value, std::vector<Value> args)
+{
+    if (!value.ptr->getType()->isPointerTy())
+        report_internal_error("Trying to initialize a non-lvalue item");
+
+    auto class_type = dynamic_cast<const ClassType*>(value.type);
+
+    if (class_type == nullptr)
     {
-        return functions.find(name) != functions.end();
+        // Initializing a primitive type.
+        if (args.empty())
+            return;
+
+        else if (args.size() != 1)
+            report_error("Cannot initialize a primitive value with more than one value");
+
+        auto casted = compiler->typing_system.cast_value(args[0], value.type);
+        builder().CreateStore(casted, value.ptr);
+
+        return;
     }
 
-    void FunctionNameResolver::cast_function_args(std::vector<llvm::Value *> &args, const FunctionType &type)
+    // Initializing an object
+
+    std::string name = class_type->name + ".constructor";
+    if (!has_function(name)) {
+        // Constructor is not defined. Noting to do here
+        return;
+    }
+
+    // Fields constructors are called in the function definition
+    //  node. This is to ensure that the parameters are defined
+    //  and are visible to these constructors, so that they can
+    //  be passed as well. This is to have the constructor calls
+    //  happen inside the constructor, not in every caller site.
+    //  These calls will happen at the top of the constructor,
+    //  thus, initializing the fields first.
+
+    auto ptr_value = compiler->create_value(value.ptr, compiler->create_type<PointerType>(value.type));
+    args.insert(args.begin(), ptr_value);
+    call_function(name, std::move(args));
+}
+
+void FunctionNameResolver::call_destructor(const Value& value)
+{
+    auto class_type = dynamic_cast<const ClassType*>(value.type);
+    if (class_type == nullptr)
+        return;
+
+    std::string name = class_type->name + ".destructor";
+    if (!has_function(name))
+        return;
+
+    // Call the destructors of fields first
+    // Fields are destructed in the reverse order of definition.
+    std::for_each(class_type->fields().rbegin(), class_type->fields().rend(), [&](auto& field) {
+        // TODO don't search for the field twice, once for the type and once for the ptr
+        auto type = class_type->get_field(field.name).type;
+        auto ptr = class_type->get_field(value.ptr, field.name);
+        call_destructor(compiler->create_value(ptr, type ));
+    });
+
+    auto ptr_value = compiler->create_value(value.ptr, compiler->create_type<PointerType>(value.type));
+    call_function(name, { ptr_value });
+}
+
+llvm::IRBuilder<>& FunctionNameResolver::builder() const
+{
+    return compiler->builder;
+}
+
+std::string FunctionNameResolver::get_winning_function(const std::string &name, const std::vector<const Type*> &arg_types) const
+{
+    auto key = name;
+    if (name != "main") key += '.';
+    auto begin = functions.lower_bound(key);
+    key.back()++;
+    auto end = functions.lower_bound(key);
+
+    if (begin == end) {
+        if (functions.find(name) != functions.end()) {
+            // This is a non-mangled function name, which doesn't have
+            //  a '.' followed by the parameter types after its name
+            return name;
+        }
+        report_error("Function " + name + " is undefined");
+    }
+
+    std::map<int, std::vector<std::pair<std::string, const FunctionType*>>> scores;
+
+    auto current = begin;
+    while (current != end)
     {
-        for (size_t i = args.size() - 1; i != (size_t)-1; i--) {
-            if (i < type.param_types.size()) {
-                // Only try to cast non-var-arg parameters
-                auto param_type = type.param_types[i]->llvm_type();
-                args[i] = compiler->cast_value(args[i], param_type);
-            } else if (args[i]->getType() == builder().getFloatTy()) {
-                // Variadic functions promote floats to doubles
-                args[i] = compiler->cast_value(args[i], builder().getDoubleTy());
+        auto& name = current->first;
+        auto& info = current->second;
+        current++;
+        auto score = compiler->typing_system.type_list_similarity_score(info.type->param_types, arg_types);
+        if (score == -1) continue;
+        scores[score].emplace_back(name, info.type);
+    }
+
+    if (scores.empty()) {
+        std::string message = "There are no applicable overloads for the function " + name + " with ";
+        if (arg_types.empty()) {
+            message += "no arguments";
+        } else {
+            message += "the provided arguments:\n(";
+            message += arg_types.front()->to_string();
+            for (size_t i = 1; i < arg_types.size(); i++) {
+                message += ", " + arg_types[i]->to_string();
             }
-        }
-    }
-
-    llvm::CallInst* FunctionNameResolver::call_function(const std::string &name, std::vector<llvm::Value *> args)
-    {
-        auto function = compiler->module.getFunction(name);
-        if (function == nullptr)
-            report_error("The function " + name + " is not defined");
-        auto& info = get_function(name);
-        cast_function_args(args, info.type);
-        return builder().CreateCall(function, args);
-    }
-
-    llvm::CallInst* FunctionNameResolver::call_function(llvm::Value *ptr, const FunctionType &type, std::vector<llvm::Value *> args)
-    {
-        cast_function_args(args, type);
-        return builder().CreateCall(type.llvm_type(), ptr, args);
-    }
-
-    void FunctionNameResolver::call_constructor(const Variable &variable, std::vector<llvm::Value *> args)
-    {
-        if (!variable.ptr->getType()->isPointerTy())
-            report_internal_error("Trying to initialize a non-lvalue item");
-
-        auto class_type = dynamic_cast<ClassType*>(variable.type);
-
-        if (class_type == nullptr)
-        {
-            // Initializing a primitive type.
-            if (args.empty())
-                return;
-
-            else if (args.size() != 1)
-                report_error("Cannot initialize a primitive value with more than one value");
-
-            auto value = compiler->cast_value(args[0], variable.type->llvm_type());
-            builder().CreateStore(value, variable.ptr);
-
-            return;
+            message += ")";
         }
 
-        // Initializing an object
+        message += "\nFunction overloads are:\n";
 
-        std::string name = class_type->name + ".constructor";
-        if (!has_function(name)) {
-            // Constructor is not defined. Noting to do here
-            return;
-        }
+        current = begin;
+        while (current != end)
+            message += current->second.type->to_string() + '\n', current++;
+        message.pop_back();  // The extra '\n'
 
-        // Fields constructors are called in the function definition
-        //  node. This is to ensure that the parameters are defined
-        //  and are visible to these constructors, so that they can
-        //  be passed as well. This is to have the constructor calls
-        //  happen inside the constructor, not in every caller site.
-        //  These calls will happen at the top of the constructor,
-        //  thus, initializing the fields first.
-
-        args.insert(args.begin(), variable.ptr);
-        call_function(name, args);
+        report_error(message);
     }
 
-    void FunctionNameResolver::call_destructor(const Variable &variable)
+    auto& result_list = scores.begin()->second;
+
+    if (result_list.size() != 1)
     {
-        auto class_type = dynamic_cast<ClassType*>(variable.type);
-        if (class_type == nullptr)
-            return;
+        std::string message = "More than one overload of the function '" + name + "' is applicable to the function call."
+                                                                                 " Applicable functions are:\n";
+        for (auto& overload : result_list)
+            message += overload.second->to_string() + '\n';
+        message.pop_back();  // The extra '\n'
 
-        std::string name = class_type->name + ".destructor";
-        if (!has_function(name))
-            return;
-
-        // Call the destructors of fields first
-        // Fields are destructed in the reverse order of definition.
-        std::for_each(class_type->fields().rbegin(), class_type->fields().rend(), [&](auto& field) {
-            // TODO don't search for the field twice, once for the type and once for the ptr
-            auto type = class_type->get_field(field.name).type;
-            auto ptr = class_type->get_field(variable.ptr, field.name);
-            call_destructor({ ptr, type });
-        });
-
-        call_function(name, { variable.ptr });
+        report_error(message);
     }
 
-    llvm::IRBuilder<>& FunctionNameResolver::builder() const
-    {
-        return compiler->builder;
-    }
+    return result_list.front().first;
+}
+
+std::string FunctionNameResolver::get_full_function_name(std::string name, const std::vector<const Type*> &param_types)
+{
+    if (name == "main") return name;
+    if (param_types.empty()) return name + ".";
+    // is_var_arg is not part of the full name since you can't
+    //  have two functions with the same parameters with the
+    //  exception that one is a variadic and the other is not
+    for (auto type : param_types)
+        name += '.' + type->as_key();
+    return name;
+}
 
 }

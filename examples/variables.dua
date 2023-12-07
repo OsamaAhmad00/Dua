@@ -1,3 +1,7 @@
+no_mangle int printf(str message, ...);
+
+void print(int num) { printf("%d", num); }
+
 // CASE Basic declaration
 // Returns 1
 
@@ -102,9 +106,6 @@ int main()
 
 // CASE Addresses
 // Outputs "123"
-
-int printf(str message, ...);
-void print(int num) { printf("%d", num); }
 
 int main()
 {

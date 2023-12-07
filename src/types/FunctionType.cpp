@@ -39,6 +39,24 @@ std::string FunctionType::to_string() const
     return result;
 }
 
+std::string FunctionType::as_key() const
+{
+    std::string result = return_type->as_key() + "__";
+
+    if (!param_types.empty()) {
+        for (size_t i = 0; i < param_types.size() - 1; i++)
+            result += param_types[i]->as_key() + "_";
+        result += param_types.back()->as_key();
+    }
+
+    if (is_var_arg)
+        result += "_...";
+
+    result += "__";
+
+    return result;
+}
+
 bool FunctionType::operator==(const FunctionType &other) const
 {
     if (!equal_types(return_type, other.return_type))

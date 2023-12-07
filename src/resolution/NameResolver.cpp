@@ -4,12 +4,6 @@
 namespace dua
 {
 
-struct FieldInfo
-{
-    size_t index;
-    ClassField& info;
-};
-
 NameResolver::NameResolver(ModuleCompiler *compiler) : compiler(compiler), function_resolver(compiler) {}
 
 llvm::IRBuilder<>& NameResolver::builder() const
@@ -17,15 +11,17 @@ llvm::IRBuilder<>& NameResolver::builder() const
     return compiler->builder;
 }
 
-void NameResolver::add_fields_constructor_args(std::string class_name, std::vector<FieldConstructorArgs> args)
+void NameResolver::add_fields_constructor_args(std::string constructor_name, std::vector<FieldConstructorArgs> args)
 {
-    fields_args[std::move(class_name)] = std::move(args);
+    fields_args[std::move(constructor_name)] = std::move(args);
 }
 
-std::vector<FieldConstructorArgs> &NameResolver::get_fields_args(const std::string &class_name) {
-    auto it = fields_args.find(class_name);
-    if (it == fields_args.end())
-        report_internal_error("Class " + class_name + " is not defined yet");
+std::vector<FieldConstructorArgs>& NameResolver::get_fields_args(const std::string &constructor_name) {
+    auto it = fields_args.find(constructor_name);
+    if (it == fields_args.end()) {
+        // This constructor has no arguments for fields, return an empty one
+        return fields_args[""];
+    }
     return it->second;
 }
 
@@ -50,12 +46,8 @@ const ClassType *NameResolver::get_class(const std::string &name) {
      return classes[name];
 }
 
-void NameResolver::register_function(std::string name, FunctionInfo info) {
-    return function_resolver.register_function(std::move(name), std::move(info));
-}
-
-FunctionInfo &NameResolver::get_function(const std::string &name) {
-    return function_resolver.get_function(name);
+void NameResolver::register_function(std::string name, FunctionInfo info, bool no_mangle) {
+    return function_resolver.register_function(std::move(name), std::move(info), no_mangle);
 }
 
 bool NameResolver::has_function(const std::string &name) const {
@@ -76,6 +68,26 @@ void NameResolver::call_constructor(const Value &value, std::vector<Value> args)
 
 void NameResolver::call_destructor(const Value &value) {
     return function_resolver.call_destructor(value);
+}
+
+FunctionInfo &NameResolver::get_function(const std::string &name, const std::vector<const Type*> &param_types) {
+    return function_resolver.get_function(name, param_types);
+}
+
+FunctionInfo &NameResolver::get_function(const std::string &name, const std::vector<Value> &args) {
+    return function_resolver.get_function(name, args);
+}
+
+std::string NameResolver::get_function(const std::string &name) {
+    return function_resolver.get_function(name);
+}
+
+FunctionInfo &NameResolver::get_function_no_overloading(const std::string &name) {
+    return function_resolver.get_function_no_overloading(name);
+}
+
+std::string NameResolver::get_full_function_name(std::string name, const std::vector<const Type *> &param_types) {
+    return FunctionNameResolver::get_full_function_name(std::move(name), param_types);
 }
 
 }

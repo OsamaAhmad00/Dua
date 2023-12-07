@@ -44,6 +44,7 @@ protected:
     STATE_MEMBER_GETTER(current_function)
     STATE_MEMBER_GETTER(current_class)
     STATE_MEMBER_GETTER(name_resolver)
+    STATE_MEMBER_GETTER(typing_system)
     STATE_MEMBER_GETTER(string_pool)
     STATE_MEMBER_GETTER(continue_stack)
     STATE_MEMBER_GETTER(break_stack)

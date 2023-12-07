@@ -74,7 +74,8 @@ void FileTestCasesRunner::run()
             execution = execute_program(exe_name, args);
         } catch (...) {
             std::filesystem::remove(exe_name);
-            exit(-1);
+            EXPECT_NO_THROW (throw "Panicked at the program execution stage") << case_description;
+            continue;
         }
 
         std::filesystem::remove(exe_name);

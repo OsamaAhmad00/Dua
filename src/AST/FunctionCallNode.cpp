@@ -1,55 +1,59 @@
 #include <AST/function/FunctionCallNode.hpp>
-#include <AST/lvalue/ClassFieldNode.hpp>
-#include <AST/lvalue/LoadedLValueNode.hpp>
-#include <types/PointerType.hpp>
+#include "types/PointerType.hpp"
+
 
 namespace dua
 {
 
-const FunctionType* get_function_type(ASTNode* func)
+llvm::CallInst *FunctionCallNode::eval()
 {
-    auto type = func->get_type();
+    std::vector<Value> evaluated(args.size());
+    for (size_t i = 0; i < args.size(); i++)
+        evaluated[i] = compiler->create_value(args[i]->eval(), args[i]->get_type());
 
-    auto function_type = dynamic_cast<const FunctionType*>(type);;
+    if (name_resolver().has_function(name))
+        return name_resolver().call_function(name, std::move(evaluated));
 
-    if (function_type == nullptr) {
-        auto function_pointer = dynamic_cast<const PointerType *>(type);
-        if (function_pointer != nullptr)
-            function_type = dynamic_cast<const FunctionType *>(function_pointer->get_element_type());
+    // It has to be a function reference.
+    auto reference = compiler->create_value((llvm::Value*)nullptr, (const Type*)nullptr);
+    if (name_resolver().symbol_table.contains(name))
+        reference = name_resolver().symbol_table.get(name);
+    else if (!evaluated.empty()) {
+        // It might be a class field
+        auto& instance = evaluated[0];
+        auto pointer_type = dynamic_cast<const PointerType*>(instance.type);
+        auto class_type = pointer_type ? dynamic_cast<const ClassType*>(pointer_type->get_element_type()) : nullptr;
+        if (class_type != nullptr && class_type->name == name.substr(0, class_type->name.size())) {
+            auto field_name = name.substr(class_type->name.size() + 1);
+            auto field = class_type->get_field(field_name);
+            reference.type = field.type;
+            reference.ptr = class_type->get_field(instance.ptr, field_name);
+            // It's a field that points to a function. The instance shouldn't be passed
+            evaluated.erase(evaluated.begin());
+        }
     }
 
+    if (reference.ptr == nullptr)
+        report_error("The identifier " + name + " doesn't refer to either a function or a function reference");
+
+    auto pointer_type = dynamic_cast<const PointerType*>(reference.type);
+    auto function_type = pointer_type ? dynamic_cast<const FunctionType*>(pointer_type->get_element_type()) : nullptr;
     if (function_type == nullptr)
-        report_error("Instantiating a call on a " + type->to_string() + ", which is not callable");
+        report_error("The variable " + name + " is of type " + reference.type->to_string() + ", which is not callable");
 
-    return function_type;
+    auto ptr = builder().CreateLoad(reference.type->llvm_type(), reference.ptr);
+
+    return name_resolver().call_function(ptr, function_type, std::move(evaluated));
 }
 
-llvm::CallInst* FunctionCallNode::eval()
+const Type *FunctionCallNode::get_type()
 {
-    size_t n = args.size();
-
-    auto loaded = dynamic_cast<LoadedLValueNode*>(func);
-    auto field = dynamic_cast<ClassFieldNode*>(loaded->lvalue);
-    bool is_method = field != nullptr && field->is_function();
-
-    n += is_method;
-
-    std::vector<Value> evaluated(n);
-
-    for (size_t i = n - 1; i != ((size_t)-1 + is_method); i--) {
-        auto arg = args[i - is_method];
-        evaluated[i] = compiler->create_value(arg->eval(), arg->get_type());
-    }
-
-    if (is_method)
-        evaluated[0] = field->get_instance();
-
-    return name_resolver().call_function(func->eval(), get_function_type(func), std::move(evaluated));
-}
-
-const Type *FunctionCallNode::get_type() {
     if (type != nullptr) return type;
-    return type = get_function_type(func)->return_type;
+
+    std::vector<const Type*> arg_types(args.size());
+    for (size_t i = 0; i < args.size(); i++)
+        arg_types[i] = args[i]->get_type();
+    return type = name_resolver().get_function(name, arg_types).type->return_type;
 }
 
 }

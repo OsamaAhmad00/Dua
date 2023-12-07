@@ -85,6 +85,8 @@ Void: 'void';
 
 Var: 'var';
 
+NoMangle: 'no_mangle';
+
 SizeOf: 'sizeof';
 
 TypeOf: 'typeof';

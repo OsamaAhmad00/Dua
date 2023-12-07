@@ -25,7 +25,7 @@ public:
 
     llvm::Value* eval() override = 0;
 
-    const std::string& get_name() const { return name; }
+    [[nodiscard]] const std::string& get_name() const { return name; }
 };
 
 }

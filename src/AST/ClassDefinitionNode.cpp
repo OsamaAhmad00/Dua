@@ -72,8 +72,6 @@ llvm::Value *ClassDefinitionNode::eval()
         members[i]->eval();
     }
 
-    name_resolver().add_fields_constructor_args(name, std::move(fields_args));
-
     current_class() = old_class;
     current_function() = old_function;
 

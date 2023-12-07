@@ -78,6 +78,7 @@ set(DUA_SOURCES
 
     src/ModuleCompiler.cpp
     src/Preprocessor.cpp
+    src/TypingSystem.cpp
     src/Value.cpp
 
     src/resolution/NameResolver.cpp
@@ -103,6 +104,7 @@ set(DUA_SOURCES
     src/AST/DoWhileNode.cpp
     src/AST/ForNode.cpp
     src/AST/FunctionCallNode.cpp
+    src/AST/ExprFunctionCallNode.cpp
     src/AST/FunctionDefinitionNode.cpp
     src/AST/GlobalVariableDefinitionNode.cpp
     src/AST/IfNode.cpp

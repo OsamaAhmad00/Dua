@@ -28,6 +28,11 @@ public:
 
         auto value = compiler->create_value(expr->eval(), ptr->get_element_type());
         name_resolver().call_destructor(value);
+
+        // Here, we pass the param type of free, regardless of the actual type of the expression, to
+        // avoid the typing system complaining about the free function having the wrong pointer type
+        auto param_type = name_resolver().get_function_no_overloading("free").type->param_types.front();
+        value.type = param_type;
         name_resolver().call_function("free", { value });
 
         return none_value();

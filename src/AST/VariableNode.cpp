@@ -12,12 +12,8 @@ llvm::Value* VariableNode::eval()
     }
 
     // Not found. Has to be a function reference
-    if (name_resolver().has_function(name))
-        return module().getFunction(name);
-
-    report_error("Reference to undefined identifier: " + name);
-    // Unreachable
-    return nullptr;
+    auto function = name_resolver().get_function(name);
+    return module().getFunction(name);
 }
 
 const Type* VariableNode::get_type()
@@ -27,7 +23,8 @@ const Type* VariableNode::get_type()
     if (name_resolver().symbol_table.contains(name)) {
         t = name_resolver().symbol_table.get(name).type;
     } else {
-        t = name_resolver().get_function(name).type;
+        auto full_name = name_resolver().get_function(name);
+        t = name_resolver().get_function_no_overloading(full_name).type;
     }
     return type = compiler->create_type<PointerType>(t);
 }

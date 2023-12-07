@@ -24,8 +24,10 @@ const static ClassType* get_class_from_ptr(ASTNode* node)
 llvm::Value* ClassFieldNode::eval()
 {
     auto full_name = get_full_name();
-    if (name_resolver().has_function(full_name))
-        return module().getFunction(full_name);
+    if (name_resolver().has_function(full_name)) {
+        auto name = name_resolver().get_function(full_name);
+        return module().getFunction(name);
+    }
 
     auto class_type = get_class_from_ptr(instance);
     return class_type->get_field(get_instance().ptr, name);
@@ -36,9 +38,10 @@ const Type* ClassFieldNode::get_type()
     if (type != nullptr) return type;
     auto full_name = get_full_name();
     const Type* t;
-    if (name_resolver().has_function(full_name))
-        t = name_resolver().get_function(full_name).type;
-    else {
+    if (name_resolver().has_function(full_name)) {
+        auto name = name_resolver().get_function(full_name);
+        t = name_resolver().get_function_no_overloading(name).type;
+    } else {
         auto class_type = get_class_from_ptr(instance);
         t = class_type->get_field(name).type;
     }

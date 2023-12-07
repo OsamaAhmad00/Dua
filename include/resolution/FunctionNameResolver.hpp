@@ -22,6 +22,11 @@ class FunctionNameResolver
 {
     std::map<std::string, FunctionInfo> functions;
 
+    // Used to resolve between applicable candidate functions
+    [[nodiscard]] std::string get_winning_function(const std::string& name, const std::vector<const Type*>& arg_types) const;
+
+    void cast_function_args(std::vector<Value>& args, const FunctionType* type) const;
+
 public:
 
     ModuleCompiler* compiler;
@@ -30,17 +35,20 @@ public:
 
     [[nodiscard]] llvm::IRBuilder<>& builder() const;
 
-    void register_function(std::string name, FunctionInfo info);
-    FunctionInfo& get_function(const std::string& name);
+    void register_function(std::string name, FunctionInfo info, bool no_mangle = false);
+    FunctionInfo& get_function(const std::string& name, const std::vector<const Type*>& param_types);
+    FunctionInfo& get_function(const std::string& name, const std::vector<Value>& args);
+    FunctionInfo& get_function_no_overloading(const std::string &name);
+    std::string get_function(std::string name);
 
     [[nodiscard]] bool has_function(const std::string& name) const;
-    void cast_function_args(std::vector<llvm::Value*>& args, const FunctionType& type);
-    llvm::CallInst* call_function(const std::string &name, std::vector<llvm::Value*> args = {});
-    llvm::CallInst* call_function(llvm::Value* ptr, const FunctionType& type, std::vector<llvm::Value*> args = {});
+    llvm::CallInst* call_function(const std::string &name, std::vector<Value> args = {});
+    llvm::CallInst* call_function(llvm::Value* ptr, const FunctionType* type, std::vector<Value> args = {});
 
-    void call_constructor(const Variable& variable, std::vector<llvm::Value*> args);
-    void call_destructor(const Variable& variable);
+    void call_constructor(const Value& value, std::vector<Value> args);
+    void call_destructor(const Value& value);
 
+    [[nodiscard]] static std::string get_full_function_name(std::string name, const std::vector<const Type*>& param_types);
 };
 
 }

@@ -89,7 +89,7 @@ class_element
 
 constructor
     : { assistant.prepare_constructor(); } Constructor '(' param_list ')' { assistant.push_var_arg(false); }
-        { assistant.create_function_declaration(); } optional_fields_constructor_params function_body
+        { assistant.create_function_declaration(); } optional_fields_constructor_params function_body { assistant.finish_constructor(); }
     ;
 
 optional_fields_constructor_params
@@ -141,12 +141,18 @@ variable_def_no_simicolon
 
 optional_constructor_args
     : '(' arg_list ')'
+    | arg_list
     | /* empty */ { assistant.enter_arg_list(); }
     ;
 
 function_decl_no_simicolon
-    : type identifier
+    : no_mangle_or_none type identifier
         '(' param_list var_arg_or_none ')' { assistant.create_function_declaration(); }
+    ;
+
+no_mangle_or_none
+    : NoMangle      { assistant.no_mangle = true;  }
+    | /* empty */   { assistant.no_mangle = false; }
     ;
 
 function_declaration
@@ -196,25 +202,28 @@ statement
     | while
     | do_while
     | block_statement
-    | expression_statement
     | variable_decl_or_def
     | return_statement
     | Delete expression ';' { assistant.create_free(); }
     | Continue { assistant.create_continue(); }
     | Break { assistant.create_break(); }
+    | expression_statement
     | ';'  { assistant.create_empty_statement(); }
     ;
 
 expression
     : number
     | String { assistant.push_str($String.text); assistant.create_string_value(); }
-    | expression '(' arg_list ')' { assistant.create_function_call(); }
     | block_expression
     | if_expression
     | when_expression
     | cast_expression
     | '(' expression ')'
-    | New type optional_constructor_args       { assistant.create_malloc(); }
+    | identifier '.' identifier '(' arg_list ')' { assistant.create_method_call();         }
+    | identifier                '(' arg_list ')' { assistant.create_function_call();       }
+    | expression                '(' arg_list ')' { assistant.create_expr_function_call();  }
+    | New identifier { assistant.create_class_type(); } optional_constructor_args { assistant.create_malloc(); }
+    | New type { assistant.enter_arg_list(); assistant.create_malloc(); }
     | SizeOf '(' type ')'         { assistant.create_size_of_type();        }
     | SizeOf '(' expression ')'   { assistant.create_size_of_expression();  }
     | TypeName '(' type ')'       { assistant.create_typename_type();       }
@@ -248,7 +257,7 @@ expression
     | expression '&&' expression { assistant.create_logical_and(); }
     | expression '||' expression { assistant.create_logical_or(); }
     | expression '?' expression ':' expression { assistant.create_ternary_operator(); }
-    | lvalue '='   expression  { assistant.create_assignment(); }
+    | lvalue '=' expression  { assistant.create_assignment(); }
     | lvalue '+='  expression  { assistant.create_compound_assignment<AdditionNode>(); }
     | lvalue '-='  expression  { assistant.create_compound_assignment<SubtractionNode>(); }
     | lvalue '*='  expression  { assistant.create_compound_assignment<MultiplicationNode>(); }
@@ -425,12 +434,12 @@ types_list @init { assistant.enter_arg_list(); }
     ;
 
 type
-    : primitive_type
-    | class_type
-    | type '(' types_list var_arg_or_none ')'   { assistant.create_function_type(); }
+    : type '(' types_list var_arg_or_none ')'   { assistant.create_function_type(); }
     | type '[' size ']'                         { assistant.create_array_type();    }
     | type '*'                                  { assistant.create_pointer_type();  }
     | TypeOf '(' expression ')'                 { assistant.create_type_of();       }
+    | primitive_type
+    | class_type
     ;
 
 class_type

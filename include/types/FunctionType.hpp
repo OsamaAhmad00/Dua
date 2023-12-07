@@ -30,6 +30,8 @@ struct FunctionType : public Type
 
     std::string to_string() const override;
 
+    std::string as_key() const override;
+
     bool operator==(const FunctionType& other) const;
 
     bool operator!=(const FunctionType& other) const { return !(*this == other); };

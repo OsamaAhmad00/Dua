@@ -1,4 +1,4 @@
-int printf(str message, ...);
+no_mangle int printf(str message, ...);
 
 
 // Case Basic function reference
@@ -66,11 +66,11 @@ int main()
 }
 
 
-// TODO Wrong function type reference
+// Case Wrong function type reference
 // Panics
-//
-// int main()
-// {
-//     void(int, int)* print = printf;
-//     print(1, 2);
-// }
+
+int main()
+{
+    void(int, int)* print = printf;
+    print(1, 2);
+}

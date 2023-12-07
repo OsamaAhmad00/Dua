@@ -12,12 +12,6 @@ namespace dua
 
 class ASTNode;
 
-struct Variable
-{
-    llvm::Value* ptr;
-    Type* type;
-};
-
 struct FieldConstructorArgs
 {
     std::string name;
@@ -31,8 +25,8 @@ public:
 
     ModuleCompiler* compiler;
 
-    SymbolTable<Variable> symbol_table;
-    std::unordered_map<std::string, ClassType*> classes;
+    SymbolTable<Value> symbol_table;
+    std::unordered_map<std::string, const ClassType*> classes;
     // Instead of having the fields be stored in the class type,
     //  and having them getting duplicated on each clone, let's
     //  keep the fields info in one place, and refer to it by name.
@@ -45,24 +39,27 @@ public:
 
     [[nodiscard]] llvm::IRBuilder<>& builder() const;
 
-    ClassType* get_class(const std::string& name);
-    void add_fields_constructor_args(std::string class_name, std::vector<FieldConstructorArgs> args);
-    std::vector<FieldConstructorArgs>& get_fields_args(const std::string& class_name);
+    const ClassType* get_class(const std::string& name);
+    void add_fields_constructor_args(std::string constructor_name, std::vector<FieldConstructorArgs> args);
+    std::vector<FieldConstructorArgs>& get_fields_args(const std::string& constructor_name);
 
     void push_scope();
-    Scope<Variable> pop_scope();
-    void destruct_all_variables(const Scope<Variable>& scope);
+    Scope<Value> pop_scope();
+    void destruct_all_variables(const Scope<Value>& scope);
 
     // Functions that delegate to the FunctionNameResolver
-    void register_function(std::string name, FunctionInfo info);
-    FunctionInfo& get_function(const std::string& name);
+    void register_function(std::string name, FunctionInfo info, bool no_mangle = false);
+    FunctionInfo& get_function(const std::string& name, const std::vector<const Type*>& param_types);
+    FunctionInfo& get_function(const std::string& name, const std::vector<Value>& args);
+    std::string get_function(const std::string& name);
+    FunctionInfo& get_function_no_overloading(const std::string &name);
     [[nodiscard]] bool has_function(const std::string& name) const;
-    llvm::CallInst* call_function(const std::string &name, std::vector<llvm::Value*> args = {});
-    llvm::CallInst* call_function(llvm::Value* ptr, const FunctionType& type, std::vector<llvm::Value*> args = {});
-    void call_constructor(const Variable& variable, std::vector<llvm::Value*> args);
-    void call_destructor(const Variable& variable);
+    llvm::CallInst* call_function(const std::string &name, std::vector<Value> args = {});
+    llvm::CallInst* call_function(llvm::Value* ptr, const FunctionType* type, std::vector<Value> args = {});
+    void call_constructor(const Value& value, std::vector<Value> args);
+    void call_destructor(const Value& value);
 
-    ~NameResolver();
+    [[nodiscard]] static std::string get_full_function_name(std::string name, const std::vector<const Type*>& param_types);
 };
 
 }

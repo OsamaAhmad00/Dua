@@ -1,4 +1,6 @@
 #include <AST/values/StringValueNode.hpp>
+#include "types/PointerType.hpp"
+#include "types/IntegerTypes.hpp"
 
 namespace dua
 {
@@ -19,7 +21,7 @@ llvm::Constant* StringValueNode::eval()
 
 const Type *StringValueNode::get_type() {
     if (type == nullptr)
-        return type = typing_system().create_type<StringType>();
+        return type = typing_system().create_type<PointerType>(typing_system().create_type<I8Type>());
     return type;
 }
 

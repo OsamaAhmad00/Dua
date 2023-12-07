@@ -43,6 +43,8 @@ public:
 
     std::string to_string() const override { return name; }
 
+    std::string as_key() const override { return name; }
+
     const ClassField& get_field(const std::string& name) const;
 
     llvm::Value* get_field(llvm::Value* instance, const std::string& name) const;

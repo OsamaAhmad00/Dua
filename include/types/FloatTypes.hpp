@@ -22,6 +22,10 @@ struct F##WIDTH##Type : public FloatType                             \
     std::string to_string() const override {                         \
         return "f"#WIDTH;                                            \
     }                                                                \
+                                                                     \
+    std::string as_key() const override {                            \
+        return "F"#WIDTH;                                            \
+    }                                                                \
 };
 
 struct FloatType : public Type {};

@@ -1,5 +1,6 @@
 #include <AST/lvalue/LoadedLValueNode.hpp>
 #include <types/PointerType.hpp>
+#include "types/ArrayType.hpp"
 
 namespace dua
 {
@@ -20,15 +21,18 @@ const Type *LoadedLValueNode::get_type()
 {
     if (type != nullptr) return type;
     auto result = lvalue->get_type();
-    auto ptr = dynamic_cast<const PointerType*>(result);
-    assert(ptr != nullptr);
+    const Type* ptr = dynamic_cast<const PointerType*>(result);
+    if (ptr == nullptr) {
+        ptr = dynamic_cast<const ArrayType*>(result);
+        assert(ptr != nullptr);
+    }
 
     // If it's pointing to a function, don't load the address
     auto element_type = lvalue->get_element_type();
     if (dynamic_cast<const FunctionType*>(element_type) != nullptr)
         return type = ptr;
 
-    return type = ptr->get_element_type();
+    return type = lvalue->get_element_type();
 }
 
 }

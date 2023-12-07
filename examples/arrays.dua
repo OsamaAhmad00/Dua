@@ -1,4 +1,4 @@
-int printf(str message, ...);
+no_mangle int printf(str message, ...);
 
 
 // Case Default value

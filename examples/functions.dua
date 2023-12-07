@@ -44,7 +44,7 @@ int main ()
 // CASE Variable arguments declaration
 // Outputs "Hello, world!\n"
 
-int printf(i8* message, ...);
+no_mangle int printf(i8* message, ...);
 
 int main()
 {

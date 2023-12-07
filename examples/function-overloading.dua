@@ -1,0 +1,192 @@
+no_mangle int printf(str message, ...);
+
+
+// Case Basic function overloading
+// Outputs "12"
+
+void print(int num) {
+    printf("%d", num);
+}
+
+void print(str message) {
+    printf("%s", message);
+}
+
+int main()
+{
+    print(1);
+    print("2");
+}
+
+
+// Case int vs long
+// Outputs "Called from int\nCalled from long\n"
+
+void print(int num) {
+    printf("Called from int\n");
+}
+
+void print(long num) {
+    printf("Called from long\n");
+}
+
+int main()
+{
+    print(1I);
+    print(2);
+}
+
+
+// Case Constructor overloading
+// Outputs "Y: default constructor\nX: param constructor\nY: param constructor\nX: default constructor\n"
+
+class X
+{
+    Y y;
+
+    constructor() : y(1, 2) {
+        printf("X: default constructor\n");
+    }
+
+    constructor(int i, int j) : y() {
+        printf("X: param constructor\n");
+    }
+}
+
+class Y
+{
+    constructor() {
+        printf("Y: default constructor\n");
+    }
+
+    constructor(int i, int j) : y() {
+        printf("Y: param constructor\n");
+    }
+}
+
+int main()
+{
+    X x1(1, 2);
+    X x2;
+}
+
+
+
+// Case Overloading with different types of parameters
+// Outputs "Hello\n3.14\n"
+
+void print(str message) {
+    printf("%s\n", message);
+}
+
+void print(float num) {
+    printf("%.2f\n", num);
+}
+
+int main()
+{
+    print("Hello");
+    print(3.14);
+}
+
+
+// Case Overloading with different number of parameters
+// Outputs "1\n12\n"
+
+void print(int num) {
+    printf("%d\n", num);
+}
+
+void print(int num1, int num2) {
+    printf("%d%d\n", num1, num2);
+}
+
+int main()
+{
+    print(1);
+    print(1, 2);
+}
+
+
+// Case Method overloading
+// Outputs "1\n2\n"
+
+class X
+{
+    void print(int num) {
+        printf("%d\n", num);
+    }
+
+    void print(str message) {
+        printf("%s\n", message);
+    }
+}
+
+int main()
+{
+    X x;
+    x.print(1);
+    x.print("2");
+}
+
+// Case Overloading with different return types
+// Outputs "1\n3.14\n"
+
+int identity(int num) {
+    return num;
+}
+
+float identity(float num) {
+    return num;
+}
+
+int main()
+{
+    printf("%d\n", identity(1));
+    printf("%.2f\n", identity(3.14));
+}
+
+
+// Case No default constructor if another constructor is defined
+// Panics
+
+class X
+{
+    constructor(int x, int y) { }
+}
+
+int main()
+{
+    X x;
+}
+
+
+// Case no_mangle for methods
+// Panics
+
+class X
+{
+    no_mangle void func() { }
+}
+
+int main()
+{
+
+}
+
+
+// Case Only difference is that one function is variadic
+// Panics
+
+void func(int a, int b) {
+
+}
+
+void func(int a, int b, ...) {
+
+}
+
+int main()
+{
+
+}

@@ -6,8 +6,9 @@
 namespace dua
 {
 
-FunctionDefinitionNode::FunctionDefinitionNode(dua::ModuleCompiler *compiler, std::string name, dua::ASTNode *body)
-        : name(std::move(name)), body(body)
+FunctionDefinitionNode::FunctionDefinitionNode(dua::ModuleCompiler *compiler,
+               std::string name, dua::ASTNode *body, const FunctionType* function_type)
+        : name(std::move(name)), body(body), function_type(function_type)
 {
     this->compiler = compiler;
 
@@ -28,11 +29,14 @@ llvm::Function *FunctionDefinitionNode::eval()
 
 llvm::Function* FunctionDefinitionNode::define_function()
 {
-    auto& info = name_resolver().get_function(name);
+    auto& info = name_resolver().get_function_no_overloading(name);
     llvm::Function* function = module().getFunction(name);
 
     if (!function)
         report_internal_error("definition of an undeclared function");
+
+    if (!function->getBasicBlockList().empty())
+        report_error("Redefinition of the function " + name);
 
     llvm::Function* old_function = current_function();
     llvm::BasicBlock* old_block = builder().GetInsertBlock();
@@ -73,10 +77,10 @@ llvm::Function* FunctionDefinitionNode::define_function()
         create_local_variable(info.param_names[i], info.type->param_types[i], &value);
     }
 
-    std::string constructor_suffix = ".constructor";
-    if (ends_with(name, constructor_suffix)) {
+    auto pos = name.find(".constructor.");
+    if (pos != std::string::npos) {
         // This is a constructor call.
-        auto class_name = name.substr(0, name.size() - constructor_suffix.size());
+        auto class_name = name.substr(0, pos);
         auto class_type = name_resolver().get_class(class_name);
         initialize_constructor(class_type);
     }
@@ -110,13 +114,14 @@ void FunctionDefinitionNode::initialize_constructor(const ClassType *class_type)
 {
     // Call the constructors of the fields first, then the constructor of this class.
     // Constructors are called in the order of definition of fields in the class.
-    auto& class_fields_args = name_resolver().get_fields_args(class_type->name);
+    auto& class_fields_args = name_resolver().get_fields_args(name);
 
+    auto self = name_resolver().symbol_table.get("self").ptr;
     for (auto& field : class_type->fields())
     {
         bool found = false;
         auto type = class_type->get_field(field.name).type;
-        auto ptr = class_type->get_field(name_resolver().symbol_table.get("self").ptr, field.name);
+        auto ptr = class_type->get_field(self, field.name);
         std::vector<Value> args;
 
         // Check if there exists arguments passed to the constructor first

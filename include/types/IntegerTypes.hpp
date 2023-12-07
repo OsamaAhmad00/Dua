@@ -22,6 +22,10 @@ struct PREFIX##WIDTH##Type : public IntegerType                \
     std::string to_string() const override {                   \
         return "i"#WIDTH;                                      \
     }                                                          \
+                                                               \
+    std::string as_key() const override {                      \
+        return #PREFIX#WIDTH;                                  \
+    }                                                          \
 };
 
 struct IntegerType : public Type {};
