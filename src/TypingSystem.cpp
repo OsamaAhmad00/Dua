@@ -44,6 +44,11 @@ llvm::Value* TypingSystem::cast_value(const Value& value, const Type* type, bool
             return builder().CreateTrunc(v, target_type);
         } else if (source_width < target_width) {
             // Extend the value to fit the larger type
+            // A 1 bit number can only store 0 or 1, no negative numbers here.
+            // If sign-extended however, the 1 (considered the sign) will propagate,
+            // resulting in a binary representation of a bunch of 1s.
+            if (source_type == builder().getInt1Ty())
+                return builder().CreateZExt(v, target_type);
             return builder().CreateSExt(v, target_type);
         }
     }
@@ -67,8 +72,13 @@ llvm::Value* TypingSystem::cast_value(const Value& value, const Type* type, bool
         }
     }
 
-    if (source_type->isIntegerTy() && target_type->isFloatingPointTy())
+    if (source_type->isIntegerTy() && target_type->isFloatingPointTy()) {
+        // A 1 bit number can only store 0 or 1, no negative numbers here.
+        // If considered to be signed however, the 1 will be considered a sign.
+        if (source_type == builder().getInt1Ty())
+            return builder().CreateUIToFP(v, target_type);
         return builder().CreateSIToFP(v, target_type);
+    }
 
     if (source_type->isFloatingPointTy() && target_type->isIntegerTy())
         return builder().CreateFPToSI(v, target_type);
@@ -106,7 +116,7 @@ const Type* TypingSystem::get_winning_type(const Type* lhs, const Type* rhs, boo
         return rhs;
 
     if (l->isFloatingPointTy() && r->isIntegerTy())
-        return rhs;
+        return lhs;
 
     if (panic_on_failure)
         report_error("Type mismatch: Can't have the types " + lhs->to_string()

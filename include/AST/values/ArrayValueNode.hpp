@@ -19,7 +19,8 @@ public:
         this->type = compiler->create_type<ArrayType>(type, this->values.size());
     }
 
-    llvm::Constant* eval() override {
+    llvm::Constant* eval() override
+    {
         std::vector<llvm::Constant*> evaluated(values.size());
         auto element_type = ((ArrayType*)type)->get_element_type();
         for (size_t i = 0; i < values.size(); i++) {

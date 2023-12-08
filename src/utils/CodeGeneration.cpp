@@ -37,7 +37,7 @@ int run_clang(const std::vector<std::string>& args)
     return std::system(("clang -Wno-override-module " + concatenated).c_str());
 }
 
-void run_clang_on_llvm_ir(const strings& filename, const strings& code, const strings& args)
+bool run_clang_on_llvm_ir(const strings& filename, const strings& code, const strings& args)
 {
     auto directory = uuid();
     std::filesystem::create_directory(directory);
@@ -60,6 +60,8 @@ void run_clang_on_llvm_ir(const strings& filename, const strings& code, const st
     run_clang(strings { "-x", "ir" } + ("./" + directory + "/" + names) + args);
 
     std::filesystem::remove_all(directory);
+
+    return true;
 }
 
 void compile(const strings& source_files, const strings& args)

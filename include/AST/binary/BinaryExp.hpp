@@ -6,7 +6,7 @@
 namespace dua
 {
 
-#define SAME_TYPE_BINARY_EXP_NODE(NAME, OP, LABEL)                                    \
+#define SAME_TYPE_BINARY_EXP_NODE(NAME, INT_OP, FLOAT_OP, LABEL, INT_ONLY)            \
 class NAME##Node : public ASTNode                                                     \
 {                                                                                     \
     ASTNode* lhs;                                                                     \
@@ -24,7 +24,23 @@ public:                                                                         
         if (l == nullptr || r == nullptr)                                             \
             report_error("Can't perform the operation " #NAME " between the types "   \
                 + lhs.type->to_string() + " and " + rhs.type->to_string());           \
-        return compiler->get_builder()->OP(l, r, LABEL);                              \
+        llvm::Value* ptr;                                                             \
+        if (dynamic_cast<const IntegerType*>(type))                                   \
+            ptr = compiler->get_builder()->INT_OP(l, r, LABEL);                       \
+        else {                                                                        \
+            if (INT_ONLY)                                                             \
+                report_error("The operation " #NAME                                   \
+                    " is applicable only on integer types");                          \
+            ptr = compiler->get_builder()->FLOAT_OP(l, r, LABEL);                     \
+        }                                                                             \
+                                                                                      \
+        /* This is necessary for making sure that the type returned is actually */    \
+        /*  the desired type. Even though we're casting to the same dua::Type   */    \
+        /*  type, which the typing system will allow, the underlying llvm::Type */    \
+        /*  might be different, and we have to make sure that it's the correct  */    \
+        /*  type too.                                                           */    \
+        auto value = compiler->create_value(ptr, type);                               \
+        return value.cast_as(type);                                                   \
     }                                                                                 \
                                                                                       \
     llvm::Value* eval() override {                                                    \

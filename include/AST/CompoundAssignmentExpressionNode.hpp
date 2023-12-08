@@ -33,7 +33,7 @@ public:
         return value;
     }
 
-    const Type* get_type() override { return type = lhs->get_type(); };
+    const Type* get_type() override { return type = lhs->get_element_type(); };
 };
 
 }

@@ -410,15 +410,23 @@ void ParserAssistant::create_dereference() {
 }
 
 void ParserAssistant::create_pre_inc() {
+    auto lvalue = pop_node_as<LValueNode>();
+    if (dynamic_cast<const IntegerType*>(lvalue->get_element_type()) == nullptr)
+        report_error("Can't perform prefix increment on non-integer (" +
+                     lvalue->get_element_type()->to_string() + ") types.");
     push_node<CompoundAssignmentExpressionNode<AdditionNode>>(
-        pop_node_as<LValueNode>(),
+        lvalue,
         compiler->create_node<I32ValueNode>(1)
     );
 }
 
 void ParserAssistant::create_pre_dec() {
+    auto lvalue = pop_node_as<LValueNode>();
+    if (dynamic_cast<const IntegerType*>(lvalue->get_element_type()) == nullptr)
+        report_error("Can't perform prefix decrement on non-integer (" +
+                     lvalue->get_element_type()->to_string() + ") types.");
     push_node<CompoundAssignmentExpressionNode<SubtractionNode>>(
-        pop_node_as<LValueNode>(),
+            lvalue,
         compiler->create_node<I32ValueNode>(1)
     );
 }

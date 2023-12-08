@@ -22,9 +22,11 @@ const Type* VariableNode::get_type()
     const Type* t;
     if (name_resolver().symbol_table.contains(name)) {
         t = name_resolver().symbol_table.get(name).type;
-    } else {
+    } else if (name_resolver().has_function(name)) {
         auto full_name = name_resolver().get_function(name);
         t = name_resolver().get_function_no_overloading(full_name).type;
+    } else {
+        report_error("The identifier " + name + " is not defined");
     }
     return type = compiler->create_type<PointerType>(t);
 }
