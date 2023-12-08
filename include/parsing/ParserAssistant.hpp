@@ -215,6 +215,7 @@ public:
     void prepare_destructor();
     void create_pointer_field_access();
     void create_array_literal();
+    void create_forced_cast();
 
     template<typename T>
     void create_unary_expr() {

@@ -125,6 +125,10 @@ const Type* TypingSystem::get_winning_type(const Type* lhs, const Type* rhs, boo
     return nullptr;
 }
 
+llvm::Value * TypingSystem::forced_cast_value(llvm::Value* value, const Type *target_type) const {
+    return builder().CreateBitOrPointerCast(value, target_type->llvm_type(), "forced_cast");
+}
+
 llvm::Value* TypingSystem::cast_as_bool(const Value& value, bool panic_on_failure) const {
     auto casted = cast_value(value, create_type<I64Type>(), panic_on_failure);
     return builder().CreateICmpNE(casted, builder().getInt64(0));

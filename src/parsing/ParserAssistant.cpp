@@ -731,4 +731,8 @@ void ParserAssistant::create_array_literal() {
     push_node<ArrayValueNode>(pop_args(), pop_type());
 }
 
+void ParserAssistant::create_forced_cast() {
+    push_node<CastExpressionNode>(pop_node(), pop_type(), true);
+}
+
 }

@@ -1,0 +1,39 @@
+no_mangle int printf(str message, ...);
+
+void print(int num) { printf("%d", num); }
+
+
+// Case Basic implicit casting
+// Outputs "3"
+
+int main()
+{
+    double d = 3.0;
+    print(d);  // implicit cast from double to int
+}
+
+
+// Case Force cast a pointer to an integer
+// Outputs "2"
+
+int main()
+{
+    var ptr = new int[5];
+    (*ptr)[1] = 2;
+    var i = ((i64))ptr;
+    print(*((i32*)(i + 4)));
+    delete ptr;
+}
+
+
+// Case Cast a pointer to an integer
+// Panics
+
+int main()
+{
+    var ptr = new int[5];
+    (*ptr)[1] = 2;
+    var i = (i64)ptr;
+    print(*((i32*)(i + 4)));
+    delete ptr;
+}

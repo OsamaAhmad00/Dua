@@ -275,6 +275,7 @@ expression
 
 cast_expression
     : '(' type ')' expression { assistant.create_cast(); }
+    | '(' '(' type ')' ')' expression { assistant.create_forced_cast(); }
     ;
 
 return_statement
