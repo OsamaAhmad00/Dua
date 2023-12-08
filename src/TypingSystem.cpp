@@ -184,6 +184,7 @@ int TypingSystem::similarity_score(const Type *t1, const Type *t2) const
 
     if (auto f1 = is<FunctionType>(t1); f1 != nullptr) {
         if (auto f2 = is<FunctionType>(t2); f2 != nullptr) {
+            if (f1->is_var_arg != f2->is_var_arg) return -1;
             int ret_score = similarity_score(f1->return_type, f2->return_type);
             if (ret_score == -1) return -1;
             int param_score = type_list_similarity_score(f1->param_types, f2->param_types);
@@ -197,18 +198,21 @@ int TypingSystem::similarity_score(const Type *t1, const Type *t2) const
 }
 
 int TypingSystem::type_list_similarity_score(const std::vector<const Type *> &l1,
-                                             const std::vector<const Type *> &l2) const
+                                             const std::vector<const Type *> &l2, bool can_differ_in_size) const
 {
-    if (l1.size() != l2.size()) return -1;
+    if (l1.size() != l2.size() && !can_differ_in_size)
+        return -1;
+
+    size_t n = std::min(l1.size(), l2.size());
 
     int score = 0;
-    for (size_t i = 0; i < l1.size(); i++) {
+    for (size_t i = 0; i < n; i++) {
         int type_score = similarity_score(l1[i], l2[i]);
         if (type_score == -1) return -1;
         score += type_score;
     }
 
-    return score;
+    return score + int(l1.size() - n) + int(l2.size() - n);
 }
 
 bool TypingSystem::is_castable(const Type *t1, const Type *t2) const {

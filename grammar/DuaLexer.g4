@@ -126,7 +126,7 @@ fragment DecimalInteger: DecimalNonZeroDigit (DecimalDigit | '\'')*;
 fragment OctalInteger: '0' (OctalDigit | '\'')*;  // Quick hack: 0 is counted as octal
 fragment BinaryInteger: '0b' (BinaryDigit | '\'')+;
 
-fragment Float: DecimalInteger '.' DecimalInteger*;
+fragment Float: DecimalInteger '.' DecimalDigit*;
 
 fragment HexDigit: [0-9a-fA-F];
 

@@ -277,13 +277,18 @@ std::string FunctionNameResolver::get_winning_function(const std::string &name, 
         auto& name = current->first;
         auto& info = current->second;
         current++;
-        auto score = compiler->typing_system.type_list_similarity_score(info.type->param_types, arg_types);
+        auto score = compiler->typing_system.type_list_similarity_score(
+            info.type->param_types,
+            arg_types,
+            info.type->is_var_arg
+        );
         if (score == -1) continue;
         scores[score].emplace_back(name, info.type);
     }
 
-    if (scores.empty()) {
-        std::string message = "There are no applicable overloads for the function " + name + " with ";
+    if (scores.empty())
+    {
+        std::string message = "There are no applicable overloads for the function '" + name + "' with ";
         if (arg_types.empty()) {
             message += "no arguments";
         } else {
