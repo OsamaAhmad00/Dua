@@ -4,6 +4,13 @@
 namespace dua
 {
 
+VariableNode::VariableNode(ModuleCompiler *compiler, std::string name, const Type *type)
+        : name(std::move(name))
+{
+    this->compiler = compiler;
+    this->type = type;
+}
+
 llvm::Value* VariableNode::eval()
 {
     if (name_resolver().symbol_table.contains(name)) {
@@ -12,8 +19,19 @@ llvm::Value* VariableNode::eval()
     }
 
     // Not found. Has to be a function reference
-    auto function = name_resolver().get_function(name);
-    return module().getFunction(name);
+    const FunctionType* func_type = nullptr;
+
+    auto pointer_type = dynamic_cast<const PointerType*>(get_type());
+    if (pointer_type != nullptr)
+        func_type = dynamic_cast<const FunctionType*>(pointer_type->get_element_type());
+
+    std::string full_name;
+    if (func_type != nullptr)
+        full_name = name_resolver().get_function_with_exact_type(name, func_type);
+    else
+        full_name = name_resolver().get_function(name);
+
+    return module().getFunction(full_name);
 }
 
 const Type* VariableNode::get_type()

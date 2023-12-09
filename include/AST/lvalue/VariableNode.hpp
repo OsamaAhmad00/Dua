@@ -12,8 +12,7 @@ public:
 
     std::string name;
 
-    VariableNode(ModuleCompiler* compiler, std::string name)
-        : name(std::move(name)) { this->compiler = compiler; }
+    VariableNode(ModuleCompiler* compiler, std::string name, const Type* type = nullptr);
 
     llvm::Value* eval() override;
 

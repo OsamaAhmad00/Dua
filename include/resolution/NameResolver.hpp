@@ -52,6 +52,8 @@ public:
     FunctionInfo& get_function(const std::string& name, const std::vector<const Type*>& param_types);
     FunctionInfo& get_function(const std::string& name, const std::vector<Value>& args);
     std::string get_function(const std::string& name);
+    [[nodiscard]] std::string get_winning_function(const std::string& name, const std::vector<const Type*>& arg_types) const;
+    std::string get_function_with_exact_type(const std::string& name, const FunctionType* type) const;
     FunctionInfo& get_function_no_overloading(const std::string &name);
     [[nodiscard]] bool has_function(const std::string& name) const;
     llvm::CallInst* call_function(const std::string &name, std::vector<Value> args = {});

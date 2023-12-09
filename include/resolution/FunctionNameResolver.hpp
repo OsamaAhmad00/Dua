@@ -22,8 +22,6 @@ class FunctionNameResolver
 {
     std::map<std::string, FunctionInfo> functions;
 
-    // Used to resolve between applicable candidate functions
-    [[nodiscard]] std::string get_winning_function(const std::string& name, const std::vector<const Type*>& arg_types) const;
 
     void cast_function_args(std::vector<Value>& args, const FunctionType* type) const;
 
@@ -36,8 +34,11 @@ public:
     [[nodiscard]] llvm::IRBuilder<>& builder() const;
 
     void register_function(std::string name, FunctionInfo info, bool no_mangle = false);
+    // Used to resolve between applicable candidate functions
+    [[nodiscard]] std::string get_winning_function(const std::string& name, const std::vector<const Type*>& arg_types) const;
     FunctionInfo& get_function(const std::string& name, const std::vector<const Type*>& param_types);
     FunctionInfo& get_function(const std::string& name, const std::vector<Value>& args);
+    std::string get_function_with_exact_type(const std::string& name, const FunctionType* type) const;
     FunctionInfo& get_function_no_overloading(const std::string &name);
     std::string get_function(std::string name);
 

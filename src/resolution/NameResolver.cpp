@@ -50,6 +50,10 @@ void NameResolver::register_function(std::string name, FunctionInfo info, bool n
     return function_resolver.register_function(std::move(name), std::move(info), no_mangle);
 }
 
+std::string NameResolver::get_winning_function(const std::string &name, const std::vector<const Type *> &arg_types) const {
+    return function_resolver.get_winning_function(name, arg_types);
+}
+
 bool NameResolver::has_function(const std::string &name) const {
     return function_resolver.has_function(name);
 }
@@ -88,6 +92,10 @@ FunctionInfo &NameResolver::get_function_no_overloading(const std::string &name)
 
 std::string NameResolver::get_full_function_name(std::string name, const std::vector<const Type *> &param_types) {
     return FunctionNameResolver::get_full_function_name(std::move(name), param_types);
+}
+
+std::string NameResolver::get_function_with_exact_type(const std::string &name, const FunctionType *type) const {
+    return function_resolver.get_function_with_exact_type(name, type);
 }
 
 }

@@ -168,7 +168,9 @@ public:
     static int16_t get_i16(std::string num);
     static int8_t  get_i8 (std::string num);
 
+    // Both rely on the argument_counters list
     std::vector<ASTNode*> pop_args();
+    std::vector<const Type*> pop_types();
 
     void create_variable_declaration();
     void create_variable_definition();
@@ -216,6 +218,7 @@ public:
     void create_pointer_field_access();
     void create_array_literal();
     void create_forced_cast();
+    void create_func_ref();
 
     template<typename T>
     void create_unary_expr() {

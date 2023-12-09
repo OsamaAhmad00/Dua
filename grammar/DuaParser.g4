@@ -134,7 +134,8 @@ variable_decl_no_simicolon
 
 // Every definition takes 4 arguments: type, name, expr, args. Some of them may be empty (null or empty args)
 variable_def_no_simicolon
-    : type identifier '=' expression { assistant.enter_arg_list(); assistant.create_variable_definition(); }
+    : type '(' types_list var_arg_or_none ')' '*' identifier '=' identifier { assistant.create_func_ref(); }
+    | type identifier '=' expression { assistant.enter_arg_list(); assistant.create_variable_definition(); }
     | Var  identifier '=' expression { assistant.enter_arg_list(); assistant.create_inferred_definition(); }
     | type identifier { assistant.push_null_node(); } optional_constructor_args { assistant.create_variable_definition(); }
     ;

@@ -92,7 +92,8 @@ std::string FunctionNameResolver::get_function(std::string name)
 
     // There exists more than one overload
     if (non_mangled != functions.end() || --end != begin)
-        report_error("Can't have a reference to the overloaded function " + name + " only from the name");
+        report_error("Can't infer the overloaded function '" + name +
+        "' just from the name. Specifying the function type might help resolve this conflict");
 
     return begin->first;
 }
@@ -260,8 +261,10 @@ std::string FunctionNameResolver::get_winning_function(const std::string &name, 
     key.back()++;
     auto end = functions.lower_bound(key);
 
+    auto non_mangled = functions.find(name);
+
     if (begin == end) {
-        if (functions.find(name) != functions.end()) {
+        if (non_mangled != functions.end()) {
             // This is a non-mangled function name, which doesn't have
             //  a '.' followed by the parameter types after its name
             return name;
@@ -270,6 +273,13 @@ std::string FunctionNameResolver::get_winning_function(const std::string &name, 
     }
 
     std::map<int, std::vector<std::pair<std::string, const FunctionType*>>> scores;
+
+    if (non_mangled != functions.end()) {
+        auto score = compiler->typing_system.type_list_similarity_score(
+                non_mangled->second.type->param_types, arg_types);
+        if (score != -1)
+            scores[score].emplace_back(name, non_mangled->second.type);
+    }
 
     auto current = begin;
     while (current != end)
@@ -336,6 +346,23 @@ std::string FunctionNameResolver::get_full_function_name(std::string name, const
     for (auto type : param_types)
         name += '.' + type->as_key();
     return name;
+}
+
+std::string FunctionNameResolver::get_function_with_exact_type(const std::string &name, const FunctionType* type) const
+{
+    auto mangled_name = get_full_function_name(name, type->param_types);
+    auto non_mangled = functions.find(name);
+    auto mangled = functions.find(mangled_name);
+    if (non_mangled != functions.end() && non_mangled->second.type == type) {
+        if (mangled != functions.end())
+            report_error("A resolution conflict between a mangled and a non-mangled functions with name " + name);
+        return name;
+    } else if (mangled != functions.end()) {
+        return mangled_name;
+    }
+
+    report_error("There is no overload for the function '" + name + "' with the type " + type->to_string());
+    return "";  // Unreachable
 }
 
 }

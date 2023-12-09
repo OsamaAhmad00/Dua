@@ -99,6 +99,15 @@ std::vector<ASTNode *> ParserAssistant::pop_args()
     return args;
 }
 
+std::vector<const Type*> ParserAssistant::pop_types()
+{
+    size_t n = leave_arg_list();
+    std::vector<const Type*> types(n);
+    for (size_t i = 0; i < n; i++)
+        types[n - i - 1] = pop_type();
+    return types;
+}
+
 void ParserAssistant::create_variable_declaration()
 {
     auto name = pop_str();
@@ -733,6 +742,20 @@ void ParserAssistant::create_array_literal() {
 
 void ParserAssistant::create_forced_cast() {
     push_node<CastExpressionNode>(pop_node(), pop_type(), true);
+}
+
+void ParserAssistant::create_func_ref()
+{
+    auto param_types = pop_types();
+    auto ret_type = pop_type();
+    auto target_func = pop_str();
+    auto is_var_arg = pop_var_arg();
+    auto func_type = compiler->typing_system.create_type<FunctionType>(ret_type, param_types, is_var_arg);
+    push_type<PointerType>(func_type);
+    push_node<VariableNode>(target_func, types.back());
+
+    enter_arg_list();
+    create_variable_definition();
 }
 
 }

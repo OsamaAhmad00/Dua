@@ -74,3 +74,32 @@ int main()
     void(int, int)* print = printf;
     print(1, 2);
 }
+
+
+// Case Reference to overloaded functions
+// Outputs "Int: 1\nDouble: 3.23\n"
+
+void func(int i)    { printf("Int: %d\n", i); }
+void func(double d) { printf("Double: %.2llf\n", d); }
+
+int main()
+{
+    void(int)* f1 = func;
+    void(double)* f2 = func;
+
+    f1(1);
+    f2(3.23);
+}
+
+
+// Case Inferring a reference to overloaded functions
+// Panics
+
+void func(int i)    { printf("Int: %d\n", i); }
+void func(double d) { printf("Double: %.2llf\n", d); }
+
+int main()
+{
+    var f1 = func;
+    var f2 = func;
+}
