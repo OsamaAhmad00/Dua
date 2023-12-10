@@ -70,7 +70,7 @@ void FileTestCasesRunner::run()
                 succeeded = true;
                 EXPECT_ANY_THROW(succeeded = !run_clang_on_llvm_ir(n, c, a));
                 if (succeeded)
-                    std::cerr << termcolor::green << "Exception thrown, Passed!" << termcolor::reset << '\n';
+                    std::cerr << termcolor::green << "\t\tException thrown, Passed!" << termcolor::reset << '\n';
                 passed_cases += succeeded;
                 continue;
             } else {

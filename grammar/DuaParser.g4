@@ -84,12 +84,18 @@ class_element
     : variable_decl_or_def
     | function_decl_or_def
     | constructor
+    | copy_constructor
     | destructor
     ;
 
 constructor
     : { assistant.prepare_constructor(); } Constructor '(' param_list ')' { assistant.push_var_arg(false); }
         { assistant.create_function_declaration(); } optional_fields_constructor_params function_body { assistant.finish_constructor(); }
+    ;
+
+copy_constructor
+    : { assistant.prepare_copy_constructor(); } '=' Constructor '(' param_list ')' { assistant.push_var_arg(false); }
+        { assistant.create_function_declaration(); } optional_fields_constructor_params function_body { assistant.finish_copy_constructor(); }
     ;
 
 optional_fields_constructor_params
@@ -107,7 +113,7 @@ field_constructor_params
     ;
 
 destructor
-    : { assistant.prepare_destructor(); }  Destructor '(' ')' { assistant.push_var_arg(false); }
+    : { assistant.prepare_destructor(); } Destructor { assistant.push_var_arg(false); }
         { assistant.enter_arg_list(); assistant.create_function_declaration(); } function_body
     ;
 
@@ -226,10 +232,10 @@ expression
     | expression                '(' arg_list ')' { assistant.create_expr_function_call();  }
     | New identifier { assistant.create_class_type(); } optional_constructor_args { assistant.create_malloc(); }
     | New type { assistant.enter_arg_list(); assistant.create_malloc(); }
-    | SizeOf '(' type ')'         { assistant.create_size_of_type();        }
     | SizeOf '(' expression ')'   { assistant.create_size_of_expression();  }
-    | TypeName '(' type ')'       { assistant.create_typename_type();       }
+    | SizeOf '(' type ')'         { assistant.create_size_of_type();        }
     | TypeName '(' expression ')' { assistant.create_typename_expression(); }
+    | TypeName '(' type ')'       { assistant.create_typename_type();       }
     | lvalue '++' { assistant.create_post_inc(); }
     | lvalue '--' { assistant.create_post_dec(); }
     | '+'  expression  // do nothing

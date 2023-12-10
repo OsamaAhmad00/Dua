@@ -1,4 +1,5 @@
 #include "AST/variable/LocalVariableDefinitionNode.hpp"
+#include "types/PointerType.hpp"
 
 namespace dua
 {
@@ -24,14 +25,16 @@ llvm::Value* LocalVariableDefinitionNode::eval()
     if (initializer != nullptr && !args.empty())
         report_error("Can't have both an initializer and an initializer list (in " + full_name + ")");
 
-    Value init_value = initializer
-            ? compiler->create_value(initializer->eval(), initializer->get_type())
-            : compiler->create_value(type->default_value(), type);
-    if (current_function() != nullptr) {
+    Value init_value;
+    if (initializer) init_value = initializer->get_eval_value();
+
+    if (current_function() != nullptr)
+    {
         std::vector<Value> evaluated(args.size());
         for (int i = 0; i < args.size(); i++)
             evaluated[i] = compiler->create_value(args[i]->eval(), args[i]->get_type());
-        return create_local_variable(name, type, &init_value, std::move(evaluated));
+        auto ptr = initializer ? &init_value : nullptr;
+        return create_local_variable(name, type, ptr, std::move(evaluated));
     }
 
     if (current_class() == nullptr)
@@ -40,15 +43,19 @@ llvm::Value* LocalVariableDefinitionNode::eval()
     // A class is being processed at the moment
     // This is a field definition, not a local variable definition.
 
+    if (initializer != nullptr && !args.empty())
+        report_error("Can't have both an initializer and an initializer list (in " + full_name + ")");
+
     auto class_name = current_class()->getName().str();
     if (name_resolver().has_function(class_name + "." + name))
         report_error("The identifier " + full_name + " is defined as both a field and a method");
 
     llvm::Constant* default_value = initializer ?
-            get_constant(init_value, type, full_name) : type->default_value();
+            get_constant(init_value, type, full_name) : nullptr;
 
     std::vector<Value> default_args;
-    if (!args.empty()) {
+    if (!args.empty())
+    {
         default_args.resize(args.size());
         for (size_t i = 0; i < args.size(); i++)
         {

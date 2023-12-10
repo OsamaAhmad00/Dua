@@ -1,0 +1,98 @@
+no_mangle int printf(str message, ...);
+
+void print(int num) { printf("%d", num); }
+
+class X
+{
+    int num = 3;
+
+    constructor() { printf("Constructed\n"); }
+
+    constructor(int i) { print(i); }
+
+    = constructor(X* x) {
+        printf("Copy constructed\n");
+        num = x->num * 2;
+    }
+}
+
+
+// Case Copy constructor with same object type
+// Outputs "Constructed\nCopy constructed\n6\n"
+
+int main()
+{
+    X x1;
+    X x2 = &x1;
+    print(x2.num);
+}
+
+
+// Case Copy constructor with different object type
+// Outputs "Constructed\n3\n"
+
+class Y
+{
+    = constructor(X* x) { print(x->num); }
+}
+
+int main()
+{
+    X x;
+    Y y = &x;
+}
+
+
+// Case Copy constructor with initializer list
+// Outputs "Constructed\n123"
+
+class Y
+{
+    X x;
+
+    = constructor(Y* y) : x(123) { }
+}
+
+int main()
+{
+    Y y1;
+    Y y2 = &y1;
+}
+
+
+// Case Copy constructor with primitive type
+// Outputs "123"
+
+class Y
+{
+    = constructor(int i) { print(i); }
+}
+
+int main()
+{
+    Y y = 123;
+}
+
+
+// Case Copy constructor with less than one parameter
+// Panics
+
+class Y
+{
+    = constructor () { }
+}
+
+int main() { }
+
+
+// Case Copy constructor with more than one parameter
+// Panics
+
+class Y
+{
+    = constructor (int i, int j) { }
+}
+
+int main() { }
+
+

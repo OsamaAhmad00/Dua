@@ -3,6 +3,7 @@
 #include <llvm/IR/Verifier.h>
 #include "types/FloatTypes.hpp"
 #include "types/PointerType.hpp"
+#include "AST/DeferredActionNode.hpp"
 
 namespace dua
 {
@@ -192,9 +193,9 @@ void FunctionNameResolver::call_constructor(const Value &value, std::vector<Valu
     if (class_type == nullptr)
     {
         // Initializing a primitive type.
-        if (args.empty())
-            return;
 
+        if (args.empty())
+            args.push_back(compiler->create_value(value.type->default_value(), value.type));
         else if (args.size() != 1)
             report_error("Cannot initialize a primitive value with more than one value");
 
@@ -206,12 +207,6 @@ void FunctionNameResolver::call_constructor(const Value &value, std::vector<Valu
 
     // Initializing an object
 
-    std::string name = class_type->name + ".constructor";
-    if (!has_function(name)) {
-        // Constructor is not defined. Noting to do here
-        return;
-    }
-
     // Fields constructors are called in the function definition
     //  node. This is to ensure that the parameters are defined
     //  and are visible to these constructors, so that they can
@@ -220,9 +215,47 @@ void FunctionNameResolver::call_constructor(const Value &value, std::vector<Valu
     //  These calls will happen at the top of the constructor,
     //  thus, initializing the fields first.
 
+    std::string name = class_type->name + ".constructor";
+    if (!has_function(name)) {
+        // Constructor is not defined. Noting to do here
+        return;
+    }
+
     auto ptr_value = compiler->create_value(value.ptr, compiler->create_type<PointerType>(value.type));
     args.insert(args.begin(), ptr_value);
     call_function(name, std::move(args));
+}
+
+void FunctionNameResolver::call_copy_constructor(const Value &value, const Value& arg)
+{
+    if (!value.ptr->getType()->isPointerTy())
+        report_internal_error("Trying to initialize a non-lvalue item");
+
+    auto class_type = dynamic_cast<const ClassType*>(value.type);
+
+    if (class_type != nullptr)
+    {
+        // Initializing an object
+
+        // Fields constructors are called in the function definition
+        //  node. This is to ensure that the parameters are defined
+        //  and are visible to these constructors, so that they can
+        //  be passed as well. This is to have the constructor calls
+        //  happen inside the constructor, not in every caller site.
+        //  These calls will happen at the top of the constructor,
+        //  thus, initializing the fields first.
+
+        std::string name = class_type->name + ".=constructor";
+        if (has_function(name)) {
+            auto ptr_value = compiler->create_value(value.ptr, compiler->create_type<PointerType>(value.type));
+            call_function(name, { ptr_value, arg });
+            return;
+        }
+    }
+
+    // Initializing a primitive type, or an object with no copy constructor.
+    auto casted = compiler->typing_system.cast_value(arg, value.type);
+    builder().CreateStore(casted, value.ptr);
 }
 
 void FunctionNameResolver::call_destructor(const Value& value)

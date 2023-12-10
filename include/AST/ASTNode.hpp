@@ -24,6 +24,8 @@ public:
 
     virtual const Type* get_type();
 
+    Value get_eval_value();
+
 protected:
 
     llvm::BasicBlock* create_basic_block(const std::string& name, llvm::Function* function);

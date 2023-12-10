@@ -98,4 +98,8 @@ std::string NameResolver::get_function_with_exact_type(const std::string &name, 
     return function_resolver.get_function_with_exact_type(name, type);
 }
 
+void NameResolver::call_copy_constructor(const Value &value, const Value& arg) {
+    function_resolver.call_copy_constructor(value, arg);
+}
+
 }

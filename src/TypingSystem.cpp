@@ -83,6 +83,11 @@ llvm::Value* TypingSystem::cast_value(const Value& value, const Type* type, bool
     if (source_type->isFloatingPointTy() && target_type->isIntegerTy())
         return builder().CreateFPToSI(v, target_type);
 
+    llvm::outs() << "Source type: ";
+    source_type->print(llvm::outs());
+    llvm::outs() << "\nTarget type: ";
+    target_type->print(llvm::outs());
+    llvm::outs() << "\n";
     report_internal_error("Casting couldn't be done");
     return nullptr;  // Unreachable
 }

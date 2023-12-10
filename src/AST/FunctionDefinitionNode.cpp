@@ -77,7 +77,12 @@ llvm::Function* FunctionDefinitionNode::define_function()
         create_local_variable(info.param_names[i], info.type->param_types[i], &value);
     }
 
-    auto pos = name.find(".constructor.");
+    size_t pos;
+    for (auto& ctor : std::vector<std::string>{ ".constructor.", ".=constructor." }) {
+        pos = name.find(ctor);
+        if (pos != std::string::npos) break;
+    }
+
     if (pos != std::string::npos) {
         // This is a constructor call.
         auto class_name = name.substr(0, pos);
@@ -140,7 +145,18 @@ void FunctionDefinitionNode::initialize_constructor(const ClassType *class_type)
             args.insert(args.end(), field.default_args.begin(), field.default_args.end());
         }
 
-        name_resolver().call_constructor(compiler->create_value(ptr, type), std::move(args));
+        // If no constructor initializer list, no default initializer list,
+        //  initialize it with the default value if exists, or with the type
+        //  default value.
+        // If it's not assigned a value, then it has an empty arg list
+        bool has_empty_args = field.default_value == nullptr;
+        auto instance = compiler->create_value(ptr, type);
+        if (!has_empty_args && args.empty()) {
+            auto arg = compiler->create_value(field.default_value, field.type);
+            name_resolver().call_copy_constructor(instance, arg);
+        } else {
+            name_resolver().call_constructor(instance, std::move(args));
+        }
     }
 }
 

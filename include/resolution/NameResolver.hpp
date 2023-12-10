@@ -59,6 +59,7 @@ public:
     llvm::CallInst* call_function(const std::string &name, std::vector<Value> args = {});
     llvm::CallInst* call_function(llvm::Value* ptr, const FunctionType* type, std::vector<Value> args = {});
     void call_constructor(const Value& value, std::vector<Value> args);
+    void call_copy_constructor(const Value& value, const Value& arg);
     void call_destructor(const Value& value);
 
     [[nodiscard]] static std::string get_full_function_name(std::string name, const std::vector<const Type*>& param_types);

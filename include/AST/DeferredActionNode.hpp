@@ -11,8 +11,8 @@ class DeferredActionNode : public ASTNode
 
 public:
 
-    DeferredActionNode(ModuleCompiler* compiler, std::function<llvm::Value*()> func, Type* type)
-            : func(func) { this->compiler = compiler; this->type = type; };
+    DeferredActionNode(ModuleCompiler* compiler, std::function<llvm::Value*()> func)
+            : func(std::move(func)) { this->compiler = compiler; this->type = type; };
 
     llvm::Value* eval() override { return func(); };
 };

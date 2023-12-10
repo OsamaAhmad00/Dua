@@ -5,11 +5,13 @@
 namespace dua
 {
 
-ClassType::ClassType(ModuleCompiler *compiler, std::string name, std::vector<ClassField> fields)
-        : name(name)
+ClassType::ClassType(ModuleCompiler *compiler, std::string name)
+        : name(std::move(name))
 {
     this->compiler = compiler;
-    compiler->name_resolver.class_fields[std::move(name)] = std::move(fields);
+
+    // Just to make sure the type is declared before usage.
+    llvm::StructType::create(compiler->context, this->name);
 }
 
 llvm::Constant *ClassType::default_value() const

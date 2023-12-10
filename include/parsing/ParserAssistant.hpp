@@ -219,6 +219,8 @@ public:
     void create_array_literal();
     void create_forced_cast();
     void create_func_ref();
+    void prepare_copy_constructor();
+    void finish_copy_constructor();
 
     template<typename T>
     void create_unary_expr() {

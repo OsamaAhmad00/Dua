@@ -581,9 +581,14 @@ void ParserAssistant::start_class_definition()
     if (compiler->current_function)
         report_error("Can't define a class inside a function");
 
+
     auto& name = strings.back();
     compiler->current_class = compiler->name_resolver.get_class(name)->llvm_type();
-    compiler->name_resolver.symbol_table.insert("self", compiler->create_value(nullptr, compiler->name_resolver.get_class(name)));
+    compiler->name_resolver.symbol_table.insert("self",
+            compiler->create_value(nullptr, compiler->name_resolver.get_class(name)));
+
+    if (compiler->current_class->isSized())
+        report_error("Redefinition of the class " + name);
 }
 
 void ParserAssistant::create_class()
@@ -593,11 +598,31 @@ void ParserAssistant::create_class()
     if (!is_in_global_scope())
         report_error("Class defined in a non-global scope");
 
-    std::vector<ASTNode*> members(n);
-    for (size_t i = 0; i < n; i++)
-        members[n - i - 1] = pop_node();
+    std::vector<LocalVariableDefinitionNode*> fields;
+    std::vector<FunctionDefinitionNode*> methods;
 
-    push_node<ClassDefinitionNode>(pop_str(), std::move(members), is_packed);
+    for (size_t i = 0; i < n; i++) {
+        auto node = pop_node();
+        if (auto f = dynamic_cast<LocalVariableDefinitionNode*>(node); f != nullptr)
+            fields.push_back(f);
+        else if (auto m = dynamic_cast<FunctionDefinitionNode*>(node); m != nullptr)
+            methods.push_back(m);
+        else report_internal_error("Class member that's not a field or a method");
+    }
+
+    // So that they are in the order of definition.
+    std::reverse(fields.begin(), fields.end());
+
+    std::vector<llvm::Type*> body(fields.size());
+    for (size_t i = 0; i < fields.size(); i++)
+        body[i] = fields[i]->get_type()->llvm_type();
+
+    auto name = pop_str();
+
+    assert(compiler->current_class == compiler->name_resolver.get_class(name)->llvm_type());
+    compiler->current_class->setBody(std::move(body), is_packed);
+
+    push_node<ClassDefinitionNode>(std::move(name), std::move(fields), std::move(methods));
 
     compiler->current_class = nullptr;
 
@@ -632,11 +657,23 @@ void ParserAssistant::create_size_of_expression()
 
 void ParserAssistant::create_type_of()
 {
-    types.push_back(nodes.back()->get_type());
-    pop_node();
+    auto node = pop_node();
+
+    // The identifier might be a class type, not a variable expression
+    if (auto l = dynamic_cast<LoadedLValueNode*>(node); l != nullptr) {
+        if (auto v = dynamic_cast<VariableNode*>(l->lvalue); v != nullptr) {
+            if (llvm::StructType::getTypeByName(compiler->context, v->name) != nullptr) {
+                push_type<ClassType>(v->name);
+                return;
+            }
+        }
+    }
+
+    types.push_back(node->get_type());
 }
 
-void ParserAssistant::create_typename_type() {
+void ParserAssistant::create_typename_type()
+{
     auto type = pop_type();
     auto llvm_type = type->llvm_type();
     if (llvm_type == nullptr) {
@@ -756,6 +793,25 @@ void ParserAssistant::create_func_ref()
 
     enter_arg_list();
     create_variable_definition();
+}
+
+void ParserAssistant::prepare_copy_constructor()
+{
+    if (compiler->current_class == nullptr)
+        report_error("Copy constructors can only be defined inside classes");
+    push_type<VoidType>();
+    push_str("=constructor");
+    no_mangle = false;
+}
+
+void ParserAssistant::finish_copy_constructor()
+{
+    auto constructor = pop_node_as<FunctionDefinitionNode>();
+    auto& param_types = constructor->get_function_type()->param_types;
+    if (param_types.size() != 2)  // One for the instance and one for the other object
+        report_error("Copy constructors must have exactly one parameter");
+    compiler->name_resolver.add_fields_constructor_args(constructor->name, std::move(fields_args));
+    nodes.push_back(constructor);
 }
 
 }

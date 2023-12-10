@@ -43,7 +43,7 @@ class X
         self.x = 5;
     }
 
-    destructor()
+    destructor
     {
         printf("X");
     }
@@ -113,7 +113,7 @@ class X
 {
     Y y;
 
-    destructor()
+    destructor
     {
         print(3);
     }
@@ -123,7 +123,7 @@ class Y
 {
     Z z;
 
-    destructor()
+    destructor
     {
         print(2);
     }
@@ -131,7 +131,7 @@ class Y
 
 class Z
 {
-    destructor()
+    destructor
     {
         print(1);
     }
@@ -256,17 +256,17 @@ class X
 
 class A
 {
-    destructor() { print(1); }
+    destructor { print(1); }
 }
 
 class B
 {
-    destructor() { print(2); }
+    destructor { print(2); }
 }
 
 class C
 {
-    destructor() { print(3); }
+    destructor { print(3); }
 }
 
 int main()

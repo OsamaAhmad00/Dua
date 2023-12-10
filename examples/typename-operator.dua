@@ -20,3 +20,16 @@ int main()
 
     print(typename(55I));
 }
+
+
+// Case Class type name
+// Outputs "X\nX\n"
+
+class X {}
+
+int main()
+{
+    X x;
+    print(typename(x));
+    print(typename(X));
+}

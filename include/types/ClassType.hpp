@@ -33,7 +33,7 @@ public:
 
     // The fields are stored and accessed through the compiler.
 
-    ClassType(ModuleCompiler* compiler, std::string name, std::vector<ClassField> fields = {});
+    ClassType(ModuleCompiler* compiler, std::string name);
 
     llvm::Constant* default_value() const override;
 

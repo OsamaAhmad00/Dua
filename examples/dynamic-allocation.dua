@@ -45,7 +45,7 @@ class X
         print(i);
     }
 
-    destructor()
+    destructor
     {
         printf("Bye");
     }
