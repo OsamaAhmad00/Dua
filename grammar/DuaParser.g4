@@ -152,9 +152,20 @@ optional_constructor_args
     | /* empty */ { assistant.enter_arg_list(); }
     ;
 
+
+infix_op
+    : '+' { assistant.push_str("Addition"); }
+    | '-' { assistant.push_str("Subtraction"); }
+    | '/' { assistant.push_str("Division"); }
+    | '*' { assistant.push_str("Multiplication"); }
+    | '%' { assistant.push_str("Mod"); }
+    ;
+
+
 function_decl_no_simicolon
     : no_mangle_or_none type identifier
         '(' param_list var_arg_or_none ')' { assistant.create_function_declaration(); }
+    | type Infix infix_op '(' param_list ')' { assistant.create_infix_operator(); }
     ;
 
 no_mangle_or_none
@@ -167,7 +178,7 @@ function_declaration
     ;
 
 function_definition
-    : function_decl_no_simicolon function_body
+    : function_decl_no_simicolon { assistant.set_current_function(); } function_body
     ;
 
 function_body

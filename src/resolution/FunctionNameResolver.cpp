@@ -286,7 +286,7 @@ llvm::IRBuilder<>& FunctionNameResolver::builder() const
     return compiler->builder;
 }
 
-std::string FunctionNameResolver::get_winning_function(const std::string &name, const std::vector<const Type*> &arg_types) const
+std::string FunctionNameResolver::get_winning_function(const std::string &name, const std::vector<const Type*> &arg_types, bool panic_on_not_found) const
 {
     auto key = name;
     if (name != "main") key += '.';
@@ -302,7 +302,9 @@ std::string FunctionNameResolver::get_winning_function(const std::string &name, 
             //  a '.' followed by the parameter types after its name
             return name;
         }
-        report_error("Function " + name + " is undefined");
+        if (panic_on_not_found)
+            report_error("Function " + name + " is undefined");
+        else return "";
     }
 
     std::map<int, std::vector<std::pair<std::string, const FunctionType*>>> scores;
@@ -331,6 +333,8 @@ std::string FunctionNameResolver::get_winning_function(const std::string &name, 
 
     if (scores.empty())
     {
+        if (!panic_on_not_found) return "";
+
         std::string message = "There are no applicable overloads for the function '" + name + "' with ";
         if (arg_types.empty()) {
             message += "no arguments";
@@ -396,6 +400,23 @@ std::string FunctionNameResolver::get_function_with_exact_type(const std::string
 
     report_error("There is no overload for the function '" + name + "' with the type " + type->to_string());
     return "";  // Unreachable
+}
+
+llvm::CallInst* FunctionNameResolver::call_infix_operator(const Value &lhs, const Value &rhs, const std::string &name)
+{
+    auto full_name = get_winning_function("infix." + name, { lhs.type, rhs.type }, false);
+    if (full_name.empty())
+        return nullptr;
+    auto func = compiler->module.getFunction(full_name);
+    return call_function(func, functions[full_name].type, {lhs, rhs});
+}
+
+const Type *FunctionNameResolver::get_infix_operator_return_type(const Type *t1, const Type *t2, const std::string& name)
+{
+    auto full_name = get_winning_function("infix." + name, { t1, t2 }, false);
+    if (full_name.empty())
+        return nullptr;
+    return functions[full_name].type->return_type;
 }
 
 }

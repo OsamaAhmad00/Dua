@@ -57,6 +57,7 @@ public:
 
     llvm::IRBuilder<>* get_builder() { return &builder; }
     llvm::LLVMContext* get_context() { return &context; }
+    NameResolver& get_name_resolver() { return name_resolver; }
     void push_deferred_node(ASTNode* node) { deferred_nodes.push_back(node); }
 
     // .dua.init function is a function that gets called before the entry point

@@ -4,8 +4,6 @@
 
 #include "AST/TranslationUnitNode.hpp"
 
-#include "AST/variable/GlobalVariableDefinitionNode.hpp"
-#include "AST/variable/LocalVariableDefinitionNode.hpp"
 #include "AST/AssignmentExpressionNode.hpp"
 #include "AST/CompoundAssignmentExpressionNode.hpp"
 #include "AST/ExpressionStatementNode.hpp"
@@ -17,6 +15,10 @@
 #include "AST/FreeNode.hpp"
 
 #include "AST/class/ClassDefinitionNode.hpp"
+
+#include "AST/variable/GlobalVariableDefinitionNode.hpp"
+#include "AST/variable/LocalVariableDefinitionNode.hpp"
+#include "AST/variable/ClassFieldDefinitionNode.hpp"
 
 #include "AST/loops/ForNode.hpp"
 #include "AST/loops/WhileNode.hpp"
@@ -221,6 +223,8 @@ public:
     void create_func_ref();
     void prepare_copy_constructor();
     void finish_copy_constructor();
+    void create_infix_operator();
+    void set_current_function();
 
     template<typename T>
     void create_unary_expr() {

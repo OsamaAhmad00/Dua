@@ -112,12 +112,25 @@ void ParserAssistant::create_variable_declaration()
 {
     auto name = pop_str();
     auto type = pop_type();
+
+    // A temporary insertion into the symbol table for name resolution
+    //  during parsing. The symbol table will be reset at the end.
     compiler->name_resolver.symbol_table.insert(name, compiler->create_value(nullptr, type));
+
     if (is_in_global_scope()) {
         push_node<GlobalVariableDefinitionNode>(std::move(name), type, nullptr);
     } else {
-        push_node<LocalVariableDefinitionNode>(std::move(name), type, nullptr);
+        if (compiler->current_function != nullptr) {
+            push_node<LocalVariableDefinitionNode>(std::move(name), type, nullptr);
+        } else {
+            // This is a field
+            assert(compiler->current_class != nullptr);
+            auto class_name = compiler->current_class->getName().str();
+            compiler->name_resolver.class_fields[class_name].push_back({ name, type, nullptr, {} });
+            push_node<ClassFieldDefinitionNode>(std::move(name), type, nullptr);
+        }
     }
+
     inc_statements();
 }
 
@@ -126,19 +139,13 @@ void ParserAssistant::create_variable_definition()
     // Either args or initializer
     auto args = pop_args();
     auto initializer = pop_node();
-    auto name = pop_str();
-    auto type = pop_type();
 
-    // A temporary insertion into the symbol table for name resolution
-    //  during parsing. The symbol table will be reset at the end.
-    compiler->name_resolver.symbol_table.insert(name, compiler->create_value(nullptr, type));
+    create_variable_declaration();
 
-    if (is_in_global_scope())
-        push_node<GlobalVariableDefinitionNode>(std::move(name), type, initializer, std::move(args));
-    else
-        push_node<LocalVariableDefinitionNode> (std::move(name), type, initializer, std::move(args));
-
-    inc_statements();
+    auto node = pop_node_as<VariableDefinitionNode>();
+    node->initializer = initializer;
+    node->args = std::move(args);
+    nodes.push_back(node);
 }
 
 void ParserAssistant::create_function_declaration()
@@ -153,7 +160,6 @@ void ParserAssistant::create_function_declaration()
     std::vector<const Type*> param_types(param_count);
     std::vector<std::string> param_names(param_count);
 
-    // The params are pushed in reverse-order
     for (int i = 0; i < param_count; i++) {
         param_names[param_count - i - 1] = pop_str();
         param_types[param_count - i - 1] = pop_type();
@@ -163,8 +169,8 @@ void ParserAssistant::create_function_declaration()
 
     auto name = pop_str();
     if (compiler->current_class != nullptr) {
-        name = compiler->current_class->getName().str() + '.' + name;
         auto class_name = compiler->current_class->getName().str();
+        name = class_name + '.' + name;
         param_types.insert(
         param_types.begin(),
             compiler->create_type<PointerType>(
@@ -207,6 +213,7 @@ void ParserAssistant::create_function_definition_block_body()
     function->set_body(body);
     nodes.push_back(function);
     dec_statements();
+    compiler->current_function = nullptr;
 }
 
 void ParserAssistant::create_function_definition_expression_body()
@@ -216,6 +223,7 @@ void ParserAssistant::create_function_definition_expression_body()
     auto function = pop_node_as<FunctionDefinitionNode>();
     function->set_body(body);
     nodes.push_back(function);
+    compiler->current_function = nullptr;
 }
 
 void ParserAssistant::create_if_statement()
@@ -598,12 +606,12 @@ void ParserAssistant::create_class()
     if (!is_in_global_scope())
         report_error("Class defined in a non-global scope");
 
-    std::vector<LocalVariableDefinitionNode*> fields;
+    std::vector<ClassFieldDefinitionNode*> fields;
     std::vector<FunctionDefinitionNode*> methods;
 
     for (size_t i = 0; i < n; i++) {
         auto node = pop_node();
-        if (auto f = dynamic_cast<LocalVariableDefinitionNode*>(node); f != nullptr)
+        if (auto f = dynamic_cast<ClassFieldDefinitionNode*>(node); f != nullptr)
             fields.push_back(f);
         else if (auto m = dynamic_cast<FunctionDefinitionNode*>(node); m != nullptr)
             methods.push_back(m);
@@ -708,7 +716,8 @@ void ParserAssistant::create_function_type()
     push_type<FunctionType>(return_type, std::move(param_types), is_var_arg);
 }
 
-void ParserAssistant::create_malloc() {
+void ParserAssistant::create_malloc()
+{
     if (!declared_malloc)
     {
         auto type = compiler->create_type<FunctionType> (
@@ -716,7 +725,11 @@ void ParserAssistant::create_malloc() {
             std::vector<const Type*>{ compiler->create_type<I64Type>() }
         );
 
+        // Temporarily setting the current function to nullptr to avoid the nested function error
+        auto current_function = compiler->current_function;
+        compiler->current_function = nullptr;
         compiler->name_resolver.register_function("malloc", {type, { "size" }}, true);
+        compiler->current_function = current_function;
 
         declared_malloc = true;
     }
@@ -732,7 +745,11 @@ void ParserAssistant::create_free()
             std::vector<const Type*>{ compiler->create_type<PointerType>(compiler->create_type<I64Type>()) }
         );
 
+        // Temporarily setting the current function to nullptr to avoid the nested function error
+        auto current_function = compiler->current_function;
+        compiler->current_function = nullptr;
         compiler->name_resolver.register_function("free", {std::move(type), { "size" }}, true);
+        compiler->current_function = current_function;
 
         declared_free = true;
     }
@@ -812,6 +829,64 @@ void ParserAssistant::finish_copy_constructor()
         report_error("Copy constructors must have exactly one parameter");
     compiler->name_resolver.add_fields_constructor_args(constructor->name, std::move(fields_args));
     nodes.push_back(constructor);
+}
+
+void ParserAssistant::create_infix_operator()
+{
+    auto param_count = leave_arg_list();
+    std::vector<const Type*> param_types(param_count);
+    std::vector<std::string> param_names(param_count);
+
+    inc_statements();
+
+    for (int i = 0; i < param_count; i++) {
+        param_names[param_count - i - 1] = pop_str();
+        param_types[param_count - i - 1] = pop_type();
+    }
+
+    auto name = pop_str();
+
+    bool is_method = compiler->current_class != nullptr;
+    if (param_count + is_method != 2) {
+        if (is_method) {
+            auto class_name = compiler->current_class->getName().str();
+            report_error("Class infix operators expect exactly one parameter (in " + class_name + "::" + name + " operator)");
+        } else {
+            report_error("Global infix operators expect exactly two parameters (in the global " + name + " operator)");
+        }
+    }
+
+    auto return_type = pop_type();
+
+    if (compiler->current_class != nullptr) {
+        auto class_name = compiler->current_class->getName().str();
+        param_types.insert(
+                param_types.begin(),
+                compiler->create_type<PointerType>(
+                compiler->name_resolver.classes[class_name]
+            )
+        );
+        param_names.insert(param_names.begin(), "self");
+    }
+
+    name = "infix." + name + "." + param_types[0]->to_string() + "." + param_types[0]->to_string();
+
+    auto function_type = compiler->create_type<FunctionType>(return_type, std::move(param_types), false);
+    FunctionInfo info {
+        function_type,
+        std::move(param_names)
+    };
+
+    compiler->name_resolver.register_function(name, std::move(info), true);
+
+    push_node<FunctionDefinitionNode>(std::move(name), nullptr, function_type);
+}
+
+void ParserAssistant::set_current_function()
+{
+    auto func = pop_node_as<FunctionDefinitionNode>();
+    compiler->current_function = compiler->module.getFunction(func->name);
+    nodes.push_back(func);
 }
 
 }

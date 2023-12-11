@@ -1,0 +1,230 @@
+no_mangle int printf(str message, ...);
+
+void print(int num) { printf("%d", num); }
+
+
+// Case Infix +
+// Outputs "5"
+
+class X
+{
+    int num = 3;
+
+    int infix + (Y* y) {
+        return self.num + y->num;
+    }
+}
+
+class Y
+{
+    int num = 2;
+}
+
+int main()
+{
+    X x;
+    Y y;
+    print(&x + &y);
+}
+
+
+// Case Global infix operator
+// Outputs "5"
+
+int infix + (X* x, Y* y) {
+    return x->num + y->num;
+}
+
+class X
+{
+    int num = 3;
+}
+
+class Y
+{
+    int num = 2;
+}
+
+int main()
+{
+    X x;
+    Y y;
+    print(&x + &y);
+}
+
+
+// Case Overwriting the integer addition
+// Outputs "66"
+
+int infix + (int x, int y) {
+    return x * y;
+}
+
+int main()
+{
+    print(2I + 3I);
+    print(2 + 3);  // long
+}
+
+
+// Case Specific infix overload selection
+// Outputs "61"
+
+int infix + (int x, int y) {
+    return x * y;
+}
+
+int infix + (long x, long y) {
+    return y - x;
+}
+
+int main()
+{
+    print(2I + 3I);
+    print(2 + 3);  // long
+}
+
+
+// Case Infix -
+// Outputs "5"
+
+class X
+{
+    int num = 3;
+
+    int infix - (Y* y) {
+        return self.num + y->num;
+    }
+}
+
+class Y
+{
+    int num = 2;
+}
+
+int main()
+{
+    X x;
+    Y y;
+    print(&x - &y);
+}
+
+
+// Case Infix *
+// Outputs "5"
+
+class X
+{
+    int num = 3;
+
+    int infix * (Y* y) {
+        return self.num + y->num;
+    }
+}
+
+class Y
+{
+    int num = 2;
+}
+
+int main()
+{
+    X x;
+    Y y;
+    print(&x * &y);
+}
+
+
+// Case Infix /
+// Outputs "5"
+
+class X
+{
+    int num = 3;
+
+    int infix / (Y* y) {
+        return self.num + y->num;
+    }
+}
+
+class Y
+{
+    int num = 2;
+}
+
+int main()
+{
+    X x;
+    Y y;
+    print(&x / &y);
+}
+
+
+// Case Infix %
+// Outputs "5"
+
+class X
+{
+    int num = 3;
+
+    int infix % (Y* y) {
+        return self.num + y->num;
+    }
+}
+
+class Y
+{
+    int num = 2;
+}
+
+int main()
+{
+    X x;
+    Y y;
+    print(&x % &y);
+}
+
+
+// Case Global infix operator with no parameters
+// Panics
+
+int infix + () { }
+
+int main()
+{
+}
+
+
+// Case Class infix operator with no parameters
+// Panics
+
+
+class X {
+    int infix + () { }
+}
+
+int main()
+{
+}
+
+
+// Case Global infix operator with more than two parameters
+// Panics
+
+int infix + (int a, int b, int c) { }
+
+int main()
+{
+}
+
+
+// Case Class infix operator with more than one parameters
+// Panics
+
+class X {
+    int infix + (int a, int b, int c) { }
+}
+
+int main()
+{
+}

@@ -99,6 +99,7 @@ set(DUA_SOURCES
     src/AST/BlockNode.cpp
     src/AST/CastExpressionNode.cpp
     src/AST/ClassDefinitionNode.cpp
+    src/AST/ClassFieldDefinitionNode.cpp
     src/AST/ClassFieldNode.cpp
     src/AST/DereferenceNode.cpp
     src/AST/DoWhileNode.cpp

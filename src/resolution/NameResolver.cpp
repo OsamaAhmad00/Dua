@@ -50,8 +50,8 @@ void NameResolver::register_function(std::string name, FunctionInfo info, bool n
     return function_resolver.register_function(std::move(name), std::move(info), no_mangle);
 }
 
-std::string NameResolver::get_winning_function(const std::string &name, const std::vector<const Type *> &arg_types) const {
-    return function_resolver.get_winning_function(name, arg_types);
+std::string NameResolver::get_winning_function(const std::string &name, const std::vector<const Type *> &arg_types, bool panic_on_not_found) const {
+    return function_resolver.get_winning_function(name, arg_types, panic_on_not_found);
 }
 
 bool NameResolver::has_function(const std::string &name) const {
@@ -100,6 +100,14 @@ std::string NameResolver::get_function_with_exact_type(const std::string &name, 
 
 void NameResolver::call_copy_constructor(const Value &value, const Value& arg) {
     function_resolver.call_copy_constructor(value, arg);
+}
+
+llvm::CallInst *NameResolver::call_infix_operator(const Value &lhs, const Value &rhs, const std::string &name) {
+    return function_resolver.call_infix_operator(lhs, rhs, name);
+}
+
+const Type *NameResolver::get_infix_operator_return_type(const Type *t1, const Type *t2, const std::string& name) {
+    return function_resolver.get_infix_operator_return_type(t1, t2, name);
 }
 
 }

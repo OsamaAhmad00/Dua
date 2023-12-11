@@ -18,7 +18,8 @@ public:                                                                         
         : lhs(lhs), rhs(rhs) { this->compiler = compiler; }                           \
                                                                                       \
     static llvm::Value* perform(ModuleCompiler* compiler,                             \
-            const Value& lhs, const Value& rhs, const Type* type) {                   \
+            const Value& lhs, const Value& rhs, const Type* type)                     \
+    {                                                                                 \
         auto l = lhs.cast_as(type, false);                                            \
         auto r = rhs.cast_as(type, false);                                            \
         if (l == nullptr || r == nullptr)                                             \
@@ -43,9 +44,17 @@ public:                                                                         
         return value.cast_as(type);                                                   \
     }                                                                                 \
                                                                                       \
-    llvm::Value* eval() override {                                                    \
-        auto lhs_value = compiler->create_value(lhs->eval(), lhs->get_type());        \
-        auto rhs_value = compiler->create_value(rhs->eval(), rhs->get_type());        \
+    llvm::Value* eval() override                                                      \
+    {                                                                                 \
+        auto lhs_value = lhs->get_eval_value();                                       \
+        auto rhs_value = rhs->get_eval_value();                                       \
+                                                                                      \
+        /* Try calling infix operator first */                                        \
+        auto infix_call = compiler->get_name_resolver()                               \
+                .call_infix_operator(lhs_value, rhs_value, #NAME);                    \
+        if (infix_call != nullptr)                                                    \
+            return infix_call;                                                        \
+                                                                                      \
         return NAME##Node::perform(                                                   \
             compiler,                                                                 \
             lhs_value,                                                                \
@@ -54,10 +63,14 @@ public:                                                                         
         );                                                                            \
     }                                                                                 \
                                                                                       \
-    const Type* get_type() override {                                                 \
+    const Type* get_type() override                                                   \
+    {                                                                                 \
         if (type != nullptr) return type;                                             \
         auto ltype = lhs->get_type();                                                 \
         auto rtype = rhs->get_type();                                                 \
+        auto infix_type = name_resolver()                                             \
+            .get_infix_operator_return_type(ltype, rtype, #NAME);                     \
+        if (infix_type != nullptr) return type = infix_type;                          \
         return type = ltype->get_winning_type(rtype);                                 \
     }                                                                                 \
 };

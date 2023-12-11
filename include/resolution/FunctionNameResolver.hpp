@@ -35,7 +35,7 @@ public:
 
     void register_function(std::string name, FunctionInfo info, bool no_mangle = false);
     // Used to resolve between applicable candidate functions
-    [[nodiscard]] std::string get_winning_function(const std::string& name, const std::vector<const Type*>& arg_types) const;
+    [[nodiscard]] std::string get_winning_function(const std::string& name, const std::vector<const Type*>& arg_types, bool panic_on_not_found = true) const;
     FunctionInfo& get_function(const std::string& name, const std::vector<const Type*>& param_types);
     FunctionInfo& get_function(const std::string& name, const std::vector<Value>& args);
     std::string get_function_with_exact_type(const std::string& name, const FunctionType* type) const;
@@ -49,6 +49,9 @@ public:
     void call_constructor(const Value& value, std::vector<Value> args);
     void call_copy_constructor(const Value& value, const Value& arg);
     void call_destructor(const Value& value);
+
+    llvm::CallInst* call_infix_operator(const Value& lhs, const Value& rhs, const std::string& name);
+    const Type* get_infix_operator_return_type(const Type* t1, const Type* t2, const std::string& name);
 
     [[nodiscard]] static std::string get_full_function_name(std::string name, const std::vector<const Type*>& param_types);
 };

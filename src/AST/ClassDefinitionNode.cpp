@@ -1,5 +1,5 @@
 #include "AST/class/ClassDefinitionNode.hpp"
-#include "AST/variable/LocalVariableDefinitionNode.hpp"
+#include "AST/variable/ClassFieldDefinitionNode.hpp"
 #include "AST/function/FunctionDefinitionNode.hpp"
 #include "utils/TextManipulation.hpp"
 

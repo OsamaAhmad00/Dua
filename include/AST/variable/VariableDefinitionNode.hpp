@@ -9,14 +9,12 @@ namespace dua
 class VariableDefinitionNode : public ASTNode
 {
 
-protected:
+public:
 
     std::string name;
     ASTNode* initializer;
     // The type is already defined in the ASTNode class
     std::vector<ASTNode*> args;
-
-public:
 
     VariableDefinitionNode(ModuleCompiler* compiler, std::string name, const Type* type,
                            ASTNode* initializer, std::vector<ASTNode*> args)
