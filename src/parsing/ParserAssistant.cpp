@@ -64,7 +64,7 @@ void ParserAssistant::create_empty_method_if_doesnt_exist(const ClassType* cls, 
 
     auto type = compiler->create_type<FunctionType>(
         compiler->create_type<VoidType>(),
-        std::vector<const Type*>{ compiler->create_type<PointerType>(cls) },
+        std::vector<const Type*>{ compiler->create_type<ReferenceType>(cls) },
         false
     );
 
@@ -173,7 +173,7 @@ void ParserAssistant::create_function_declaration()
         name = class_name + '.' + name;
         param_types.insert(
         param_types.begin(),
-            compiler->create_type<PointerType>(
+            compiler->create_type<ReferenceType>(
                 compiler->name_resolver.classes[class_name]
             )
         );
@@ -388,7 +388,8 @@ void ParserAssistant::create_method_call()
     auto class_type = dynamic_cast<const ClassType*>(instance.type);
     auto full_name = class_type->name + "." + func_name;
     auto args = pop_args();
-    args.insert(args.begin(), compiler->create_node<VariableNode>(instance_name));
+    auto ref_type = compiler->create_type<ReferenceType>(class_type);
+    args.insert(args.begin(), compiler->create_node<VariableNode>(instance_name, ref_type));
     push_node<FunctionCallNode>(full_name, std::move(args));
 }
 
@@ -861,8 +862,8 @@ void ParserAssistant::create_infix_operator()
     if (compiler->current_class != nullptr) {
         auto class_name = compiler->current_class->getName().str();
         param_types.insert(
-                param_types.begin(),
-                compiler->create_type<PointerType>(
+            param_types.begin(),
+            compiler->create_type<ReferenceType>(
                 compiler->name_resolver.classes[class_name]
             )
         );

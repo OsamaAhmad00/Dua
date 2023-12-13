@@ -67,7 +67,7 @@ Value FunctionDefinitionNode::define_function()
         //  the self pointer is pushed to the stack, the variable
         //  on the stack would have a type of class** instead of class*.
         i++;
-        auto type = dynamic_cast<const PointerType*>(info.type->param_types[0])->get_element_type();
+        auto type = dynamic_cast<const ReferenceType*>(info.type->param_types[0])->get_element_type();
         name_resolver().symbol_table.insert("self", compiler->create_value(function->args().begin(), type));
     }
 

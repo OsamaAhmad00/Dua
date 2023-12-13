@@ -1,5 +1,6 @@
 #include <AST/function/FunctionCallNode.hpp>
 #include "types/PointerType.hpp"
+#include "types/ReferenceType.hpp"
 
 
 namespace dua
@@ -24,21 +25,21 @@ Value FunctionCallNode::eval()
         return name_resolver().call_function(name, eval_args());
 
     // It has to be a function reference.
-    bool is_method = false;
-    auto reference = compiler->create_value((llvm::Value*)nullptr, (const Type*)nullptr);
+    bool is_field = false;
+    Value reference;
     if (name_resolver().symbol_table.contains(name))
         reference = name_resolver().symbol_table.get(name);
     else if (!args.empty()) {
         // It might be a class field, called within a method in the class, in which
         //  case, the first argument will be the instance itself
-        auto pointer_type = dynamic_cast<const PointerType*>(args[0]->get_type());
-        auto class_type = pointer_type ? dynamic_cast<const ClassType*>(pointer_type->get_element_type()) : nullptr;
+        auto instance_type = dynamic_cast<const ReferenceType*>(args[0]->get_type());
+        auto class_type = instance_type ? dynamic_cast<const ClassType*>(instance_type->get_element_type()) : nullptr;
         if (class_type != nullptr && class_type->name == name.substr(0, class_type->name.size())) {
             auto field_name = name.substr(class_type->name.size() + 1);  // + 1, ignoring the dot
             auto field = class_type->get_field(field_name);
             reference.type = field.type;
             reference.ptr = class_type->get_field(args[0]->eval(), field_name).ptr;
-            is_method = true;
+            is_field = true;
         }
     }
 
@@ -53,7 +54,7 @@ Value FunctionCallNode::eval()
     auto ptr = builder().CreateLoad(reference.type->llvm_type(), reference.ptr);
     auto value = compiler->create_value(ptr, function_type);
 
-    return name_resolver().call_function(value, eval_args(is_method));
+    return name_resolver().call_function(value, eval_args(is_field));
 }
 
 const Type *FunctionCallNode::get_type()

@@ -154,6 +154,8 @@ void FunctionNameResolver::cast_function_args(std::vector<Value> &args, const Fu
             if (auto ref = dynamic_cast<const ReferenceType*>(param_type); ref != nullptr) {
                 // If is a reference type, replace it with a pointer type.
                 param_type = compiler->create_type<PointerType>(ref->get_element_type());
+                if (auto arg_ref = args[i].type->as<ReferenceType>(); arg_ref != nullptr)
+                    args[i].memory_location = args[i].ptr;
                 if (args[i].memory_location == nullptr)
                     report_error("Can't pass a non-lvalue expression (with " + args[i].type->to_string() + " type) as a reference");
 
@@ -240,8 +242,8 @@ void FunctionNameResolver::call_constructor(const Value &value, std::vector<Valu
         return;
     }
 
-    auto ptr_value = compiler->create_value(value.ptr, compiler->create_type<PointerType>(value.type));
-    args.insert(args.begin(), ptr_value);
+    auto instance = compiler->create_value(value.ptr, compiler->create_type<ReferenceType>(value.type));
+    args.insert(args.begin(), instance);
     call_function(name, std::move(args));
 }
 
@@ -266,8 +268,8 @@ void FunctionNameResolver::call_copy_constructor(const Value &value, const Value
 
         std::string name = class_type->name + ".=constructor";
         if (has_function(name)) {
-            auto ptr_value = compiler->create_value(value.ptr, compiler->create_type<PointerType>(value.type));
-            call_function(name, { ptr_value, arg });
+            auto instance = compiler->create_value(value.ptr, compiler->create_type<ReferenceType>(value.type));
+            call_function(name, { instance, arg });
             return;
         }
     }
@@ -295,8 +297,8 @@ void FunctionNameResolver::call_destructor(const Value& value)
         call_destructor(f);
     });
 
-    auto ptr_value = compiler->create_value(value.ptr, compiler->create_type<PointerType>(value.type));
-    call_function(name, { ptr_value });
+    auto instance = compiler->create_value(value.ptr, compiler->create_type<ReferenceType>(value.type));
+    call_function(name, { instance });
 }
 
 llvm::IRBuilder<>& FunctionNameResolver::builder() const

@@ -40,4 +40,9 @@ const ReferenceType *Type::as_ref() const {
     return dynamic_cast<const ReferenceType*>(this);
 }
 
+template <>
+const ReferenceType* Type::as<ReferenceType>() const {
+    return as_ref();
+}
+
 }

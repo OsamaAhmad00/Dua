@@ -52,7 +52,7 @@ int main()
 {
     L l;
     var func = l.print;
-    func(&l);
+    func(l);
 }
 
 
@@ -80,7 +80,7 @@ int main()
 // Outputs "Int: 1\nDouble: 3.23\n"
 
 void func(int i)    { printf("Int: %d\n", i); }
-void func(double d) { printf("Double: %.2llf\n", d); }
+void func(double d) { printf("Double: %.2lf\n", d); }
 
 int main()
 {
@@ -96,7 +96,7 @@ int main()
 // Panics
 
 void func(int i)    { printf("Int: %d\n", i); }
-void func(double d) { printf("Double: %.2llf\n", d); }
+void func(double d) { printf("Double: %.2lf\n", d); }
 
 int main()
 {

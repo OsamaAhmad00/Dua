@@ -38,11 +38,6 @@ struct Type
         return res;
     }
 
-    template <>
-    const ReferenceType* as<ReferenceType>() const {
-        return as_ref();
-    }
-
 };
 
 }
