@@ -12,6 +12,8 @@ struct ProgramExecution
     int exit_code;
 };
 
-ProgramExecution execute_program(const std::string& program, const std::vector<std::string>& args = {});
+class TLEException : public std::exception {};
+
+ProgramExecution execute_program(const std::string& program, const std::vector<std::string>& args = {}, long long time_limit = 2000);
 
 }

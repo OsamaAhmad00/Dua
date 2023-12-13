@@ -29,7 +29,9 @@ void FileTestCasesRunner::run()
             std::cerr.flush();
 
             auto expected_exit_code_str = extract_header_element(header, "Returns");
+            auto expected_time_limit_str = extract_header_element(header, "Time Limit");
             auto expected_output = extract_header_element(header, "Outputs");
+            bool exceeds_time_limit = header_has_flag(header, "Exceeds time limit");
             bool expected_output_is_empty = true;
             if (expected_output.size() >= 2) {
                 expected_output_is_empty = false;
@@ -78,13 +80,33 @@ void FileTestCasesRunner::run()
                 EXPECT_NO_THROW(succeeded = run_clang_on_llvm_ir(n, c, a));
             }
 
+            long long time_limit = -1;
+            for (auto& ch : expected_time_limit_str) ch = std::tolower(ch);
+            if (expected_time_limit_str.empty()) {
+                time_limit = 2000;  // 2 seconds
+            } else if (expected_time_limit_str != "infinite") {
+                try {
+                    time_limit = std::stol(expected_time_limit_str);
+                } catch (std::exception& e) {
+                    std::cerr << "Invalid time limit: '" + expected_time_limit_str + "'\n";
+                    FAIL();
+                }
+            }
+
             ProgramExecution execution;
 
             try {
-                execution = execute_program(exe_name, args);
-            } catch (...) {
+                execution = execute_program(exe_name, args, time_limit);
+            } catch (TLEException& e) {
+                std::cerr << "Time limit of " + expected_time_limit_str + "ms exceeded. ";
+                std::cerr << (exceeds_time_limit ? "Passed!\n" : "Failed\n");
                 std::filesystem::remove(exe_name);
-                std::cerr << "Panicked at the program execution stage\n";
+                EXPECT_TRUE(exceeds_time_limit);
+                continue;
+            } catch (std::exception& e) {
+                std::cerr << "Panicked at the program execution stage with message '" << e.what() << "'\n";
+                std::filesystem::remove(exe_name);
+                EXPECT_FALSE("Panicked at the program execution stage");
                 continue;
             }
 
@@ -102,7 +124,7 @@ void FileTestCasesRunner::run()
                 expected_exit_code = std::stoi(expected_exit_code_str);
             } catch (std::exception& e) {
                 std::cerr << "Invalid expected return code: '" + expected_exit_code_str << "'\n";
-                continue;
+                FAIL();
             }
             EXPECT_EQ((expected_exit_code % 256 + 256) % 256, (execution.exit_code % 256 + 256) % 256)
                                 << "Actual exit code is " << execution.exit_code << '\n';

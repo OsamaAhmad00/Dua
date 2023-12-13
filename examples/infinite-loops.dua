@@ -1,0 +1,21 @@
+no_mangle int printf(str message, ...);
+
+// Case Infinite Loop
+// Time Limit 1000
+// Exceeds time limit
+
+int main()
+{
+    while (true);
+}
+
+
+// Case Infinite Loop print
+// Time Limit 2000
+// Exceeds time limit
+
+int main()
+{
+    while (true)
+        printf("Hello\n");
+}

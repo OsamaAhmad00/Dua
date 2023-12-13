@@ -11,39 +11,51 @@ namespace dua
 
 namespace bp = boost::process;
 
-ProgramExecution execute_program(const std::string& program, const std::vector<std::string>& args)
+std::string capture_output(bp::ipstream& is, bool& within_limit)
+{
+    std::string result, line;
+    while (!is.eof() && std::getline(is, line) && within_limit)
+    {
+        // FIXME this is to avoid the \r windows puts before the \n.
+        //  This will produce wrong results if the text is intended
+        //  to have a \r at the end.
+        // This will add a \n to the end of the output even if there wasn't one.
+        if (line.back() == '\r') line.pop_back();
+        result += line + '\n';
+    }
+    return result;
+}
+
+ProgramExecution execute_program(const std::string& program, const std::vector<std::string>& args, long long time_limit)
 {
     ProgramExecution result { "THE PROGRAM DIDN'T EXECUTE!!", -989898989};
 
-    try
-    {
-        bp::ipstream is; //reading pipe-stream
-        // This captures stdout only, ignoring stderr.
-        bp::child c(program, args, bp::std_out > is, bp::std_err > bp::null);
+    bp::ipstream is; //reading pipe-stream
+    // This captures stdout only, ignoring stderr.
+    bp::child c(program, args, bp::std_out > is, bp::std_err > bp::null);
 
-        std::string line;
-        result.std_out.clear();
-        // This will add a \n to the end of the output even if there wasn't one.
-        while (c.running() && !is.eof() && std::getline(is, line)) {
-            // FIXME this is to avoid the \r windows puts before the \n.
-            //  This will produce wrong results if the text is intended
-            //  to have a \r at the end.
-            if (line.back() == '\r') line.pop_back();
-            result.std_out += line + '\n';
-        }
+    std::string line;
+    result.std_out.clear();
 
-        c.wait();
+    bool within_limit = true;
+    auto output = std::async(&capture_output, std::ref(is), std::ref(within_limit));
+    auto start = std::chrono::system_clock::now();
 
-        result.exit_code = c.exit_code();
+    output.wait_for(std::chrono::milliseconds(time_limit));
+    auto current = std::chrono::system_clock::now();
+    auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds >(current - start).count();
+    within_limit = milliseconds < time_limit;
+    c.terminate();
 
-        // FIXME remove this. Without this line, the deletion of the
-        //  temporary test executables fails with an "access denied" message.
-        std::this_thread::sleep_for(std::chrono::milliseconds(5));
-    }
-    catch (std::exception& e) {
-        report_internal_error(
-                std::string("Encountered an error while executing the program output: ") + e.what());
-    }
+    // FIXME remove this. Without this line, the deletion of the
+    //  temporary test executables fails with an "access denied" message.
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+    result.std_out = output.get();
+    result.exit_code = c.exit_code();
+
+    if (!within_limit)
+        throw TLEException();
 
     return result;
 }

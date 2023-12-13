@@ -20,7 +20,6 @@ struct Type
     virtual bool operator==(const Type& other);
     virtual bool operator!=(const Type& other);
     const Type* get_ref_element_type() const;
-    const ReferenceType* as_ref() const;
     virtual ~Type() = default;
 
     llvm::Type* operator->() const;
@@ -39,5 +38,8 @@ struct Type
     }
 
 };
+
+template <>
+const ReferenceType* Type::as<ReferenceType>() const;
 
 }

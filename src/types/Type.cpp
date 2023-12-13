@@ -30,19 +30,15 @@ bool Type::is_castable(const Type *type) const {
 }
 
 const Type* Type::get_ref_element_type() const {
-    if (auto ref = as_ref(); ref != nullptr) {
+    if (auto ref = dynamic_cast<const ReferenceType*>(this); ref != nullptr) {
         return ref->get_element_type();
     }
     return nullptr;
 }
 
-const ReferenceType *Type::as_ref() const {
-    return dynamic_cast<const ReferenceType*>(this);
-}
-
 template <>
 const ReferenceType* Type::as<ReferenceType>() const {
-    return as_ref();
+    return dynamic_cast<const ReferenceType*>(this);
 }
 
 }
