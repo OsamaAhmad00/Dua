@@ -18,7 +18,10 @@ jobs:
       run: sudo apt update -y
 
     - name: Install LLVM
-      run: sudo apt install llvm-dev -y
+      run: |
+        wget https://apt.llvm.org/llvm.sh
+        chmod u+x llvm.sh
+        sudo ./llvm.sh 17
 
     - name: Install Java
       run: sudo apt install default-jre -y

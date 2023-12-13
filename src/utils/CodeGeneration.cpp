@@ -9,6 +9,9 @@
 #include <utils/TextManipulation.hpp>
 #include <ModuleCompiler.hpp>
 #include <Preprocessor.hpp>
+#include <boost/process.hpp>
+
+namespace bp = boost::process;
 
 namespace dua
 {
@@ -33,8 +36,17 @@ void generate_llvm_ir(const strings& filename, const strings& code)
 
 int run_clang(const std::vector<std::string>& args)
 {
-    std::string concatenated = boost::algorithm::join(args, " ");
-    return std::system(("clang -Wno-override-module " + concatenated).c_str());
+    // FIXME make it detect the available versions of clang
+
+    std::string string = " -Wno-override-module " + boost::algorithm::join(args, " ");
+
+#ifdef _WIN32
+    auto name = "clang";
+#else
+    auto name = "clang-17";
+#endif
+
+    return std::system((name + string).c_str());
 }
 
 bool run_clang_on_llvm_ir(const strings& filename, const strings& code, const strings& args)
