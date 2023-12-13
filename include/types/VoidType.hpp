@@ -10,9 +10,9 @@ struct VoidType : Type
 {
     VoidType(ModuleCompiler* compiler) { this->compiler = compiler; }
 
-    llvm::Constant* default_value() const override {
+    Value default_value() const override {
         report_internal_error("Void types have no value");
-        return nullptr;
+        return {};
     }
 
     llvm::Type* llvm_type() const override {

@@ -33,7 +33,7 @@ public:
         this->compiler = compiler;
     }
 
-    llvm::Value* eval() override;
+    Value eval() override;
 
     bool has_else() { return branches.size() == conditions.size() + 1; }
 

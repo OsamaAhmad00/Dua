@@ -14,7 +14,7 @@ public:
     DereferenceNode(ModuleCompiler* compiler, ASTNode* address)
             : address(address) { this->compiler = compiler; this->type = type; }
 
-    llvm::Value* eval() override;
+    Value eval() override;
 
     const Type* get_type() override;
 

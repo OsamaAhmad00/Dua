@@ -5,16 +5,17 @@
 namespace dua
 {
 
-llvm::Value* LoadedLValueNode::eval()
+Value LoadedLValueNode::eval()
 {
-    auto ptr = lvalue->eval();
+    auto memory_location = lvalue->eval();
 
     // If it's pointing to a function, don't load the address
     auto element_type = lvalue->get_element_type();
     if (dynamic_cast<const FunctionType*>(element_type) != nullptr)
-        return ptr;
+        return memory_location;
 
-    return builder().CreateLoad(element_type->llvm_type(), ptr);
+    auto result = builder().CreateLoad(element_type->llvm_type(), memory_location.ptr);
+    return compiler->create_value(result, get_type(), memory_location.ptr);
 }
 
 const Type *LoadedLValueNode::get_type()

@@ -40,10 +40,10 @@ public:
     [[nodiscard]] int type_list_similarity_score(const std::vector<const Type*>& l1,
                              const std::vector<const Type*>& l2, bool can_differ_in_size = false) const;
     // Returns the result type of an operation involving the two types.
-    [[nodiscard]] const Type* get_winning_type(const Type* lhs, const Type* rhs, bool panic_on_failure=true) const;
-    [[nodiscard]] llvm::Value* cast_value(const Value& value, const Type* target_type, bool panic_on_failure=true) const;
-    [[nodiscard]] llvm::Value * forced_cast_value(llvm::Value* value, const Type *target_type) const;
-    [[nodiscard]] llvm::Value* cast_as_bool(const Value& value, bool panic_on_failure=true) const;
+    [[nodiscard]] const Type* get_winning_type(const Type* lhs, const Type* rhs, bool panic_on_failure=true, const std::string& message = "") const;
+    [[nodiscard]] Value cast_value(const Value& value, const Type* target_type, bool panic_on_failure=true) const;
+    [[nodiscard]] Value forced_cast_value(const Value& value, const Type *target_type) const;
+    [[nodiscard]] Value cast_as_bool(const Value& value, bool panic_on_failure=true) const;
     [[nodiscard]] bool is_castable(const Type *t1, const Type* t2) const;
 
     [[nodiscard]] llvm::IRBuilder<>& builder() const;

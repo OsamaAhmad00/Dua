@@ -27,17 +27,13 @@ llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, const 
     return instance;
 }
 
-NoneValue ASTNode::none_value() { return builder().getInt32(0); }
+NoneValue ASTNode::none_value() { return Value { nullptr, nullptr, nullptr, nullptr }; }
 
 const Type* ASTNode::get_type()
 {
     if (type == nullptr)
         return type = compiler->create_type<VoidType>();
     return type;
-}
-
-Value ASTNode::get_eval_value() {
-    return compiler->create_value(eval(), get_type());
 }
 
 }

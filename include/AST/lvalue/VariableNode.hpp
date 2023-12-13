@@ -14,7 +14,7 @@ public:
 
     VariableNode(ModuleCompiler* compiler, std::string name, const Type* type = nullptr);
 
-    llvm::Value* eval() override;
+    Value eval() override;
 
     const Type* get_type() override;
 

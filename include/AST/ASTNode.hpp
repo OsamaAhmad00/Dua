@@ -10,7 +10,7 @@ namespace dua
 
 // Just an indicator that the return
 //  value is not going to be used.
-using NoneValue = llvm::Value*;
+using NoneValue = Value;
 
 class ASTNode
 {
@@ -20,11 +20,12 @@ public:
 
     virtual ~ASTNode() = default;
 
-    virtual llvm::Value* eval() = 0;
+    virtual Value eval() = 0;
 
     virtual const Type* get_type();
 
-    Value get_eval_value();
+    template <typename T>
+    T* as() { return dynamic_cast<T*>(this); }
 
 protected:
 

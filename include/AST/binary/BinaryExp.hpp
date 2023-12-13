@@ -17,22 +17,22 @@ public:                                                                         
     NAME##Node(ModuleCompiler* compiler, ASTNode* lhs, ASTNode* rhs)                  \
         : lhs(lhs), rhs(rhs) { this->compiler = compiler; }                           \
                                                                                       \
-    static llvm::Value* perform(ModuleCompiler* compiler,                             \
+    static Value perform(ModuleCompiler* compiler,                                    \
             const Value& lhs, const Value& rhs, const Type* type)                     \
     {                                                                                 \
         auto l = lhs.cast_as(type, false);                                            \
         auto r = rhs.cast_as(type, false);                                            \
-        if (l == nullptr || r == nullptr)                                             \
+        if (l.is_null() || r.is_null())                                               \
             report_error("Can't perform the operation " #NAME " between the types "   \
                 + lhs.type->to_string() + " and " + rhs.type->to_string());           \
         llvm::Value* ptr;                                                             \
         if (dynamic_cast<const IntegerType*>(type))                                   \
-            ptr = compiler->get_builder()->INT_OP(l, r, LABEL);                       \
+            ptr = compiler->get_builder()->INT_OP(l.ptr, r.ptr, LABEL);               \
         else {                                                                        \
             if (INT_ONLY)                                                             \
                 report_error("The operation " #NAME                                   \
                     " is applicable only on integer types");                          \
-            ptr = compiler->get_builder()->FLOAT_OP(l, r, LABEL);                     \
+            ptr = compiler->get_builder()->FLOAT_OP(l.ptr, r.ptr, LABEL);             \
         }                                                                             \
                                                                                       \
         /* This is necessary for making sure that the type returned is actually */    \
@@ -44,15 +44,15 @@ public:                                                                         
         return value.cast_as(type);                                                   \
     }                                                                                 \
                                                                                       \
-    llvm::Value* eval() override                                                      \
+    Value eval() override                                                             \
     {                                                                                 \
-        auto lhs_value = lhs->get_eval_value();                                       \
-        auto rhs_value = rhs->get_eval_value();                                       \
+        auto lhs_value = lhs->eval();                                                 \
+        auto rhs_value = rhs->eval();                                                 \
                                                                                       \
         /* Try calling infix operator first */                                        \
         auto infix_call = compiler->get_name_resolver()                               \
                 .call_infix_operator(lhs_value, rhs_value, #NAME);                    \
-        if (infix_call != nullptr)                                                    \
+        if (!infix_call.is_null())                                                    \
             return infix_call;                                                        \
                                                                                       \
         return NAME##Node::perform(                                                   \
@@ -71,7 +71,9 @@ public:                                                                         
         auto infix_type = name_resolver()                                             \
             .get_infix_operator_return_type(ltype, rtype, #NAME);                     \
         if (infix_type != nullptr) return type = infix_type;                          \
-        return type = ltype->get_winning_type(rtype);                                 \
+        return type = ltype->get_winning_type(rtype, true,                            \
+            "There is no " #NAME " operator defined for the types " +                 \
+            ltype->to_string() + " and " + rtype->to_string());                       \
     }                                                                                 \
 };
 

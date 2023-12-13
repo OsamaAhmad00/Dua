@@ -26,7 +26,7 @@ public:
             report_error("The delete operator only accepts a pointer type, not a "
                 + expr->get_type()->to_string());
 
-        auto value = compiler->create_value(expr->eval(), ptr->get_element_type());
+        auto value = compiler->create_value(expr->eval().ptr, ptr->get_element_type());
         name_resolver().call_destructor(value);
 
         // Here, we pass the param type of free, regardless of the actual type of the expression, to

@@ -7,7 +7,7 @@ namespace dua
 
 class GlobalVariableDefinitionNode : public VariableDefinitionNode
 {
-    llvm::GlobalVariable* result = nullptr;
+    Value result;
 
 public:
 
@@ -15,7 +15,7 @@ public:
                                  ASTNode* initializer, std::vector<ASTNode*> args = {})
         : VariableDefinitionNode(compiler, std::move(name), type, initializer, std::move(args)) {}
 
-    llvm::GlobalVariable* eval() override;
+    Value eval() override;
 };
 
 }

@@ -1,10 +1,11 @@
 #include "types/PointerType.hpp"
+#include <ModuleCompiler.hpp>
 
 namespace dua
 {
 
-llvm::Constant* PointerType::default_value() const {
-    return llvm::Constant::getNullValue(llvm_type());
+Value PointerType::default_value() const {
+    return compiler->create_value(llvm::Constant::getNullValue(llvm_type()), this);
 }
 
 llvm::PointerType* PointerType::llvm_type() const {

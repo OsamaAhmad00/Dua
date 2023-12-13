@@ -2,6 +2,7 @@
 #include <types/VoidType.hpp>
 #include <types/PointerType.hpp>
 #include <utils/TextManipulation.hpp>
+#include "types/ReferenceType.hpp"
 
 namespace dua
 {
@@ -16,18 +17,18 @@ FunctionDefinitionNode::FunctionDefinitionNode(dua::ModuleCompiler *compiler,
         report_internal_error("Nested functions are not allowed");
 }
 
-llvm::Function *FunctionDefinitionNode::eval()
+Value FunctionDefinitionNode::eval()
 {
     // The declaration logic is moved to the parser,
     //  so that all functions are visible everywhere
     //  across the module, regardless of the order
     //  of declaration/definition.
     if (body == nullptr)
-        return module().getFunction(name);
+        return compiler->create_value(module().getFunction(name), get_type());
     return define_function();
 }
 
-llvm::Function* FunctionDefinitionNode::define_function()
+Value FunctionDefinitionNode::define_function()
 {
     auto& info = name_resolver().get_function_no_overloading(name);
     llvm::Function* function = module().getFunction(name);
@@ -55,7 +56,7 @@ llvm::Function* FunctionDefinitionNode::define_function()
         }
     }
 
-    // local variables
+    // parameters and local variables
     name_resolver().push_scope();
 
     size_t i = 0;
@@ -73,8 +74,16 @@ llvm::Function* FunctionDefinitionNode::define_function()
     for (; i < info.param_names.size(); i++) {
         const auto& arg = function->args().begin() + i;
         arg->setName(info.param_names[i]);
-        auto value = compiler->create_value(arg, info.type->param_types[i]);
-        create_local_variable(info.param_names[i], info.type->param_types[i], &value);
+        auto type = info.type->param_types[i];
+        if (auto ref = dynamic_cast<const ReferenceType*>(type); ref != nullptr) {
+            // If it's a reference type, the llvm type of the parameter will be a pointer type,
+            // which will hold the address of the variable, just like the result of an alloca.
+            auto value = compiler->create_value(arg, ref);
+            name_resolver().symbol_table.insert(info.param_names[i], value);
+        } else {
+            auto value = compiler->create_value(arg, type);
+            create_local_variable(info.param_names[i], type, &value);
+        }
     }
 
     size_t pos;
@@ -105,14 +114,14 @@ llvm::Function* FunctionDefinitionNode::define_function()
         // TODO perform a more sophisticated analysis
         auto terminator = builder().GetInsertBlock()->getTerminator();
         if (!terminator || llvm::dyn_cast<llvm::ReturnInst>(terminator) == nullptr) {
-            builder().CreateRet(info.type->return_type->default_value());
+            builder().CreateRet(info.type->return_type->default_value().ptr);
         }
     }
 
     builder().SetInsertPoint(old_block);
     current_function() = old_function;
 
-    return function;
+    return compiler->create_value(function, get_type());
 }
 
 void FunctionDefinitionNode::initialize_constructor(const ClassType *class_type)
@@ -121,12 +130,12 @@ void FunctionDefinitionNode::initialize_constructor(const ClassType *class_type)
     // Constructors are called in the order of definition of fields in the class.
     auto& class_fields_args = name_resolver().get_fields_args(name);
 
-    auto self = name_resolver().symbol_table.get("self").ptr;
+    auto self = name_resolver().symbol_table.get("self");
     for (auto& field : class_type->fields())
     {
         bool found = false;
         auto type = class_type->get_field(field.name).type;
-        auto ptr = class_type->get_field(self, field.name);
+        auto ptr = class_type->get_field(self, field.name).ptr;
         std::vector<Value> args;
 
         // Check if there exists arguments passed to the constructor first
@@ -135,7 +144,7 @@ void FunctionDefinitionNode::initialize_constructor(const ClassType *class_type)
                 found = true;
                 args.resize(field_arg.args.size());
                 for (size_t j = 0; j < args.size(); j++)
-                    args[j] = compiler->create_value(field_arg.args[j]->eval(), field_arg.args[j]->get_type());
+                    args[j] = field_arg.args[j]->eval();
                 break;
             }
         }

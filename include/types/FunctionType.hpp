@@ -9,6 +9,7 @@ namespace dua
 
 struct FunctionType : public Type
 {
+    llvm::FunctionType* llvm_type_cache = nullptr;
     const Type* return_type;
     std::vector<const Type*> param_types;
     bool is_var_arg;
@@ -20,11 +21,7 @@ struct FunctionType : public Type
         this->compiler = compiler;
     }
 
-    FunctionType(FunctionType&& other) { *this = std::move(other); }
-
-    FunctionType& operator=(FunctionType&& other);
-
-    llvm::Constant* default_value() const override;
+    Value default_value() const override;
 
     llvm::FunctionType* llvm_type() const override;
 

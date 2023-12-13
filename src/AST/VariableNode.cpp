@@ -1,5 +1,6 @@
 #include <AST/lvalue/VariableNode.hpp>
 #include <types/PointerType.hpp>
+#include <types/ReferenceType.hpp>
 
 namespace dua
 {
@@ -11,11 +12,11 @@ VariableNode::VariableNode(ModuleCompiler *compiler, std::string name, const Typ
     this->type = type;
 }
 
-llvm::Value* VariableNode::eval()
+Value VariableNode::eval()
 {
     if (name_resolver().symbol_table.contains(name)) {
         // This searches locally first, then globally if not found.
-        return name_resolver().symbol_table.get(name).ptr;
+        return compiler->create_value(name_resolver().symbol_table.get(name).ptr, get_type());
     }
 
     // Not found. Has to be a function reference
@@ -31,7 +32,7 @@ llvm::Value* VariableNode::eval()
     else
         full_name = name_resolver().get_function(name);
 
-    return module().getFunction(full_name);
+    return compiler->create_value(module().getFunction(full_name), get_type());
 }
 
 const Type* VariableNode::get_type()

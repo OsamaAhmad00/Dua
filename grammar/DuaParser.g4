@@ -454,10 +454,11 @@ types_list @init { assistant.enter_arg_list(); }
     ;
 
 type
-    : type '(' types_list var_arg_or_none ')'   { assistant.create_function_type(); }
-    | type '[' size ']'                         { assistant.create_array_type();    }
-    | type '*'                                  { assistant.create_pointer_type();  }
-    | TypeOf '(' expression ')'                 { assistant.create_type_of();       }
+    : type '(' types_list var_arg_or_none ')'   { assistant.create_function_type();  }
+    | type '[' size ']'                         { assistant.create_array_type();     }
+    | type '*'                                  { assistant.create_pointer_type();   }
+    | type '&'                                  { assistant.create_reference_type(); }
+    | TypeOf '(' expression ')'                 { assistant.create_type_of();        }
     | primitive_type
     | class_type
     ;

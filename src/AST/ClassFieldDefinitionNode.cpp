@@ -10,7 +10,7 @@ llvm::Constant* ClassFieldDefinitionNode::get_constant(Value value, const Type* 
     if (value.ptr == nullptr)
         report_error("Can't initialize class fields with a non-constant expression (in " + field_name + ")");
 
-    auto casted = (llvm::Constant*)typing_system().cast_value(value, target_type, false);
+    auto casted = typing_system().cast_value(value, target_type, false).as<llvm::Constant>();
 
     if (casted == nullptr)
         report_error("Initializing the field " + field_name + " with a mismatching type expression");
@@ -26,7 +26,7 @@ NoneValue ClassFieldDefinitionNode::eval()
         report_error("Can't have both an initializer and an initializer list (in " + full_name + ")");
 
     Value init_value;
-    if (initializer) init_value = initializer->get_eval_value();
+    if (initializer) init_value = initializer->eval();
 
     auto class_name = current_class()->getName().str();
     if (name_resolver().has_function(class_name + "." + name))
@@ -42,7 +42,7 @@ NoneValue ClassFieldDefinitionNode::eval()
         for (size_t i = 0; i < args.size(); i++)
         {
             auto constant = get_constant(
-                    compiler->create_value(args[i]->eval(), args[i]->get_type()),
+                    args[i]->eval(),
                     args[i]->get_type(),
                     full_name
             );

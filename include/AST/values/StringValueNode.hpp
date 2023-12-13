@@ -21,7 +21,7 @@ public:
         : is_nullptr(false), value(std::move(value))
         { this->compiler = compiler; }
 
-    llvm::Constant* eval() override;
+    Value eval() override;
 
     const Type* get_type() override;
 };

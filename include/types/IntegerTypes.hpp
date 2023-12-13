@@ -11,8 +11,11 @@ struct PREFIX##WIDTH##Type : public IntegerType                \
     PREFIX##WIDTH##Type(ModuleCompiler* compiler)              \
         { this->compiler = compiler; }                         \
                                                                \
-    llvm::Constant* default_value() const override {           \
-        return compiler->get_builder()->getInt##WIDTH(0);      \
+    Value default_value() const override {                     \
+        return compiler->create_value(                         \
+            compiler->get_builder()->getInt##WIDTH(0),         \
+            this                                               \
+        );                                                     \
     }                                                          \
                                                                \
     llvm::Type* llvm_type() const override {                   \

@@ -11,7 +11,7 @@ const PointerType* assert_ptr(const Type* type) {
     return ptr;
 }
 
-llvm::Value* DereferenceNode::eval()
+Value DereferenceNode::eval()
 {
     assert_ptr(address->get_type());
     return address->eval();

@@ -1,15 +1,15 @@
 #include <AST/variable/GlobalVariableDefinitionNode.hpp>
-#include "AST/values/LLMVValueNode.hpp"
+#include "AST/values/RawValueNode.hpp"
 #include <utils/ErrorReporting.hpp>
 
 namespace dua
 {
 
-llvm::GlobalVariable* GlobalVariableDefinitionNode::eval()
+Value GlobalVariableDefinitionNode::eval()
 {
     // ASTNodes evaluation should be idempotent.
     // This condition makes sure this is the case.
-    if (result != nullptr)
+    if (!result.is_null())
         return result;
 
     if (initializer != nullptr && !args.empty())
@@ -27,9 +27,9 @@ llvm::GlobalVariable* GlobalVariableDefinitionNode::eval()
 
     if (initializer != nullptr)
     {
-        auto value = compiler->create_value(initializer->eval(), initializer->get_type());
+        auto value = initializer->eval();
 
-        auto llvm_value = typing_system().cast_value(value, type);
+        auto llvm_value = typing_system().cast_value(value, type).ptr;
         if (llvm_value == nullptr)
             report_error("Type mismatch between the global variable " + name + " and its initializer");
 
@@ -46,7 +46,7 @@ llvm::GlobalVariable* GlobalVariableDefinitionNode::eval()
     {
         std::vector<Value> evaluated(args.size());
         for (int i = 0; i < args.size(); i++)
-            evaluated[i] = compiler->create_value(args[i]->eval(), args[i]->get_type());
+            evaluated[i] = args[i]->eval();
 
         name_resolver().call_constructor(compiler->create_value(variable, type), std::move(evaluated));
     }
@@ -54,12 +54,12 @@ llvm::GlobalVariable* GlobalVariableDefinitionNode::eval()
     // Restore the old position back
     builder().restoreIP(old_position);
 
-    variable->setInitializer(constant ? constant : type->default_value());
+    variable->setInitializer(constant ? constant : type->default_value().get_constant());
     variable->setConstant(false);
 
     name_resolver().symbol_table.insert_global(name, compiler->create_value(variable, type));
 
-    return result = variable;
+    return result = compiler->create_value(variable, get_type());
 }
 
 }

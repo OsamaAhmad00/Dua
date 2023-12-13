@@ -7,7 +7,7 @@ namespace dua
 
 int IfNode::_counter = 0;
 
-llvm::Value* IfNode::eval()
+Value IfNode::eval()
 {
     assert(!conditions.empty());
 
@@ -59,11 +59,10 @@ llvm::Value* IfNode::eval()
     for (size_t i = 0; i < body_blocks.size(); i++)
     {
         builder().SetInsertPoint(jump_to_blocks[i]);
-        llvm::Value* condition = conditions[i]->eval();
-        condition = typing_system().cast_as_bool(compiler->create_value(condition, conditions[i]->get_type()));
-        if (condition == nullptr)
+        auto condition = conditions[i]->eval().cast_as_bool();
+        if (condition.is_null())
             report_error("The provided condition can't be casted to boolean value.");
-        builder().CreateCondBr(condition, body_blocks[i], jump_to_blocks[i + 1]);
+        builder().CreateCondBr(condition.ptr, body_blocks[i], jump_to_blocks[i + 1]);
     }
 
     // The conditionals may be nested. And the block that
@@ -79,11 +78,11 @@ llvm::Value* IfNode::eval()
     if (else_block) body_blocks.push_back(else_block);
     for (size_t i = 0; i < body_blocks.size(); i++) {
         builder().SetInsertPoint(body_blocks[i]);
-        llvm::Value* value = branches[i]->eval();
+        auto value = branches[i]->eval();
         if (builder().GetInsertBlock()->empty() || !builder().GetInsertBlock()->back().isTerminator())
             builder().CreateBr(end_block);
         if (is_expression) {
-            values.push_back(compiler->create_value(value, branches[i]->get_type()));
+            values.push_back(compiler->create_value(value.ptr, branches[i]->get_type()));
             phi_blocks.push_back(builder().GetInsertBlock());
         }
     }
@@ -96,7 +95,7 @@ llvm::Value* IfNode::eval()
     auto type = get_type();
     for (auto& value : values) {
         auto casted = typing_system().cast_value(value, type);
-        if (casted == nullptr) {
+        if (casted.is_null()) {
             report_error("Mismatch in the types of the branches");
         }
     }
@@ -111,7 +110,7 @@ llvm::Value* IfNode::eval()
         phi->addIncoming(values[i].ptr, phi_blocks[i]);
     }
 
-    return phi;
+    return compiler->create_value(phi, get_type());
 }
 
 const Type *IfNode::get_type() {

@@ -6,20 +6,15 @@
 #include "types/PointerType.hpp"
 #include "types/ArrayType.hpp"
 #include "types/FloatTypes.hpp"
+#include "types/ReferenceType.hpp"
 
 namespace dua
 {
 
 TypingSystem::TypingSystem(ModuleCompiler *compiler) : compiler(compiler) {}
 
-llvm::Value* TypingSystem::cast_value(const Value& value, const Type* type, bool panic_on_failure) const
+static llvm::Value* _cast_value(const Value& value, const Type* type, bool panic_on_failure, llvm::IRBuilder<>& builder, llvm::Module& module)
 {
-    if (!is_castable(value.type, type)) {
-        if (panic_on_failure)
-            report_internal_error("Can't cast the type " + value.type->to_string() + " to " + type->to_string());
-        return nullptr;
-    }
-
     llvm::Type* source_type = value.ptr->getType();
     llvm::Type* target_type = type->llvm_type();
     llvm::Value* v = value.ptr;
@@ -29,7 +24,7 @@ llvm::Value* TypingSystem::cast_value(const Value& value, const Type* type, bool
         return v;
     }
 
-    llvm::DataLayout dl(&module());
+    llvm::DataLayout dl(&module);
     unsigned int source_width = dl.getTypeAllocSize(source_type);
     unsigned int target_width = dl.getTypeAllocSize(target_type);
 
@@ -41,31 +36,31 @@ llvm::Value* TypingSystem::cast_value(const Value& value, const Type* type, bool
             //  converting between an i8 and i1, which both give a size
             //  of 1 byte.
             // Truncate the value to fit the smaller type
-            return builder().CreateTrunc(v, target_type);
+            return builder.CreateTrunc(v, target_type);
         } else if (source_width < target_width) {
             // Extend the value to fit the larger type
             // A 1 bit number can only store 0 or 1, no negative numbers here.
             // If sign-extended however, the 1 (considered the sign) will propagate,
             // resulting in a binary representation of a bunch of 1s.
-            if (source_type == builder().getInt1Ty())
-                return builder().CreateZExt(v, target_type);
-            return builder().CreateSExt(v, target_type);
+            if (source_type == builder.getInt1Ty())
+                return builder.CreateZExt(v, target_type);
+            return builder.CreateSExt(v, target_type);
         }
     }
 
     if (source_type->isPointerTy() && target_type->isPointerTy())
-        return builder().CreateBitCast(v, target_type);
+        return builder.CreateBitCast(v, target_type);
 
     if (source_type->isIntegerTy() && target_type->isPointerTy())
-        return builder().CreateIntToPtr(v, target_type);
+        return builder.CreateIntToPtr(v, target_type);
 
     if (source_type->isFloatingPointTy() && target_type->isFloatingPointTy()) {
         if (source_width > target_width) {
             // Truncate the value to fit the smaller type
-            return builder().CreateFPTrunc(v, target_type);
+            return builder.CreateFPTrunc(v, target_type);
         } else if (source_width < target_width) {
             // Extend the value to fit the larger type
-            return builder().CreateFPExt(v, target_type);
+            return builder.CreateFPExt(v, target_type);
         } else {
             // The types have the same bit width, no need to cast
             return v;
@@ -75,13 +70,13 @@ llvm::Value* TypingSystem::cast_value(const Value& value, const Type* type, bool
     if (source_type->isIntegerTy() && target_type->isFloatingPointTy()) {
         // A 1 bit number can only store 0 or 1, no negative numbers here.
         // If considered to be signed however, the 1 will be considered a sign.
-        if (source_type == builder().getInt1Ty())
-            return builder().CreateUIToFP(v, target_type);
-        return builder().CreateSIToFP(v, target_type);
+        if (source_type == builder.getInt1Ty())
+            return builder.CreateUIToFP(v, target_type);
+        return builder.CreateSIToFP(v, target_type);
     }
 
     if (source_type->isFloatingPointTy() && target_type->isIntegerTy())
-        return builder().CreateFPToSI(v, target_type);
+        return builder.CreateFPToSI(v, target_type);
 
     llvm::outs() << "Source type: ";
     source_type->print(llvm::outs());
@@ -92,7 +87,19 @@ llvm::Value* TypingSystem::cast_value(const Value& value, const Type* type, bool
     return nullptr;  // Unreachable
 }
 
-const Type* TypingSystem::get_winning_type(const Type* lhs, const Type* rhs, bool panic_on_failure) const
+Value TypingSystem::cast_value(const dua::Value &value, const Type* target_type, bool panic_on_failure) const
+{
+    if (!is_castable(value.type, target_type)) {
+        if (panic_on_failure)
+            report_internal_error("Can't cast the type " + value.type->to_string() + " to " + target_type->to_string());
+        return {};
+    }
+
+    auto result = _cast_value(value, target_type, panic_on_failure, builder(), module());
+    return compiler->create_value(result, target_type, value.memory_location);
+}
+
+const Type* TypingSystem::get_winning_type(const Type* lhs, const Type* rhs, bool panic_on_failure, const std::string& message) const
 {
     auto l = lhs->llvm_type();
     auto r = rhs->llvm_type();
@@ -124,19 +131,26 @@ const Type* TypingSystem::get_winning_type(const Type* lhs, const Type* rhs, boo
         return lhs;
 
     if (panic_on_failure)
-        report_error("Type mismatch: Can't have the types " + lhs->to_string()
-            + " and " + rhs->to_string() + " in an operation");
+    {
+        if (!message.empty())
+            report_error(message);
+        else
+            report_error("Type mismatch: Can't have the types " + lhs->to_string()
+                     + " and " + rhs->to_string() + " in an operation");
+    }
 
     return nullptr;
 }
 
-llvm::Value * TypingSystem::forced_cast_value(llvm::Value* value, const Type *target_type) const {
-    return builder().CreateBitOrPointerCast(value, target_type->llvm_type(), "forced_cast");
+Value TypingSystem::forced_cast_value(const Value& value, const Type *target_type) const {
+    auto result = builder().CreateBitOrPointerCast(value.ptr, target_type->llvm_type(), "forced_cast");
+    return compiler->create_value(result, target_type);
 }
 
-llvm::Value* TypingSystem::cast_as_bool(const Value& value, bool panic_on_failure) const {
+Value TypingSystem::cast_as_bool(const Value& value, bool panic_on_failure) const {
     auto casted = cast_value(value, create_type<I64Type>(), panic_on_failure);
-    return builder().CreateICmpNE(casted, builder().getInt64(0));
+    auto result = builder().CreateICmpNE(casted.ptr, builder().getInt64(0));
+    return compiler->create_value(result, compiler->create_type<I8Type>());
 }
 
 template <typename T>
@@ -144,6 +158,12 @@ static const T* is(const Type* t) { return dynamic_cast<const T*>(t); }
 
 int TypingSystem::similarity_score(const Type *t1, const Type *t2) const
 {
+    // Strip the reference
+    if (auto r1 = dynamic_cast<const ReferenceType*>(t1); r1 != nullptr)
+        t1 = r1->get_element_type();
+    if (auto r2 = dynamic_cast<const ReferenceType*>(t2); r2 != nullptr)
+        t2 = r2->get_element_type();
+
     // This function relies on the fact that there is only one instance
     //  of each type. It compares pointers to determine whether the types
     //  are equal or not.
@@ -224,7 +244,7 @@ int TypingSystem::type_list_similarity_score(const std::vector<const Type *> &l1
     return score + int(l1.size() - n) + int(l2.size() - n);
 }
 
-bool TypingSystem::is_castable(const Type *t1, const Type *t2) const {
+bool TypingSystem::is_castable(const Type* t1, const Type* t2) const {
     return similarity_score(t1, t2) != -1;
 }
 

@@ -16,11 +16,11 @@ public:
     ClassFieldNode(ModuleCompiler* compiler, ASTNode* instance, std::string field_name)
             : VariableNode(compiler, std::move(field_name)), instance(instance) { }
 
-    llvm::Value* eval() override;
+    Value eval() override;
 
     [[nodiscard]] const Type* get_type() override;
 
-    [[nodiscard]] Value get_instance() const;
+    [[nodiscard]] Value eval_instance() const;
 
     [[nodiscard]] std::string get_full_name() const;
 

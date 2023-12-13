@@ -14,9 +14,9 @@ public:
     NegativeExpressionNode(ModuleCompiler* compiler, ASTNode* expression)
         : expression(expression) { this->compiler = compiler; }
 
-    llvm::Value* eval() override;
+    Value eval() override;
 
-    const Type* get_type() override { delete type; return type = expression->get_type(); }
+    const Type* get_type() override { return type = expression->get_type(); }
 };
 
 
@@ -29,7 +29,7 @@ public:
     NotExpressionNode(ModuleCompiler* compiler, ASTNode* expression)
         : expression(expression) { this->compiler = compiler; }
 
-    llvm::Value* eval() override;
+    Value eval() override;
 
     const Type* get_type() override { delete type; return type = expression->get_type(); }
 };
@@ -44,7 +44,7 @@ public:
     BitwiseComplementExpressionNode(ModuleCompiler* compiler, ASTNode* expression)
         : expression(expression) { this->compiler = compiler; }
 
-    llvm::Value* eval() override;
+    Value eval() override;
 
     const Type* get_type() override { delete type; return type = expression->get_type(); }
 };

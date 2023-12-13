@@ -14,7 +14,7 @@ public:
     ReturnNode(ModuleCompiler* compiler, ASTNode* expression)
         : expression(expression) { this->compiler = compiler; }
 
-    llvm::ReturnInst* eval() override;
+    Value eval() override;
 };
 
 }

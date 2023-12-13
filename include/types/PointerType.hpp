@@ -15,7 +15,7 @@ public:
     PointerType(ModuleCompiler* compiler, const Type* element_type)
             : element_type(element_type) { this->compiler = compiler; }
 
-    llvm::Constant* default_value() const override;
+    Value default_value() const override;
 
     llvm::PointerType * llvm_type() const override;
 

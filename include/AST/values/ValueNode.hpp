@@ -9,7 +9,7 @@ namespace dua
 class ValueNode : public ASTNode
 {
 public:
-    llvm::Constant* eval() override = 0;
+    Value eval() override = 0;
 };
 
 }

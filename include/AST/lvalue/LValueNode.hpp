@@ -12,7 +12,7 @@ public:
 
     virtual const Type* get_element_type() = 0;
 
-    llvm::Value* eval() override = 0;
+    Value eval() override = 0;
 };
 
 }

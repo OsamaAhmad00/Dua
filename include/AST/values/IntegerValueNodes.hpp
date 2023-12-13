@@ -19,8 +19,11 @@ public:                                                                  \
     I##WIDTH##ValueNode(ModuleCompiler* compiler)                        \
         : I##WIDTH##ValueNode(compiler, 0) {}                            \
                                                                          \
-    llvm::Constant* eval() override {                                    \
-        return builder().getInt##WIDTH(value);                           \
+    Value eval() override {                                              \
+        return compiler->create_value(                                   \
+            builder().getInt##WIDTH(value),                              \
+            get_type()                                                   \
+        );                                                               \
     }                                                                    \
                                                                          \
     const Type* get_type() override {                                    \

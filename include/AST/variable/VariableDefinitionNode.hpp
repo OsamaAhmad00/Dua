@@ -21,7 +21,7 @@ public:
             : name(std::move(name)), initializer(initializer), args(std::move(args))
     { this->compiler = compiler; this->type = type; }
 
-    llvm::Value* eval() override = 0;
+    Value eval() override = 0;
 
     [[nodiscard]] const std::string& get_name() const { return name; }
 };

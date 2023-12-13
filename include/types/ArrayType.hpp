@@ -16,7 +16,7 @@ public:
     ArrayType(ModuleCompiler* compiler, const Type* element_type, size_t size)
         : element_type(element_type), size(size) { this->compiler = compiler; }
 
-    llvm::Constant* default_value() const override;
+    Value default_value() const override;
 
     llvm::ArrayType* llvm_type() const override;
 

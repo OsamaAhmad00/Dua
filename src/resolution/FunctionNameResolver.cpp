@@ -4,6 +4,7 @@
 #include "types/FloatTypes.hpp"
 #include "types/PointerType.hpp"
 #include "AST/DeferredActionNode.hpp"
+#include "types/ReferenceType.hpp"
 
 namespace dua
 {
@@ -43,8 +44,16 @@ void FunctionNameResolver::register_function(std::string name, FunctionInfo info
     llvm::Type* ret = info.type->return_type->llvm_type();
 
     std::vector<llvm::Type*> parameter_types;
-    for (auto& type: info.type->param_types)
-        parameter_types.push_back(type->llvm_type());
+    for (auto& type: info.type->param_types) {
+        // Reference types are represented as pointers, and the address of the
+        //  referenced variable is passed. This won't create collision between
+        //  a function that accepts a pointer, and a function that accepts a
+        //  reference, because the dua::Type of the two parameters is still different.
+        if (auto ref = dynamic_cast<const ReferenceType*>(type); ref != nullptr)
+            parameter_types.push_back(type->llvm_type()->getPointerTo());
+        else
+            parameter_types.push_back(type->llvm_type());
+    }
 
     if (!no_mangle)
         name = get_full_function_name(name, info.type->param_types);
@@ -138,25 +147,32 @@ bool FunctionNameResolver::has_function(const std::string &name) const
 void FunctionNameResolver::cast_function_args(std::vector<Value> &args, const FunctionType* type) const
 {
     for (size_t i = args.size() - 1; i != (size_t)-1; i--) {
-        if (i < type->param_types.size()) {
+        if (i < type->param_types.size())
+        {
             // Only try to cast non-var-arg parameters
             auto param_type = type->param_types[i];
-            args[i] = compiler->create_value(
-                    compiler->typing_system.cast_value(args[i], param_type),
-                    param_type
-            );
+            if (auto ref = dynamic_cast<const ReferenceType*>(param_type); ref != nullptr) {
+                // If is a reference type, replace it with a pointer type.
+                param_type = compiler->create_type<PointerType>(ref->get_element_type());
+                if (args[i].memory_location == nullptr)
+                    report_error("Can't pass a non-lvalue expression (with " + args[i].type->to_string() + " type) as a reference");
+
+                // Cast the memory location instead of the actual loaded value
+                args[i] = compiler->create_value(args[i].memory_location, param_type);
+            }
+            args[i] = compiler->typing_system.cast_value(args[i], param_type);
         } else if (args[i].ptr->getType() == builder().getFloatTy()) {
             // Variadic functions promote floats to doubles
             auto double_type = compiler->create_type<F64Type>();
             args[i] = compiler->create_value(
-                    compiler->typing_system.cast_value(args[i], double_type),
-                    double_type
+                compiler->typing_system.cast_value(args[i], double_type).ptr,
+                double_type
             );
         }
     }
 }
 
-llvm::CallInst* FunctionNameResolver::call_function(const std::string &name, std::vector<Value> args)
+Value FunctionNameResolver::call_function(const std::string &name, std::vector<Value> args)
 {
     auto full_name = get_winning_function(name, get_types(args));
 
@@ -171,16 +187,19 @@ llvm::CallInst* FunctionNameResolver::call_function(const std::string &name, std
     for (size_t i = 0; i < args.size(); i++)
         llvm_args[i] = args[i].ptr;
 
-    return builder().CreateCall(function, std::move(llvm_args));
+    auto result = builder().CreateCall(function, std::move(llvm_args));
+    return compiler->create_value(result, info.type->return_type);
 }
 
-llvm::CallInst* FunctionNameResolver::call_function(llvm::Value *ptr, const FunctionType* type, std::vector<Value> args)
+Value FunctionNameResolver::call_function(const Value& func, std::vector<Value> args)
 {
+    auto type = func.type->as<FunctionType>();
     cast_function_args(args, type);
     std::vector<llvm::Value*> llvm_args(args.size());
     for (size_t i = 0; i < args.size(); i++)
         llvm_args[i] = args[i].ptr;
-    return builder().CreateCall(type->llvm_type(), ptr, std::move(llvm_args));
+    auto result = builder().CreateCall(type->llvm_type(), func.ptr, std::move(llvm_args));
+    return compiler->create_value(result, type->return_type);
 }
 
 void FunctionNameResolver::call_constructor(const Value &value, std::vector<Value> args)
@@ -195,12 +214,12 @@ void FunctionNameResolver::call_constructor(const Value &value, std::vector<Valu
         // Initializing a primitive type.
 
         if (args.empty())
-            args.push_back(compiler->create_value(value.type->default_value(), value.type));
+            args.push_back(compiler->create_value(value.type->default_value().ptr, value.type));
         else if (args.size() != 1)
             report_error("Cannot initialize a primitive value with more than one value");
 
         auto casted = compiler->typing_system.cast_value(args[0], value.type);
-        builder().CreateStore(casted, value.ptr);
+        builder().CreateStore(casted.ptr, value.ptr);
 
         return;
     }
@@ -255,7 +274,7 @@ void FunctionNameResolver::call_copy_constructor(const Value &value, const Value
 
     // Initializing a primitive type, or an object with no copy constructor.
     auto casted = compiler->typing_system.cast_value(arg, value.type);
-    builder().CreateStore(casted, value.ptr);
+    builder().CreateStore(casted.ptr, value.ptr);
 }
 
 void FunctionNameResolver::call_destructor(const Value& value)
@@ -272,9 +291,8 @@ void FunctionNameResolver::call_destructor(const Value& value)
     // Fields are destructed in the reverse order of definition.
     std::for_each(class_type->fields().rbegin(), class_type->fields().rend(), [&](auto& field) {
         // TODO don't search for the field twice, once for the type and once for the ptr
-        auto type = class_type->get_field(field.name).type;
-        auto ptr = class_type->get_field(value.ptr, field.name);
-        call_destructor(compiler->create_value(ptr, type ));
+        auto f = class_type->get_field(value, field.name);
+        call_destructor(f);
     });
 
     auto ptr_value = compiler->create_value(value.ptr, compiler->create_type<PointerType>(value.type));
@@ -402,13 +420,15 @@ std::string FunctionNameResolver::get_function_with_exact_type(const std::string
     return "";  // Unreachable
 }
 
-llvm::CallInst* FunctionNameResolver::call_infix_operator(const Value &lhs, const Value &rhs, const std::string &name)
+Value FunctionNameResolver::call_infix_operator(const Value &lhs, const Value &rhs, const std::string &name)
 {
     auto full_name = get_winning_function("infix." + name, { lhs.type, rhs.type }, false);
     if (full_name.empty())
-        return nullptr;
+        return {};
     auto func = compiler->module.getFunction(full_name);
-    return call_function(func, functions[full_name].type, {lhs, rhs});
+    auto type = functions[full_name].type;
+    auto value = compiler->create_value(func, type);
+    return call_function(value, {lhs, rhs});
 }
 
 const Type *FunctionNameResolver::get_infix_operator_return_type(const Type *t1, const Type *t2, const std::string& name)

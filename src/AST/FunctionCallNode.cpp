@@ -5,31 +5,40 @@
 namespace dua
 {
 
-llvm::CallInst *FunctionCallNode::eval()
+std::vector<Value> FunctionCallNode::eval_args(bool is_method)
 {
-    std::vector<Value> evaluated(args.size());
+    auto n = args.size() - is_method;
+    std::vector<Value> evaluated(n);
+    for (size_t i = 0; i < args.size() - is_method; i++)
+        evaluated[i] = args[i + is_method]->eval();
+    return evaluated;
+}
+
+Value FunctionCallNode::eval()
+{
+    std::vector<const Type*> arg_types(args.size());
     for (size_t i = 0; i < args.size(); i++)
-        evaluated[i] = compiler->create_value(args[i]->eval(), args[i]->get_type());
+        arg_types[i] = args[i]->get_type();
 
     if (name_resolver().has_function(name))
-        return name_resolver().call_function(name, std::move(evaluated));
+        return name_resolver().call_function(name, eval_args());
 
     // It has to be a function reference.
+    bool is_method = false;
     auto reference = compiler->create_value((llvm::Value*)nullptr, (const Type*)nullptr);
     if (name_resolver().symbol_table.contains(name))
         reference = name_resolver().symbol_table.get(name);
-    else if (!evaluated.empty()) {
-        // It might be a class field
-        auto& instance = evaluated[0];
-        auto pointer_type = dynamic_cast<const PointerType*>(instance.type);
+    else if (!args.empty()) {
+        // It might be a class field, called within a method in the class, in which
+        //  case, the first argument will be the instance itself
+        auto pointer_type = dynamic_cast<const PointerType*>(args[0]->get_type());
         auto class_type = pointer_type ? dynamic_cast<const ClassType*>(pointer_type->get_element_type()) : nullptr;
         if (class_type != nullptr && class_type->name == name.substr(0, class_type->name.size())) {
-            auto field_name = name.substr(class_type->name.size() + 1);
+            auto field_name = name.substr(class_type->name.size() + 1);  // + 1, ignoring the dot
             auto field = class_type->get_field(field_name);
             reference.type = field.type;
-            reference.ptr = class_type->get_field(instance.ptr, field_name);
-            // It's a field that points to a function. The instance shouldn't be passed
-            evaluated.erase(evaluated.begin());
+            reference.ptr = class_type->get_field(args[0]->eval(), field_name).ptr;
+            is_method = true;
         }
     }
 
@@ -42,8 +51,9 @@ llvm::CallInst *FunctionCallNode::eval()
         report_error("The variable " + name + " is of type " + reference.type->to_string() + ", which is not callable");
 
     auto ptr = builder().CreateLoad(reference.type->llvm_type(), reference.ptr);
+    auto value = compiler->create_value(ptr, function_type);
 
-    return name_resolver().call_function(ptr, function_type, std::move(evaluated));
+    return name_resolver().call_function(value, eval_args(is_method));
 }
 
 const Type *FunctionCallNode::get_type()

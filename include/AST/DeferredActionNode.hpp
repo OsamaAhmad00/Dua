@@ -7,14 +7,14 @@ namespace dua
 
 class DeferredActionNode : public ASTNode
 {
-    std::function<llvm::Value*()> func;
+    std::function<Value()> func;
 
 public:
 
-    DeferredActionNode(ModuleCompiler* compiler, std::function<llvm::Value*()> func)
+    DeferredActionNode(ModuleCompiler* compiler, std::function<Value()> func)
             : func(std::move(func)) { this->compiler = compiler; this->type = type; };
 
-    llvm::Value* eval() override { return func(); };
+    Value eval() override { return func(); };
 };
 
 }

@@ -43,14 +43,14 @@ public:
     std::string get_function(std::string name);
 
     [[nodiscard]] bool has_function(const std::string& name) const;
-    llvm::CallInst* call_function(const std::string &name, std::vector<Value> args = {});
-    llvm::CallInst* call_function(llvm::Value* ptr, const FunctionType* type, std::vector<Value> args = {});
+    Value call_function(const std::string &name, std::vector<Value> args = {});
+    Value call_function(const Value& func, std::vector<Value> args = {});
 
     void call_constructor(const Value& value, std::vector<Value> args);
     void call_copy_constructor(const Value& value, const Value& arg);
     void call_destructor(const Value& value);
 
-    llvm::CallInst* call_infix_operator(const Value& lhs, const Value& rhs, const std::string& name);
+    Value call_infix_operator(const Value& lhs, const Value& rhs, const std::string& name);
     const Type* get_infix_operator_return_type(const Type* t1, const Type* t2, const std::string& name);
 
     [[nodiscard]] static std::string get_full_function_name(std::string name, const std::vector<const Type*>& param_types);

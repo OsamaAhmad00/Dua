@@ -6,9 +6,9 @@
 namespace dua
 {
 
-llvm::Value *ClassDefinitionNode::eval()
+Value ClassDefinitionNode::eval()
 {
-    if (result != nullptr)
+    if (!result.is_null())
         return result;
 
     if (name_resolver().classes.find(name) == name_resolver().classes.end())

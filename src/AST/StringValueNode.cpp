@@ -7,16 +7,16 @@ namespace dua
 
 int StringValueNode::counter = 0;
 
-llvm::Constant* StringValueNode::eval()
+Value StringValueNode::eval()
 {
     if (is_nullptr) return type->default_value();
     auto& pool = string_pool();
     auto it = pool.find(value);
     if (it != pool.end())
-        return it->second;
+        return compiler->create_value(it->second, get_type());
     auto result = builder().CreateGlobalStringPtr(value, "StringLiteral" + std::to_string(counter++));
     pool[value] = result;
-    return result;
+    return compiler->create_value(result, get_type());
 }
 
 const Type *StringValueNode::get_type() {

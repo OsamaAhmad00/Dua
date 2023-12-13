@@ -24,7 +24,7 @@ const FunctionType* get_function_type(ASTNode* func)
     return function_type;
 }
 
-llvm::CallInst* ExprFunctionCallNode::eval()
+Value ExprFunctionCallNode::eval()
 {
     size_t n = args.size();
 
@@ -38,13 +38,13 @@ llvm::CallInst* ExprFunctionCallNode::eval()
 
     for (size_t i = n - 1; i != ((size_t)-1 + is_method); i--) {
         auto arg = args[i - is_method];
-        evaluated[i] = compiler->create_value(arg->eval(), arg->get_type());
+        evaluated[i] = arg->eval();
     }
 
     if (is_method)
-        evaluated[0] = field->get_instance();
+        evaluated[0] = field->eval_instance();
 
-    return name_resolver().call_function(func->eval(), get_function_type(func), std::move(evaluated));
+    return name_resolver().call_function(func->eval(), std::move(evaluated));
 }
 
 const Type *ExprFunctionCallNode::get_type() {

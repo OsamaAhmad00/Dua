@@ -1,4 +1,6 @@
 #include <types/FunctionType.hpp>
+#include <ModuleCompiler.hpp>
+#include "types/ReferenceType.hpp"
 
 
 namespace dua
@@ -8,16 +10,25 @@ inline bool equal_types(const Type* t1, const Type* t2) {
     return (bool)t1 == (bool)t2 && (!t1 || *t1 == *t2);
 }
 
-llvm::Constant* FunctionType::default_value() const {
-    return llvm::Constant::getNullValue(llvm_type());
+Value FunctionType::default_value() const {
+    return compiler->create_value(llvm::Constant::getNullValue(llvm_type()), this);
+}
+
+llvm::Type* get_llvm_representation(const Type* type)
+{
+    if (auto ref = type->as<ReferenceType>(); ref != nullptr)
+        return ref->get_element_type()->llvm_type()->getPointerTo();
+    return type->llvm_type();
 }
 
 llvm::FunctionType* FunctionType::llvm_type() const
 {
-    llvm::Type* ret = return_type->llvm_type();
+    if (llvm_type_cache != nullptr) return llvm_type_cache;
+    llvm::Type* ret = get_llvm_representation(return_type);
     std::vector<llvm::Type*> params(param_types.size());
-    for (size_t i = 0; i < param_types.size(); i++)
-        params[i] = param_types[i]->llvm_type();
+    for (size_t i = 0; i < param_types.size(); i++) {
+        params[i] = get_llvm_representation(param_types[i]);
+    }
     return llvm::FunctionType::get(ret, std::move(params), is_var_arg);
 }
 
@@ -68,16 +79,6 @@ bool FunctionType::operator==(const FunctionType &other) const
         if (!equal_types(param_types[i], other.param_types[i]))
             return false;
     return is_var_arg == other.is_var_arg;
-}
-
-FunctionType &FunctionType::operator=(FunctionType &&other)
-{
-    param_types = std::move(other.param_types);
-    return_type = other.return_type;
-    is_var_arg = other.is_var_arg;
-    other.param_types.clear();
-    other.return_type = nullptr;
-    return *this;
 }
 
 }

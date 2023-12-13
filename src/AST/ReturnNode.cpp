@@ -4,15 +4,15 @@
 namespace dua
 {
 
-llvm::ReturnInst* ReturnNode::eval()
+Value ReturnNode::eval()
 {
     if (expression == nullptr)
-        return builder().CreateRetVoid();
-    auto result = compiler->create_value(expression->eval(), expression->get_type());
+        return compiler->create_value(builder().CreateRetVoid(), compiler->create_type<VoidType>());
+    auto result = expression->eval();
     auto return_type = name_resolver().get_function_no_overloading(
             current_function()->getName().str()).type->return_type;
     auto casted = typing_system().cast_value(result, return_type);
-    return builder().CreateRet(casted);
+    return compiler->create_value(builder().CreateRet(casted.ptr), get_type());
 }
 
 }

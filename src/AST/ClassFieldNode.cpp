@@ -6,7 +6,7 @@ namespace dua
 
 static const ClassType* get_class(const Type* type)
 {
-    auto casted = dynamic_cast<const ClassType*>(type);
+    auto casted = type->as<ClassType>();
     if (casted == nullptr)
         report_error("Member access on a non-class (" + type->to_string() + ") type");
     return casted;
@@ -21,16 +21,16 @@ const static ClassType* get_class_from_ptr(ASTNode* node)
     return get_class(ptr->get_element_type());
 }
 
-llvm::Value* ClassFieldNode::eval()
+Value ClassFieldNode::eval()
 {
     auto full_name = get_full_name();
     if (name_resolver().has_function(full_name)) {
         auto name = name_resolver().get_function(full_name);
-        return module().getFunction(name);
+        return compiler->create_value(module().getFunction(name), get_type());
     }
 
     auto class_type = get_class_from_ptr(instance);
-    return class_type->get_field(get_instance().ptr, name);
+    return compiler->create_value(class_type->get_field(eval_instance(), name).ptr, get_type());
 }
 
 const Type* ClassFieldNode::get_type()
@@ -48,10 +48,10 @@ const Type* ClassFieldNode::get_type()
     return type = compiler->create_type<PointerType>(t);
 }
 
-Value ClassFieldNode::get_instance() const
+Value ClassFieldNode::eval_instance() const
 {
     if (instance_eval.ptr != nullptr) return instance_eval;
-    return instance_eval = compiler->create_value(instance->eval(), instance->get_type());
+    return instance_eval = instance->eval();
 }
 
 std::string ClassFieldNode::get_full_name() const

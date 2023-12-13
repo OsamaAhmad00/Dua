@@ -20,8 +20,8 @@ public:
             report_internal_error("Sequential node constructed with empty list");
     }
 
-    llvm::Value* eval() override {
-        llvm::Value* result = nullptr;
+    Value eval() override {
+        Value result;
         for (int i = 0; i < nodes.size(); i++) {
             if (i == return_node) {
                 result = nodes[i]->eval();

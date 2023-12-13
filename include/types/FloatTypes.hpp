@@ -11,8 +11,11 @@ struct F##WIDTH##Type : public FloatType                             \
     F##WIDTH##Type(ModuleCompiler* compiler)                         \
         { this->compiler = compiler; }                               \
                                                                      \
-    llvm::Constant* default_value() const override {                 \
-        return llvm::ConstantFP::get(llvm_type(), 0);                \
+    Value default_value() const override {                           \
+        return compiler->create_value(                               \
+            llvm::ConstantFP::get(llvm_type(), 0),                   \
+            this                                                     \
+        );                                                           \
     }                                                                \
                                                                      \
     llvm::Type* llvm_type() const override {                         \

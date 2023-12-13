@@ -14,7 +14,7 @@ ClassType::ClassType(ModuleCompiler *compiler, std::string name)
     llvm::StructType::create(compiler->context, this->name);
 }
 
-llvm::Constant *ClassType::default_value() const
+Value ClassType::default_value() const
 {
     std::vector<llvm::Constant*> initializers(fields().size());
 
@@ -22,7 +22,8 @@ llvm::Constant *ClassType::default_value() const
         initializers[i] = fields()[i].default_value;
     }
 
-    return llvm::ConstantStruct::get(llvm_type(), std::move(initializers));
+    auto result = llvm::ConstantStruct::get(llvm_type(), std::move(initializers));
+    return compiler->create_value(result, this);
 }
 
 llvm::StructType* ClassType::llvm_type() const {
@@ -44,17 +45,23 @@ const ClassField& ClassType::get_field(const std::string &name) const {
     return fields().front();
 }
 
-llvm::Value *ClassType::get_field(llvm::Value *instance, const std::string &name) const {
+Value ClassType::get_field(const Value& instance, const std::string &name) const {
     for (size_t i = 0; i < fields().size(); i++) {
         if (fields()[i].name == name)
             return get_field(instance, i);
     }
     report_error("Class " + this->name + " doesn't contain a member with the name " + name);
-    return nullptr;
+    return {};
 }
 
-llvm::Value *ClassType::get_field(llvm::Value *instance, size_t index) const {
-    return compiler->get_builder()->CreateStructGEP(llvm_type(), instance, index, fields()[index].name);
+Value ClassType::get_field(const Value& instance, size_t index) const
+{
+    // TODO avoid creating a GEP instruction on each access. You might cache the
+    //  result of the access for each instance-index pair, yet, you have to bear
+    //  in mind that in different basic blocks or functions, you have to perform
+    //  the access again, so, it's not just a simple caching problem.
+    auto result = compiler->get_builder()->CreateStructGEP(llvm_type(), instance.ptr, index, fields()[index].name);
+    return compiler->create_value(result, fields()[index].type);
 }
 
 }

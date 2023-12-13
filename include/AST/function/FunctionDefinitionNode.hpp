@@ -11,7 +11,7 @@ class FunctionDefinitionNode : public ASTNode
 
     const FunctionType* function_type;
 
-    llvm::Function* define_function();
+    Value define_function();
 
     void initialize_constructor(const ClassType* class_type);
 
@@ -25,7 +25,7 @@ public:
 
     const FunctionType* get_function_type() { return function_type; }
 
-    llvm::Function* eval() override;
+    Value eval() override;
 };
 
 }

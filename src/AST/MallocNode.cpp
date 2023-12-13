@@ -11,7 +11,7 @@ MallocNode::MallocNode(dua::ModuleCompiler *compiler, const Type *type, std::vec
     this->type = compiler->create_type<PointerType>(type);
 }
 
-llvm::Value *MallocNode::eval()
+Value MallocNode::eval()
 {
     auto alloc_type = get_element_type()->llvm_type();
 
@@ -29,10 +29,10 @@ llvm::Value *MallocNode::eval()
 
     std::vector<Value> evaluated(args.size());
     for (int i = 0; i < args.size(); i++)
-        evaluated[i] = compiler->create_value(args[i]->eval(), args[i]->get_type());
-    name_resolver().call_constructor(compiler->create_value(instance, get_element_type()), std::move(evaluated));
+        evaluated[i] = args[i]->eval();
+    name_resolver().call_constructor(compiler->create_value(instance.ptr, get_element_type()), std::move(evaluated));
 
-    return instance;
+    return compiler->create_value(instance.ptr, get_type());
 }
 
 const Type *MallocNode::get_type() {

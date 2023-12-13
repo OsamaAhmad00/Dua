@@ -60,6 +60,7 @@
 #include "types/PointerType.hpp"
 #include "types/ClassType.hpp"
 #include "types/FunctionType.hpp"
+#include "types/ReferenceType.hpp"
 
 #include "utils/TextManipulation.hpp"
 #include "utils/ErrorReporting.hpp"
@@ -225,6 +226,7 @@ public:
     void finish_copy_constructor();
     void create_infix_operator();
     void set_current_function();
+    void create_reference_type();
 
     template<typename T>
     void create_unary_expr() {

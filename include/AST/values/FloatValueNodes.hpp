@@ -19,8 +19,11 @@ public:                                                                         
     F##WIDTH##ValueNode(ModuleCompiler* compiler)                                \
         : F##WIDTH##ValueNode(compiler, 0.0) {}                                  \
                                                                                  \
-    llvm::Constant *eval() override                                              \
-        { return llvm::ConstantFP::get(get_type()->llvm_type(), value); }        \
+    Value eval() override                                                        \
+    {                                                                            \
+        auto res = llvm::ConstantFP::get(get_type()->llvm_type(), value);        \
+        return compiler->create_value(res, get_type());                          \
+    }                                                                            \
                                                                                  \
     const Type* get_type() override {                                            \
         if (type == nullptr)                                                     \

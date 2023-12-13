@@ -16,7 +16,7 @@ public:
 
     BlockNode& append(ASTNode* element);
 
-    llvm::Value* eval() override;
+    Value eval() override;
 
     const Type* get_type() override;
 };

@@ -10,7 +10,7 @@ class FunctionDefinitionNode;
 
 class ClassDefinitionNode : public ASTNode
 {
-    llvm::Value* result = nullptr;
+    Value result;
 
     std::string name;
     std::vector<ClassFieldDefinitionNode*> fields;
@@ -23,7 +23,7 @@ public:
         : name(std::move(name)), fields(std::move(fields)), methods(std::move(methods))
         { this->compiler = compiler; }
 
-    llvm::Value* eval() override;
+    Value eval() override;
 };
 
 }

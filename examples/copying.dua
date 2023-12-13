@@ -10,9 +10,9 @@ class X
 
     constructor(int i) { print(i); }
 
-    = constructor(X* x) {
+    = constructor(X& x) {
         printf("Copy constructed\n");
-        num = x->num * 2;
+        self.num = x.num * 2;
     }
 }
 
@@ -23,7 +23,7 @@ class X
 int main()
 {
     X x1;
-    X x2 = &x1;
+    X x2 = x1;
     print(x2.num);
 }
 
@@ -33,13 +33,13 @@ int main()
 
 class Y
 {
-    = constructor(X* x) { print(x->num); }
+    = constructor(X& x) { print(x.num); }
 }
 
 int main()
 {
     X x;
-    Y y = &x;
+    Y y = x;
 }
 
 
@@ -50,13 +50,13 @@ class Y
 {
     X x;
 
-    = constructor(Y* y) : x(123) { }
+    = constructor(Y& y) : x(123) { }
 }
 
 int main()
 {
     Y y1;
-    Y y2 = &y1;
+    Y y2 = y1;
 }
 
 
@@ -96,3 +96,4 @@ class Y
 int main() { }
 
 
+// Case chain 

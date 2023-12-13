@@ -35,7 +35,7 @@ public:
 
     ClassType(ModuleCompiler* compiler, std::string name);
 
-    llvm::Constant* default_value() const override;
+    Value default_value() const override;
 
     llvm::StructType* llvm_type() const override;
 
@@ -47,9 +47,9 @@ public:
 
     const ClassField& get_field(const std::string& name) const;
 
-    llvm::Value* get_field(llvm::Value* instance, const std::string& name) const;
+    Value get_field(const Value& instance, const std::string& name) const;
 
-    llvm::Value* get_field(llvm::Value* instance, size_t index) const;
+    Value get_field(const Value& instance, size_t index) const;
 };
 
 }

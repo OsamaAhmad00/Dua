@@ -15,7 +15,7 @@ public:
 
     MallocNode(ModuleCompiler* compiler, const Type* type, std::vector<ASTNode*> args);
 
-    llvm::Value* eval() override;
+    Value eval() override;
 
     const Type* get_type() override;
 

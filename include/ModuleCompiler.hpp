@@ -45,14 +45,8 @@ public:
         return typing_system.create_type<T>(args...);
     }
 
-    template <typename T>
-    Value create_value(llvm::Value* value, const T* type) {
-        return { &typing_system, value, type };
-    }
-
-    template <typename T, typename ...Args>
-    Value create_value(llvm::Value* value, Args ...args) {
-        return create_value(value, create_type(args...));
+    Value create_value(llvm::Value* value, const Type* type, llvm::Value* memory_location = nullptr) {
+        return { &typing_system, value, type, memory_location };
     }
 
     llvm::IRBuilder<>* get_builder() { return &builder; }

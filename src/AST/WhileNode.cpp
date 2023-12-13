@@ -22,11 +22,10 @@ NoneValue WhileNode::eval()
     builder().CreateBr(cond_block);
 
     builder().SetInsertPoint(cond_block);
-    llvm::Value* cond_res = cond_exp->eval();
-    cond_res = typing_system().cast_as_bool(compiler->create_value(cond_res, cond_exp->get_type()));
-    if (cond_res == nullptr)
+    auto cond_res = cond_exp->eval().cast_as_bool();
+    if (cond_res.is_null())
         report_error("The provided condition can't be casted to boolean value.");
-    builder().CreateCondBr(cond_res, body_block, end_block);
+    builder().CreateCondBr(cond_res.ptr, body_block, end_block);
 
     builder().SetInsertPoint(body_block);
     body_exp->eval();

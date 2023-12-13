@@ -4,14 +4,15 @@
 namespace dua
 {
 
-llvm::Value *ArrayIndexingNode::eval()
+Value ArrayIndexingNode::eval()
 {
-    auto ptr = lvalue->eval();
-    return builder().CreateGEP(
+    auto eval = lvalue->eval();
+    auto value = builder().CreateGEP(
         lvalue->get_element_type()->llvm_type(),
-        ptr,
-        { builder().getInt32(0), index->eval() }
+        eval.ptr,
+        { builder().getInt32(0), index->eval().ptr }
     );
+    return compiler->create_value(value, get_type());
 }
 
 const Type *ArrayIndexingNode::get_type() {

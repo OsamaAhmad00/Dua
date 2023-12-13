@@ -19,7 +19,7 @@ public:
     ExprFunctionCallNode(ModuleCompiler* compiler, ASTNode* func, std::vector<ASTNode*> args = {})
         : func(func), args(std::move(args)) { this->compiler = compiler; }
 
-    llvm::CallInst* eval() override;
+    Value eval() override;
 
     const Type* get_type() override;
 };

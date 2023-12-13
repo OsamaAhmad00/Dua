@@ -889,4 +889,8 @@ void ParserAssistant::set_current_function()
     nodes.push_back(func);
 }
 
+void ParserAssistant::create_reference_type() {
+    push_type<ReferenceType>(pop_type());
+}
+
 }

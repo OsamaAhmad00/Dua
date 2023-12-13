@@ -19,7 +19,7 @@ public:
         this->compiler = compiler;
     }
 
-    llvm::Value* eval() override
+    Value eval() override
     {
         llvm::DataLayout dl(&module());
 
@@ -37,7 +37,7 @@ public:
         }
 
         long long size = (type->isSized()) ? dl.getTypeSizeInBits(type) / 8 : 0;
-        return builder().getInt64(size);
+        return compiler->create_value(builder().getInt64(size), get_type());
     }
 
     const Type* get_type() override {

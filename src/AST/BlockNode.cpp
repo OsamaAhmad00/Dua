@@ -9,7 +9,7 @@ BlockNode& BlockNode::append(ASTNode *element)
     return *this;
 }
 
-llvm::Value* BlockNode::eval()
+Value BlockNode::eval()
 {
     name_resolver().push_scope();
 
