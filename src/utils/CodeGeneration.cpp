@@ -38,15 +38,16 @@ int run_clang(const std::vector<std::string>& args)
 {
     // FIXME make it detect the available versions of clang
 
-    std::string string = " -Wno-override-module " + boost::algorithm::join(args, " ");
+    std::string concatenated = " -Wno-override-module " + boost::algorithm::join(args, " ");
 
 #ifdef _WIN32
-    auto name = "clang";
+    auto prefix = "clang";
 #else
-    auto name = "clang-17";
+    // -lm = link with the math library
+    auto prefix = "clang-17 -lm";
 #endif
 
-    return std::system((name + string).c_str());
+    return std::system((prefix + concatenated).c_str());
 }
 
 bool run_clang_on_llvm_ir(const strings& filename, const strings& code, const strings& args)
