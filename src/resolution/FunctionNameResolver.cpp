@@ -34,31 +34,18 @@ void report_function_not_defined(const std::string& name)
 
 FunctionNameResolver::FunctionNameResolver(ModuleCompiler *compiler) : compiler(compiler) {}
 
-void FunctionNameResolver::register_function(std::string name, FunctionInfo info, bool no_mangle)
+void FunctionNameResolver::register_function(std::string name, const FunctionInfo& info, bool no_mangle)
 {
     if (compiler->current_function != nullptr)
         report_internal_error("Nested functions are not allowed");
 
     // Registering the function in the module so that all
     //  functions are visible during AST evaluation.
-    llvm::Type* ret = info.type->return_type->llvm_type();
-
-    std::vector<llvm::Type*> parameter_types;
-    for (auto& type: info.type->param_types) {
-        // Reference types are represented as pointers, and the address of the
-        //  referenced variable is passed. This won't create collision between
-        //  a function that accepts a pointer, and a function that accepts a
-        //  reference, because the dua::Type of the two parameters is still different.
-        if (auto ref = dynamic_cast<const ReferenceType*>(type); ref != nullptr)
-            parameter_types.push_back(type->llvm_type()->getPointerTo());
-        else
-            parameter_types.push_back(type->llvm_type());
-    }
 
     if (!no_mangle)
         name = get_full_function_name(name, info.type->param_types);
 
-    llvm::FunctionType* type = llvm::FunctionType::get(ret, parameter_types, info.type->is_var_arg);
+    llvm::FunctionType* type = info.type->llvm_type();
     llvm::Function* function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, name, compiler->module);
     llvm::verifyFunction(*function);
 

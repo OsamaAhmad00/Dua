@@ -16,6 +16,10 @@ Value FunctionType::default_value() const {
 
 llvm::Type* get_llvm_representation(const Type* type)
 {
+    // Reference types are represented as pointers, and the address of the
+    //  referenced variable is passed. This won't create collision between
+    //  a function that accepts a pointer, and a function that accepts a
+    //  reference, because the dua::Type of the two parameters is still different.
     if (auto ref = type->as<ReferenceType>(); ref != nullptr)
         return ref->get_element_type()->llvm_type()->getPointerTo();
     return type->llvm_type();

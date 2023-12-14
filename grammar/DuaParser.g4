@@ -278,7 +278,7 @@ expression
     | expression '&&' expression { assistant.create_logical_and(); }
     | expression '||' expression { assistant.create_logical_or(); }
     | expression '?' expression ':' expression { assistant.create_ternary_operator(); }
-    | expression '=' expression { assistant.create_assignment(); }
+    | <assoc=right> expression '=' expression { assistant.create_assignment(); }
     | lvalue '+='  expression  { assistant.create_compound_assignment<AdditionNode>(); }
     | lvalue '-='  expression  { assistant.create_compound_assignment<SubtractionNode>(); }
     | lvalue '*='  expression  { assistant.create_compound_assignment<MultiplicationNode>(); }

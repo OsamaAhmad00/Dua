@@ -870,7 +870,7 @@ void ParserAssistant::create_infix_operator()
         param_names.insert(param_names.begin(), "self");
     }
 
-    name = "infix." + name + "." + param_types[0]->to_string() + "." + param_types[0]->to_string();
+    name = "infix." + name + "." + param_types[0]->to_string() + "." + param_types[1]->to_string();
 
     auto function_type = compiler->create_type<FunctionType>(return_type, std::move(param_types), false);
     FunctionInfo info {
