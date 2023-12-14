@@ -9,8 +9,8 @@ Value ArrayIndexingNode::eval()
     auto eval = lvalue->eval();
     auto value = builder().CreateGEP(
         lvalue->get_element_type()->llvm_type(),
-        eval.ptr,
-        { builder().getInt32(0), index->eval().ptr }
+        eval.get(),
+        { builder().getInt32(0), index->eval().get() }
     );
     return compiler->create_value(value, get_type());
 }

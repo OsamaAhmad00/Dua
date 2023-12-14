@@ -49,6 +49,10 @@ public:
         return { &typing_system, value, type, memory_location };
     }
 
+    Value create_value(const Type* type, llvm::Value* memory_location) {
+        return create_value(nullptr, type, memory_location);
+    }
+
     llvm::IRBuilder<>* get_builder() { return &builder; }
     llvm::LLVMContext* get_context() { return &context; }
     NameResolver& get_name_resolver() { return name_resolver; }

@@ -60,7 +60,7 @@ Value ClassType::get_field(const Value& instance, size_t index) const
     //  result of the access for each instance-index pair, yet, you have to bear
     //  in mind that in different basic blocks or functions, you have to perform
     //  the access again, so, it's not just a simple caching problem.
-    auto result = compiler->get_builder()->CreateStructGEP(llvm_type(), instance.ptr, index, fields()[index].name);
+    auto result = compiler->get_builder()->CreateStructGEP(llvm_type(), instance.get(), index, fields()[index].name);
     return compiler->create_value(result, fields()[index].type);
 }
 

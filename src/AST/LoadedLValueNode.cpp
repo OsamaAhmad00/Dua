@@ -14,8 +14,7 @@ Value LoadedLValueNode::eval()
     if (dynamic_cast<const FunctionType*>(element_type) != nullptr)
         return memory_location;
 
-    auto result = builder().CreateLoad(element_type->llvm_type(), memory_location.ptr);
-    return compiler->create_value(result, get_type(), memory_location.ptr);
+    return compiler->create_value(get_type(), memory_location.get());
 }
 
 const Type *LoadedLValueNode::get_type()

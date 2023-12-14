@@ -15,9 +15,9 @@ TypingSystem::TypingSystem(ModuleCompiler *compiler) : compiler(compiler) {}
 
 static llvm::Value* _cast_value(const Value& value, const Type* type, bool panic_on_failure, llvm::IRBuilder<>& builder, llvm::Module& module)
 {
-    llvm::Type* source_type = value.ptr->getType();
+    llvm::Type* source_type = value.get()->getType();
     llvm::Type* target_type = type->llvm_type();
-    llvm::Value* v = value.ptr;
+    llvm::Value* v = value.get();
 
     // If the types are equal, return the value as it is
     if (source_type == target_type) {
@@ -139,13 +139,13 @@ const Type* TypingSystem::get_winning_type(const Type* lhs, const Type* rhs, boo
 }
 
 Value TypingSystem::forced_cast_value(const Value& value, const Type *target_type) const {
-    auto result = builder().CreateBitOrPointerCast(value.ptr, target_type->llvm_type(), "forced_cast");
+    auto result = builder().CreateBitOrPointerCast(value.get(), target_type->llvm_type(), "forced_cast");
     return compiler->create_value(result, target_type);
 }
 
 Value TypingSystem::cast_as_bool(const Value& value, bool panic_on_failure) const {
     auto casted = cast_value(value, create_type<I64Type>(), panic_on_failure);
-    auto result = builder().CreateICmpNE(casted.ptr, builder().getInt64(0));
+    auto result = builder().CreateICmpNE(casted.get(), builder().getInt64(0));
     return compiler->create_value(result, compiler->create_type<I8Type>());
 }
 

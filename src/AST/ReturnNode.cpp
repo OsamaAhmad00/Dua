@@ -17,9 +17,9 @@ Value ReturnNode::eval()
     if (auto ref = return_type->as<ReferenceType>(); ref != nullptr) {
         auto ptr_type = compiler->create_type<PointerType>(result.type);
         auto mem_location = compiler->create_value(result.memory_location, ptr_type);
-        ptr = typing_system().cast_value(mem_location, ptr_type).ptr;
+        ptr = typing_system().cast_value(mem_location, ptr_type).get();
     } else {
-        ptr = typing_system().cast_value(result, return_type).ptr;
+        ptr = typing_system().cast_value(result, return_type).get();
     }
     return compiler->create_value(builder().CreateRet(ptr), get_type());
 }

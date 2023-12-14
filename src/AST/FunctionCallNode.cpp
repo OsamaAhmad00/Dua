@@ -38,12 +38,12 @@ Value FunctionCallNode::eval()
             auto field_name = name.substr(class_type->name.size() + 1);  // + 1, ignoring the dot
             auto field = class_type->get_field(field_name);
             reference.type = field.type;
-            reference.ptr = class_type->get_field(args[0]->eval(), field_name).ptr;
+            reference.set(class_type->get_field(args[0]->eval(), field_name).get());
             is_field = true;
         }
     }
 
-    if (reference.ptr == nullptr)
+    if (reference.is_null())
         report_error("The identifier " + name + " doesn't refer to either a function or a function reference");
 
     auto pointer_type = dynamic_cast<const PointerType*>(reference.type);
@@ -51,7 +51,7 @@ Value FunctionCallNode::eval()
     if (function_type == nullptr)
         report_error("The variable " + name + " is of type " + reference.type->to_string() + ", which is not callable");
 
-    auto ptr = builder().CreateLoad(reference.type->llvm_type(), reference.ptr);
+    auto ptr = builder().CreateLoad(reference.type->llvm_type(), reference.get());
     auto value = compiler->create_value(ptr, function_type);
 
     return name_resolver().call_function(value, eval_args(is_field));

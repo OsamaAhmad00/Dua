@@ -30,9 +30,9 @@ Value MallocNode::eval()
     std::vector<Value> evaluated(args.size());
     for (int i = 0; i < args.size(); i++)
         evaluated[i] = args[i]->eval();
-    name_resolver().call_constructor(compiler->create_value(instance.ptr, get_element_type()), std::move(evaluated));
+    name_resolver().call_constructor(compiler->create_value(instance.get(), get_element_type()), std::move(evaluated));
 
-    return compiler->create_value(instance.ptr, get_type());
+    return compiler->create_value(instance.get(), get_type());
 }
 
 const Type *MallocNode::get_type() {

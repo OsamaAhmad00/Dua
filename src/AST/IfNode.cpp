@@ -62,7 +62,7 @@ Value IfNode::eval()
         auto condition = conditions[i]->eval().cast_as_bool();
         if (condition.is_null())
             report_error("The provided condition can't be casted to boolean value.");
-        builder().CreateCondBr(condition.ptr, body_blocks[i], jump_to_blocks[i + 1]);
+        builder().CreateCondBr(condition.get(), body_blocks[i], jump_to_blocks[i + 1]);
     }
 
     // The conditionals may be nested. And the block that
@@ -82,7 +82,7 @@ Value IfNode::eval()
         if (builder().GetInsertBlock()->empty() || !builder().GetInsertBlock()->back().isTerminator())
             builder().CreateBr(end_block);
         if (is_expression) {
-            values.push_back(compiler->create_value(value.ptr, branches[i]->get_type()));
+            values.push_back(compiler->create_value(value.get(), branches[i]->get_type()));
             phi_blocks.push_back(builder().GetInsertBlock());
         }
     }
@@ -101,13 +101,13 @@ Value IfNode::eval()
     }
 
     llvm::PHINode* phi = builder().CreatePHI(
-        values.front().ptr->getType(),
+        values.front().get()->getType(),
         values.size(),
         operation_name + std::to_string(counter) + "_result"
     );
 
     for (size_t i = 0; i < values.size(); i++) {
-        phi->addIncoming(values[i].ptr, phi_blocks[i]);
+        phi->addIncoming(values[i].get(), phi_blocks[i]);
     }
 
     return compiler->create_value(phi, get_type());

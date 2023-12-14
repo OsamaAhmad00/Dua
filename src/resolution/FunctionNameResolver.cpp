@@ -142,7 +142,7 @@ void FunctionNameResolver::cast_function_args(std::vector<Value> &args, const Fu
                 // If is a reference type, replace it with a pointer type.
                 param_type = compiler->create_type<PointerType>(ref->get_element_type());
                 if (auto arg_ref = args[i].type->as<ReferenceType>(); arg_ref != nullptr)
-                    args[i].memory_location = args[i].ptr;
+                    args[i].memory_location = args[i].get();
                 if (args[i].memory_location == nullptr)
                     report_error("Can't pass a non-lvalue expression (with " + args[i].type->to_string() + " type) as a reference");
 
@@ -150,11 +150,11 @@ void FunctionNameResolver::cast_function_args(std::vector<Value> &args, const Fu
                 args[i] = compiler->create_value(args[i].memory_location, param_type);
             }
             args[i] = compiler->typing_system.cast_value(args[i], param_type);
-        } else if (args[i].ptr->getType() == builder().getFloatTy()) {
+        } else if (args[i].get()->getType() == builder().getFloatTy()) {
             // Variadic functions promote floats to doubles
             auto double_type = compiler->create_type<F64Type>();
             args[i] = compiler->create_value(
-                compiler->typing_system.cast_value(args[i], double_type).ptr,
+                compiler->typing_system.cast_value(args[i], double_type).get(),
                 double_type
             );
         }
@@ -174,7 +174,7 @@ Value FunctionNameResolver::call_function(const std::string &name, std::vector<V
     cast_function_args(args, info.type);
     std::vector<llvm::Value*> llvm_args(args.size());
     for (size_t i = 0; i < args.size(); i++)
-        llvm_args[i] = args[i].ptr;
+        llvm_args[i] = args[i].get();
 
     auto result = builder().CreateCall(function, std::move(llvm_args));
     return compiler->create_value(result, info.type->return_type);
@@ -186,14 +186,14 @@ Value FunctionNameResolver::call_function(const Value& func, std::vector<Value> 
     cast_function_args(args, type);
     std::vector<llvm::Value*> llvm_args(args.size());
     for (size_t i = 0; i < args.size(); i++)
-        llvm_args[i] = args[i].ptr;
-    auto result = builder().CreateCall(type->llvm_type(), func.ptr, std::move(llvm_args));
+        llvm_args[i] = args[i].get();
+    auto result = builder().CreateCall(type->llvm_type(), func.get(), std::move(llvm_args));
     return compiler->create_value(result, type->return_type);
 }
 
 void FunctionNameResolver::call_constructor(const Value &value, std::vector<Value> args)
 {
-    if (!value.ptr->getType()->isPointerTy())
+    if (!value.get()->getType()->isPointerTy())
         report_internal_error("Trying to initialize a non-lvalue item");
 
     auto class_type = dynamic_cast<const ClassType*>(value.type);
@@ -203,12 +203,12 @@ void FunctionNameResolver::call_constructor(const Value &value, std::vector<Valu
         // Initializing a primitive type.
 
         if (args.empty())
-            args.push_back(compiler->create_value(value.type->default_value().ptr, value.type));
+            args.push_back(compiler->create_value(value.type->default_value().get(), value.type));
         else if (args.size() != 1)
             report_error("Cannot initialize a primitive value with more than one value");
 
         auto casted = compiler->typing_system.cast_value(args[0], value.type);
-        builder().CreateStore(casted.ptr, value.ptr);
+        builder().CreateStore(casted.get(), value.get());
 
         return;
     }
@@ -229,14 +229,14 @@ void FunctionNameResolver::call_constructor(const Value &value, std::vector<Valu
         return;
     }
 
-    auto instance = compiler->create_value(value.ptr, compiler->create_type<ReferenceType>(value.type));
+    auto instance = compiler->create_value(value.get(), compiler->create_type<ReferenceType>(value.type));
     args.insert(args.begin(), instance);
     call_function(name, std::move(args));
 }
 
 void FunctionNameResolver::call_copy_constructor(const Value &value, const Value& arg)
 {
-    if (!value.ptr->getType()->isPointerTy())
+    if (!value.get()->getType()->isPointerTy())
         report_internal_error("Trying to initialize a non-lvalue item");
 
     auto class_type = dynamic_cast<const ClassType*>(value.type);
@@ -255,7 +255,7 @@ void FunctionNameResolver::call_copy_constructor(const Value &value, const Value
 
         std::string name = class_type->name + ".=constructor";
         if (has_function(name)) {
-            auto instance = compiler->create_value(value.ptr, compiler->create_type<ReferenceType>(value.type));
+            auto instance = compiler->create_value(value.get(), compiler->create_type<ReferenceType>(value.type));
             call_function(name, { instance, arg });
             return;
         }
@@ -263,7 +263,7 @@ void FunctionNameResolver::call_copy_constructor(const Value &value, const Value
 
     // Initializing a primitive type, or an object with no copy constructor.
     auto casted = compiler->typing_system.cast_value(arg, value.type);
-    builder().CreateStore(casted.ptr, value.ptr);
+    builder().CreateStore(casted.get(), value.get());
 }
 
 void FunctionNameResolver::call_destructor(const Value& value)
@@ -284,7 +284,7 @@ void FunctionNameResolver::call_destructor(const Value& value)
         call_destructor(f);
     });
 
-    auto instance = compiler->create_value(value.ptr, compiler->create_type<ReferenceType>(value.type));
+    auto instance = compiler->create_value(value.get(), compiler->create_type<ReferenceType>(value.type));
     call_function(name, { instance });
 }
 

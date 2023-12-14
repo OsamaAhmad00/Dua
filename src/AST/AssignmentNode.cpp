@@ -21,7 +21,7 @@ Value AssignmentExpressionNode::eval()
     }
 
     if (!llvm_type->isAggregateType())
-        return compiler->create_value(builder().CreateStore(rhs_res.ptr, lhs_res.memory_location), get_type());
+        return compiler->create_value(builder().CreateStore(rhs_res.get(), lhs_res.memory_location), get_type());
 
     size_t n = -1;
     if (llvm_type->isArrayTy())
@@ -36,7 +36,7 @@ Value AssignmentExpressionNode::eval()
         indices[1] = builder().getInt32(i);
         builder().CreateGEP(llvm_type, lhs_res.memory_location, indices);
         // Here, the target is the source, since we're loading from the target and storing into the source.
-        llvm::Value* source_ptr = builder().CreateStructGEP(llvm_type, rhs_res.ptr, 0);
+        llvm::Value* source_ptr = builder().CreateStructGEP(llvm_type, rhs_res.get(), 0);
         llvm::Value* target_ptr = builder().CreateStructGEP(llvm_type, lhs_res.memory_location, 0);
         llvm::Value* source = builder().CreateLoad(element_type, source_ptr);
         builder().CreateStore(source, target_ptr);

@@ -114,7 +114,7 @@ Value FunctionDefinitionNode::define_function()
         // TODO perform a more sophisticated analysis
         auto terminator = builder().GetInsertBlock()->getTerminator();
         if (!terminator || llvm::dyn_cast<llvm::ReturnInst>(terminator) == nullptr) {
-            builder().CreateRet(info.type->return_type->default_value().ptr);
+            builder().CreateRet(info.type->return_type->default_value().get());
         }
     }
 
@@ -135,7 +135,7 @@ void FunctionDefinitionNode::initialize_constructor(const ClassType *class_type)
     {
         bool found = false;
         auto type = class_type->get_field(field.name).type;
-        auto ptr = class_type->get_field(self, field.name).ptr;
+        auto ptr = class_type->get_field(self, field.name).get();
         std::vector<Value> args;
 
         // Check if there exists arguments passed to the constructor first

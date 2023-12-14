@@ -29,7 +29,7 @@ public:
                              type->to_string() + " and " + values[i]->get_type()->to_string() + " types in an initializer together");
             auto value = values[i]->eval();
             auto casted = typing_system().cast_value(value, element_type);
-            evaluated[i] = llvm::dyn_cast<llvm::Constant>(casted.ptr);
+            evaluated[i] = llvm::dyn_cast<llvm::Constant>(casted.get());
             if (evaluated[i] == nullptr)
                 report_error("Array initializers can't be initialized with "
                 + values[i]->get_type()->to_string() + " type, which doesn't evaluate to a constant");

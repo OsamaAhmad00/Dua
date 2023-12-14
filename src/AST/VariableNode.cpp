@@ -16,7 +16,7 @@ Value VariableNode::eval()
 {
     if (name_resolver().symbol_table.contains(name)) {
         // This searches locally first, then globally if not found.
-        return compiler->create_value(name_resolver().symbol_table.get(name).ptr, get_type());
+        return compiler->create_value(name_resolver().symbol_table.get(name).get(), get_type());
     }
 
     // Not found. Has to be a function reference

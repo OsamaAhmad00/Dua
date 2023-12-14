@@ -30,7 +30,7 @@ Value ClassFieldNode::eval()
     }
 
     auto class_type = get_class_from_ptr(instance);
-    return compiler->create_value(class_type->get_field(eval_instance(), name).ptr, get_type());
+    return compiler->create_value(class_type->get_field(eval_instance(), name).get(), get_type());
 }
 
 const Type* ClassFieldNode::get_type()
@@ -50,7 +50,7 @@ const Type* ClassFieldNode::get_type()
 
 Value ClassFieldNode::eval_instance() const
 {
-    if (instance_eval.ptr != nullptr) return instance_eval;
+    if (instance_eval.get() != nullptr) return instance_eval;
     return instance_eval = instance->eval();
 }
 

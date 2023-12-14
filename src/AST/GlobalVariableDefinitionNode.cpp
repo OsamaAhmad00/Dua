@@ -29,7 +29,7 @@ Value GlobalVariableDefinitionNode::eval()
     {
         auto value = initializer->eval();
 
-        auto llvm_value = typing_system().cast_value(value, type).ptr;
+        auto llvm_value = typing_system().cast_value(value, type).get();
         if (llvm_value == nullptr)
             report_error("Type mismatch between the global variable " + name + " and its initializer");
 

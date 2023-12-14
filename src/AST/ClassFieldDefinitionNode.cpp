@@ -6,8 +6,8 @@ namespace dua
 
 llvm::Constant* ClassFieldDefinitionNode::get_constant(Value value, const Type* target_type, const std::string& field_name)
 {
-    value.ptr = llvm::dyn_cast<llvm::Constant>(value.ptr);
-    if (value.ptr == nullptr)
+    value.set(value.as<llvm::Constant>());
+    if (value.is_null())
         report_error("Can't initialize class fields with a non-constant expression (in " + field_name + ")");
 
     auto casted = typing_system().cast_value(value, target_type, false).as<llvm::Constant>();

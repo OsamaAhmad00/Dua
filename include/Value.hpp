@@ -10,12 +10,19 @@ namespace dua
 class TypingSystem;
 class Type;
 
-struct Value
+class Value
 {
+    mutable llvm::Value* loaded_value;  // Only loaded if needed
+
+public:
+
     TypingSystem* typing_system = nullptr;
-    llvm::Value* ptr = nullptr;
     const Type* type = nullptr;
     llvm::Value* memory_location = nullptr;
+
+    Value(TypingSystem* typing_system, llvm::Value* value, const Type* type, llvm::Value* memory_location);
+    Value(TypingSystem* typing_system, const Type* type, llvm::Value* memory_location);
+    Value();
 
     // Delegates to TypingSystem
     [[nodiscard]] Value cast_as(const Type* type, bool panic_on_failure=true) const;
@@ -25,9 +32,12 @@ struct Value
     [[nodiscard]] llvm::Constant* get_constant() const;
     [[nodiscard]] bool is_null() const;
 
+    llvm::Value* get() const;
+    void set(llvm::Value* value);
+
     template <typename T>
     [[nodiscard]] T* as() const {
-        return llvm::dyn_cast<T>(ptr);
+        return llvm::dyn_cast<T>(get());
     }
 };
 
