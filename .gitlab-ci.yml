@@ -1,0 +1,55 @@
+stages:
+  - build
+  - test
+
+variables:
+  BUILD_TYPE: Release
+  GIT_SUBMODULE_STRATEGY: recursive
+  GIT_SUBMODULE_FORCE_HTTPS: "true"
+
+build:
+  stage: build
+  image: ubuntu:latest
+  script:
+    - apt update -y
+    # C++, Boost, and essentials
+    - apt install software-properties-common lsb-release wget gnupg -y
+    - apt install libtool autoconf unzip wget -y
+    - apt install build-essential g++ python3-dev autotools-dev libicu-dev libbz2-dev libboost-all-dev libzstd-dev -y
+    # CMake
+    - wget https://cmake.org/files/v3.28/cmake-3.28.0-linux-x86_64.sh
+    - chmod u+x cmake-3.28.0-linux-x86_64.sh
+    - ./cmake-3.28.0-linux-x86_64.sh --skip-license --prefix=/usr/local
+    # LLVM
+    - wget https://apt.llvm.org/llvm.sh
+    - chmod u+x llvm.sh
+    - ./llvm.sh 17
+    # Java
+    - apt install default-jre -y
+    # Building
+    - cmake -B $CI_PROJECT_DIR/build -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+    - cmake --build $CI_PROJECT_DIR/build --config $BUILD_TYPE
+  artifacts:
+    paths:
+      - build/
+
+test:
+  stage: test
+  image: ubuntu:latest
+  script:
+    - apt update -y
+    - apt install software-properties-common lsb-release wget gnupg -y
+    - apt install build-essential g++ python3-dev autotools-dev libicu-dev libbz2-dev libboost-all-dev libzstd-dev -y
+    # LLVM
+    - wget https://apt.llvm.org/llvm.sh
+    - chmod u+x llvm.sh
+    - ./llvm.sh 17
+    # CMake
+    - wget https://cmake.org/files/v3.28/cmake-3.28.0-linux-x86_64.sh
+    - chmod u+x cmake-3.28.0-linux-x86_64.sh
+    - ./cmake-3.28.0-linux-x86_64.sh --skip-license --prefix=/usr/local
+    # Run the test
+    - cd build
+    - ctest -C $BUILD_TYPE --verbose
+  dependencies:
+    - build
