@@ -14,8 +14,7 @@ NoneValue ForNode::eval()
         node->eval();
 
     int counter = _counter++;  // storing a local copy
-    // You might delay the attachment of the blocks to the functions to reorder the blocks in a more readable way
-    //  by doing the following: current_function->getBasicBlockList().push_back(block); I prefer this way.
+    // You might delay the attachment of the blocks to the functions to reorder the blocks in a more readable way.
     llvm::BasicBlock* update_block = create_basic_block("for_update" + std::to_string(counter), current_function());
     llvm::BasicBlock* cond_block = create_basic_block("for_cond" + std::to_string(counter), current_function());
     llvm::BasicBlock* body_block = create_basic_block("for_body" + std::to_string(counter), current_function());

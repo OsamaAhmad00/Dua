@@ -36,7 +36,7 @@ Value FunctionDefinitionNode::define_function()
     if (!function)
         report_internal_error("definition of an undeclared function");
 
-    if (!function->getBasicBlockList().empty())
+    if (!function->empty())
         report_error("Redefinition of the function " + name);
 
     llvm::Function* old_function = current_function();
