@@ -348,7 +348,7 @@ void ParserAssistant::create_assignment()
     //  is an expression, and the expression statement would increase
     //  it as appropriate
     ASTNode* rhs = pop_node();
-    auto lhs = pop_node_as<LValueNode>();
+    ASTNode* lhs = pop_node();
     push_node<AssignmentExpressionNode>(lhs, rhs);
 }
 

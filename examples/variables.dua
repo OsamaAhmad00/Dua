@@ -117,6 +117,6 @@ int main()
     print(x);
     *p = 2;
     print(**pp);
-    ****&ppp = 3;
+    ****(&ppp) = 3;
     print(*p);
 }

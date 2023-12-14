@@ -104,10 +104,6 @@ const Type* TypingSystem::get_winning_type(const Type* lhs, const Type* rhs, boo
     auto l = lhs->llvm_type();
     auto r = rhs->llvm_type();
 
-    if (l == r) {
-        return lhs;
-    }
-
     llvm::DataLayout dl(&module());
     unsigned int l_width = dl.getTypeAllocSize(l);
     unsigned int r_width = dl.getTypeAllocSize(r);

@@ -159,6 +159,7 @@ infix_op
     | '/' { assistant.push_str("Division"); }
     | '*' { assistant.push_str("Multiplication"); }
     | '%' { assistant.push_str("Mod"); }
+    | '=' { assistant.push_str("Assignment"); }
     ;
 
 
@@ -247,11 +248,12 @@ expression
     | SizeOf '(' type ')'         { assistant.create_size_of_type();        }
     | TypeName '(' expression ')' { assistant.create_typename_expression(); }
     | TypeName '(' type ')'       { assistant.create_typename_type();       }
+    | loaded_lvalue
     | lvalue '++' { assistant.create_post_inc(); }
     | lvalue '--' { assistant.create_post_dec(); }
-    | '+'  expression  // do nothing
     | '++' lvalue { assistant.create_pre_inc(); }
     | '--' lvalue { assistant.create_pre_dec(); }
+    | '+'  expression  // do nothing
     | '-'  expression { assistant.create_unary_expr<NegativeExpressionNode>();          }
     | '!'  expression { assistant.create_unary_expr<NotExpressionNode>();               }
     | '~'  expression { assistant.create_unary_expr<BitwiseComplementExpressionNode>(); }
@@ -276,7 +278,7 @@ expression
     | expression '&&' expression { assistant.create_logical_and(); }
     | expression '||' expression { assistant.create_logical_or(); }
     | expression '?' expression ':' expression { assistant.create_ternary_operator(); }
-    | lvalue '=' expression  { assistant.create_assignment(); }
+    | expression '=' expression { assistant.create_assignment(); }
     | lvalue '+='  expression  { assistant.create_compound_assignment<AdditionNode>(); }
     | lvalue '-='  expression  { assistant.create_compound_assignment<SubtractionNode>(); }
     | lvalue '*='  expression  { assistant.create_compound_assignment<MultiplicationNode>(); }
@@ -288,7 +290,6 @@ expression
     | lvalue '&='  expression  { assistant.create_compound_assignment<BitwiseAndNode>(); }
     | lvalue '^='  expression  { assistant.create_compound_assignment<XorNode>(); }
     | lvalue '|='  expression  { assistant.create_compound_assignment<BitwiseOrNode>(); }
-    | lvalue { assistant.create_loaded_lvalue(); }
     ;
 
 cast_expression
@@ -402,13 +403,18 @@ block_expression
     : scope_begin statements expression scope_end { assistant.inc_statements(); assistant.create_block(); }
     ;
 
+loaded_lvalue
+    : lvalue { assistant.create_loaded_lvalue(); }
+    ;
+
 lvalue
     : '(' lvalue ')'
-    | Identifier { assistant.push_node<VariableNode>($Identifier.text); }
     | lvalue '[' expression ']' { assistant.create_array_indexing(); }
-    | '*' expression { assistant.create_dereference(); }
-    | lvalue '.' identifier { assistant.create_field_access(); }
+    | '*' loaded_lvalue { assistant.create_dereference(); }
+    | '*' '(' expression ')' { assistant.create_dereference(); }
+    | lvalue '.' identifier  { assistant.create_field_access(); }
     | lvalue { assistant.create_loaded_lvalue(); } '->' identifier { assistant.create_field_access(); }
+    | Identifier { assistant.push_node<VariableNode>($Identifier.text); }
     ;
 
 // A convinience production that pushes the identifier's text.

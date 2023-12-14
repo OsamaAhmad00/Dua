@@ -8,12 +8,12 @@ namespace dua
 
 class AssignmentExpressionNode : public ASTNode
 {
-    LValueNode* lhs;
+    ASTNode* lhs;
     ASTNode* rhs;
 
 public:
 
-    AssignmentExpressionNode(ModuleCompiler* compiler, LValueNode* lhs, ASTNode* rhs)
+    AssignmentExpressionNode(ModuleCompiler* compiler, ASTNode* lhs, ASTNode* rhs)
         : lhs(lhs), rhs(rhs) { this->compiler = compiler; };
 
     Value eval() override;
