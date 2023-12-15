@@ -45,33 +45,45 @@ Value FunctionDefinitionNode::define_function()
     builder().SetInsertPoint(current_block);
     current_function() = function;
 
-    if (current_class() != nullptr) {
-        // class fields
+    bool is_method = false;
+
+    if (current_class() != nullptr)
+    {
+        // Make class fields accessible from within the method
         name_resolver().push_scope();
-        auto& fields = name_resolver().get_class(current_class()->getName().str())->fields();
-        auto self = function->args().begin();
+        auto class_name = current_class()->getName().str();
+        auto class_type = name_resolver().get_class(class_name);
+        auto& fields = class_type->fields();
+        auto first_arg = function->args().begin();
+        auto class_value = compiler->create_value(first_arg, class_type);
         for (size_t i = 0; i < fields.size(); i++) {
-            auto ptr = builder().CreateStructGEP(current_class(), self, i, fields[i].name);
-            name_resolver().symbol_table.insert(fields[i].name, compiler->create_value(ptr, fields[i].type));
+            auto f = class_type->get_field(class_value, i);
+            name_resolver().symbol_table.insert(fields[i].name, f);
         }
     }
 
-    // parameters and local variables
+    // For parameters and local variables. This will
+    //  shadow the names of the fields in case of collisions.
     name_resolver().push_scope();
 
-    size_t i = 0;
-    if (!info.param_names.empty() && info.param_names[0] == "self") {
-        // FIXME don't allow parameters to be named "self"
+    if (current_class() != nullptr)
+    {
         // The self variable doesn't need to be manipulated, thus,
         //  it doesn't need to be pushed on the stack. Moreover, if
         //  the self pointer is pushed to the stack, the variable
         //  on the stack would have a type of class** instead of class*.
-        i++;
         auto type = dynamic_cast<const ReferenceType*>(info.type->param_types[0])->get_element_type();
         name_resolver().symbol_table.insert("self", compiler->create_value(function->args().begin(), type));
+
+        for (size_t j = 1; j < info.param_names.size(); j++)
+            if (info.param_names[j] == "self")
+                report_error("The parameter name 'self' is reserved in class methods (the parameter number "
+                    + std::to_string(j + 1) + " of the method " + name);
+
+        is_method = true;
     }
 
-    for (; i < info.param_names.size(); i++) {
+    for (size_t i = is_method; i < info.param_names.size(); i++) {
         const auto& arg = function->args().begin() + i;
         arg->setName(info.param_names[i]);
         auto type = info.type->param_types[i];
@@ -102,12 +114,14 @@ Value FunctionDefinitionNode::define_function()
     body->eval();
 
     auto scope = name_resolver().pop_scope();
+    // Don't want to destroy the self reference along with the parameters
     scope.map.erase("self");
     name_resolver().destruct_all_variables(scope);
 
     if (current_class() != nullptr)
         name_resolver().pop_scope();
 
+    // Implicit return values
     if (info.type->return_type->llvm_type() == builder().getVoidTy())
         builder().CreateRetVoid();
     else {

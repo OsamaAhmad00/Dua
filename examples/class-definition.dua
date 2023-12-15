@@ -94,6 +94,29 @@ int main()
 }
 
 
+// Case Accessing the fields directly
+// Outputs "1 2 3 4 5"
+
+class Z
+{
+    var p = printf;
+    var x = 3;
+
+    void func()
+    {
+        p("1 2 ");
+        print(x);
+        self.p("4 5");
+    }
+}
+
+int main()
+{
+    Z z;
+    z.func();
+}
+
+
 // Case Undefined field access
 // Panics
 
