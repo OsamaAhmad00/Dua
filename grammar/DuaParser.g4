@@ -299,6 +299,7 @@ cast_expression
 
 return_statement
     : Return expression ';' { assistant.create_return(); }
+    | Return ';' { assistant.push_null_node(); assistant.create_return(); }
     ;
 
 expression_statement
