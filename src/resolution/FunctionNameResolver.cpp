@@ -111,8 +111,14 @@ FunctionInfo &FunctionNameResolver::get_function(const std::string &name, const 
     return get_function(name, get_types(args));
 }
 
-bool FunctionNameResolver::has_function(const std::string &name) const
+bool FunctionNameResolver::has_function(const std::string &name, bool try_as_method) const
 {
+    if (try_as_method && compiler->current_class) {
+        auto class_name = compiler->current_class->getName().str();
+        if (has_function(class_name + "." + name, false))
+            return true;
+    }
+
     // Non-mangled functions
     if (functions.find(name) != functions.end())
         return true;
@@ -163,7 +169,33 @@ void FunctionNameResolver::cast_function_args(std::vector<Value> &args, const Fu
 
 Value FunctionNameResolver::call_function(const std::string &name, std::vector<Value> args)
 {
-    auto full_name = get_winning_function(name, get_types(args));
+    auto types = get_types(args);
+
+    std::string full_name;
+
+    if (compiler->current_class != nullptr)
+    {
+        // If there is a function call, this must be from
+        //  within a function. If a class is being evaluated
+        //  currently, then this is a method, and the "self"
+        //  parameter is defined for sure.
+
+        auto class_name = compiler->current_class->getName().str();
+        types.insert(types.begin(), compiler->name_resolver.get_class(class_name));
+        full_name = get_winning_function(class_name + "." + name, types, false);
+        if (full_name.empty()) {
+            // Undo
+            types.erase(types.begin());
+        } else {
+            // Add the argument
+            auto instance = compiler->name_resolver.symbol_table.get("self");
+            instance.memory_location = instance.get();  // The symbol table stores the address, not the value
+            args.insert(args.begin(), instance);
+        }
+    }
+
+    if (full_name.empty())
+        full_name = get_winning_function(name, types);
 
     auto function = compiler->module.getFunction(full_name);
     if (function == nullptr)

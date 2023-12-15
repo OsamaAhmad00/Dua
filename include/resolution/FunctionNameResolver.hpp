@@ -42,7 +42,7 @@ public:
     FunctionInfo& get_function_no_overloading(const std::string &name);
     std::string get_function(std::string name);
 
-    [[nodiscard]] bool has_function(const std::string& name) const;
+    [[nodiscard]] bool has_function(const std::string& name, bool try_as_method = true) const;
     Value call_function(const std::string &name, std::vector<Value> args = {});
     Value call_function(const Value& func, std::vector<Value> args = {});
 

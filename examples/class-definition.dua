@@ -117,6 +117,38 @@ int main()
 }
 
 
+// Case Calling methods directly
+// Outputs ":5 :4 :3 :2 :1 "
+
+class Z
+{
+    void space() { printf(" "); }
+
+
+    void print(int i) { printf(":%d", i); }
+
+    void p1(int i) {
+        if (i <= 0) return;
+        print(i);
+        space();
+        p2(i - 1);
+    }
+
+    void p2(int i) {
+        if (i <= 0) return;
+        print(i);
+        space();
+        p1(i - 1);
+    }
+}
+
+int main()
+{
+    Z z;
+    z.p1(5);
+}
+
+
 // Case Undefined field access
 // Panics
 
