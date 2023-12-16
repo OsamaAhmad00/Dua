@@ -11,10 +11,10 @@ BlockNode& BlockNode::append(ASTNode *element)
 
 Value BlockNode::eval()
 {
-    name_resolver().push_scope();
-
     if (elements.empty())
         return none_value();
+
+    name_resolver().push_scope();
 
     for (size_t i = 0; i < elements.size() - 1; i++) {
         elements[i]->eval();

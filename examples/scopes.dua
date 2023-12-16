@@ -1,0 +1,62 @@
+no_mangle int printf(str message, ...);
+
+void print(int num) { printf("%d", num); }
+
+
+// Case Basic name shadowing
+// Outputs "12"
+
+int main()
+{
+    int x = 2;
+    {
+        int x = 1;
+        print(x);
+        { }
+    }
+    print(x);
+}
+
+
+// Case Deep scope nesting
+// Outputs "123456"
+
+int main()
+{
+    int x = 6;
+    for (int i = 1; i < 2; i++) {
+        int x = 5;
+        {
+            int x = 4;
+            when {
+                true -> {
+                    int x = 3;
+                    int y = x;
+
+                    if (false) {
+                    } else {
+                        int x = 2;
+                        while (false) {
+                            int y;
+                            int x;
+                            int z;
+                        }
+                        do {
+                            int x = 1;
+                            int z;
+                            double y;
+                            print(x);
+                        } while (false);
+                        print(x);
+                    }
+                    print(x);
+                    3
+                },
+                else -> 4
+            };
+            print(x);
+        }
+        print(x);
+    }
+    print(x);
+}
