@@ -47,7 +47,7 @@ NoneValue ForNode::eval()
     continue_stack().pop_back();
     break_stack().pop_back();
 
-    name_resolver().push_scope();
+    name_resolver().pop_scope();
 
     return none_value();
 }
