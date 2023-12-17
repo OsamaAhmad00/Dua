@@ -28,6 +28,7 @@
 
 #include "AST/function/ExprFunctionCallNode.hpp"
 #include "AST/function/FunctionCallNode.hpp"
+#include "AST/function/MethodCallNode.hpp"
 #include "AST/function/FunctionDefinitionNode.hpp"
 #include "AST/function/ReturnNode.hpp"
 

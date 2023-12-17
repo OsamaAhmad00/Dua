@@ -119,6 +119,7 @@ set(DUA_SOURCES
     src/AST/VariableNode.cpp
     src/AST/WhileNode.cpp
     src/AST/TypeNameNode.cpp
+    src/AST/MethodCallNode.cpp
 
     src/types/Type.cpp
     src/types/ArrayType.cpp

@@ -401,13 +401,8 @@ void ParserAssistant::create_method_call()
 {
     auto func_name = pop_str();
     auto instance_name = pop_str();
-    auto instance = compiler->name_resolver.symbol_table.get(instance_name);
-    auto class_type = instance.type->as<ClassType>();
-    auto full_name = class_type->name + "." + func_name;
     auto args = pop_args();
-    auto ref_type = compiler->create_type<ReferenceType>(class_type);
-    args.insert(args.begin(), compiler->create_node<VariableNode>(instance_name, ref_type));
-    push_node<FunctionCallNode>(full_name, std::move(args));
+    push_node<MethodCallNode>(std::move(instance_name), std::move(func_name), std::move(args));
 }
 
 void ParserAssistant::create_expr_function_call()
