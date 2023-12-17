@@ -228,7 +228,7 @@ void FunctionNameResolver::call_constructor(const Value &value, std::vector<Valu
     if (!value.get()->getType()->isPointerTy())
         report_internal_error("Trying to initialize a non-lvalue item");
 
-    auto class_type = dynamic_cast<const ClassType*>(value.type);
+    auto class_type = value.type->as<ClassType>();
 
     if (class_type == nullptr)
     {
@@ -237,7 +237,7 @@ void FunctionNameResolver::call_constructor(const Value &value, std::vector<Valu
         if (args.empty())
             args.push_back(compiler->create_value(value.type->default_value().get(), value.type));
         else if (args.size() != 1)
-            report_error("Cannot initialize a primitive value with more than one value");
+            report_error("Cannot initialize a primitive type with more than one value");
 
         auto casted = compiler->typing_system.cast_value(args[0], value.type);
         builder().CreateStore(casted.get(), value.get());
@@ -271,7 +271,7 @@ void FunctionNameResolver::call_copy_constructor(const Value &value, const Value
     if (!value.get()->getType()->isPointerTy())
         report_internal_error("Trying to initialize a non-lvalue item");
 
-    auto class_type = dynamic_cast<const ClassType*>(value.type);
+    auto class_type = value.type->as<ClassType>();
 
     if (class_type != nullptr)
     {
@@ -300,7 +300,11 @@ void FunctionNameResolver::call_copy_constructor(const Value &value, const Value
 
 void FunctionNameResolver::call_destructor(const Value& value)
 {
-    auto class_type = dynamic_cast<const ClassType*>(value.type);
+    auto is_ref = value.type->as<ReferenceType>();
+    if (is_ref != nullptr)
+        return;
+
+    auto class_type = value.type->as<ClassType>();
     if (class_type == nullptr)
         return;
 

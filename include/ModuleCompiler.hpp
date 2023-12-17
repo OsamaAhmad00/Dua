@@ -56,7 +56,29 @@ public:
     llvm::IRBuilder<>* get_builder() { return &builder; }
     llvm::LLVMContext* get_context() { return &context; }
     NameResolver& get_name_resolver() { return name_resolver; }
+    TypingSystem& get_typing_system() { return typing_system; }
     void push_deferred_node(ASTNode* node) { deferred_nodes.push_back(node); }
+
+    void push_scope();
+    Scope<Value> pop_scope();
+
+    // Used in return expressions, break, continue, end of blocks,
+    //  and any construct that needs to destruct the current scope,
+    //  or the whole scope of a function, without popping it. These
+    //  functions also check whether the current insertion basic block
+    //  is terminated or not (has a branch or return instruction)
+    //  before destructing. If so, they don't call the destructors,
+    //  assuming that the terminal instruction has handled the destruction.
+    //  As an example, if there is a return statement at the end of a block,
+    //  both will try to destruct the variables at the current scope (the
+    //  return statement will destruct the whole function scope), yet,
+    //  the block node will find that there is a return instruction,
+    //  and will assume that it has handled the destruction.
+    void destruct_last_scope();
+    void destruct_function_scope();  // Used mainly in return statements
+
+    void push_scope_counter();
+    void pop_scope_counter();
 
     // .dua.init function is a function that gets called before the entry point
     //  (at the beginning of the entry point), in which initializations and
@@ -111,6 +133,10 @@ private:
 
     // Used to track allocated nodes to delete later
     std::vector<ASTNode*> nodes;
+
+    // Used to keep track of the number of scopes used within a function, in
+    //  order to determine how many scopes to destruct upon a return instruction
+    std::vector<size_t> function_scope_count;
 
     // A cache of the resulting LLVM IR, used to
     //  avoid performing the same computations

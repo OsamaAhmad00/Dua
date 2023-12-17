@@ -42,3 +42,15 @@ int main()
 
     return 0;
 }
+
+// Case Empty branches
+// Outputs "12"
+
+int main()
+{
+    if (false) { }
+    else { printf("1"); }
+
+    if (true) { printf("2"); }
+    else {}
+}

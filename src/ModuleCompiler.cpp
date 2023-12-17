@@ -74,4 +74,43 @@ ModuleCompiler::~ModuleCompiler()
         delete node;
 }
 
+void ModuleCompiler::push_scope() {
+    name_resolver.push_scope();
+    typing_system.push_scope();
+    function_scope_count.back()++;
+}
+
+Scope<Value> ModuleCompiler::pop_scope() {
+    function_scope_count.back()--;
+    typing_system.pop_scope();
+    return name_resolver.pop_scope();
+}
+
+void ModuleCompiler::destruct_last_scope()
+{
+    if (builder.GetInsertBlock()->getTerminator() != nullptr)
+        return;
+
+    name_resolver.destruct_all_variables(name_resolver.symbol_table.scopes.back());
+}
+
+void ModuleCompiler::destruct_function_scope()
+{
+    if (builder.GetInsertBlock()->getTerminator() != nullptr)
+        return;
+
+    auto& scopes = name_resolver.symbol_table.scopes;
+    auto n = scopes.size();
+    for (size_t i = 1; i <= function_scope_count.back(); i++)
+        name_resolver.destruct_all_variables(scopes[n - i]);
+}
+
+void ModuleCompiler::push_scope_counter() {
+    function_scope_count.push_back(0);
+}
+
+void ModuleCompiler::pop_scope_counter() {
+    function_scope_count.pop_back();
+}
+
 }

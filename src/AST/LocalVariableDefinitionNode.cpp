@@ -14,7 +14,7 @@ Value LocalVariableDefinitionNode::eval()
         report_error("Can't have both an initializer and an initializer list (in " + full_name + ")");
 
     // If it's a reference, just add a record to the symbol table and return
-    if (auto ref = dynamic_cast<const ReferenceType*>(type); ref != nullptr) {
+    if (auto ref = type->as<ReferenceType>(); ref != nullptr) {
         if (auto loaded = dynamic_cast<LoadedLValueNode*>(initializer); loaded != nullptr) {
             auto result = loaded->lvalue->eval();
             name_resolver().symbol_table.insert(name, result);

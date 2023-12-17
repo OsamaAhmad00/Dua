@@ -14,7 +14,7 @@ Value BlockNode::eval()
     if (elements.empty())
         return none_value();
 
-    name_resolver().push_scope();
+    compiler->push_scope();
 
     for (size_t i = 0; i < elements.size() - 1; i++) {
         elements[i]->eval();
@@ -22,7 +22,8 @@ Value BlockNode::eval()
 
     auto result =  elements.back()->eval();
 
-    name_resolver().destruct_all_variables(name_resolver().pop_scope());
+    compiler->destruct_last_scope();
+    compiler->pop_scope();
 
     return result;
 }

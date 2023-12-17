@@ -49,8 +49,12 @@ Value FunctionDefinitionNode::define_function()
 
     if (current_class() != nullptr)
     {
+        // Create an extra counter to avoid interfering
+        // with the counter of the current method
+        compiler->push_scope_counter();
+
         // Make class fields accessible from within the method
-        name_resolver().push_scope();
+        compiler->push_scope();
         auto class_name = current_class()->getName().str();
         auto class_type = name_resolver().get_class(class_name);
         auto& fields = class_type->fields();
@@ -62,9 +66,11 @@ Value FunctionDefinitionNode::define_function()
         }
     }
 
+    compiler->push_scope_counter();
+
     // For parameters and local variables. This will
     //  shadow the names of the fields in case of collisions.
-    name_resolver().push_scope();
+    compiler->push_scope();
 
     if (current_class() != nullptr)
     {
@@ -72,7 +78,7 @@ Value FunctionDefinitionNode::define_function()
         //  it doesn't need to be pushed on the stack. Moreover, if
         //  the self pointer is pushed to the stack, the variable
         //  on the stack would have a type of class** instead of class*.
-        auto type = dynamic_cast<const ReferenceType*>(info.type->param_types[0])->get_element_type();
+        auto type = info.type->param_types[0];
         name_resolver().symbol_table.insert("self", compiler->create_value(function->args().begin(), type));
 
         for (size_t j = 1; j < info.param_names.size(); j++)
@@ -113,23 +119,46 @@ Value FunctionDefinitionNode::define_function()
 
     body->eval();
 
-    auto scope = name_resolver().pop_scope();
-    // Don't want to destroy the self reference along with the parameters
-    scope.map.erase("self");
-    name_resolver().destruct_all_variables(scope);
-
-    if (current_class() != nullptr)
-        name_resolver().pop_scope();
-
     // Implicit return values
-    if (info.type->return_type->llvm_type() == builder().getVoidTy())
-        builder().CreateRetVoid();
-    else {
-        // TODO perform a more sophisticated analysis
-        auto terminator = builder().GetInsertBlock()->getTerminator();
-        if (!terminator || llvm::dyn_cast<llvm::ReturnInst>(terminator) == nullptr) {
-            builder().CreateRet(info.type->return_type->default_value().get());
+    size_t created_default_values = 0;
+    bool is_void = info.type->return_type->as<VoidType>() != nullptr;
+    for (auto& basic_block : *function)
+    {
+        auto terminator = basic_block.getTerminator();
+        if (terminator == nullptr)
+        {
+            // There is no terminator for this basic block
+
+            builder().SetInsertPoint(&basic_block);
+
+            compiler->destruct_function_scope();
+
+            if (is_void) {
+                builder().CreateRetVoid();
+            } else {
+                created_default_values++;
+                builder().CreateRet(info.type->return_type->default_value().get());
+            }
         }
+    }
+
+    // It's ok for the main function to not return a value explicitly
+    if (created_default_values && name != "main") {
+        auto count = std::to_string(created_default_values);
+        report_warning("The function " + name + " doesn't return a value at "
+            + count + " terminal positions. Returning the default value instead");
+    }
+
+    // Since each node takes care of the scopes it has created,
+    //  at this point, there must be only once scope for the
+    //  function (and one for the fields in case of a method)
+    // Note that we pop the scope first then the counter.
+    compiler->pop_scope();
+    compiler->pop_scope_counter();
+
+    if (current_class() != nullptr) {
+        compiler->pop_scope();
+        compiler->pop_scope_counter();
     }
 
     builder().SetInsertPoint(old_block);

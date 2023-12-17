@@ -16,4 +16,9 @@ void report_internal_error(const std::string& message)
     throw std::runtime_error(message);
 }
 
+void report_warning(const std::string& message)
+{
+    std::cerr << termcolor::yellow << "Warning: " << termcolor::reset << message << '\n';
+}
+
 }

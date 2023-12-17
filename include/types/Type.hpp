@@ -19,7 +19,7 @@ struct Type
     virtual std::string as_key() const = 0;
     virtual bool operator==(const Type& other);
     virtual bool operator!=(const Type& other);
-    const Type* get_ref_element_type() const;
+    const Type* get_contained_type() const;
     virtual ~Type() = default;
 
     llvm::Type* operator->() const;
@@ -32,8 +32,10 @@ struct Type
     template <typename T>
     const T* as() const {
         auto res = dynamic_cast<const T*>(this);
-        if (res == nullptr)
-            return get_ref_element_type()->as<T>();
+        if (res == nullptr) {
+            auto t = get_contained_type();
+            if (t != nullptr) return t->as<T>();
+        }
         return res;
     }
 

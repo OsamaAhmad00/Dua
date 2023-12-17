@@ -6,7 +6,7 @@ namespace dua
 {
 
 const PointerType* assert_ptr(const Type* type) {
-    auto ptr = dynamic_cast<const PointerType*>(type);
+    auto ptr = type->as<PointerType>();
     if (!ptr) report_error("Can't dereference a non-pointer type expression");
     return ptr;
 }

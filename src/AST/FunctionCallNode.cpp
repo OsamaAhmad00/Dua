@@ -33,7 +33,7 @@ Value FunctionCallNode::eval()
         // It might be a class field, called within a method in the class, in which
         //  case, the first argument will be the instance itself
         auto instance_type = dynamic_cast<const ReferenceType*>(args[0]->get_type());
-        auto class_type = instance_type ? dynamic_cast<const ClassType*>(instance_type->get_element_type()) : nullptr;
+        auto class_type = instance_type ? instance_type->get_element_type()->as<ClassType>() : nullptr;
         if (class_type != nullptr && class_type->name == name.substr(0, class_type->name.size())) {
             auto field_name = name.substr(class_type->name.size() + 1);  // + 1, ignoring the dot
             auto field = class_type->get_field(field_name);

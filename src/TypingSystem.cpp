@@ -155,10 +155,10 @@ static const T* is(const Type* t) { return dynamic_cast<const T*>(t); }
 int TypingSystem::similarity_score(const Type *t1, const Type *t2) const
 {
     // Strip the reference
-    if (auto r1 = dynamic_cast<const ReferenceType*>(t1); r1 != nullptr)
-        t1 = r1->get_element_type();
-    if (auto r2 = dynamic_cast<const ReferenceType*>(t2); r2 != nullptr)
-        t2 = r2->get_element_type();
+    if (auto t = t1->get_contained_type(); t != nullptr)
+        t1 = t;
+    if (auto t = t2->get_contained_type(); t != nullptr)
+        t2 = t;
 
     // This function relies on the fact that there is only one instance
     //  of each type. It compares pointers to determine whether the types

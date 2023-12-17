@@ -1,6 +1,22 @@
 #include "parsing/ParserAssistant.hpp"
 
 
+/*
+ * The parser assistant class uses the name_resolver's symbol
+ *  table to store types of identifiers. This is to be able
+ *  to perform type inference while constructing the AST. This
+ *  utilizes the fact that AST nodes use that specific symbol
+ *  table to determine types of identifiers. Unless this table
+ *  is populated while construction, we won't be able to infer
+ *  the resulting types of the nodes, thus, will have to defer
+ *  type inference related operations to evaluation time (not
+ *  recommended), or have another separate system, just to
+ *  keep track of the resulting types of the nodes.
+ * After the AST construction is done, any manipulated element
+ *  of the ModuleCompiler is reset, so that it can be used
+ *  safely during the evaluation stage.
+ */
+
 namespace dua
 {
 
@@ -385,7 +401,7 @@ void ParserAssistant::create_method_call()
     auto func_name = pop_str();
     auto instance_name = pop_str();
     auto instance = compiler->name_resolver.symbol_table.get(instance_name);
-    auto class_type = dynamic_cast<const ClassType*>(instance.type);
+    auto class_type = instance.type->as<ClassType>();
     auto full_name = class_type->name + "." + func_name;
     auto args = pop_args();
     auto ref_type = compiler->create_type<ReferenceType>(class_type);
@@ -429,7 +445,7 @@ void ParserAssistant::create_dereference() {
 
 void ParserAssistant::create_pre_inc() {
     auto lvalue = pop_node_as<LValueNode>();
-    if (dynamic_cast<const IntegerType*>(lvalue->get_element_type()) == nullptr)
+    if (lvalue->get_element_type()->as<IntegerType>() == nullptr)
         report_error("Can't perform prefix increment on non-integer (" +
                      lvalue->get_element_type()->to_string() + ") types.");
     push_node<CompoundAssignmentExpressionNode<AdditionNode>>(
@@ -440,7 +456,7 @@ void ParserAssistant::create_pre_inc() {
 
 void ParserAssistant::create_pre_dec() {
     auto lvalue = pop_node_as<LValueNode>();
-    if (dynamic_cast<const IntegerType*>(lvalue->get_element_type()) == nullptr)
+    if (lvalue->get_element_type()->as<IntegerType>() == nullptr)
         report_error("Can't perform prefix decrement on non-integer (" +
                      lvalue->get_element_type()->to_string() + ") types.");
     push_node<CompoundAssignmentExpressionNode<SubtractionNode>>(
@@ -691,7 +707,7 @@ void ParserAssistant::create_typename_type()
         //  x is a variable name (an expression), or a class
         //  type. If the type is nullptr, this means that this
         //  is not a valid class type, thus, this is a variable.
-        auto cls = dynamic_cast<const ClassType*>(type);
+        auto cls = type->as<ClassType>();
         if (cls == nullptr)
             report_internal_error("sizeof operator called on an invalid type");
         auto real_type = compiler->name_resolver.symbol_table.get(cls->name).type;

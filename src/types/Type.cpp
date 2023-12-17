@@ -29,11 +29,13 @@ bool Type::is_castable(const Type *type) const {
     return compiler->typing_system.is_castable(this, type);
 }
 
-const Type* Type::get_ref_element_type() const {
-    if (auto ref = dynamic_cast<const ReferenceType*>(this); ref != nullptr) {
-        return ref->get_element_type();
-    }
-    return nullptr;
+const Type* Type::get_contained_type() const {
+    auto result = this;
+    if (auto ref = dynamic_cast<const ReferenceType*>(result); ref != nullptr)
+        result = ref->get_element_type();
+    if (auto i = dynamic_cast<const IdentifierType*>(result); i != nullptr)
+        result = i->get_type();
+    return (result == this) ? nullptr : result;
 }
 
 template <>

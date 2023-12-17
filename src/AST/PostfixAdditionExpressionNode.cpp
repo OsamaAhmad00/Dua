@@ -6,7 +6,7 @@ namespace dua
 
 Value PostfixAdditionExpressionNode::eval()
 {
-    if (dynamic_cast<const IntegerType*>(lvalue->get_element_type()) == nullptr)
+    if (lvalue->get_element_type()->as<IntegerType>() == nullptr)
         report_error("Can't perform postfix increment/decrement on non-integer (" +
             lvalue->get_element_type()->to_string() + ") types.");
     auto ptr = lvalue->eval();

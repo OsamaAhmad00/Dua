@@ -22,9 +22,9 @@ Value VariableNode::eval()
     // Not found. Has to be a function reference
     const FunctionType* func_type = nullptr;
 
-    auto pointer_type = dynamic_cast<const PointerType*>(get_type());
+    auto pointer_type = get_type()->as<PointerType>();
     if (pointer_type != nullptr)
-        func_type = dynamic_cast<const FunctionType*>(pointer_type->get_element_type());
+        func_type = pointer_type->get_element_type()->as<FunctionType>();
 
     std::string full_name;
     if (func_type != nullptr)
