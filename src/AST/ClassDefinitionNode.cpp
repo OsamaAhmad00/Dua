@@ -23,6 +23,8 @@ Value ClassDefinitionNode::eval()
     auto old_function = current_function();
     current_function() = nullptr;
 
+    typing_system().insert_global_type(name, compiler->create_type<ClassType>(name));
+
     // First, evaluate the aliases
     for (auto& alias : aliases)
         alias->eval();

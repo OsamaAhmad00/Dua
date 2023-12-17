@@ -112,7 +112,7 @@ private:
     std::vector<ASTNode*> deferred_nodes;
 
     // Used to avoid unnecessary allocations for same strings
-    std::unordered_map<std::string, llvm::Constant*> string_pool;
+    std::map<std::string, llvm::Constant*> string_pool;
 
     // The function being processed currently
     llvm::Function* current_function = nullptr;

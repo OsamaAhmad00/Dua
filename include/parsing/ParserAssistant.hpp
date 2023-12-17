@@ -45,6 +45,7 @@
 #include "AST/values/FloatValueNodes.hpp"
 #include "AST/values/IntegerValueNodes.hpp"
 #include "AST/values/StringValueNode.hpp"
+#include "AST/values/TypeNameNode.hpp"
 
 #include "AST/lvalue/LValueNode.hpp"
 #include "AST/lvalue/VariableNode.hpp"
@@ -64,6 +65,7 @@
 #include "types/FunctionType.hpp"
 #include "types/ReferenceType.hpp"
 #include "types/IdentifierType.hpp"
+#include "types/TypeOfType.hpp"
 
 #include "utils/TextManipulation.hpp"
 #include "utils/ErrorReporting.hpp"

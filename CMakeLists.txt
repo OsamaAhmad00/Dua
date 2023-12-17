@@ -118,6 +118,7 @@ set(DUA_SOURCES
     src/AST/StringValueNode.cpp
     src/AST/VariableNode.cpp
     src/AST/WhileNode.cpp
+    src/AST/TypeNameNode.cpp
 
     src/types/Type.cpp
     src/types/ArrayType.cpp
@@ -125,6 +126,7 @@ set(DUA_SOURCES
     src/types/ClassType.cpp
     src/types/FunctionType.cpp
     src/types/IdentifierType.cpp
+    src/types/TypeOfType.cpp
 )
 
 set(DUA_PREREQUISITE_LIBS ${LLVM_LIBS} ${ANTLR4_LIBS} ${Boost_LIBRARIES})

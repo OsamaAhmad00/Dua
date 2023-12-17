@@ -47,6 +47,10 @@ Value FunctionCallNode::eval()
         report_error("The identifier " + name + " doesn't refer to either a function or a function reference");
 
     auto pointer_type = dynamic_cast<const PointerType*>(reference.type);
+    if (!pointer_type) {
+        if (auto c = reference.type->get_contained_type(); c != nullptr)
+            pointer_type = c->as<PointerType>();
+    }
     auto function_type = pointer_type ? dynamic_cast<const FunctionType*>(pointer_type->get_element_type()) : nullptr;
     if (function_type == nullptr)
         report_error("The variable " + name + " is of type " + reference.type->to_string() + ", which is not callable");

@@ -3,22 +3,9 @@ no_mangle int printf(str message, ...);
 void print(int num) { printf("%d", num); }
 
 
-// Case Primitive type alias
-// Outputs "a b c"
-
-typealias a = int;
-
-int main()
-{
-    typealias b = i64;
-    typealias c = double;
-
-    printf("%s %s %s", typename(a), typename(b), typename(c));
-}
-
 
 // Case Using alias types
-// Outputs "a b c"
+// Outputs "i32 i64 f64"
 
 typealias a = int;
 
@@ -36,7 +23,7 @@ int main()
 
 
 // Case Type alias within a class
-// Outputs "a b c"
+// Outputs "i32 i64 f64"
 
 typealias a = int;
 
@@ -58,7 +45,7 @@ int main() {
 
 
 // Case Type alias sequence
-// Outputs "abcd"
+// Outputs "i32 i32 i32 i32"
 
 typealias a = int;
 
@@ -67,15 +54,15 @@ int main()
     typealias b = a;
     typealias c = b;
     typealias d = c;
-    printf("%s", typename(a));
-    printf("%s", typename(b));
-    printf("%s", typename(c));
+    printf("%s ", typename(a));
+    printf("%s ", typename(b));
+    printf("%s ", typename(c));
     printf("%s", typename(d));
 }
 
 
 // Case Type alias shadowing
-// Outputs "t t"
+// Outputs "f64 i64"
 
 typealias t = int;
 
@@ -91,7 +78,7 @@ int main()
 
 
 // Case Shadowing class types
-// Outputs "X"
+// Outputs "i32"
 
 class X {}
 
@@ -103,7 +90,7 @@ int main()
 
 
 // Case Using function name as an alias
-// Outputs "func"
+// Outputs "i32"
 
 void func() { }
 

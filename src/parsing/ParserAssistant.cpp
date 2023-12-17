@@ -687,42 +687,12 @@ void ParserAssistant::create_size_of_expression()
 
 void ParserAssistant::create_type_of()
 {
-    auto node = pop_node();
-
-    // The identifier might be a class type, not a variable expression
-    if (auto l = dynamic_cast<LoadedLValueNode*>(node); l != nullptr) {
-        if (auto v = dynamic_cast<VariableNode*>(l->lvalue); v != nullptr) {
-            if (llvm::StructType::getTypeByName(compiler->context, v->name) != nullptr) {
-                push_type<ClassType>(v->name);
-                return;
-            } else if (compiler->typing_system.identifier_types.contains(v->name)) {
-                push_type<IdentifierType>(v->name);
-                return;
-            }
-        }
-    }
-
-    types.push_back(node->get_type());
+    push_type<TypeOfType>(pop_node());
 }
 
 void ParserAssistant::create_typename_type()
 {
-    auto type = pop_type();
-    auto llvm_type = type->llvm_type();
-    if (llvm_type == nullptr) {
-        // This can happen for example in the case typename(x).
-        //  This will leave the parser confused about whether
-        //  x is a variable name (an expression), or a class
-        //  type. If the type is nullptr, this means that this
-        //  is not a valid class type, thus, this is a variable.
-        auto cls = type->as<ClassType>();
-        if (cls == nullptr)
-            report_internal_error("typename operator called on an invalid type");
-        auto real_type = compiler->name_resolver.symbol_table.get(cls->name).type;
-        push_node<StringValueNode>(real_type->to_string());
-    } else {
-        push_node<StringValueNode>(type->to_string());
-    }
+    push_node<TypeNameNode>(pop_type());
 }
 
 void ParserAssistant::create_typename_expression() {
