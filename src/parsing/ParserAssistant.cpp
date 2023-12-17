@@ -57,7 +57,7 @@ TranslationUnitNode* ParserAssistant::construct_result()
 
 void ParserAssistant::finish_parsing()
 {
-    reset_symbol_table();
+    reset_symbol_tables();
     compiler->current_class = nullptr;
     compiler->current_function = nullptr;
     create_missing_methods();
@@ -102,8 +102,9 @@ void ParserAssistant::create_empty_method_if_doesnt_exist(const ClassType* cls, 
     );
 }
 
-void ParserAssistant::reset_symbol_table() {
+void ParserAssistant::reset_symbol_tables() {
     compiler->name_resolver.symbol_table = decltype(compiler->name_resolver.symbol_table){};
+    compiler->typing_system.identifier_types = decltype(compiler->typing_system.identifier_types){};
 }
 
 std::vector<ASTNode *> ParserAssistant::pop_args()
@@ -295,13 +296,13 @@ void ParserAssistant::create_if_expression()
 
 void ParserAssistant::enter_scope() {
     statement_counters.push_back(0);
-    compiler->name_resolver.push_scope();
+    compiler->push_scope();
 }
 
 size_t ParserAssistant::leave_scope() {
     size_t result = statement_counters.back();
     statement_counters.pop_back();
-    compiler->name_resolver.pop_scope();
+    compiler->pop_scope();
     return result;
 }
 
@@ -589,6 +590,7 @@ void ParserAssistant::register_class()
 
     auto cls = compiler->create_type<ClassType>(name);
     compiler->name_resolver.classes[name] = cls;
+    compiler->typing_system.insert_global_type(name, cls);
 
     llvm::StructType::create(compiler->context, name);
 }
@@ -625,6 +627,7 @@ void ParserAssistant::create_class()
 
     std::vector<ClassFieldDefinitionNode*> fields;
     std::vector<FunctionDefinitionNode*> methods;
+    std::vector<TypeAliasNode*> aliases;
 
     for (size_t i = 0; i < n; i++) {
         auto node = pop_node();
@@ -632,7 +635,9 @@ void ParserAssistant::create_class()
             fields.push_back(f);
         else if (auto m = dynamic_cast<FunctionDefinitionNode*>(node); m != nullptr)
             methods.push_back(m);
-        else report_internal_error("Class member that's not a field or a method");
+        else if (auto a = dynamic_cast<TypeAliasNode*>(node); a != nullptr)
+            aliases.push_back(a);
+        else report_internal_error("Class member that's not a field, a method, or an alias");
     }
 
     // So that they are in the order of definition.
@@ -647,15 +652,15 @@ void ParserAssistant::create_class()
     assert(compiler->current_class == compiler->name_resolver.get_class(name)->llvm_type());
     compiler->current_class->setBody(std::move(body), is_packed);
 
-    push_node<ClassDefinitionNode>(std::move(name), std::move(fields), std::move(methods));
+    push_node<ClassDefinitionNode>(std::move(name), std::move(fields), std::move(methods), std::move(aliases));
 
     compiler->current_class = nullptr;
 
     inc_statements();
 }
 
-void ParserAssistant::create_class_type() {
-    push_type<ClassType>(pop_str());
+void ParserAssistant::create_identifier_type() {
+    push_type<IdentifierType>(pop_str());
 }
 
 void ParserAssistant::create_field_access() {
@@ -690,6 +695,9 @@ void ParserAssistant::create_type_of()
             if (llvm::StructType::getTypeByName(compiler->context, v->name) != nullptr) {
                 push_type<ClassType>(v->name);
                 return;
+            } else if (compiler->typing_system.identifier_types.contains(v->name)) {
+                push_type<IdentifierType>(v->name);
+                return;
             }
         }
     }
@@ -709,7 +717,7 @@ void ParserAssistant::create_typename_type()
         //  is not a valid class type, thus, this is a variable.
         auto cls = type->as<ClassType>();
         if (cls == nullptr)
-            report_internal_error("sizeof operator called on an invalid type");
+            report_internal_error("typename operator called on an invalid type");
         auto real_type = compiler->name_resolver.symbol_table.get(cls->name).type;
         push_node<StringValueNode>(real_type->to_string());
     } else {
@@ -908,6 +916,14 @@ void ParserAssistant::set_current_function()
 
 void ParserAssistant::create_reference_type() {
     push_type<ReferenceType>(pop_type());
+}
+
+void ParserAssistant::create_type_alias() {
+    auto name = pop_str();
+    auto type = pop_type();
+    compiler->typing_system.insert_type(name, type);
+    push_node<TypeAliasNode>(std::move(name), type);
+    inc_statements();
 }
 
 }

@@ -4,6 +4,7 @@
 #include <llvm/IR/Type.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
+#include <SymbolTable.hpp>
 
 namespace dua
 {
@@ -18,6 +19,8 @@ class TypingSystem
 
 public:
 
+    SymbolTable<const Type*> identifier_types;
+
     explicit TypingSystem(ModuleCompiler* compiler);
 
     template <typename T, typename ...Args>
@@ -27,7 +30,7 @@ public:
         //  (like pointers), in which each layer (the type pointed to in
         //  the case of a pointer type) is created in this function.
         T t(compiler, args...);
-        auto str = t.to_string();
+        auto str = t.as_key();
         auto it = type_cache.find(str);
         T* result;
         result = ((it != type_cache.end()) ? (T*)it->second : new T(compiler, args...));
@@ -48,6 +51,13 @@ public:
 
     [[nodiscard]] llvm::IRBuilder<>& builder() const;
     [[nodiscard]] llvm::Module& module() const;
+
+    void insert_type(const std::string& name, const Type* type);
+    void insert_global_type(const std::string& name, const Type* type);
+    const Type* get_type(const std::string& name);
+
+    void push_scope();
+    Scope<const Type*> pop_scope();
 
     ~TypingSystem();
 };

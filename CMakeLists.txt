@@ -124,6 +124,7 @@ set(DUA_SOURCES
     src/types/PointerType.cpp
     src/types/ClassType.cpp
     src/types/FunctionType.cpp
+    src/types/IdentifierType.cpp
 )
 
 set(DUA_PREREQUISITE_LIBS ${LLVM_LIBS} ${ANTLR4_LIBS} ${Boost_LIBRARIES})

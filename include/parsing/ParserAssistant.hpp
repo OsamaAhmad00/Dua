@@ -54,6 +54,8 @@
 #include "AST/lvalue/LoadedLValueNode.hpp"
 #include "AST/lvalue/MallocNode.hpp"
 
+#include "AST/types/TypeAliasNode.hpp"
+
 #include "types/IntegerTypes.hpp"
 #include "types/FloatTypes.hpp"
 #include "types/ArrayType.hpp"
@@ -61,6 +63,7 @@
 #include "types/ClassType.hpp"
 #include "types/FunctionType.hpp"
 #include "types/ReferenceType.hpp"
+#include "types/IdentifierType.hpp"
 
 #include "utils/TextManipulation.hpp"
 #include "utils/ErrorReporting.hpp"
@@ -204,7 +207,7 @@ public:
     void create_array_indexing();
     void create_logical_and();
     void create_logical_or();
-    void create_class_type();
+    void create_identifier_type();
     void create_field_access();
     void create_inferred_definition();
     void create_size_of_type();
@@ -227,6 +230,7 @@ public:
     void create_infix_operator();
     void set_current_function();
     void create_reference_type();
+    void create_type_alias();
 
     template<typename T>
     void create_unary_expr() {
@@ -282,7 +286,7 @@ public:
     void finish_parsing();
     void create_missing_methods();
     void create_empty_method_if_doesnt_exist(const ClassType* cls, std::string&& name);
-    void reset_symbol_table();
+    void reset_symbol_tables();
 
     void set_module_compiler(ModuleCompiler* compiler) { this->compiler = compiler; }
 };

@@ -18,6 +18,8 @@ ModuleCompiler::ModuleCompiler(const std::string &module_name, const std::string
 
     ParserFacade parser(*this);
 
+    function_scope_count.push_back(0);
+
     // Parse
     TranslationUnitNode* ast = parser.parse(code);
 

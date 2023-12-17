@@ -44,6 +44,7 @@ global_element
     : variable_decl_or_def
     | function_decl_or_def
     | class_decl_or_def
+    | type_alias
     ;
 
 class_decl_or_def
@@ -86,6 +87,7 @@ class_element
     | constructor
     | copy_constructor
     | destructor
+    | type_alias
     ;
 
 constructor
@@ -222,6 +224,7 @@ statement
     | do_while
     | block_statement
     | variable_decl_or_def
+    | type_alias
     | return_statement
     | Delete expression ';' { assistant.create_free(); }
     | Continue { assistant.create_continue(); }
@@ -242,7 +245,7 @@ expression
     | identifier '.' identifier '(' arg_list ')' { assistant.create_method_call();         }
     | identifier                '(' arg_list ')' { assistant.create_function_call();       }
     | expression                '(' arg_list ')' { assistant.create_expr_function_call();  }
-    | New identifier { assistant.create_class_type(); } optional_constructor_args { assistant.create_malloc(); }
+    | New identifier { assistant.create_identifier_type(); } optional_constructor_args { assistant.create_malloc(); }
     | New type { assistant.enter_arg_list(); assistant.create_malloc(); }
     | SizeOf '(' expression ')'   { assistant.create_size_of_expression();  }
     | SizeOf '(' type ')'         { assistant.create_size_of_type();        }
@@ -290,6 +293,10 @@ expression
     | lvalue '&='  expression  { assistant.create_compound_assignment<BitwiseAndNode>(); }
     | lvalue '^='  expression  { assistant.create_compound_assignment<XorNode>(); }
     | lvalue '|='  expression  { assistant.create_compound_assignment<BitwiseOrNode>(); }
+    ;
+
+type_alias
+    : TypeAlias identifier '=' type ';' { assistant.create_type_alias(); }
     ;
 
 cast_expression
@@ -467,11 +474,11 @@ type
     | type '&'                                  { assistant.create_reference_type(); }
     | TypeOf '(' expression ')'                 { assistant.create_type_of();        }
     | primitive_type
-    | class_type
+    | identifier_type
     ;
 
-class_type
-    : identifier { assistant.create_class_type(); }
+identifier_type
+    : identifier { assistant.create_identifier_type(); }
     ;
 
 primitive_type

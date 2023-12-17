@@ -1,6 +1,7 @@
 #include "AST/class/ClassDefinitionNode.hpp"
 #include "AST/variable/ClassFieldDefinitionNode.hpp"
 #include "AST/function/FunctionDefinitionNode.hpp"
+#include "AST/types/TypeAliasNode.hpp"
 #include "utils/TextManipulation.hpp"
 
 namespace dua
@@ -22,7 +23,11 @@ Value ClassDefinitionNode::eval()
     auto old_function = current_function();
     current_function() = nullptr;
 
-    // Evaluate fields first
+    // First, evaluate the aliases
+    for (auto& alias : aliases)
+        alias->eval();
+
+    // Evaluate fields before the methods
     // The fields will register themselves
     for (auto & field : fields)
         field->eval();

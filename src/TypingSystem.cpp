@@ -258,4 +258,26 @@ TypingSystem::~TypingSystem()
         delete type.second;
 }
 
+void TypingSystem::push_scope() {
+    identifier_types.push_scope();
+}
+
+Scope<const Type*> TypingSystem::pop_scope() {
+    return identifier_types.pop_scope();
+}
+
+void TypingSystem::insert_type(const std::string &name, const Type *type) {
+    identifier_types.insert(name, type);
+}
+
+void TypingSystem::insert_global_type(const std::string &name, const Type *type) {
+    identifier_types.insert_global(name, type);
+}
+
+const Type* TypingSystem::get_type(const std::string &name) {
+    if (identifier_types.contains(name))
+        return identifier_types.get(name);
+    return compiler->create_type<ClassType>(name);
+}
+
 }

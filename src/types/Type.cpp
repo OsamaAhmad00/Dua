@@ -1,6 +1,7 @@
 #include <types/Type.hpp>
 #include <ModuleCompiler.hpp>
 #include "types/ReferenceType.hpp"
+#include "types/IdentifierType.hpp"
 
 namespace dua
 {
@@ -41,6 +42,11 @@ const Type* Type::get_contained_type() const {
 template <>
 const ReferenceType* Type::as<ReferenceType>() const {
     return dynamic_cast<const ReferenceType*>(this);
+}
+
+template <>
+const IdentifierType* Type::as<IdentifierType>() const {
+    return dynamic_cast<const IdentifierType*>(this);
 }
 
 }

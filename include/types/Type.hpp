@@ -9,6 +9,7 @@ namespace dua
 class ModuleCompiler;
 class Value;
 class ReferenceType;
+class IdentifierType;
 
 struct Type
 {
@@ -43,5 +44,8 @@ struct Type
 
 template <>
 const ReferenceType* Type::as<ReferenceType>() const;
+
+template <>
+const IdentifierType* Type::as<IdentifierType>() const;
 
 }

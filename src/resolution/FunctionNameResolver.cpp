@@ -5,6 +5,7 @@
 #include "types/PointerType.hpp"
 #include "AST/DeferredActionNode.hpp"
 #include "types/ReferenceType.hpp"
+#include "types/IdentifierType.hpp"
 
 namespace dua
 {

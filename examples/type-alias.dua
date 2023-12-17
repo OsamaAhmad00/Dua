@@ -1,0 +1,161 @@
+no_mangle int printf(str message, ...);
+
+void print(int num) { printf("%d", num); }
+
+
+// Case Primitive type alias
+// Outputs "a b c"
+
+typealias a = int;
+
+int main()
+{
+    typealias b = i64;
+    typealias c = double;
+
+    printf("%s %s %s", typename(a), typename(b), typename(c));
+}
+
+
+// Case Using alias types
+// Outputs "a b c"
+
+typealias a = int;
+
+int main()
+{
+    typealias b = i64;
+    typealias c = double;
+
+    a x;
+    b y;
+    c z;
+
+    printf("%s %s %s", typename(x), typename(y), typename(z));
+}
+
+
+// Case Type alias within a class
+// Outputs "a b c"
+
+typealias a = int;
+
+class X
+{
+    typealias b = long;
+
+    void func() {
+        typealias c = double;
+        printf("%s %s %s", typename(a), typename(b), typename(c));
+    }
+
+}
+
+int main() {
+    X x;
+    x.func();
+}
+
+
+// Case Type alias sequence
+// Outputs "abcd"
+
+typealias a = int;
+
+int main()
+{
+    typealias b = a;
+    typealias c = b;
+    typealias d = c;
+    printf("%s", typename(a));
+    printf("%s", typename(b));
+    printf("%s", typename(c));
+    printf("%s", typename(d));
+}
+
+
+// Case Type alias shadowing
+// Outputs "t t"
+
+typealias t = int;
+
+int main()
+{
+    typealias t = long;
+    {
+        typealias t = double;
+        printf("%s ", typename(t));
+    }
+    printf("%s", typename(t));
+}
+
+
+// Case Shadowing class types
+// Outputs "X"
+
+class X {}
+
+int main()
+{
+    typealias X = int;
+    printf("%s", typename(X));
+}
+
+
+// Case Using function name as an alias
+// Outputs "func"
+
+void func() { }
+
+int main()
+{
+    typealias func = i32;
+    printf("%s", typename(func));
+}
+
+
+// Case Shadowing in same scope 1
+// Panics
+
+class X {}
+
+typealias X = int;
+
+int main()
+{
+    printf("%s", typename(X));
+}
+
+
+// Case Shadowing in same scope 2
+// Panics
+
+
+int main()
+{
+    typealias X = int;
+    typealias X = int;
+    printf("%s", typename(X));
+}
+
+
+// Case Use of an alias before its definition
+// Panics
+
+int main()
+{
+    printf("%s", typename(x));
+    typealias x = int;
+}
+
+typealias x = int;
+
+
+// Case Shadowing primitive types
+// Panics
+
+int main()
+{
+    typealias int = long;
+    printf("%s", typename(X));
+}
