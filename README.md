@@ -1,4 +1,4 @@
-<p align="center" style="text-align: center;"> <img width="256" src="dua.svg"> </p>
+<div align="center"> <img width="256" src="dua.svg"> </div>
 
 # Dua
 
