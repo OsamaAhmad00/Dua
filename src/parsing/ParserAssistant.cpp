@@ -1,22 +1,6 @@
 #include "parsing/ParserAssistant.hpp"
 
 
-/*
- * The parser assistant class uses the name_resolver's symbol
- *  table to store types of identifiers. This is to be able
- *  to perform type inference while constructing the AST. This
- *  utilizes the fact that AST nodes use that specific symbol
- *  table to determine types of identifiers. Unless this table
- *  is populated while construction, we won't be able to infer
- *  the resulting types of the nodes, thus, will have to defer
- *  type inference related operations to evaluation time (not
- *  recommended), or have another separate system, just to
- *  keep track of the resulting types of the nodes.
- * After the AST construction is done, any manipulated element
- *  of the ModuleCompiler is reset, so that it can be used
- *  safely during the evaluation stage.
- */
-
 namespace dua
 {
 
@@ -57,7 +41,6 @@ TranslationUnitNode* ParserAssistant::construct_result()
 
 void ParserAssistant::finish_parsing()
 {
-    reset_symbol_tables();
     compiler->current_class = nullptr;
     compiler->current_function = nullptr;
     create_missing_methods();
@@ -102,11 +85,6 @@ void ParserAssistant::create_empty_method_if_doesnt_exist(const ClassType* cls, 
     );
 }
 
-void ParserAssistant::reset_symbol_tables() {
-    compiler->name_resolver.symbol_table = decltype(compiler->name_resolver.symbol_table){};
-    compiler->typing_system.identifier_types = decltype(compiler->typing_system.identifier_types){};
-}
-
 std::vector<ASTNode *> ParserAssistant::pop_args()
 {
     size_t n = leave_arg_list();
@@ -129,10 +107,6 @@ void ParserAssistant::create_variable_declaration()
 {
     auto name = pop_str();
     auto type = pop_type();
-
-    // A temporary insertion into the symbol table for name resolution
-    //  during parsing. The symbol table will be reset at the end.
-    compiler->name_resolver.symbol_table.insert(name, compiler->create_value(nullptr, type));
 
     if (is_in_global_scope()) {
         push_node<GlobalVariableDefinitionNode>(std::move(name), type, nullptr);
@@ -441,23 +415,17 @@ void ParserAssistant::create_dereference() {
 
 void ParserAssistant::create_pre_inc() {
     auto lvalue = pop_node_as<LValueNode>();
-    if (lvalue->get_element_type()->as<IntegerType>() == nullptr)
-        report_error("Can't perform prefix increment on non-integer (" +
-                     lvalue->get_element_type()->to_string() + ") types.");
-    push_node<CompoundAssignmentExpressionNode<AdditionNode>>(
+    push_node<PrefixAdditionExpressionNode>(
         lvalue,
-        compiler->create_node<I32ValueNode>(1)
+        1
     );
 }
 
 void ParserAssistant::create_pre_dec() {
     auto lvalue = pop_node_as<LValueNode>();
-    if (lvalue->get_element_type()->as<IntegerType>() == nullptr)
-        report_error("Can't perform prefix decrement on non-integer (" +
-                     lvalue->get_element_type()->to_string() + ") types.");
-    push_node<CompoundAssignmentExpressionNode<SubtractionNode>>(
-            lvalue,
-        compiler->create_node<I32ValueNode>(1)
+    push_node<PrefixAdditionExpressionNode>(
+        lvalue,
+        -1
     );
 }
 
@@ -585,9 +553,6 @@ void ParserAssistant::register_class()
 
     auto cls = compiler->create_type<ClassType>(name);
     compiler->name_resolver.classes[name] = cls;
-    compiler->typing_system.insert_global_type(name, cls);
-
-    llvm::StructType::create(compiler->context, name);
 }
 
 void ParserAssistant::finish_class_declaration() {
@@ -606,8 +571,6 @@ void ParserAssistant::start_class_definition()
 
     auto& name = strings.back();
     compiler->current_class = compiler->name_resolver.get_class(name)->llvm_type();
-    compiler->name_resolver.symbol_table.insert("self",
-            compiler->create_value(nullptr, compiler->name_resolver.get_class(name)));
 
     if (compiler->current_class->isSized())
         report_error("Redefinition of the class " + name);
@@ -664,8 +627,7 @@ void ParserAssistant::create_field_access() {
 
 void ParserAssistant::create_inferred_definition()
 {
-    const Type* type = nodes.back()->get_type();
-    types.push_back(type);
+    push_type<TypeOfType>(nodes.back());
     create_variable_definition();
 }
 
@@ -794,7 +756,7 @@ void ParserAssistant::create_func_ref()
     auto ret_type = pop_type();
     auto target_func = pop_str();
     auto is_var_arg = pop_var_arg();
-    auto func_type = compiler->typing_system.create_type<FunctionType>(ret_type, param_types, is_var_arg);
+    auto func_type = compiler->create_type<FunctionType>(ret_type, param_types, is_var_arg);
     push_type<PointerType>(func_type);
     push_node<VariableNode>(target_func, types.back());
 
@@ -886,7 +848,6 @@ void ParserAssistant::create_reference_type() {
 void ParserAssistant::create_type_alias() {
     auto name = pop_str();
     auto type = pop_type();
-    compiler->typing_system.insert_type(name, type);
     push_node<TypeAliasNode>(std::move(name), type);
     inc_statements();
 }

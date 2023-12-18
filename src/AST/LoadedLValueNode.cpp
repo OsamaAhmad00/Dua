@@ -21,9 +21,9 @@ const Type *LoadedLValueNode::get_type()
 {
     if (type != nullptr) return type;
     auto result = lvalue->get_type();
-    const Type* ptr = dynamic_cast<const PointerType*>(result);
+    const Type* ptr = result->as<PointerType>();
     if (ptr == nullptr) {
-        ptr = dynamic_cast<const ArrayType*>(result);
+        ptr = result->as<ArrayType>();
         assert(ptr != nullptr);
     }
 

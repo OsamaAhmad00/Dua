@@ -114,6 +114,7 @@ set(DUA_SOURCES
     src/AST/MallocNode.cpp
     src/AST/NumericalUnaryExpressionNodes.cpp
     src/AST/PostfixAdditionExpressionNode.cpp
+    src/AST/PrefixAdditionExpressionNode.cpp
     src/AST/ReturnNode.cpp
     src/AST/StringValueNode.cpp
     src/AST/VariableNode.cpp

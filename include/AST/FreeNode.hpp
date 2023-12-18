@@ -21,7 +21,7 @@ public:
 
     NoneValue eval() override
     {
-        auto ptr = dynamic_cast<const PointerType*>(expr->get_type());
+        auto ptr = expr->get_type()->as<PointerType>();
         if (ptr == nullptr)
             report_error("The delete operator only accepts a pointer type, not a "
                 + expr->get_type()->to_string());

@@ -26,13 +26,13 @@ public:                                                                         
             report_error("Can't perform the operation " #NAME " between the types "   \
                 + lhs.type->to_string() + " and " + rhs.type->to_string());           \
         llvm::Value* ptr;                                                             \
-        if (dynamic_cast<const IntegerType*>(type))                                   \
-            ptr = compiler->get_builder()->INT_OP(l.get(), r.get(), LABEL);               \
+        if (type->as<IntegerType>())                                                  \
+            ptr = compiler->get_builder()->INT_OP(l.get(), r.get(), LABEL);           \
         else {                                                                        \
             if (INT_ONLY)                                                             \
                 report_error("The operation " #NAME                                   \
                     " is applicable only on integer types");                          \
-            ptr = compiler->get_builder()->FLOAT_OP(l.get(), r.get(), LABEL);             \
+            ptr = compiler->get_builder()->FLOAT_OP(l.get(), r.get(), LABEL);         \
         }                                                                             \
                                                                                       \
         /* This is necessary for making sure that the type returned is actually */    \

@@ -40,6 +40,7 @@
 #include "AST/unary/NumericalUnaryExpressionNodes.hpp"
 #include "AST/unary/CastExpressionNode.hpp"
 #include "AST/unary/PostfixAdditionExpressionNode.hpp"
+#include "AST/unary/PrefixAdditionExpressionNode.hpp"
 
 #include "AST/values/ValueNode.hpp"
 #include "AST/values/ArrayValueNode.hpp"
@@ -289,7 +290,6 @@ public:
     void finish_parsing();
     void create_missing_methods();
     void create_empty_method_if_doesnt_exist(const ClassType* cls, std::string&& name);
-    void reset_symbol_tables();
 
     void set_module_compiler(ModuleCompiler* compiler) { this->compiler = compiler; }
 };
