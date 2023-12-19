@@ -109,7 +109,7 @@ class ParserAssistant
 
     // Used to determine the number of parameters
     //  or arguments in function expressions.
-    std::vector<size_t> argument_counters;
+    std::vector<size_t> general_counters;
     std::vector<bool> var_arg_stack;
 
     std::vector<FieldConstructorArgs> fields_args;
@@ -178,8 +178,9 @@ public:
     static int16_t get_i16(std::string num);
     static int8_t  get_i8 (std::string num);
 
-    // Both rely on the argument_counters list
+    // Both rely on the general_counters list
     std::vector<ASTNode*> pop_args();
+    std::vector<std::string> pop_strings();
     std::vector<const Type*> pop_types();
 
     void create_variable_declaration();
@@ -269,9 +270,9 @@ public:
     void inc_statements();
     void dec_statements();
 
-    void enter_arg_list();
-    size_t leave_arg_list();
-    void inc_args();
+    void push_counter();
+    size_t pop_counter();
+    void inc_counter();
     void push_var_arg(bool value);
     bool pop_var_arg();
     void create_function_call();

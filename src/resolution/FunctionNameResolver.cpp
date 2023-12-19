@@ -3,9 +3,8 @@
 #include <llvm/IR/Verifier.h>
 #include "types/FloatTypes.hpp"
 #include "types/PointerType.hpp"
-#include "AST/DeferredActionNode.hpp"
 #include "types/ReferenceType.hpp"
-#include "types/IdentifierType.hpp"
+#include "AST/function/FunctionDefinitionNode.hpp"
 
 namespace dua
 {
@@ -216,6 +215,8 @@ Value FunctionNameResolver::call_function(const std::string &name, std::vector<V
 Value FunctionNameResolver::call_function(const Value& func, std::vector<Value> args)
 {
     auto type = func.type->as<FunctionType>();
+    if (type == nullptr)
+        report_internal_error("Calling a non-function type");
     cast_function_args(args, type);
     std::vector<llvm::Value*> llvm_args(args.size());
     for (size_t i = 0; i < args.size(); i++)
@@ -463,6 +464,32 @@ const Type *FunctionNameResolver::get_infix_operator_return_type(const Type *t1,
     if (full_name.empty())
         return nullptr;
     return functions[full_name].type->return_type;
+}
+
+void FunctionNameResolver::add_templated_function(FunctionDefinitionNode* node, std::vector<std::string> template_params, FunctionInfo info)
+{
+    auto name = node->name + "." + std::to_string(template_params.size());
+    if (auto it = templated_functions.find(name); it == templated_functions.end())
+        templated_functions.insert(it, {std::move(name), { node, std::move(template_params), std::move(info) }});
+    else
+        report_error("The templated function " + node->name + " with "
+            + std::to_string(template_params.size()) + " is already defined");
+}
+
+TemplatedNode& FunctionNameResolver::get_templated_function(std::string name, size_t template_arg_count)
+{
+    name += "." + std::to_string(template_arg_count);
+    auto it = templated_functions.find(name);
+    if (it == templated_functions.end())
+        report_error("The templated function " + name + " with "
+            + std::to_string(template_arg_count) + " template parameters is not defined");
+    return it->second;
+}
+
+std::string FunctionNameResolver::get_templated_function_full_name(std::string name,
+                                                                   const std::vector<const Type *> &template_args)
+{
+    return get_full_function_name(name + "." + std::to_string(template_args.size()), template_args);
 }
 
 }

@@ -91,13 +91,19 @@ class_element
     ;
 
 constructor
-    : { assistant.prepare_constructor(); } Constructor '(' param_list ')' { assistant.push_var_arg(false); }
-        { assistant.create_function_declaration(); } optional_fields_constructor_params function_body { assistant.finish_constructor(); }
+    : { assistant.prepare_constructor(); } Constructor
+        { assistant.push_counter(); } // for the template parameters
+        '(' param_list ')' { assistant.push_var_arg(false); }
+        { assistant.create_function_declaration(); } optional_fields_constructor_params
+        function_body { assistant.finish_constructor(); }
     ;
 
 copy_constructor
-    : { assistant.prepare_copy_constructor(); } '=' Constructor '(' param_list ')' { assistant.push_var_arg(false); }
-        { assistant.create_function_declaration(); } optional_fields_constructor_params function_body { assistant.finish_copy_constructor(); }
+    : { assistant.prepare_copy_constructor(); } '=' Constructor
+        { assistant.push_counter(); } // for the template parameters
+        '(' param_list ')' { assistant.push_var_arg(false); }
+        { assistant.create_function_declaration(); } optional_fields_constructor_params
+        function_body { assistant.finish_copy_constructor(); }
     ;
 
 optional_fields_constructor_params
@@ -116,7 +122,8 @@ field_constructor_params
 
 destructor
     : { assistant.prepare_destructor(); } Destructor { assistant.push_var_arg(false); }
-        { assistant.enter_arg_list(); assistant.create_function_declaration(); } function_body
+        { assistant.push_counter(); } // for the template parameters
+        { assistant.push_counter(); assistant.create_function_declaration(); } function_body
     ;
 
 variable_decl_or_def
@@ -143,17 +150,16 @@ variable_decl_no_simicolon
 // Every definition takes 4 arguments: type, name, expr, args. Some of them may be empty (null or empty args)
 variable_def_no_simicolon
     : type '(' types_list var_arg_or_none ')' '*' identifier '=' identifier { assistant.create_func_ref(); }
-    | type identifier '=' expression { assistant.enter_arg_list(); assistant.create_variable_definition(); }
-    | Var  identifier '=' expression { assistant.enter_arg_list(); assistant.create_inferred_definition(); }
+    | type identifier '=' expression { assistant.push_counter(); assistant.create_variable_definition(); }
+    | Var  identifier '=' expression { assistant.push_counter(); assistant.create_inferred_definition(); }
     | type identifier { assistant.push_null_node(); } optional_constructor_args { assistant.create_variable_definition(); }
     ;
 
 optional_constructor_args
     : '(' arg_list ')'
     | arg_list
-    | /* empty */ { assistant.enter_arg_list(); }
+    | /* empty */ { assistant.push_counter(); }
     ;
-
 
 infix_op
     : '+' { assistant.push_str("Addition"); }
@@ -164,11 +170,25 @@ infix_op
     | '=' { assistant.push_str("Assignment"); }
     ;
 
-
 function_decl_no_simicolon
-    : no_mangle_or_none type identifier
+    : no_mangle_or_none type identifier template_params_or_none
         '(' param_list var_arg_or_none ')' { assistant.create_function_declaration(); }
     | type Infix infix_op '(' param_list ')' { assistant.create_infix_operator(); }
+    ;
+
+template_params_or_none @init { assistant.push_counter(); }
+    : '<' template_param_list '>'
+    | /* empty */
+    ;
+
+template_param_list
+    : comma_separated_identifiers
+    | /* empty */
+    ;
+
+comma_separated_identifiers
+    : comma_separated_identifiers ',' identifier { assistant.inc_counter(); }
+    | identifier { assistant.inc_counter(); }
     ;
 
 no_mangle_or_none
@@ -189,7 +209,7 @@ function_body
     | '=' expression ';' { assistant.create_function_definition_expression_body(); }
     ;
 
-param_list @init { assistant.enter_arg_list(); }
+param_list @init { assistant.push_counter(); }
     : comma_separated_params
     | /* empty */
     ;
@@ -204,8 +224,8 @@ param
     ;
 
 comma_separated_params
-    : param { assistant.inc_args(); }
-    | comma_separated_params ',' param { assistant.inc_args(); }
+    : param { assistant.inc_counter(); }
+    | comma_separated_params ',' param { assistant.inc_counter(); }
     ;
 
 block_statement
@@ -242,11 +262,10 @@ expression
     | when_expression
     | cast_expression
     | '(' expression ')'
-    | identifier '.' identifier '(' arg_list ')' { assistant.create_method_call();         }
-    | identifier                '(' arg_list ')' { assistant.create_function_call();       }
+    | function_call
     | expression                '(' arg_list ')' { assistant.create_expr_function_call();  }
     | New identifier { assistant.create_identifier_type(); } optional_constructor_args { assistant.create_malloc(); }
-    | New type { assistant.enter_arg_list(); assistant.create_malloc(); }
+    | New type { assistant.push_counter(); assistant.create_malloc(); }
     | SizeOf '(' expression ')'   { assistant.create_size_of_expression();  }
     | SizeOf '(' type ')'         { assistant.create_size_of_type();        }
     | TypeName '(' expression ')' { assistant.create_typename_expression(); }
@@ -293,6 +312,16 @@ expression
     | lvalue '&='  expression  { assistant.create_compound_assignment<BitwiseAndNode>(); }
     | lvalue '^='  expression  { assistant.create_compound_assignment<XorNode>(); }
     | lvalue '|='  expression  { assistant.create_compound_assignment<BitwiseOrNode>(); }
+    ;
+
+function_call
+    : identifier '.' identifier template_args_or_none '(' arg_list ')' { assistant.create_method_call();   }
+    | identifier                template_args_or_none '(' arg_list ')' { assistant.create_function_call(); }
+    ;
+
+template_args_or_none
+    : '<' types_list '>'
+    | /* empty */ { assistant.push_counter(); }
     ;
 
 type_alias
@@ -390,14 +419,14 @@ do_while
     : 'do' statement 'while' '(' expression_or_none_loop ')' ';' { assistant.create_do_while(); }
     ;
 
-arg_list @init { assistant.enter_arg_list(); }
+arg_list @init { assistant.push_counter(); }
     : comma_separated_arguments
     | /* empty */
     ;
 
 comma_separated_arguments
-    : expression { assistant.inc_args(); }
-    | comma_separated_arguments ',' expression { assistant.inc_args(); }
+    : expression { assistant.inc_counter(); }
+    | comma_separated_arguments ',' expression { assistant.inc_counter(); }
     ;
 
 // If none, push 1. If used as a condition, equals true. If used as
@@ -458,11 +487,11 @@ float
     ;
 
 comma_separated_types
-    : comma_separated_types ',' type { assistant.inc_args(); }
-    | type { assistant.inc_args(); }
+    : comma_separated_types ',' type { assistant.inc_counter(); }
+    | type { assistant.inc_counter(); }
     ;
 
-types_list @init { assistant.enter_arg_list(); }
+types_list @init { assistant.push_counter(); }
     : comma_separated_types
     | /* empty */
     ;

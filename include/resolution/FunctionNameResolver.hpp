@@ -10,6 +10,8 @@ namespace dua
 {
 
 class ModuleCompiler;
+class ASTNode;
+class FunctionDefinitionNode;
 struct Value;
 
 struct FunctionInfo
@@ -18,10 +20,18 @@ struct FunctionInfo
     std::vector<std::string> param_names;
 };
 
+struct TemplatedNode
+{
+    ASTNode* node;
+    std::vector<std::string> template_params;
+    FunctionInfo info;
+};
+
 class FunctionNameResolver
 {
     std::map<std::string, FunctionInfo> functions;
 
+    std::unordered_map<std::string, TemplatedNode> templated_functions;
 
     void cast_function_args(std::vector<Value>& args, const FunctionType* type) const;
 
@@ -54,6 +64,10 @@ public:
     const Type* get_infix_operator_return_type(const Type* t1, const Type* t2, const std::string& name);
 
     [[nodiscard]] static std::string get_full_function_name(std::string name, const std::vector<const Type*>& param_types);
+
+    std::string get_templated_function_full_name(std::string name, const std::vector<const Type*>& template_args);
+    void add_templated_function(FunctionDefinitionNode* node, std::vector<std::string> template_params, FunctionInfo info);
+    TemplatedNode& get_templated_function(std::string name, size_t template_arg_count);
 };
 
 }

@@ -17,9 +17,12 @@ class FunctionDefinitionNode : public ASTNode
 
 public:
 
+    bool is_templated;
+
     std::string name;
 
-    FunctionDefinitionNode(ModuleCompiler* compiler, std::string name, ASTNode* body, const FunctionType* function_type);
+    FunctionDefinitionNode(ModuleCompiler* compiler, std::string name, ASTNode* body,
+                           const FunctionType* function_type, bool is_templated = false);
 
     void set_body(ASTNode* body) { assert(this->body == nullptr); this->body = body; }
 

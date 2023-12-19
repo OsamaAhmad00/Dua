@@ -85,9 +85,18 @@ void ParserAssistant::create_empty_method_if_doesnt_exist(const ClassType* cls, 
     );
 }
 
+std::vector<std::string> ParserAssistant::pop_strings()
+{
+    size_t n = pop_counter();
+    std::vector<std::string> result(n);
+    for (size_t i = 0; i < n; i++)
+        result[n - i - 1] = pop_str();
+    return result;
+}
+
 std::vector<ASTNode *> ParserAssistant::pop_args()
 {
-    size_t n = leave_arg_list();
+    size_t n = pop_counter();
     std::vector<ASTNode*> args(n);
     for (size_t i = 0; i < n; i++)
         args[n - i - 1] = pop_node();
@@ -96,7 +105,7 @@ std::vector<ASTNode *> ParserAssistant::pop_args()
 
 std::vector<const Type*> ParserAssistant::pop_types()
 {
-    size_t n = leave_arg_list();
+    size_t n = pop_counter();
     std::vector<const Type*> types(n);
     for (size_t i = 0; i < n; i++)
         types[n - i - 1] = pop_type();
@@ -147,7 +156,7 @@ void ParserAssistant::create_function_declaration()
     inc_statements();
 
     auto is_var_arg = pop_var_arg();
-    auto param_count = leave_arg_list();
+    auto param_count = pop_counter();
     std::vector<const Type*> param_types(param_count);
     std::vector<std::string> param_names(param_count);
 
@@ -156,9 +165,12 @@ void ParserAssistant::create_function_declaration()
         param_types[param_count - i - 1] = pop_type();
     }
 
-    auto return_type = pop_type();
+    auto template_params = pop_strings();
 
     auto name = pop_str();
+
+    auto return_type = pop_type();
+
     if (compiler->current_class != nullptr) {
         auto class_name = compiler->current_class->getName().str();
         name = class_name + '.' + name;
@@ -171,10 +183,12 @@ void ParserAssistant::create_function_declaration()
         param_names.insert(param_names.begin(), "self");
     }
 
-    if (!no_mangle)
-        name = compiler->name_resolver.get_full_function_name(name, param_types);
-    else if (compiler->current_class != nullptr)
-        report_error("Can't use the no_mangle keyword for methods");
+    if (template_params.empty()) {
+        if (!no_mangle)
+            name = compiler->name_resolver.get_full_function_name(name, param_types);
+        else if (compiler->current_class != nullptr)
+            report_error("Can't use the no_mangle keyword for methods");
+    }
 
     auto function_type = compiler->create_type<FunctionType>(return_type, std::move(param_types), is_var_arg);
     FunctionInfo info {
@@ -182,9 +196,16 @@ void ParserAssistant::create_function_declaration()
         std::move(param_names)
     };
 
-    compiler->name_resolver.register_function(name, std::move(info), true);
-
     push_node<FunctionDefinitionNode>(std::move(name), nullptr, function_type);
+
+    auto func = (FunctionDefinitionNode*)nodes.back();
+    if (!template_params.empty()) {
+        // Templated functions will be registered upon instantiation
+        func->is_templated = true;
+        compiler->name_resolver.add_templated_function(func, std::move(template_params), std::move(info));
+    } else {
+        compiler->name_resolver.register_function(func->name, std::move(info), true);
+    }
 }
 
 void ParserAssistant::create_block()
@@ -343,18 +364,18 @@ void ParserAssistant::create_assignment()
     push_node<AssignmentExpressionNode>(lhs, rhs);
 }
 
-void ParserAssistant::enter_arg_list() {
-    argument_counters.push_back(0);
+void ParserAssistant::push_counter() {
+    general_counters.push_back(0);
 }
 
-size_t ParserAssistant::leave_arg_list() {
-    size_t result = argument_counters.back();
-    argument_counters.pop_back();
+size_t ParserAssistant::pop_counter() {
+    size_t result = general_counters.back();
+    general_counters.pop_back();
     return result;
 }
 
-void ParserAssistant::inc_args() {
-    argument_counters.back() += 1;
+void ParserAssistant::inc_counter() {
+    general_counters.back() += 1;
 }
 
 void ParserAssistant::push_var_arg(bool value) {
@@ -367,16 +388,21 @@ bool ParserAssistant::pop_var_arg() {
     return result;
 }
 
-void ParserAssistant::create_function_call() {
-    push_node<FunctionCallNode>(pop_str(), pop_args());
+void ParserAssistant::create_function_call()
+{
+    auto args = pop_args();
+    auto template_args = pop_types();
+    auto func_name = pop_str();
+    push_node<FunctionCallNode>(std::move(func_name), std::move(args), std::move(template_args));
 }
 
 void ParserAssistant::create_method_call()
 {
+    auto args = pop_args();
+    auto template_args = pop_types();
     auto func_name = pop_str();
     auto instance_name = pop_str();
-    auto args = pop_args();
-    push_node<MethodCallNode>(std::move(instance_name), std::move(func_name), std::move(args));
+    push_node<MethodCallNode>(std::move(instance_name), std::move(func_name), std::move(args), std::move(template_args));
 }
 
 void ParserAssistant::create_expr_function_call()
@@ -659,7 +685,7 @@ void ParserAssistant::create_typename_expression() {
 
 void ParserAssistant::create_function_type()
 {
-    size_t param_count = leave_arg_list();
+    size_t param_count = pop_counter();
     bool is_var_arg = pop_var_arg();
     std::vector<const Type*> param_types(param_count);
     for (size_t i = 0; i < param_count; i++)
@@ -760,7 +786,7 @@ void ParserAssistant::create_func_ref()
     push_type<PointerType>(func_type);
     push_node<VariableNode>(target_func, types.back());
 
-    enter_arg_list();
+    push_counter();
     create_variable_definition();
 }
 
@@ -785,7 +811,7 @@ void ParserAssistant::finish_copy_constructor()
 
 void ParserAssistant::create_infix_operator()
 {
-    auto param_count = leave_arg_list();
+    auto param_count = pop_counter();
     std::vector<const Type*> param_types(param_count);
     std::vector<std::string> param_names(param_count);
 

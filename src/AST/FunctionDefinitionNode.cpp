@@ -8,8 +8,8 @@ namespace dua
 {
 
 FunctionDefinitionNode::FunctionDefinitionNode(dua::ModuleCompiler *compiler,
-               std::string name, dua::ASTNode *body, const FunctionType* function_type)
-        : name(std::move(name)), body(body), function_type(function_type)
+               std::string name, dua::ASTNode *body, const FunctionType* function_type, bool is_templated)
+        : name(std::move(name)), body(body), function_type(function_type), is_templated(is_templated)
 {
     this->compiler = compiler;
 
@@ -19,6 +19,8 @@ FunctionDefinitionNode::FunctionDefinitionNode(dua::ModuleCompiler *compiler,
 
 Value FunctionDefinitionNode::eval()
 {
+    if (is_templated)
+        return none_value();
     // The declaration logic is moved to the parser,
     //  so that all functions are visible everywhere
     //  across the module, regardless of the order

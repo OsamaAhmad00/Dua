@@ -11,15 +11,18 @@ class FunctionCallNode : public ASTNode
 
 protected:
 
+    Value call_templated_function();
+
     std::vector<Value> eval_args(bool is_method = false);
 
     std::string name;
     std::vector<ASTNode*> args;
+    std::vector<const Type*> template_args;
 
 public:
 
-    FunctionCallNode(ModuleCompiler* compiler, std::string name, std::vector<ASTNode*> args = {})
-            : name(std::move(name)), args(std::move(args)) { this->compiler = compiler; }
+    FunctionCallNode(ModuleCompiler* compiler, std::string name,
+                     std::vector<ASTNode*> args = {}, std::vector<const Type*> template_args = {});
 
     Value eval() override;
 
