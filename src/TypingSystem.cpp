@@ -277,7 +277,8 @@ void TypingSystem::insert_global_type(const std::string &name, const Type *type)
 const Type* TypingSystem::get_type(const std::string &name) {
     if (identifier_types.contains(name))
         return identifier_types.get(name);
-    return compiler->create_type<ClassType>(name);
+    report_error("The type/alias " + name + " is not defined");
+    return nullptr;
 }
 
 }

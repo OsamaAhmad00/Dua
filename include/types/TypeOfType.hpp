@@ -1,13 +1,13 @@
 #pragma once
 
-#include <types/Type.hpp>
+#include <types/NonConcreteType.hpp>
 
 namespace dua
 {
 
 class ASTNode;
 
-class TypeOfType : public Type
+class TypeOfType : public StaticType
 {
     ASTNode* node;
 
@@ -16,7 +16,7 @@ public:
     TypeOfType(ModuleCompiler* compiler, ASTNode* node)
             : node(node) { this->compiler = compiler; }
 
-    const Type* get_type() const;
+    const Type* get_concrete_type() const override;
 
     Value default_value() const override;
 

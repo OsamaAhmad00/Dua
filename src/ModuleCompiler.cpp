@@ -2,6 +2,7 @@
 #include <parsing/ParserFacade.hpp>
 #include <AST/TranslationUnitNode.hpp>
 #include <llvm/Support/Host.h>
+#include "AST/function/FunctionDefinitionNode.hpp"
 
 namespace dua
 {
@@ -113,6 +114,114 @@ void ModuleCompiler::push_scope_counter() {
 
 void ModuleCompiler::pop_scope_counter() {
     function_scope_count.pop_back();
+}
+
+void ModuleCompiler::add_templated_function(FunctionDefinitionNode* node, std::vector<std::string> template_params, FunctionInfo info, llvm::StructType* current_class)
+{
+    auto name = node->name + "." + std::to_string(template_params.size());
+    if (auto it = templated_functions.find(name); it == templated_functions.end()) {
+        templated_functions[std::move(name)] = {node, std::move(template_params), std::move(info), current_class};
+    } else {
+        report_error("The templated function " + node->name + " with "
+                     + std::to_string(template_params.size()) + " template parameters is already defined");
+    }
+}
+
+Value ModuleCompiler::get_templated_function(std::string name, std::vector<const Type *> &template_args,
+                                                 const std::vector<const Type *> &arg_types, bool use_arg_types)
+{
+    // Templated functions are named as follows:
+    //  original_name.template_param_count.param_types_separated_by_dots
+    // We need to include the count of the template parameters count to
+    //  allow for functions with same signature, but with different number
+    //  of template parameters to exist without collision
+
+    auto it = templated_functions.find(name + "." + std::to_string(template_args.size()));
+
+    if (it == templated_functions.end())
+        report_error("The templated function " + name + " with "
+                     + std::to_string(template_args.size()) + " template parameters is not defined");
+
+    std::string full_name;
+
+    if (use_arg_types)
+        full_name = get_templated_function_full_name(std::move(name), template_args, arg_types);
+    else
+        full_name = get_templated_function_full_name(std::move(name), template_args);
+
+    if (name_resolver.has_function(full_name)) {
+        auto func = module.getFunction(full_name);
+        auto type = name_resolver.get_function_no_overloading(full_name).type;
+        return create_value(func, type);
+    }
+
+    // Function not defined yet.
+    // Instantiate the function with the provided arguments
+
+    auto& templated = it->second;
+
+    // The full name is computed here.
+    templated.node->no_mangle = true;
+
+    name_resolver.symbol_table.temporarily_discard_all_but_global_scope();
+    typing_system.identifier_types.temporarily_discard_all_but_global_scope();
+
+    // A scope that will hold the binding of the template
+    //  parameters to the template arguments, and will
+    //  shadow the outer scope types that collide if exists.
+    typing_system.push_scope();
+
+    for (size_t i = 0; i < template_args.size(); i++)
+        typing_system.insert_type(templated.template_params[i], template_args[i]);
+
+    // Temporarily reset set the current function to nullptr
+    // so that we don't get the nested functions error.
+    auto old_func = current_function;
+    current_function = nullptr;
+
+    // Temporarily reset set the current class to
+    // nullptr so that method definitions are correct
+    auto old_class = current_class;
+    current_class = templated.owner_class;
+
+    name_resolver.register_function(full_name, templated.info, true);
+
+    std::swap(templated.node->name, full_name);
+    templated.node->is_templated = false;
+    templated.node->eval();
+    templated.node->is_templated = true;
+    std::swap(templated.node->name, full_name);
+
+    current_class = old_class;
+    current_function = old_func;
+
+    typing_system.pop_scope();
+
+    typing_system.identifier_types.restore_original_scopes();
+    name_resolver.symbol_table.restore_original_scopes();
+
+    auto func = module.getFunction(full_name);
+    auto type = name_resolver.get_function_no_overloading(full_name).type;
+
+    return create_value(func, type);
+}
+
+Value ModuleCompiler::get_templated_function(std::string name, std::vector<const Type *> &template_args) {
+    return get_templated_function(std::move(name), template_args, std::vector<const Type*>{}, false);
+}
+
+std::string ModuleCompiler::get_templated_function_full_name(std::string name, const std::vector<const Type *> &template_args)
+{
+    // The same way the param types are added to the name, the template args are added to the name.
+    name += "." + std::to_string(template_args.size());
+    if (!template_args.empty())
+        name = name_resolver.get_function_full_name(name, template_args);
+    return name;
+}
+
+std::string ModuleCompiler::get_templated_function_full_name(std::string name, const std::vector<const Type *> &template_args, const std::vector<const Type *> &param_types) {
+    name = get_templated_function_full_name(std::move(name), template_args);
+    return name_resolver.get_function_full_name(name, param_types);
 }
 
 }

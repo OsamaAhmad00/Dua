@@ -4,20 +4,20 @@
 namespace dua
 {
 
-const Type* IdentifierType::get_type() const {
+const Type* IdentifierType::get_concrete_type() const {
     return compiler->get_typing_system().get_type(name);
 }
 
 Value IdentifierType::default_value() const {
-    return get_type()->default_value();
+    return get_concrete_type()->default_value();
 }
 
 llvm::Type *IdentifierType::llvm_type() const {
-    return get_type()->llvm_type();
+    return get_concrete_type()->llvm_type();
 }
 
 bool IdentifierType::operator==(const Type &other) {
-    return *get_type() == other;
+    return *get_concrete_type() == other;
 }
 
 }

@@ -23,9 +23,21 @@ const static ClassType* get_class_from_ptr(ASTNode* node)
 
 Value ClassFieldNode::eval()
 {
+
     auto full_name = get_full_name();
+
+    if (is_templated) {
+        // This is a templated method reference for sure since no identifier
+        // is allowed to be templated, except for types and function reference.
+        auto func = compiler->get_templated_function(full_name, template_args);
+        // This returns a function type. If this is a function reference, we should
+        //  wrap it in a pointer type.
+        func.type = compiler->create_type<PointerType>(func.type);
+        return func;
+    }
+
     if (name_resolver().has_function(full_name)) {
-        auto name = name_resolver().get_function(full_name);
+        auto name = name_resolver().get_function_full_name(full_name);
         return compiler->create_value(module().getFunction(name), get_type());
     }
 
@@ -36,15 +48,23 @@ Value ClassFieldNode::eval()
 const Type* ClassFieldNode::get_type()
 {
     if (type != nullptr) return type;
+
     auto full_name = get_full_name();
+
+    if (is_templated) {
+        return type = compiler->create_type<PointerType>(compiler->get_templated_function(full_name, template_args).type);
+    }
+
     const Type* t;
+
     if (name_resolver().has_function(full_name)) {
-        auto name = name_resolver().get_function(full_name);
+        auto name = name_resolver().get_function_full_name(full_name);
         t = name_resolver().get_function_no_overloading(name).type;
     } else {
         auto class_type = get_class_from_ptr(instance);
         t = class_type->get_field(name).type;
     }
+
     return type = compiler->create_type<PointerType>(t);
 }
 

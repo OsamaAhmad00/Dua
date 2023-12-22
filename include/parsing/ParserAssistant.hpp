@@ -76,6 +76,18 @@
 namespace dua
 {
 
+struct DeferredFieldArgs
+{
+    FunctionDefinitionNode* node;
+    std::vector<FieldConstructorArgs> args;
+};
+
+struct DeferredFunctionDeclaration
+{
+    FunctionDefinitionNode* node;
+    FunctionInfo info;
+};
+
 //  This class is used to make the semantic-actions in the parser grammar file
 //  as minimal as possible, making the grammar clearer, and also the code more
 //  isolated from the grammar, thus, more readable.
@@ -111,6 +123,13 @@ class ParserAssistant
     //  or arguments in function expressions.
     std::vector<size_t> general_counters;
     std::vector<bool> var_arg_stack;
+
+    // A deferred definitions that will happen after the parsing is done
+    // This is to avoid constraining the order of definitions, and the
+    //  necessity of declaring a class before using it in the same file.
+    std::vector<ClassDefinitionNode*> class_definitions;
+    std::vector<DeferredFunctionDeclaration> function_definitions;
+    std::vector<DeferredFieldArgs> constructors_field_args;
 
     std::vector<FieldConstructorArgs> fields_args;
 
@@ -158,6 +177,9 @@ public:
     // Don't mangle the name of the function. If this is true,
     //  function overloading won't be applicable for the function.
     bool no_mangle = false;
+    bool is_in_function = false;
+
+    std::vector<bool> is_templated_stack;
 
     void push_str(std::string str) {
         strings.push_back(std::move(str));
@@ -178,7 +200,10 @@ public:
     static int16_t get_i16(std::string num);
     static int8_t  get_i8 (std::string num);
 
-    // Both rely on the general_counters list
+    void push_is_templated(bool is_templated);
+    bool pop_is_templated();
+
+    // Rely on the general_counters list
     std::vector<ASTNode*> pop_args();
     std::vector<std::string> pop_strings();
     std::vector<const Type*> pop_types();
@@ -236,6 +261,7 @@ public:
     void set_current_function();
     void create_reference_type();
     void create_type_alias();
+    void create_identifier_lvalue();
 
     template<typename T>
     void create_unary_expr() {

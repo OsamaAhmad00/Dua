@@ -92,7 +92,7 @@ class_element
 
 constructor
     : { assistant.prepare_constructor(); } Constructor
-        { assistant.push_counter(); } // for the template parameters
+        no_template
         '(' param_list ')' { assistant.push_var_arg(false); }
         { assistant.create_function_declaration(); } optional_fields_constructor_params
         function_body { assistant.finish_constructor(); }
@@ -100,7 +100,7 @@ constructor
 
 copy_constructor
     : { assistant.prepare_copy_constructor(); } '=' Constructor
-        { assistant.push_counter(); } // for the template parameters
+        no_template
         '(' param_list ')' { assistant.push_var_arg(false); }
         { assistant.create_function_declaration(); } optional_fields_constructor_params
         function_body { assistant.finish_copy_constructor(); }
@@ -122,7 +122,7 @@ field_constructor_params
 
 destructor
     : { assistant.prepare_destructor(); } Destructor { assistant.push_var_arg(false); }
-        { assistant.push_counter(); } // for the template parameters
+        no_template
         { assistant.push_counter(); assistant.create_function_declaration(); } function_body
     ;
 
@@ -147,9 +147,9 @@ variable_decl_no_simicolon
     : type identifier { assistant.create_variable_declaration(); }
     ;
 
-// Every definition takes 4 arguments: type, name, expr, args. Some of them may be empty (null or empty args)
+// Every definition takes 4 arguments: type, name, expr, and args. Some of them may be empty (null or empty args)
 variable_def_no_simicolon
-    : type '(' types_list var_arg_or_none ')' '*' identifier '=' identifier { assistant.create_func_ref(); }
+    : type '(' types_list var_arg_or_none ')' '*' identifier '=' identifier template_args_or_none { assistant.create_func_ref(); }
     | type identifier '=' expression { assistant.push_counter(); assistant.create_variable_definition(); }
     | Var  identifier '=' expression { assistant.push_counter(); assistant.create_inferred_definition(); }
     | type identifier { assistant.push_null_node(); } optional_constructor_args { assistant.create_variable_definition(); }
@@ -176,12 +176,16 @@ function_decl_no_simicolon
     | type Infix infix_op '(' param_list ')' { assistant.create_infix_operator(); }
     ;
 
-template_params_or_none @init { assistant.push_counter(); }
-    : '<' template_param_list '>'
-    | /* empty */
+no_template
+    : /* empty */ { assistant.push_counter(); assistant.push_is_templated(false); }
     ;
 
-template_param_list
+template_params_or_none
+    : '<' template_param_list '>' { assistant.push_is_templated(true); }
+    | no_template
+    ;
+
+template_param_list @init { assistant.push_counter(); }
     : comma_separated_identifiers
     | /* empty */
     ;
@@ -320,8 +324,8 @@ function_call
     ;
 
 template_args_or_none
-    : '<' types_list '>'
-    | /* empty */ { assistant.push_counter(); }
+    : '<' types_list '>' { assistant.push_is_templated(true); }
+    | /* empty */ no_template
     ;
 
 type_alias
@@ -449,9 +453,9 @@ lvalue
     | lvalue '[' expression ']' { assistant.create_array_indexing(); }
     | '*' loaded_lvalue { assistant.create_dereference(); }
     | '*' '(' expression ')' { assistant.create_dereference(); }
-    | lvalue '.' identifier  { assistant.create_field_access(); }
-    | lvalue { assistant.create_loaded_lvalue(); } '->' identifier { assistant.create_field_access(); }
-    | Identifier { assistant.push_node<VariableNode>($Identifier.text); }
+    | lvalue '.' identifier template_args_or_none { assistant.create_field_access(); }
+    | lvalue { assistant.create_loaded_lvalue(); } '->' identifier template_args_or_none { assistant.create_field_access(); }
+    | identifier template_args_or_none { assistant.create_identifier_lvalue(); }
     ;
 
 // A convinience production that pushes the identifier's text.

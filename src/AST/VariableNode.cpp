@@ -6,7 +6,14 @@ namespace dua
 {
 
 VariableNode::VariableNode(ModuleCompiler *compiler, std::string name, const Type *type)
-        : name(std::move(name))
+        : name(std::move(name)), template_args({}), is_templated(false)
+{
+    this->compiler = compiler;
+    this->type = type;
+}
+
+VariableNode::VariableNode(ModuleCompiler *compiler, std::string name, std::vector<const Type *> template_args, const Type *type)
+        : name(std::move(name)), template_args(template_args), is_templated(true)
 {
     this->compiler = compiler;
     this->type = type;
@@ -19,6 +26,16 @@ Value VariableNode::eval()
         return compiler->create_value(name_resolver().symbol_table.get(name).get(), get_type());
     }
 
+    if (is_templated) {
+        // This is a templated function reference for sure since no identifier
+        // is allowed to be templated, except for types and function reference.
+        auto func = compiler->get_templated_function(name, template_args);
+        // This returns a function type. If this is a function reference, we should
+        //  wrap it in a pointer type.
+        func.type = compiler->create_type<PointerType>(func.type);
+        return func;
+    }
+
     // Not found. Has to be a function reference
     const FunctionType* func_type = nullptr;
 
@@ -28,9 +45,9 @@ Value VariableNode::eval()
 
     std::string full_name;
     if (func_type != nullptr)
-        full_name = name_resolver().get_function_with_exact_type(name, func_type);
+        full_name = name_resolver().get_function_name_with_exact_type(name, func_type);
     else
-        full_name = name_resolver().get_function(name);
+        full_name = name_resolver().get_function_full_name(name);
 
     return compiler->create_value(module().getFunction(full_name), get_type());
 }
@@ -38,15 +55,24 @@ Value VariableNode::eval()
 const Type* VariableNode::get_type()
 {
     if (type != nullptr) return type;
+
+    if (is_templated) {
+        // This is definitely a templated function reference.
+        // Wrap the function type in a pointer
+        return type = compiler->create_type<PointerType>(compiler->get_templated_function(name, template_args).type);
+    }
+
     const Type* t;
+
     if (name_resolver().symbol_table.contains(name)) {
         t = name_resolver().symbol_table.get(name).type;
     } else if (name_resolver().has_function(name)) {
-        auto full_name = name_resolver().get_function(name);
+        auto full_name = name_resolver().get_function_full_name(name);
         t = name_resolver().get_function_no_overloading(full_name).type;
     } else {
         report_error("The identifier " + name + " is not defined");
     }
+
     return type = compiler->create_type<PointerType>(t);
 }
 

@@ -1,6 +1,5 @@
 #include <AST/function/FunctionDefinitionNode.hpp>
 #include <types/VoidType.hpp>
-#include <types/PointerType.hpp>
 #include <utils/TextManipulation.hpp>
 #include "types/ReferenceType.hpp"
 
@@ -8,8 +7,8 @@ namespace dua
 {
 
 FunctionDefinitionNode::FunctionDefinitionNode(dua::ModuleCompiler *compiler,
-               std::string name, dua::ASTNode *body, const FunctionType* function_type, bool is_templated)
-        : name(std::move(name)), body(body), function_type(function_type), is_templated(is_templated)
+               std::string name, dua::ASTNode *body, const FunctionType* function_type, bool no_mangle, bool is_templated)
+        : name(std::move(name)), body(body), function_type(function_type), no_mangle(no_mangle), is_templated(is_templated)
 {
     this->compiler = compiler;
 
@@ -19,14 +18,19 @@ FunctionDefinitionNode::FunctionDefinitionNode(dua::ModuleCompiler *compiler,
 
 Value FunctionDefinitionNode::eval()
 {
-    if (is_templated)
-        return none_value();
     // The declaration logic is moved to the parser,
     //  so that all functions are visible everywhere
     //  across the module, regardless of the order
     //  of declaration/definition.
+
+    if (is_templated)
+        return none_value();
+
+    set_full_name();
+
     if (body == nullptr)
         return compiler->create_value(module().getFunction(name), get_type());
+
     return define_function();
 }
 
@@ -211,6 +215,14 @@ void FunctionDefinitionNode::initialize_constructor(const ClassType *class_type)
         } else {
             name_resolver().call_constructor(instance, std::move(args));
         }
+    }
+}
+
+void FunctionDefinitionNode::set_full_name()
+{
+    if (!no_mangle) {
+        name = name_resolver().get_function_full_name(name, get_function_type()->param_types);
+        no_mangle = true;
     }
 }
 

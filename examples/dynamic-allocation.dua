@@ -3,6 +3,35 @@ no_mangle int printf(str message, ...);
 void print(int n) { printf("%d", n); }
 
 
+// Case Primitive type allocation
+// Outputs "3"
+
+int main()
+{
+    var x = new int;
+    *x = 3;
+    printf("%d", *x);
+    delete x;
+}
+
+
+// Case Array allocation
+// Outputs "0123456789"
+
+int main()
+{
+    var arr = new int[10];
+
+    for (int i = 0; i < 10; i++)
+        (*arr)[i] = i;
+
+    for (int i = 0; i < 10; i++)
+        print((*arr)[i]);
+
+    delete arr;
+}
+
+
 // Case Object allocation
 // Outputs "Hello123Bye"
 

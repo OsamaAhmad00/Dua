@@ -41,5 +41,4 @@ const ClassType *NameResolver::get_class(const std::string &name) {
      return classes[name];
 }
 
-
 }

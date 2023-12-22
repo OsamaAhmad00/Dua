@@ -34,11 +34,11 @@ bool Type::is_castable(const Type *type) const {
 const Type* Type::get_contained_type() const {
     auto result = this;
     if (auto t = dynamic_cast<const TypeOfType*>(result); t != nullptr)
-        result = t->get_type();
+        result = t->get_concrete_type();
     if (auto ref = dynamic_cast<const ReferenceType*>(result); ref != nullptr)
         result = ref->get_element_type();
     if (auto i = dynamic_cast<const IdentifierType*>(result); i != nullptr)
-        result = i->get_type();
+        result = i->get_concrete_type();
     return (result == this) ? nullptr : result;
 }
 

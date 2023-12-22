@@ -15,6 +15,13 @@ namespace dua
 
 class ASTNode;
 
+struct TemplatedFunctionNode
+{
+    FunctionDefinitionNode* node;
+    std::vector<std::string> template_params;
+    FunctionInfo info;
+    llvm::StructType* owner_class = nullptr;  // In case of a method
+};
 
 class ModuleCompiler
 {
@@ -86,6 +93,12 @@ public:
     void create_dua_init_function();
     void complete_dua_init_function();
 
+    std::string get_templated_function_full_name(std::string name, const std::vector<const Type*>& template_args);
+    std::string get_templated_function_full_name(std::string name, const std::vector<const Type*>& template_args, const std::vector<const Type*>& param_types);
+    void add_templated_function(FunctionDefinitionNode* node, std::vector<std::string> template_params, FunctionInfo info, llvm::StructType* current_class);
+    Value get_templated_function(std::string name, std::vector<const Type*>& template_args);
+    Value get_templated_function(std::string name, std::vector<const Type*>& template_args, const std::vector<const Type*>& arg_types, bool use_arg_types = true);
+
     ~ModuleCompiler();
 
 private:
@@ -137,6 +150,9 @@ private:
     // Used to keep track of the number of scopes used within a function, in
     //  order to determine how many scopes to destruct upon a return instruction
     std::vector<size_t> function_scope_count;
+
+    // A map of the templated functions, used to instantiate functions on demand
+    std::unordered_map<std::string, TemplatedFunctionNode> templated_functions;
 
     // A cache of the resulting LLVM IR, used to
     //  avoid performing the same computations

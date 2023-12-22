@@ -18,7 +18,7 @@ public:
 
     Value eval() override {
         auto i = type->as<IdentifierType>();
-        typing_system().insert_type(name, i ? i->get_type() : type);
+        typing_system().insert_type(name, i ? i->get_concrete_type() : type);
         return none_value();
     }
 };

@@ -1,13 +1,12 @@
 #include <types/TypeOfType.hpp>
 #include <ModuleCompiler.hpp>
-#include <AST/ASTNode.hpp>
 #include <AST/lvalue/LoadedLValueNode.hpp>
 #include <AST/lvalue/VariableNode.hpp>
 
 namespace dua
 {
 
-const Type* TypeOfType::get_type() const
+const Type* TypeOfType::get_concrete_type() const
 {
     // TODO improve this so that it doesn't
     if (auto l = node->as<LoadedLValueNode>(); l != nullptr) {
@@ -22,19 +21,19 @@ const Type* TypeOfType::get_type() const
 }
 
 Value TypeOfType::default_value() const {
-    return get_type()->default_value();
+    return get_concrete_type()->default_value();
 }
 
 llvm::Type *TypeOfType::llvm_type() const {
-    return get_type()->llvm_type();
+    return get_concrete_type()->llvm_type();
 }
 
 bool TypeOfType::operator==(const Type &other) {
-    return *get_type() == other;
+    return *get_concrete_type() == other;
 }
 
 std::string TypeOfType::to_string() const {
-    return get_type()->to_string();
+    return get_concrete_type()->to_string();
 }
 
 std::string TypeOfType::as_key() const {

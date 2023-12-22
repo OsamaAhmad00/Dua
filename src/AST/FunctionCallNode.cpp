@@ -9,7 +9,13 @@ namespace dua
 
 FunctionCallNode::FunctionCallNode(ModuleCompiler *compiler, std::string name, std::vector<ASTNode *> args,
                                    std::vector<const Type*> template_args)
-        : name(name), args(std::move(args)), template_args(template_args)
+        : name(std::move(name)), args(std::move(args)), template_args(std::move(template_args)), is_templated(true)
+{
+    this->compiler = compiler;
+}
+
+FunctionCallNode::FunctionCallNode(ModuleCompiler *compiler, std::string name, std::vector<ASTNode *> args)
+    : name(std::move(name)), args(std::move(args)), template_args({}), is_templated(false)
 {
     this->compiler = compiler;
 }
@@ -25,7 +31,7 @@ std::vector<Value> FunctionCallNode::eval_args(bool is_method)
 
 Value FunctionCallNode::eval()
 {
-    if (!template_args.empty())
+    if (is_templated)
         return call_templated_function();
 
     std::vector<const Type*> arg_types(args.size());
@@ -84,40 +90,11 @@ const Type *FunctionCallNode::get_type()
 
 Value FunctionCallNode::call_templated_function()
 {
-    auto full_name = name_resolver().get_templated_function_full_name(name, template_args);
-    if (name_resolver().has_function(full_name))
-        return name_resolver().call_function(full_name, eval_args());
-
-    // Instantiate the function with the provided arguments
-
-    // A scope that will hold the binding of the template
-    //  parameters to the template arguments, and will
-    //  shadow the outer scope types that collide if exists.
-    typing_system().push_scope();
-
-    auto& templated = name_resolver().get_templated_function(name, template_args.size());
-    for (size_t i = 0; i < template_args.size(); i++)
-        typing_system().insert_type(templated.template_params[i], template_args[i]);
-
-    // Temporarily reset set the current function to nullptr
-    // so that we don't get the nested functions error.
-    auto old_func = current_function();
-    current_function() = nullptr;
-
-    name_resolver().register_function(full_name, templated.info, true);
-
-    auto func_node = (FunctionDefinitionNode*)templated.node;
-    func_node->is_templated = false;
-    std::swap(func_node->name, full_name);
-    templated.node->eval();
-    std::swap(func_node->name, full_name);
-    func_node->is_templated = true;
-
-    current_function() = old_func;
-
-    typing_system().pop_scope();
-
-    return name_resolver().call_function(full_name, eval_args());
+    std::vector<const Type*> arg_types(args.size());
+    for (size_t i = 0; i < args.size(); i++)
+        arg_types[i] = args[i]->get_type();
+    auto func = compiler->get_templated_function(name, template_args, std::move(arg_types));
+    return name_resolver().call_function(func, eval_args());
 }
 
 }

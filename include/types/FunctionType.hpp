@@ -23,6 +23,8 @@ struct FunctionType : public Type
 
     Value default_value() const override;
 
+    const FunctionType* with_concrete_types() const;
+
     llvm::FunctionType* llvm_type() const override;
 
     std::string to_string() const override;

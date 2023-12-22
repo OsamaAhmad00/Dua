@@ -4,7 +4,6 @@
 #include "types/FloatTypes.hpp"
 #include "types/PointerType.hpp"
 #include "types/ReferenceType.hpp"
-#include "AST/function/FunctionDefinitionNode.hpp"
 
 namespace dua
 {
@@ -34,7 +33,7 @@ void report_function_not_defined(const std::string& name)
 
 FunctionNameResolver::FunctionNameResolver(ModuleCompiler *compiler) : compiler(compiler) {}
 
-void FunctionNameResolver::register_function(std::string name, const FunctionInfo& info, bool no_mangle)
+void FunctionNameResolver::register_function(std::string name, FunctionInfo info, bool no_mangle)
 {
     if (compiler->current_function != nullptr)
         report_internal_error("Nested functions are not allowed");
@@ -42,8 +41,11 @@ void FunctionNameResolver::register_function(std::string name, const FunctionInf
     // Registering the function in the module so that all
     //  functions are visible during AST evaluation.
 
+    // Concrete types must be captured when registering
+    info.type = info.type->with_concrete_types();
+
     if (!no_mangle)
-        name = get_full_function_name(name, info.type->param_types);
+        name = get_function_full_name(name, info.type->param_types);
 
     llvm::FunctionType* type = info.type->llvm_type();
     llvm::Function* function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, name, compiler->module);
@@ -71,7 +73,7 @@ FunctionInfo& FunctionNameResolver::get_function_no_overloading(const std::strin
     return it->second;
 }
 
-std::string FunctionNameResolver::get_function(std::string name)
+std::string FunctionNameResolver::get_function_full_name(std::string name)
 {
     name += '.';
     auto begin = functions.lower_bound(name);
@@ -418,7 +420,7 @@ std::string FunctionNameResolver::get_winning_function(const std::string &name, 
     return result_list.front().first;
 }
 
-std::string FunctionNameResolver::get_full_function_name(std::string name, const std::vector<const Type*> &param_types)
+std::string FunctionNameResolver::get_function_full_name(std::string name, const std::vector<const Type*> &param_types)
 {
     if (name == "main") return name;
     if (param_types.empty()) return name + ".";
@@ -426,13 +428,13 @@ std::string FunctionNameResolver::get_full_function_name(std::string name, const
     //  have two functions with the same parameters with the
     //  exception that one is a variadic and the other is not
     for (auto type : param_types)
-        name += '.' + type->as_key();
+        name += '.' + type->to_string();
     return name;
 }
 
-std::string FunctionNameResolver::get_function_with_exact_type(const std::string &name, const FunctionType* type) const
+std::string FunctionNameResolver::get_function_name_with_exact_type(const std::string &name, const FunctionType* type) const
 {
-    auto mangled_name = get_full_function_name(name, type->param_types);
+    auto mangled_name = get_function_full_name(name, type->param_types);
     auto non_mangled = functions.find(name);
     auto mangled = functions.find(mangled_name);
     if (non_mangled != functions.end() && non_mangled->second.type == type) {
@@ -464,32 +466,6 @@ const Type *FunctionNameResolver::get_infix_operator_return_type(const Type *t1,
     if (full_name.empty())
         return nullptr;
     return functions[full_name].type->return_type;
-}
-
-void FunctionNameResolver::add_templated_function(FunctionDefinitionNode* node, std::vector<std::string> template_params, FunctionInfo info)
-{
-    auto name = node->name + "." + std::to_string(template_params.size());
-    if (auto it = templated_functions.find(name); it == templated_functions.end())
-        templated_functions.insert(it, {std::move(name), { node, std::move(template_params), std::move(info) }});
-    else
-        report_error("The templated function " + node->name + " with "
-            + std::to_string(template_params.size()) + " is already defined");
-}
-
-TemplatedNode& FunctionNameResolver::get_templated_function(std::string name, size_t template_arg_count)
-{
-    name += "." + std::to_string(template_arg_count);
-    auto it = templated_functions.find(name);
-    if (it == templated_functions.end())
-        report_error("The templated function " + name + " with "
-            + std::to_string(template_arg_count) + " template parameters is not defined");
-    return it->second;
-}
-
-std::string FunctionNameResolver::get_templated_function_full_name(std::string name,
-                                                                   const std::vector<const Type *> &template_args)
-{
-    return get_full_function_name(name + "." + std::to_string(template_args.size()), template_args);
 }
 
 }

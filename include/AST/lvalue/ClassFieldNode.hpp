@@ -16,6 +16,9 @@ public:
     ClassFieldNode(ModuleCompiler* compiler, ASTNode* instance, std::string field_name)
             : VariableNode(compiler, std::move(field_name)), instance(instance) { }
 
+    ClassFieldNode(ModuleCompiler* compiler, ASTNode* instance, std::string field_name, const std::vector<const Type*>& template_args)
+            : VariableNode(compiler, std::move(field_name), template_args), instance(instance) { }
+
     Value eval() override;
 
     [[nodiscard]] const Type* get_type() override;

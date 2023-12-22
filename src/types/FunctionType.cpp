@@ -1,6 +1,7 @@
 #include <types/FunctionType.hpp>
 #include <ModuleCompiler.hpp>
 #include "types/ReferenceType.hpp"
+#include "types/NonConcreteType.hpp"
 
 
 namespace dua
@@ -83,6 +84,22 @@ bool FunctionType::operator==(const FunctionType &other) const
         if (!equal_types(param_types[i], other.param_types[i]))
             return false;
     return is_var_arg == other.is_var_arg;
+}
+
+const FunctionType *FunctionType::with_concrete_types() const
+{
+    auto new_return_type = return_type;
+    if (auto x = return_type->as<NonConcreteType>(); x != nullptr)
+        new_return_type = x->get_concrete_type();
+
+    auto new_param_types = param_types;
+    for (size_t i = 0; i < param_types.size(); i++)
+        if (auto x = param_types[i]->as<NonConcreteType>(); x != nullptr)
+            new_param_types[i] = x->get_concrete_type();
+
+    if (return_type != new_return_type || param_types != new_param_types)
+        return compiler->create_type<FunctionType>(new_return_type, new_param_types, is_var_arg);
+    return this;
 }
 
 }

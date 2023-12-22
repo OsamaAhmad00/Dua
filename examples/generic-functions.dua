@@ -77,3 +77,78 @@ int main()
     func<int>();
     func<int, long>();
 }
+
+
+// Case Templated method
+// Outputs "i32 123"
+
+class X
+{
+    int num = 123;
+
+    void func<T>() {
+        printf("%s %d", typename(T), num);
+    }
+}
+
+int main()
+{
+    X x;
+    x.func<int>();
+}
+
+
+// Case Templated function reference
+// Outputs "i32 i64 "
+
+void func<T>() {
+    printf("%s ", typename(T));
+}
+
+int main()
+{
+    var x = func<int>;
+    var y = func<long>;
+
+    x();
+    y();
+}
+
+
+// Case Templated method reference
+// Outputs "i32 i64 "
+
+class Z
+{
+    void func<T>() {
+        printf("%s ", typename(T));
+    }
+}
+
+int main()
+{
+    Z z;
+    var x = z.func<int>;
+    var y = z.func<long>;
+
+    x(z);
+    y(z);
+}
+
+
+// TODO Case Templated function overloading
+// Outputs "i32 i64"
+//
+// void func<T>(int i) {
+//     printf("i32 ");
+// }
+//
+// void func<T>(long l) {
+//     printf("i64");
+// }
+//
+// int main()
+// {
+//     func<byte>(1);
+//     func<byte>(1I);
+// }
