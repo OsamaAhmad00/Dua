@@ -199,3 +199,21 @@ int main()
     func<byte>(1);
     func<byte>(1);
 }
+
+
+// Case Nested templated function call
+// Outputs "i16 i32 i64 "
+
+void func<T>(T t)
+{
+    if (t == 1)
+        func<i32>(2);
+    else if (t == 2)
+        func<i16>(3);
+    printf("%s ", typename(T));
+}
+
+int main()
+{
+    func<i64>(1);
+}

@@ -155,13 +155,16 @@ private:
     // A map of the templated functions, used to instantiate functions on demand
     std::unordered_map<std::string, std::vector<TemplatedFunctionNode>> templated_functions;
 
-    // A cache of the resulting LLVM IR, used to
-    //  avoid performing the same computations
-    std::string result;
-
     // Mainly used when evaluating a templated nodes, in which the type of the children
     //  may change depending on the template arguments.
     bool stop_caching_types = false;
+
+    // Used to determine the depth of the nested templated definitions
+    size_t templated_definition_depth = 0;
+
+    // A cache of the resulting LLVM IR, used to
+    //  avoid performing the same computations
+    std::string result;
 };
 
 }

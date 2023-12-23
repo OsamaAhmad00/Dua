@@ -148,9 +148,11 @@ Value ModuleCompiler::get_templated_function(const std::string& name, std::vecto
         report_error("The templated function " + name + " with "
                      + std::to_string(template_args.size()) + " template parameters is not defined");
 
+    templated_definition_depth++;
+
     // Finding the best overload
-    name_resolver.symbol_table.temporarily_discard_all_but_global_scope();
-    typing_system.identifier_types.temporarily_discard_all_but_global_scope();
+    name_resolver.symbol_table.keep_only_first_n_scopes(templated_definition_depth);
+    typing_system.identifier_types.keep_only_first_n_scopes(templated_definition_depth);
 
     auto& functions = it->second;
 
@@ -185,8 +187,9 @@ Value ModuleCompiler::get_templated_function(const std::string& name, std::vecto
         auto type = name_resolver.get_function_no_overloading(full_name).type;
 
         typing_system.pop_scope();
-        typing_system.identifier_types.restore_original_scopes();
-        name_resolver.symbol_table.restore_original_scopes();
+        typing_system.identifier_types.restore_prev_state();
+        name_resolver.symbol_table.restore_prev_state();
+        templated_definition_depth--;
 
         return create_value(func, type);
     }
@@ -224,10 +227,11 @@ Value ModuleCompiler::get_templated_function(const std::string& name, std::vecto
 
     typing_system.pop_scope();
 
-    typing_system.identifier_types.restore_original_scopes();
-    name_resolver.symbol_table.restore_original_scopes();
+    typing_system.identifier_types.restore_prev_state();
+    name_resolver.symbol_table.restore_prev_state();
 
     stop_caching_types = old_type_cache_config;
+    templated_definition_depth--;
 
     auto func = module.getFunction(full_name);
     auto type = name_resolver.get_function_no_overloading(full_name).type;

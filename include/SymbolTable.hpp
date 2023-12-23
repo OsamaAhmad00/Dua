@@ -40,7 +40,7 @@ struct SymbolTable
     std::vector<Scope<T>> scopes;
     // Used when switching to a temporary state in which
     //  all scopes but the global one are discarded.
-    std::vector<Scope<T>> other_scopes;
+    std::vector<std::vector<Scope<T>>> switch_stack;
 
     SymbolTable() { push_scope(); }
 
@@ -113,20 +113,22 @@ struct SymbolTable
         return top;
     }
 
-    void temporarily_discard_all_but_global_scope()
+    void keep_only_first_n_scopes(size_t n)
     {
-        other_scopes.clear();
-        if (scopes.empty()) return;
-        other_scopes.push_back(std::move(scopes[0]));
-        std::swap(scopes, other_scopes);
+        if (n > scopes.size())
+            report_internal_error("Can't keep " + std::to_string(n) + " scopes. There are only " + std::to_string(scopes.size()) + " scopes");
+
+        switch_stack.push_back(std::move(scopes));
+
+        scopes.resize(n);
+        for (size_t i = 0; i < n; i++)
+            scopes[i] = switch_stack.back()[i];
     }
 
-    void restore_original_scopes()
+    void restore_prev_state()
     {
-        // Assumes that global scope is present, thus,
-        // the original stack had at least one element
-        std::swap(scopes, other_scopes);
-        scopes[0] = std::move(other_scopes[0]);
+        scopes = std::move(switch_stack.back());
+        switch_stack.pop_back();
     }
 };
 
