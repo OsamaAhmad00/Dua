@@ -136,19 +136,66 @@ int main()
 }
 
 
-// TODO Case Templated function overloading
-// Outputs "i32 i64"
+// TODO Case Using the template arg as parameter type
+// Outputs "B3 L4"
 //
-// void func<T>(int i) {
-//     printf("i32 ");
-// }
+// void print(byte b) { printf("B%d " , (int)b); }
+// void print(long l) { printf("L%lld", l); }
 //
-// void func<T>(long l) {
-//     printf("i64");
+// void func<T>(T t) {
+//     print(t);
 // }
 //
 // int main()
 // {
-//     func<byte>(1);
-//     func<byte>(1I);
+//     func<byte>(3);
+//     func<long>(4);
 // }
+
+// Case Templated function implicit casting
+// Outputs "Hello"
+
+void func<T>(T t) {
+    printf("Hello");
+}
+
+int main()
+{
+    func<byte>(1);
+}
+
+
+// Case Templated function overloading
+// Outputs "i32 i64"
+
+void func<T>(int i) {
+    printf("i32 ");
+}
+
+void func<T>(long l) {
+    printf("i64");
+}
+
+int main()
+{
+    func<byte>(1I);
+    func<byte>(1);
+}
+
+
+// Case Redefinition of the templated function with the same signature
+// Panics
+
+void func<T>(int i) {
+    printf("i32 ");
+}
+
+void func<T>(int i) {
+    printf("i32 ");
+}
+
+int main()
+{
+    func<byte>(1);
+    func<byte>(1);
+}

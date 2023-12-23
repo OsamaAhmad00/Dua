@@ -344,13 +344,16 @@ std::string FunctionNameResolver::get_winning_function(const std::string &name, 
     auto non_mangled = functions.find(name);
 
     if (begin == end) {
+
         if (non_mangled != functions.end()) {
             // This is a non-mangled function name, which doesn't have
             //  a '.' followed by the parameter types after its name
             return name;
         }
+
         if (panic_on_not_found)
             report_error("Function " + name + " is undefined");
+
         else return "";
     }
 
@@ -408,6 +411,8 @@ std::string FunctionNameResolver::get_winning_function(const std::string &name, 
 
     if (result_list.size() != 1)
     {
+        if (!panic_on_not_found) return "";
+
         std::string message = "More than one overload of the function '" + name + "' is applicable to the function call."
                                                                                  " Applicable functions are:\n";
         for (auto& overload : result_list)
@@ -437,6 +442,7 @@ std::string FunctionNameResolver::get_function_name_with_exact_type(const std::s
     auto mangled_name = get_function_full_name(name, type->param_types);
     auto non_mangled = functions.find(name);
     auto mangled = functions.find(mangled_name);
+
     if (non_mangled != functions.end() && non_mangled->second.type == type) {
         if (mangled != functions.end())
             report_error("A resolution conflict between a mangled and a non-mangled functions with name " + name);
@@ -446,6 +452,7 @@ std::string FunctionNameResolver::get_function_name_with_exact_type(const std::s
     }
 
     report_error("There is no overload for the function '" + name + "' with the type " + type->to_string());
+
     return "";  // Unreachable
 }
 

@@ -96,8 +96,9 @@ public:
     std::string get_templated_function_full_name(std::string name, const std::vector<const Type*>& template_args);
     std::string get_templated_function_full_name(std::string name, const std::vector<const Type*>& template_args, const std::vector<const Type*>& param_types);
     void add_templated_function(FunctionDefinitionNode* node, std::vector<std::string> template_params, FunctionInfo info, llvm::StructType* current_class);
-    Value get_templated_function(std::string name, std::vector<const Type*>& template_args);
-    Value get_templated_function(std::string name, std::vector<const Type*>& template_args, const std::vector<const Type*>& arg_types, bool use_arg_types = true);
+    Value get_templated_function(const std::string& name, std::vector<const Type*>& template_args);
+    Value get_templated_function(const std::string& name, std::vector<const Type*>& template_args, const std::vector<const Type*>& arg_types, bool use_arg_types = true);
+    long long get_winner_templated_function(const std::string& name, const std::vector<TemplatedFunctionNode>& functions, const std::vector<const Type*>& template_args, const std::vector<const Type*>& arg_types, bool panic_on_not_found = true);
 
     ~ModuleCompiler();
 
@@ -152,7 +153,7 @@ private:
     std::vector<size_t> function_scope_count;
 
     // A map of the templated functions, used to instantiate functions on demand
-    std::unordered_map<std::string, TemplatedFunctionNode> templated_functions;
+    std::unordered_map<std::string, std::vector<TemplatedFunctionNode>> templated_functions;
 
     // A cache of the resulting LLVM IR, used to
     //  avoid performing the same computations

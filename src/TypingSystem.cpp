@@ -154,7 +154,7 @@ static const T* is(const Type* t) { return dynamic_cast<const T*>(t); }
 
 int TypingSystem::similarity_score(const Type *t1, const Type *t2) const
 {
-    // Strip the reference
+    // Strip any wrappers, including references
     if (auto t = t1->get_contained_type(); t != nullptr)
         t1 = t;
     if (auto t = t2->get_contained_type(); t != nullptr)
