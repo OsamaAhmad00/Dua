@@ -20,7 +20,7 @@ Value DereferenceNode::eval()
 const Type* DereferenceNode::get_type()
 {
     if (type != nullptr) return type;
-    return type = assert_ptr(address->get_type());
+    return set_type(assert_ptr(address->get_type()));
 }
 
 const Type* DereferenceNode::get_element_type()

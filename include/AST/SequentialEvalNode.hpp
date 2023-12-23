@@ -33,7 +33,7 @@ public:
     }
 
     const Type* get_type() override {
-        return type = nodes[return_node]->get_type();
+        return set_type(nodes[return_node]->get_type());
     }
 
 };

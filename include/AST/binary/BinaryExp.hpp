@@ -70,10 +70,10 @@ public:                                                                         
         auto rtype = rhs->get_type();                                                 \
         auto infix_type = name_resolver()                                             \
             .get_infix_operator_return_type(ltype, rtype, #NAME);                     \
-        if (infix_type != nullptr) return type = infix_type;                          \
-        return type = ltype->get_winning_type(rtype, true,                            \
+        if (infix_type != nullptr) return set_type(infix_type);                       \
+        return set_type(ltype->get_winning_type(rtype, true,                          \
             "There is no " #NAME " operator defined for the types " +                 \
-            ltype->to_string() + " and " + rtype->to_string());                       \
+            ltype->to_string() + " and " + rtype->to_string()));                      \
     }                                                                                 \
 };
 

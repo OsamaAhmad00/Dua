@@ -194,6 +194,10 @@ Value ModuleCompiler::get_templated_function(const std::string& name, std::vecto
     // Function not defined yet.
     // Instantiate the function with the provided arguments
 
+    // Types shouldn't be cached during the evaluation of templated functions
+    auto old_type_cache_config = stop_caching_types;
+    stop_caching_types = true;
+
     // The full name is computed here.
     templated.node->no_mangle = true;
 
@@ -222,6 +226,8 @@ Value ModuleCompiler::get_templated_function(const std::string& name, std::vecto
 
     typing_system.identifier_types.restore_original_scopes();
     name_resolver.symbol_table.restore_original_scopes();
+
+    stop_caching_types = old_type_cache_config;
 
     auto func = module.getFunction(full_name);
     auto type = name_resolver.get_function_no_overloading(full_name).type;

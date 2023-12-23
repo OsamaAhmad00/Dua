@@ -136,21 +136,21 @@ int main()
 }
 
 
-// TODO Case Using the template arg as parameter type
+// Case Using the template arg as parameter type
 // Outputs "B3 L4"
-//
-// void print(byte b) { printf("B%d " , (int)b); }
-// void print(long l) { printf("L%lld", l); }
-//
-// void func<T>(T t) {
-//     print(t);
-// }
-//
-// int main()
-// {
-//     func<byte>(3);
-//     func<long>(4);
-// }
+
+void print(byte b) { printf("B%d " , (int)b); }
+void print(long l) { printf("L%lld", l); }
+
+void func<T>(T t) {
+    print(t);
+}
+
+int main()
+{
+    func<byte>(3);
+    func<long>(4);
+}
 
 // Case Templated function implicit casting
 // Outputs "Hello"

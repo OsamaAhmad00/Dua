@@ -16,7 +16,7 @@ public:
 
     Value eval() override;
 
-    const Type* get_type() override { return type = expression->get_type(); }
+    const Type* get_type() override { return set_type(expression->get_type()); }
 };
 
 
@@ -31,7 +31,7 @@ public:
 
     Value eval() override;
 
-    const Type* get_type() override { delete type; return type = expression->get_type(); }
+    const Type* get_type() override { return set_type(expression->get_type()); }
 };
 
 
@@ -46,7 +46,7 @@ public:
 
     Value eval() override;
 
-    const Type* get_type() override { delete type; return type = expression->get_type(); }
+    const Type* get_type() override { return set_type(expression->get_type()); }
 };
 
 }

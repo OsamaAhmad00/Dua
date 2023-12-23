@@ -85,7 +85,7 @@ const Type *FunctionCallNode::get_type()
     std::vector<const Type*> arg_types(args.size());
     for (size_t i = 0; i < args.size(); i++)
         arg_types[i] = args[i]->get_type();
-    return type = name_resolver().get_function(name, arg_types).type->return_type;
+    return set_type(name_resolver().get_function(name, arg_types).type->return_type);
 }
 
 Value FunctionCallNode::call_templated_function()

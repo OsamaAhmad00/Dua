@@ -158,6 +158,10 @@ private:
     // A cache of the resulting LLVM IR, used to
     //  avoid performing the same computations
     std::string result;
+
+    // Mainly used when evaluating a templated nodes, in which the type of the children
+    //  may change depending on the template arguments.
+    bool stop_caching_types = false;
 };
 
 }

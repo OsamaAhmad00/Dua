@@ -49,7 +49,7 @@ Value ExprFunctionCallNode::eval()
 
 const Type *ExprFunctionCallNode::get_type() {
     if (type != nullptr) return type;
-    return type = get_function_type(func)->return_type;
+    return set_type(get_function_type(func)->return_type);
 }
 
 }

@@ -19,7 +19,7 @@ Value TypeNameNode::eval()
 
 const Type *TypeNameNode::get_type() {
     if (type == nullptr)
-        return type = typing_system().create_type<PointerType>(typing_system().create_type<I8Type>());
+        return set_type(typing_system().create_type<PointerType>(typing_system().create_type<I8Type>()));
     return type;
 }
 

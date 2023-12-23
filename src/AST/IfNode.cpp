@@ -115,8 +115,8 @@ Value IfNode::eval()
 
 const Type *IfNode::get_type() {
     if (type != nullptr) return type;
-    if (is_expression) return type = branches.front()->get_type();
-    return type = compiler->create_type<VoidType>();
+    if (is_expression) return set_type(branches.front()->get_type());
+    return set_type(compiler->create_type<VoidType>());
 }
 
 }

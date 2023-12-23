@@ -46,7 +46,7 @@ Value AssignmentExpressionNode::eval()
 }
 
 const Type* AssignmentExpressionNode::get_type() {
-    return type = lhs->get_type();
+    return set_type(lhs->get_type());
 }
 
 }

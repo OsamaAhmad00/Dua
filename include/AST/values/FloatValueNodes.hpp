@@ -27,7 +27,7 @@ public:                                                                         
                                                                                  \
     const Type* get_type() override {                                            \
         if (type == nullptr)                                                     \
-            return type = compiler->create_type<F##WIDTH##Type>();               \
+            return set_type(compiler->create_type<F##WIDTH##Type>());            \
         return type;                                                             \
     }                                                                            \
 };

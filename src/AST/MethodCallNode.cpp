@@ -28,7 +28,7 @@ const Type* MethodCallNode::get_type()
 {
     if (type != nullptr) return type;
     process();
-    return type = FunctionCallNode::get_type();
+    return set_type(FunctionCallNode::get_type());
 }
 
 }

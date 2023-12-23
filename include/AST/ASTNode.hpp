@@ -24,6 +24,8 @@ public:
 
     virtual const Type* get_type();
 
+    const Type* set_type(const Type* type);
+
     template <typename T>
     T* as() { return dynamic_cast<T*>(this); }
 

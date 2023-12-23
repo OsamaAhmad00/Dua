@@ -32,7 +32,13 @@ NoneValue ASTNode::none_value() { return Value { nullptr, nullptr, nullptr, null
 const Type* ASTNode::get_type()
 {
     if (type == nullptr)
-        return type = compiler->create_type<VoidType>();
+        return set_type(compiler->create_type<VoidType>());
+    return type;
+}
+
+const Type* ASTNode::set_type(const Type* type) {
+    if (!compiler->stop_caching_types)
+        this->type = type;
     return type;
 }
 

@@ -16,7 +16,7 @@ Value ArrayIndexingNode::eval()
 }
 
 const Type *ArrayIndexingNode::get_type() {
-    return type = lvalue->get_element_type();
+    return set_type(lvalue->get_element_type());
 }
 
 const Type *ArrayIndexingNode::get_element_type() {

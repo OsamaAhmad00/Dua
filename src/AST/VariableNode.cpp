@@ -59,7 +59,7 @@ const Type* VariableNode::get_type()
     if (is_templated) {
         // This is definitely a templated function reference.
         // Wrap the function type in a pointer
-        return type = compiler->create_type<PointerType>(compiler->get_templated_function(name, template_args).type);
+        return set_type(compiler->create_type<PointerType>(compiler->get_templated_function(name, template_args).type));
     }
 
     const Type* t;
@@ -73,7 +73,7 @@ const Type* VariableNode::get_type()
         report_error("The identifier " + name + " is not defined");
     }
 
-    return type = compiler->create_type<PointerType>(t);
+    return set_type(compiler->create_type<PointerType>(t));
 }
 
 const Type *VariableNode::get_element_type()

@@ -52,7 +52,7 @@ const Type* ClassFieldNode::get_type()
     auto full_name = get_full_name();
 
     if (is_templated) {
-        return type = compiler->create_type<PointerType>(compiler->get_templated_function(full_name, template_args).type);
+        return set_type(compiler->create_type<PointerType>(compiler->get_templated_function(full_name, template_args).type));
     }
 
     const Type* t;
@@ -65,7 +65,7 @@ const Type* ClassFieldNode::get_type()
         t = class_type->get_field(name).type;
     }
 
-    return type = compiler->create_type<PointerType>(t);
+    return set_type(compiler->create_type<PointerType>(t));
 }
 
 Value ClassFieldNode::eval_instance() const
