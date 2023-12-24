@@ -1,0 +1,462 @@
+no_mangle int printf(str message, ...);
+
+// Case Basic generic class
+// Outputs "i64 i32 X "
+
+class X {}
+
+class G<T>
+{
+    void func() {
+        printf("%s ", typename(T));
+    }
+}
+
+int main()
+{
+    G<i64> g1;
+    G<i32> g2;
+    G<X> g3;
+
+    g1.func();
+    g2.func();
+    g3.func();
+}
+
+
+// Case Templated class with multiple template parameters
+// Outputs "i64 i32 i16"
+
+class X<T, U, K>
+{
+    void print() {
+        printf("%s %s %s", typename(T), typename(U), typename(K));
+    }
+}
+
+int main()
+{
+    X<i64, i32, i16> x;
+    x.print();
+}
+
+
+// Case Templated class with templated method
+// Outputs "i32: 1, i64: 2"
+
+class X<T>
+{
+    void print<U>(T t, U u) {
+        printf("%s: %d, %s: %d", typename(t), (int)t, typename(u), (int)u);
+    }
+}
+
+int main()
+{
+    X<i32> x;
+    x.print<i64>(1, 2);
+}
+
+
+// Case Reference to a templated method of a templated class
+// Outputs "Hello 123\nHello 123\n"
+
+class X<T>
+{
+    void print<U>(T message, U num)
+    {
+        printf("%s %d\n", message, num);
+    }
+}
+
+int main()
+{
+    X<str> x;
+    var print1 = x.print<int>;
+    var print2 = x.print<long>;
+    print1(x, "Hello", 123);
+    print2(x, "Hello", 123);
+}
+
+
+// Case Empty template parameters list
+// Outputs "Hello"
+
+class X<> {
+    void func() {
+        printf("Hello");
+    }
+}
+
+int main()
+{
+    X<> x;
+    x.func();
+}
+
+
+// Case Creating the same templated class multiple times
+// Outputs "i32 i32 i32 "
+
+class X<T>
+{
+    void print() {
+        printf("%s ", typename(T));
+    }
+}
+
+int main()
+{
+    X<int> x1;
+    X<int> x2;
+    X<int> x3;
+    x1.print();
+    x2.print();
+    x3.print();
+}
+
+
+// Case Class with multiple template parameters
+// Outputs "i32 i64"
+
+class X<T, U>
+{
+    void print() {
+        printf("%s %s", typename(T), typename(U));
+    }
+}
+
+int main()
+{
+    X<int, long> x();
+    x.print();
+}
+
+
+// Case Same class name with different template params
+// Outputs "i32 i32 i64"
+
+class X<T>
+{
+    void func() {
+        printf("%s ", typename(T));
+    }
+}
+
+class X<T, U>
+{
+    void func() {
+        printf("%s %s", typename(T), typename(U));
+    }
+}
+
+int main()
+{
+    X<int> x1;
+    X<int, long> x2;
+    x1.func();
+    x2.func();
+}
+
+
+// Case Using the template arg as parameter type
+// Outputs "B1 L2 L3 B4 "
+
+void print(byte b) { printf("B%d " , (int)b); }
+void print(long l) { printf("L%lld ", l); }
+
+class X<T>
+{
+    void func<U>(T t, U u) {
+        print(t);
+        print(u);
+    }
+}
+
+int main()
+{
+    X<byte> x1;
+    X<long> x2;
+    x1.func<long>(1, 2);
+    x2.func<byte>(3, 4);
+}
+
+
+// Case Templated class method implicit casting
+// Outputs "Hello"
+
+class X<T>
+{
+    void func(T t) {
+        printf("Hello");
+    }
+}
+
+int main()
+{
+    X<byte> x;
+    x.func(1);
+}
+
+
+// Case Templated class method overloading
+// Outputs "i32 i64"
+
+class X<T>
+{
+    void func(int i) {
+        printf("i32 ");
+    }
+
+    void func(long l) {
+        printf("i64");
+    }
+}
+
+int main()
+{
+    X<byte> x;
+    x.func(1I);
+    x.func(2);
+}
+
+
+// Case Redefinition of the templated class with the same number of template params
+// Panics
+
+class X<T> {}
+class X<T> {}
+
+int main()
+{
+    X<int> x;
+}
+
+
+// Case Templated and non-templated classes with the same name
+// Outputs "Non-templated\nTemplated\n"
+
+class X
+{
+    void func() {
+        printf("Non-templated\n");
+    }
+}
+
+class X<T>
+{
+    void func() {
+        printf("Templated\n");
+    }
+}
+
+int main()
+{
+    X x1;
+    X<int> x2;
+    x1.func();
+    x2.func();
+}
+
+
+// Case Aliasing a templated class
+// Outputs "i32 i64 "
+
+class X<T>
+{
+    void print() {
+        printf("%s ", typename(T));
+    }
+}
+
+int main()
+{
+    typealias A = X<int>;
+    typealias B = X<long>;
+
+    A a;
+    B b;
+    a.print();
+    b.print();
+}
+
+
+// Case Templated class as a field of another class
+// Outputs "3"
+
+
+class X
+{
+    Y<int> y;
+
+    void print() {
+        printf("%d", y.i);
+    }
+}
+
+class Y<T>
+{
+    T i = 3;
+}
+
+int main()
+{
+    X x;
+    x.print();
+}
+
+// Case Nested templated class instantiation
+// Outputs "i16 i32 i64 "
+
+class X<T>
+{
+    void func(T t)
+    {
+        if (t == 1) {
+            X<i32> x;
+            x.func(2);
+        } else if (t == 2) {
+            X<i16> x;
+            x.func(3);
+        }
+        printf("%s ", typename(T));
+    }
+}
+
+
+int main()
+{
+    X<i64> x;
+    x.func(1);
+}
+
+
+// Case Constructor of a templated class
+// Outputs "Hello"
+
+class X<T>
+{
+    constructor() {
+        printf("Hello");
+    }
+}
+
+int main()
+{
+    X<int> x;
+}
+
+
+// Case Destructor of a templated class
+// Outputs "Hello"
+
+class X<T>
+{
+    destructor {
+        printf("Hello");
+    }
+}
+
+int main()
+{
+    X<int> x;
+}
+
+
+// Case Constructor overloading of a templated class
+// Outputs "Hello 1 2"
+
+class X<T>
+{
+    constructor() {
+        printf("Hello");
+    }
+
+    constructor(T i, T j) {
+        printf(" %d %d", i, j);
+    }
+}
+
+int main()
+{
+    X<int> x1;
+    X<int> x2(1, 2);
+}
+
+
+// Case Templated class fields argument in constructor
+// Outputs "1\n1\n1 2\n2\n"
+
+class X<T>
+{
+    Y<int, long> y;
+
+    constructor(T x, T y) : y(x, y) {
+        printf("%d\n", (int)(x * y));
+    }
+
+    constructor(T x) : y(x) {
+        printf("%d\n", (int)x);
+    }
+}
+
+class Y<T, U>
+{
+    constructor(T t) {
+        printf("%d\n", (int)t);
+    }
+
+    constructor(T t, U u) {
+        printf("%d %d\n", (int)t, (int)u);
+    }
+}
+
+int main()
+{
+    X<int> x1(1);
+    X<int> x2(1, 2);
+}
+
+
+// Case Shadowing class template param in a templated method
+// Outputs "i32 i64"
+
+class X<T>
+{
+    void func<T>() {
+        printf("%s ", typename(T));
+    }
+
+    void func() {
+        printf("%s", typename(T));
+    }
+}
+
+int main()
+{
+    X<long> x;
+    x.func<int>();
+    x.func();
+}
+
+
+// Case Using a shadowed type in a method parameter
+// Outputs "i32 i64"
+
+class X<T>
+{
+    void func<T>(T t) {
+        printf("%s ", typename(t));
+    }
+
+    void func(T t) {
+        printf("%s", typename(t));
+    }
+}
+
+int main()
+{
+    X<long> x;
+    x.func<int>(1);
+    x.func(1);
+}

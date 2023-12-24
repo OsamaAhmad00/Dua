@@ -38,7 +38,14 @@ Scope<Value> NameResolver::pop_scope()
 }
 
 const ClassType *NameResolver::get_class(const std::string &name) {
-     return classes[name];
+    auto it = classes.find(name);
+    if (it == classes.end())
+        report_internal_error("The class " + name + " is not defined");
+    return it->second;
+}
+
+bool NameResolver::has_class(const std::string &name) {
+    return classes.find(name) != classes.end();
 }
 
 }

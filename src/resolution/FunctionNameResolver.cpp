@@ -18,17 +18,7 @@ std::vector<const Type*> get_types(const std::vector<Value>& args)
 
 void report_function_not_defined(const std::string& name)
 {
-    size_t dot = 0;
-    while (dot < name.size() && name[dot] != '.') dot++;
-
-    if (dot == name.size()) {
-        report_error("The function " + name + " is not declared/defined");
-    } else {
-        // A class method
-        auto class_name = name.substr(0, dot);
-        auto method_name = name.substr(dot + 1);
-        report_error("The class " + class_name + " is not defined. Can't resolve " + class_name + "::" + method_name);
-    }
+    report_error("The function " + name + " is not declared/defined");
 }
 
 FunctionNameResolver::FunctionNameResolver(ModuleCompiler *compiler) : compiler(compiler) {}

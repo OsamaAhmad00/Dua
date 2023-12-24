@@ -7,8 +7,8 @@ namespace dua
 {
 
 FunctionDefinitionNode::FunctionDefinitionNode(dua::ModuleCompiler *compiler,
-               std::string name, dua::ASTNode *body, const FunctionType* function_type, bool no_mangle, bool is_templated)
-        : name(std::move(name)), body(body), function_type(function_type), no_mangle(no_mangle), is_templated(is_templated)
+               std::string name, dua::ASTNode *body, const FunctionType* function_type, bool no_mangle, size_t template_param_count)
+        : name(std::move(name)), body(body), function_type(function_type), no_mangle(no_mangle), template_param_count(template_param_count)
 {
     this->compiler = compiler;
 
@@ -23,7 +23,7 @@ Value FunctionDefinitionNode::eval()
     //  across the module, regardless of the order
     //  of declaration/definition.
 
-    if (is_templated)
+    if (template_param_count != -1)
         return none_value();
 
     set_full_name();
@@ -224,6 +224,10 @@ void FunctionDefinitionNode::set_full_name()
         name = name_resolver().get_function_full_name(name, get_function_type()->param_types);
         no_mangle = true;
     }
+}
+
+FunctionDefinitionNode *FunctionDefinitionNode::clone() const {
+    return compiler->create_node<FunctionDefinitionNode>(name, body, function_type, no_mangle, template_param_count);
 }
 
 }

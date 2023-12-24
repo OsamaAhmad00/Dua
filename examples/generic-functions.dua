@@ -152,6 +152,7 @@ int main()
     func<long>(4);
 }
 
+
 // Case Templated function implicit casting
 // Outputs "Hello"
 
@@ -216,4 +217,22 @@ void func<T>(T t)
 int main()
 {
     func<i64>(1);
+}
+
+
+// Case Templated and non-templated functions with the same name
+// Outputs "Non-templated\nTemplated\n"
+
+void func() {
+    printf("Non-templated\n");
+}
+
+void func<T>() {
+    printf("Templated\n");
+}
+
+int main()
+{
+    func();
+    func<int>();
 }

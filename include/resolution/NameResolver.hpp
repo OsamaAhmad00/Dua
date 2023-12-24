@@ -37,6 +37,7 @@ public:
 
 
     const ClassType* get_class(const std::string& name);
+    bool has_class(const std::string& name);
     void add_fields_constructor_args(std::string constructor_name, std::vector<FieldConstructorArgs> args);
     std::vector<FieldConstructorArgs>& get_fields_args(const std::string& constructor_name);
 

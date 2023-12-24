@@ -57,7 +57,7 @@ class_declaration
     ;
 
 class_decl_no_semicolon
-    : Class identifier { assistant.register_class(); }
+    : Class identifier template_params_or_none { assistant.register_class(); }
     ;
 
 class_definition
@@ -242,12 +242,12 @@ statements
     ;
 
 statement
-    : if_statement
+    : variable_decl_or_def
+    | if_statement
     | for
     | while
     | do_while
     | block_statement
-    | variable_decl_or_def
     | type_alias
     | return_statement
     | Delete expression ';' { assistant.create_free(); }
@@ -501,17 +501,22 @@ types_list @init { assistant.push_counter(); }
     ;
 
 type
-    : type '(' types_list var_arg_or_none ')'   { assistant.create_function_type();  }
-    | type '[' size ']'                         { assistant.create_array_type();     }
-    | type '*'                                  { assistant.create_pointer_type();   }
-    | type '&'                                  { assistant.create_reference_type(); }
-    | TypeOf '(' expression ')'                 { assistant.create_type_of();        }
+    : type '(' types_list var_arg_or_none ')'   { assistant.create_function_type();        }
+    | type '[' size ']'                         { assistant.create_array_type();           }
+    | type '*'                                  { assistant.create_pointer_type();         }
+    | type '&'                                  { assistant.create_reference_type();       }
+    | TypeOf '(' expression ')'                 { assistant.create_type_of();              }
     | primitive_type
     | identifier_type
+    | templated_class_type
     ;
 
 identifier_type
     : identifier { assistant.create_identifier_type(); }
+    ;
+
+templated_class_type
+    : identifier template_args_or_none { assistant.create_templated_class_type(); }
     ;
 
 primitive_type

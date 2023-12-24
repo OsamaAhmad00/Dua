@@ -72,6 +72,7 @@
 #include "utils/TextManipulation.hpp"
 #include "utils/ErrorReporting.hpp"
 
+#include <set>
 
 namespace dua
 {
@@ -80,12 +81,24 @@ struct DeferredFieldArgs
 {
     FunctionDefinitionNode* node;
     std::vector<FieldConstructorArgs> args;
+    std::string owner_class;
+    bool in_templated_class = false;
 };
 
 struct DeferredFunctionDeclaration
 {
-    FunctionDefinitionNode* node;
+    FunctionDefinitionNode* node = nullptr;
     FunctionInfo info;
+};
+
+struct DeferredTemplatedClassDefinition
+{
+    std::string name;
+    std::vector<const Type*> template_args;
+
+    bool operator<(const DeferredTemplatedClassDefinition& other) const {
+        return name < other.name || (name == other.name && template_args < other.template_args);
+    }
 };
 
 //  This class is used to make the semantic-actions in the parser grammar file
@@ -94,6 +107,9 @@ struct DeferredFunctionDeclaration
 class ParserAssistant
 {
     ModuleCompiler* compiler = nullptr;
+
+    std::string current_class;
+    bool in_templated_class = false;
 
     // These stacks are used to push every recent result into it.
     // If a node currently under construction requires previous
@@ -128,6 +144,7 @@ class ParserAssistant
     // This is to avoid constraining the order of definitions, and the
     //  necessity of declaring a class before using it in the same file.
     std::vector<ClassDefinitionNode*> class_definitions;
+    std::set<DeferredTemplatedClassDefinition> templated_class_definitions;
     std::vector<DeferredFunctionDeclaration> function_definitions;
     std::vector<DeferredFieldArgs> constructors_field_args;
 
@@ -194,6 +211,8 @@ public:
     void push_type(Args...args) { types.push_back(compiler->create_type<T>(args...)); }
 
     void push_null_node() { nodes.push_back(nullptr); }
+
+    bool in_class() { return !current_class.empty() || in_templated_class; }
 
     static int64_t get_i64(std::string num);
     static int32_t get_i32(std::string num);
@@ -262,6 +281,7 @@ public:
     void create_reference_type();
     void create_type_alias();
     void create_identifier_lvalue();
+    void create_templated_class_type();
 
     template<typename T>
     void create_unary_expr() {

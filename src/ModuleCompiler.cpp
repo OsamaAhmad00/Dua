@@ -3,6 +3,9 @@
 #include <AST/TranslationUnitNode.hpp>
 #include <llvm/Support/Host.h>
 #include "AST/function/FunctionDefinitionNode.hpp"
+#include "AST/class/ClassDefinitionNode.hpp"
+#include "types/ReferenceType.hpp"
+#include "AST/variable/ClassFieldDefinitionNode.hpp"
 
 namespace dua
 {
@@ -116,11 +119,13 @@ void ModuleCompiler::pop_scope_counter() {
     function_scope_count.pop_back();
 }
 
-std::string get_templated_function_key(std::string name, size_t args_count) {
-    return name + "." + std::to_string(args_count);
+std::string ModuleCompiler::get_templated_function_key(std::string name, size_t args_count) {
+    // Templated functions are prefixed with a special keyword to avoid
+    // ambiguity with non-templated functions (to not have the same prefix)
+    return "Templated." + name + "." + std::to_string(args_count);
 }
 
-void ModuleCompiler::add_templated_function(FunctionDefinitionNode* node, std::vector<std::string> template_params, FunctionInfo info, llvm::StructType* current_class)
+void ModuleCompiler::add_templated_function(FunctionDefinitionNode* node, std::vector<std::string> template_params, FunctionInfo info, const std::string& class_name, bool in_templated_class)
 {
     auto name = get_templated_function_key(node->name, template_params.size());
     auto& functions = templated_functions[std::move(name)];
@@ -131,7 +136,8 @@ void ModuleCompiler::add_templated_function(FunctionDefinitionNode* node, std::v
                          info.type->to_string());
         }
     }
-    functions.push_back({node, std::move(template_params), std::move(info), current_class});
+    auto cls = class_name.empty() ? nullptr : llvm::StructType::getTypeByName(context, class_name);
+    functions.push_back({node, std::move(template_params), std::move(info), cls, in_templated_class });
 }
 
 Value ModuleCompiler::get_templated_function(const std::string& name, std::vector<const Type *> &template_args, const std::vector<const Type *> &arg_types, bool use_arg_types)
@@ -156,6 +162,17 @@ Value ModuleCompiler::get_templated_function(const std::string& name, std::vecto
 
     auto& functions = it->second;
 
+    auto& any_overload = functions.front();
+    if (any_overload.in_templated_class)
+    {
+        // If one overload belongs to a class, all other overloads will belong to it too.
+        typing_system.push_scope();
+        auto class_name = any_overload.owner_class->getName().str();
+        auto& bindings = templated_class_bindings[class_name];
+        for (size_t i = 0; i < bindings.params.size(); i++)
+            typing_system.insert_type(bindings.params[i], bindings.args[i]);
+    }
+
     long long idx = 0;
     if (!use_arg_types) {
         if (functions.size() > 1)
@@ -166,7 +183,7 @@ Value ModuleCompiler::get_templated_function(const std::string& name, std::vecto
 
     auto& templated = functions[idx];
 
-    // A scope that will hold the binding of the template
+    // A scope that will hold the bindings of the template
     //  parameters to the template arguments, and will
     //  shadow the outer scope types that collide if exists.
     typing_system.push_scope();
@@ -194,7 +211,7 @@ Value ModuleCompiler::get_templated_function(const std::string& name, std::vecto
         return create_value(func, type);
     }
 
-    // Function not defined yet.
+    // Function is not defined yet.
     // Instantiate the function with the provided arguments
 
     // Types shouldn't be cached during the evaluation of templated functions
@@ -204,22 +221,26 @@ Value ModuleCompiler::get_templated_function(const std::string& name, std::vecto
     // The full name is computed here.
     templated.node->no_mangle = true;
 
-    // Temporarily reset set the current function to nullptr
+    // Temporarily reset the current function to nullptr
     // so that we don't get the nested functions error.
     auto old_func = current_function;
     current_function = nullptr;
 
-    // Temporarily reset set the current class to
-    // nullptr so that method definitions are correct
+    // Temporarily set the current class to the owner
+    // class so that method definitions are correct
     auto old_class = current_class;
-    current_class = templated.owner_class;
+    // Templated classes will set the current class
+    //  before proceeding
+    if (!templated.in_templated_class)
+        current_class = templated.owner_class;
 
     name_resolver.register_function(full_name, templated.info, true);
 
     std::swap(templated.node->name, full_name);
-    templated.node->is_templated = false;
+    auto old_template_param_count = templated.node->template_param_count;
+    templated.node->template_param_count = -1;
     templated.node->eval();
-    templated.node->is_templated = true;
+    templated.node->template_param_count = old_template_param_count;
     std::swap(templated.node->name, full_name);
 
     current_class = old_class;
@@ -322,6 +343,252 @@ long long ModuleCompiler::get_winner_templated_function(const std::string& name,
     }
 
     return result_list.front();
+}
+
+std::string ModuleCompiler::get_templated_class_key(std::string name, size_t args_count) {
+    return name + "." + std::to_string(args_count);
+}
+
+std::string ModuleCompiler::get_templated_class_full_name(const std::string& name, const std::vector<const Type*>& template_args) {
+    return get_templated_function_full_name(name, template_args);
+}
+
+void ModuleCompiler::add_templated_class(ClassDefinitionNode* node, std::vector<std::string> template_params)
+{
+    auto name = get_templated_class_key(node->name, template_params.size());
+    if (templated_classes.find(name) != templated_classes.end())
+        report_error("Redefinition of the templated class " + node->name + " with " + std::to_string(template_params.size()) + " template parameters");
+    templated_classes[std::move(name)] = {node, std::move(template_params)};
+}
+
+const ClassType* ModuleCompiler::get_templated_class(const std::string &name, const std::vector<const Type*>& template_args)
+{
+    auto key = get_templated_class_key(name, template_args.size());
+    auto it = templated_classes.find(key);
+    if (it == templated_classes.end())
+        report_error("The templated class " + name + " with " + std::to_string(template_args.size()) + " template parameters is not defined");
+
+    auto& templated = it->second;
+
+    templated_definition_depth++;
+
+    name_resolver.symbol_table.keep_only_first_n_scopes(templated_definition_depth);
+    typing_system.identifier_types.keep_only_first_n_scopes(templated_definition_depth);
+
+    // A scope that will hold the bindings of the template
+    //  parameters to the template arguments, and will
+    //  shadow the outer scope types that collide if exists.
+    typing_system.push_scope();
+
+    for (size_t i = 0; i < template_args.size(); i++)
+        typing_system.insert_type(templated.template_params[i], template_args[i]);
+
+    auto full_name = get_templated_class_full_name(name, template_args);
+
+    if (!name_resolver.has_class(full_name))
+        report_internal_error("The templated class " + full_name + " is not defined");
+
+    auto cls = name_resolver.get_class(full_name);
+
+    typing_system.pop_scope();
+    typing_system.identifier_types.restore_prev_state();
+    name_resolver.symbol_table.restore_prev_state();
+    templated_definition_depth--;
+
+    return cls;
+}
+
+void ModuleCompiler::add_templated_class_method_info(const std::string &cls, FunctionDefinitionNode* method, FunctionInfo info, std::vector<std::string> template_params) {
+    // TODO compute the key as the hash of the triple { name, template param count, type pointer }
+    auto key = cls + "." + method->name;
+    if (method->template_param_count != -1)
+        key += "." + std::to_string(method->template_param_count);
+    key += info.type->as_key();
+    templated_class_method_info[key] = { std::move(info), std::move(template_params) };
+}
+
+TemplatedClassMethodInfo ModuleCompiler::get_templated_class_method_info(const std::string &cls, const std::string &method, const FunctionType* type, size_t template_param_count) {
+    auto key = cls + "." + method;
+    if (template_param_count != -1)
+        key += "." + std::to_string(template_param_count);
+    key += type->as_key();
+    auto it = templated_class_method_info.find(key);
+    if (it == templated_class_method_info.end())
+        report_internal_error("There is no info stored for the method " + method + " of the templated class " + cls);
+    return it->second;
+}
+
+void ModuleCompiler::register_templated_class(const std::string &name, const std::vector<const Type *> &template_args)
+{
+    auto key = get_templated_class_key(name, template_args.size());
+    auto it = templated_classes.find(key);
+    if (it == templated_classes.end())
+        report_error("The templated class " + name + " with " + std::to_string(template_args.size()) + " template parameters is not defined");
+
+    auto& templated = it->second;
+
+    auto full_name = get_templated_class_full_name(name, template_args);
+
+    auto cls = create_type<ClassType>(full_name);
+    name_resolver.classes[full_name] = cls;
+
+    templated_class_bindings[full_name] = { templated.template_params, template_args };
+
+    // Registering the methods of the class
+
+    templated_definition_depth++;
+
+    name_resolver.symbol_table.keep_only_first_n_scopes(templated_definition_depth);
+    typing_system.identifier_types.keep_only_first_n_scopes(templated_definition_depth);
+
+    // A scope that will hold the bindings of the template
+    //  parameters to the template arguments, and will
+    //  shadow the outer scope types that collide if exists.
+    typing_system.push_scope();
+
+    for (size_t i = 0; i < template_args.size(); i++)
+        typing_system.insert_type(templated.template_params[i], template_args[i]);
+
+    auto& methods = templated.node->methods;
+    for (auto & method : methods)
+    {
+        auto method_name = full_name + "." + method->name;
+
+        auto new_param_types = method->function_type->param_types;
+        // The first element is a placeholder
+        new_param_types[0] = create_type<ReferenceType>(cls);
+        auto ret = method->function_type->return_type;
+        auto is_var_arg = method->function_type->is_var_arg;
+
+        auto concrete_type = create_type<FunctionType>(ret, new_param_types, is_var_arg);
+
+        auto [info, template_params] = get_templated_class_method_info(key, method->name, method->function_type, method->template_param_count);
+        info.type = concrete_type;
+
+        if (method->template_param_count != -1) {
+            // Cloning the method node here because we're going to restore its function type later
+            auto node = create_node<FunctionDefinitionNode>(method_name, method->body, concrete_type, method->no_mangle, method->template_param_count);
+            add_templated_function(node, std::move(template_params), std::move(info), full_name, true);
+        } else {
+            // Setting the full name after the substitution of the concrete class type
+            auto full_method_name = name_resolver.get_function_full_name(method_name, concrete_type->param_types);
+            name_resolver.register_function(std::move(full_method_name), std::move(info), true);
+        }
+    }
+
+    typing_system.pop_scope();
+
+    templated_definition_depth--;
+
+    typing_system.identifier_types.restore_prev_state();
+    name_resolver.symbol_table.restore_prev_state();
+}
+
+const ClassType* ModuleCompiler::define_templated_class(const std::string &name, const std::vector<const Type *> &template_args)
+{
+    auto key = get_templated_class_key(name, template_args.size());
+    auto it = templated_classes.find(key);
+    if (it == templated_classes.end())
+        report_error("The templated class " + name + " with " + std::to_string(template_args.size()) + " template parameters is not defined");
+
+    auto& templated = it->second;
+
+    templated_definition_depth++;
+
+    name_resolver.symbol_table.keep_only_first_n_scopes(templated_definition_depth);
+    typing_system.identifier_types.keep_only_first_n_scopes(templated_definition_depth);
+
+    // A scope that will hold the bindings of the template
+    //  parameters to the template arguments, and will
+    //  shadow the outer scope types that collide if exists.
+    typing_system.push_scope();
+
+    for (size_t i = 0; i < template_args.size(); i++)
+        typing_system.insert_type(templated.template_params[i], template_args[i]);
+
+    auto full_name = get_templated_class_full_name(name, template_args);
+
+    // Class is not defined yet.
+    // Instantiate the class with the provided arguments
+
+    // Types shouldn't be cached during the evaluation of templated classes
+    auto old_type_cache_config = stop_caching_types;
+    stop_caching_types = true;
+
+    // Temporarily set the current function to nullptr
+    // so that we don't get the nested functions error.
+    auto old_func = current_function;
+    current_function = nullptr;
+
+    // Temporarily set the current class to nullptr so
+    // that we don't get the nested class definition error.
+    auto old_class = current_class;
+    current_class = nullptr;
+
+    auto cls = name_resolver.get_class(full_name);
+
+    auto& methods = templated.node->methods;
+    std::vector<std::string> old_names(methods.size());
+    std::vector<const FunctionType*> old_types(methods.size());
+    std::vector<bool> old_no_mangle(methods.size());
+
+    for (size_t i = 0; i < methods.size(); i++)
+    {
+        auto& method = methods[i];
+
+        if (method->template_param_count != -1)
+            continue;
+
+        old_names[i] = std::move(method->name);
+        method->name = full_name + "." + old_names[i];
+
+        old_types[i] = method->function_type;
+        auto new_param_types = old_types[i]->param_types;
+        // The first element is a placeholder
+        new_param_types[0] =create_type<ReferenceType>(cls);
+        auto ret = old_types[i]->return_type;
+        auto is_var_arg = old_types[i]->is_var_arg;
+
+        method->function_type = create_type<FunctionType>(ret, new_param_types, is_var_arg);
+
+        old_no_mangle[i] = method->no_mangle;
+
+        method->set_full_name();
+    }
+
+    // Add field constructor args of the concrete class
+    // We do this after having the types (and the full names)
+    //  of methods updated, and before evaluating the methods
+    auto& constructors = templated_class_field_constructor_args[key];
+    for (auto& constructor : constructors) {
+        name_resolver.add_fields_constructor_args(constructor.func->name, constructor.args);
+    }
+
+    std::swap(templated.node->name, full_name);
+    templated.node->is_templated = false;
+    templated.node->eval();
+    templated.node->is_templated = true;
+    std::swap(templated.node->name, full_name);
+
+    for (size_t i = 0; i < methods.size(); i++) {
+        auto& method = methods[i];
+        method->name = std::move(old_names[i]);
+        method->function_type = old_types[i];
+        method->no_mangle = old_no_mangle[i];
+    }
+
+    current_class = old_class;
+    current_function = old_func;
+
+    typing_system.pop_scope();
+
+    typing_system.identifier_types.restore_prev_state();
+    name_resolver.symbol_table.restore_prev_state();
+
+    stop_caching_types = old_type_cache_config;
+    templated_definition_depth--;
+
+    return cls;
 }
 
 }

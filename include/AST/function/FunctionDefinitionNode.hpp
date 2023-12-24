@@ -7,6 +7,8 @@ namespace dua
 
 class FunctionDefinitionNode : public ASTNode
 {
+    friend class ModuleCompiler;
+
     ASTNode* body;  // Can be nullptr in case of declaration
 
     const FunctionType* function_type;
@@ -19,14 +21,16 @@ public:
 
     std::string name;
     bool no_mangle;
-    bool is_templated;
+    size_t template_param_count;
 
     FunctionDefinitionNode(ModuleCompiler* compiler, std::string name, ASTNode* body,
-                           const FunctionType* function_type, bool no_mangle = false, bool is_templated = false);
+                           const FunctionType* function_type, bool no_mangle = false, size_t template_param_count = -1);
 
     void set_full_name();
 
     void set_body(ASTNode* body) { assert(this->body == nullptr); this->body = body; }
+
+    FunctionDefinitionNode* clone() const;
 
     const FunctionType* get_function_type() { return function_type; }
 

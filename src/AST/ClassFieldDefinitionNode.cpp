@@ -54,7 +54,9 @@ NoneValue ClassFieldDefinitionNode::eval()
     // non-const direct access
     for (auto& field : name_resolver().class_fields[class_name]) {
         if (field.name == name) {
-            assert(field.type == type);
+            // The field type can be different type in case of fields
+            // with templated types, in which field.type will be a
+            // concrete type and type will be a templated type
             field.default_value = default_value;
             field.default_args = std::move(default_args);
             break;

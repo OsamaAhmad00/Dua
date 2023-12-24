@@ -42,6 +42,12 @@ const Type* Type::get_contained_type() const {
     return (result == this) ? nullptr : result;
 }
 
+const Type *Type::get_concrete_type() const {
+    if (auto i = this->as<IdentifierType>(); i != nullptr)
+        return i->get_concrete_type();
+    return this;
+}
+
 template <>
 const ReferenceType* Type::as<ReferenceType>() const {
     return dynamic_cast<const ReferenceType*>(this);

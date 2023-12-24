@@ -21,6 +21,7 @@ struct Type
     virtual bool operator==(const Type& other);
     virtual bool operator!=(const Type& other);
     const Type* get_contained_type() const;
+    const Type* get_concrete_type() const;
     virtual ~Type() = default;
 
     llvm::Type* operator->() const;

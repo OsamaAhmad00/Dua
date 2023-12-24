@@ -9,8 +9,8 @@ namespace dua
 
 Value ClassDefinitionNode::eval()
 {
-    if (!result.is_null())
-        return result;
+    if (is_templated)
+        return none_value();
 
     if (name_resolver().classes.find(name) == name_resolver().classes.end())
         report_internal_error("Definition of the class " + name + " before registering it");
@@ -44,7 +44,7 @@ Value ClassDefinitionNode::eval()
     current_class() = old_class;
     current_function() = old_function;
 
-    return result = none_value();
+    return none_value();
 }
 
 }

@@ -45,21 +45,65 @@ void ParserAssistant::finish_parsing()
     //  class definitions because class members may use the typeof operator on a
     //  function name or something similar
 
-    for (auto [constructor, args] : constructors_field_args) {
-        constructor->set_full_name();
-        compiler->name_resolver.add_fields_constructor_args(constructor->name, std::move(args));
+    for (auto& [constructor, args, owner_class, in_templated_class] : constructors_field_args) {
+        if (in_templated_class) {
+            compiler->templated_class_field_constructor_args[owner_class].push_back({ constructor, std::move(args) });
+        } else {
+            constructor->set_full_name();
+            compiler->name_resolver.add_fields_constructor_args(constructor->name, std::move(args));
+        }
     }
 
-    for (auto [func, info] : function_definitions) {
+    for (auto& [func, info] : function_definitions) {
         func->set_full_name();
         compiler->name_resolver.register_function(func->name, std::move(info), true);
     }
 
     std::vector<llvm::Type*> body;
-    for (auto cls : class_definitions)
+
+    for (auto& [name, template_args] : templated_class_definitions)
+        compiler->register_templated_class(name, template_args);
+
+    for (auto& [name, template_args] : templated_class_definitions)
+    {
+        auto cls = compiler->get_templated_class(name, template_args);
+
+        // Copying the fields from the templated class to the concrete class
+        auto key = compiler->get_templated_class_key(name, template_args.size());
+        auto& templated_fields = compiler->name_resolver.class_fields[key];
+        auto& concrete_fields = compiler->name_resolver.class_fields[cls->name];
+        concrete_fields = templated_fields;
+
+        compiler->typing_system.identifier_types.keep_only_first_n_scopes(1);
+        compiler->typing_system.push_scope();
+        auto& template_params = compiler->templated_classes[key].template_params;
+        for (size_t i = 0; i < template_args.size(); i++)
+            compiler->typing_system.insert_type(template_params[i], template_args[i]);
+
+        // Set the types of the fields to the corresponding concrete type
+        for (auto& field : concrete_fields)
+            field.type = field.type->get_concrete_type();
+
+        compiler->typing_system.pop_scope();
+        compiler->typing_system.identifier_types.restore_prev_state();
+
+        auto class_type = cls->llvm_type();
+        if (class_type->isSized())
+            report_error("Redefinition of the templated class " + cls->name + " with " + std::to_string(template_args.size()) + " template parameters");
+
+        body.resize(cls->fields().size());
+        for (size_t i = 0; i < body.size(); i++)
+            body[i] = cls->fields()[i].type->llvm_type();
+
+        bool is_packed = compiler->templated_classes[key].node->is_packed;
+
+        class_type->setBody(std::move(body), is_packed);
+    }
+
+    for (auto& cls : class_definitions)
     {
         auto class_type = compiler->name_resolver.get_class(cls->name)->llvm_type();
-        if (!class_type->isOpaque())
+        if (class_type->isSized())
             report_error("Redefinition of the class " + cls->name);
         body.resize(cls->fields.size());
         for (size_t i = 0; i < body.size(); i++)
@@ -67,8 +111,13 @@ void ParserAssistant::finish_parsing()
         class_type->setBody(std::move(body), cls->is_packed);
     }
 
-    compiler->current_class = nullptr;
-    compiler->current_function = nullptr;
+    for (auto& [name, template_args] : templated_class_definitions) {
+        auto cls = compiler->get_templated_class(name, template_args);
+        compiler->define_templated_class(name, template_args);
+    }
+
+    current_class = "";
+    is_in_function = false;
 
     create_missing_methods();
 }
@@ -152,9 +201,8 @@ void ParserAssistant::create_variable_declaration()
             push_node<LocalVariableDefinitionNode>(std::move(name), type, nullptr);
         } else {
             // This is a field
-            assert(compiler->current_class != nullptr);
-            auto class_name = compiler->current_class->getName().str();
-            compiler->name_resolver.class_fields[class_name].push_back({ name, type, nullptr, {} });
+            assert(in_class());
+            compiler->name_resolver.class_fields[current_class].push_back({ name, type, nullptr, {} });
             push_node<ClassFieldDefinitionNode>(std::move(name), type, nullptr);
         }
     }
@@ -178,7 +226,7 @@ void ParserAssistant::create_variable_definition()
 
 void ParserAssistant::create_function_declaration()
 {
-    if (!is_in_global_scope() && compiler->current_class == nullptr)
+    if (!is_in_global_scope() && !in_class())
         report_error("Function declarations/definitions not allowed in a local scope");
 
     inc_statements();
@@ -199,22 +247,21 @@ void ParserAssistant::create_function_declaration()
 
     auto return_type = pop_type();
 
-    if (compiler->current_class != nullptr) {
-        auto class_name = compiler->current_class->getName().str();
-        name = class_name + '.' + name;
-        param_types.insert(
-        param_types.begin(),
-            compiler->create_type<ReferenceType>(
-                compiler->name_resolver.classes[class_name]
-            )
-        );
+    bool is_templated = pop_is_templated();
+
+    if (in_class())
+    {
+        if (!in_templated_class)
+            name = current_class + '.' + name;
+        // This i64 type is just a placeholder
+        auto self_type = in_templated_class ? (const Type*)compiler->create_type<I64Type>()
+                : compiler->create_type<ReferenceType>(compiler->name_resolver.classes[current_class]);
+        param_types.insert(param_types.begin(), self_type);
         param_names.insert(param_names.begin(), "self");
     }
 
-    bool is_templated = pop_is_templated();
-
     if (no_mangle) {
-        if (compiler->current_class != nullptr)
+        if (in_class())
             report_error("Can't use the no_mangle keyword for methods");
         if (is_templated)
             report_error("Non-mangled templated functions are not supported yet");
@@ -226,16 +273,22 @@ void ParserAssistant::create_function_declaration()
         std::move(param_names)
     };
 
-    push_node<FunctionDefinitionNode>(std::move(name), nullptr, function_type, no_mangle, is_templated);
+    size_t template_param_count = -1;
+    if (is_templated)
+        template_param_count = template_params.size();
+
+    push_node<FunctionDefinitionNode>(std::move(name), nullptr, function_type, no_mangle, template_param_count);
     auto func = (FunctionDefinitionNode*)nodes.back();
 
-    if (!is_templated) {
-        function_definitions.push_back({ func, std::move(info) });
-    } else {
+    if (in_templated_class) {
+        // Templated classes would add their own templated methods upon instantiation of concrete classes
+        compiler->add_templated_class_method_info(current_class, func, std::move(info), std::move(template_params));
+    } else if (is_templated) {
         // Templated functions will be registered upon instantiation
-        compiler->add_templated_function(func, std::move(template_params), std::move(info), compiler->current_class);
+        compiler->add_templated_function(func, std::move(template_params), std::move(info), current_class, in_templated_class);
+    } else {
+        function_definitions.push_back({func, std::move(info)});
     }
-
 }
 
 void ParserAssistant::create_block()
@@ -606,6 +659,9 @@ void ParserAssistant::create_logical_or()
 
 void ParserAssistant::register_class()
 {
+    if (is_templated_stack.back())
+        return;
+
     auto& name = strings.back();
 
     if (compiler->name_resolver.classes.find(name) != compiler->name_resolver.classes.end()) {
@@ -621,30 +677,36 @@ void ParserAssistant::register_class()
 void ParserAssistant::finish_class_declaration() {
     // Pop the name since it's not going to be used in a definition
     pop_str();
+    pop_strings();  // template params
+    pop_is_templated();
 }
 
 void ParserAssistant::start_class_definition()
 {
-    if (compiler->current_class)
+    if (in_class())
         report_error("Nested classes are not allowed");
 
     if (is_in_function)
         report_error("Can't define a class inside a function");
 
+    in_templated_class = pop_is_templated();
 
-    auto& name = strings.back();
-    compiler->current_class = compiler->name_resolver.get_class(name)->llvm_type();
-
-    if (compiler->current_class->isSized())
-        report_error("Redefinition of the class " + name);
+    if (in_templated_class) {
+        auto template_param_count = general_counters.back();
+        auto& name = strings[strings.size() - 1 - template_param_count];
+        current_class = compiler->get_templated_class_key(name, template_param_count);
+    } else {
+        current_class = strings.back();
+    }
 }
 
 void ParserAssistant::create_class()
 {
+    // Pop the statement counter here so that checking global scope succeeds
     size_t n = leave_scope();
 
     if (!is_in_global_scope())
-        report_error("Class defined in a non-global scope");
+        report_error("Class " + current_class + " is defined in a non-global scope");
 
     std::vector<ClassFieldDefinitionNode*> fields;
     std::vector<FunctionDefinitionNode*> methods;
@@ -664,13 +726,20 @@ void ParserAssistant::create_class()
     // So that they are in the order of definition.
     std::reverse(fields.begin(), fields.end());
 
+    auto template_params = pop_strings();
+
     auto name = pop_str();
 
-    push_node<ClassDefinitionNode>(std::move(name), std::move(fields), std::move(methods), std::move(aliases), is_packed);
+    push_node<ClassDefinitionNode>(std::move(name), std::move(fields), std::move(methods), std::move(aliases), is_packed, in_templated_class);
 
-    class_definitions.push_back((ClassDefinitionNode*)nodes.back());
+    auto cls = (ClassDefinitionNode*)nodes.back();
+    if (in_templated_class)
+        compiler->add_templated_class(cls, std::move(template_params));
+    else
+        class_definitions.push_back(cls);
 
-    compiler->current_class = nullptr;
+    current_class = "";
+    in_templated_class = false;
 
     inc_statements();
 }
@@ -680,8 +749,9 @@ void ParserAssistant::create_identifier_type() {
 }
 
 void ParserAssistant::create_field_access() {
+    auto template_args = pop_types();
     if (pop_is_templated())
-        push_node<ClassFieldNode>(pop_node(), pop_str(), pop_types());
+        push_node<ClassFieldNode>(pop_node(), pop_str(), std::move(template_args));
     else
         push_node<ClassFieldNode>(pop_node(), pop_str());
 }
@@ -738,11 +808,7 @@ void ParserAssistant::create_malloc()
             std::vector<const Type*>{ compiler->create_type<I64Type>() }
         );
 
-        // Temporarily setting the current function to nullptr to avoid the nested function error
-        auto current_function = compiler->current_function;
-        compiler->current_function = nullptr;
         compiler->name_resolver.register_function("malloc", {type, { "size" }}, true);
-        compiler->current_function = current_function;
 
         declared_malloc = true;
     }
@@ -758,11 +824,7 @@ void ParserAssistant::create_free()
             std::vector<const Type*>{ compiler->create_type<PointerType>(compiler->create_type<I64Type>()) }
         );
 
-        // Temporarily setting the current function to nullptr to avoid the nested function error
-        auto current_function = compiler->current_function;
-        compiler->current_function = nullptr;
         compiler->name_resolver.register_function("free", {std::move(type), { "size" }}, true);
-        compiler->current_function = current_function;
 
         declared_free = true;
     }
@@ -776,7 +838,7 @@ void ParserAssistant::create_pointer_field_access() {
 
 void ParserAssistant::prepare_constructor()
 {
-    if (compiler->current_class == nullptr)
+    if (!in_class())
         report_error("Constructors can only be defined inside classes");
     push_type<VoidType>();
     push_str("constructor");
@@ -786,14 +848,14 @@ void ParserAssistant::prepare_constructor()
 void ParserAssistant::finish_constructor()
 {
     auto constructor = pop_node_as<FunctionDefinitionNode>();
-    constructors_field_args.push_back({ constructor, std::move(fields_args) });
+    constructors_field_args.push_back({ constructor, std::move(fields_args), current_class, in_templated_class });
     fields_args.clear();
     nodes.push_back(constructor);
 }
 
 void ParserAssistant::prepare_destructor()
 {
-    if (compiler->current_class == nullptr)
+    if (!in_class())
         report_error("Destructors can only be defined inside classes");
     push_type<VoidType>();
     push_str("destructor");
@@ -833,7 +895,7 @@ void ParserAssistant::create_func_ref()
 
 void ParserAssistant::prepare_copy_constructor()
 {
-    if (compiler->current_class == nullptr)
+    if (!in_class())
         report_error("Copy constructors can only be defined inside classes");
     push_type<VoidType>();
     push_str("=constructor");
@@ -846,7 +908,7 @@ void ParserAssistant::finish_copy_constructor()
     auto& param_types = constructor->get_function_type()->param_types;
     if (param_types.size() != 2)  // One for the instance and one for the other object
         report_error("Copy constructors must have exactly one parameter");
-    constructors_field_args.push_back({ constructor, std::move(fields_args) });
+    constructors_field_args.push_back({ constructor, std::move(fields_args), current_class, in_templated_class});
     fields_args.clear();
     nodes.push_back(constructor);
 }
@@ -866,11 +928,10 @@ void ParserAssistant::create_infix_operator()
 
     auto name = pop_str();
 
-    bool is_method = compiler->current_class != nullptr;
+    bool is_method = in_class();
     if (param_count + is_method != 2) {
         if (is_method) {
-            auto class_name = compiler->current_class->getName().str();
-            report_error("Class infix operators expect exactly one parameter (in " + class_name + "::" + name + " operator)");
+            report_error("Class infix operators expect exactly one parameter (in " + current_class + "::" + name + " operator)");
         } else {
             report_error("Global infix operators expect exactly two parameters (in the global " + name + " operator)");
         }
@@ -878,12 +939,11 @@ void ParserAssistant::create_infix_operator()
 
     auto return_type = pop_type();
 
-    if (compiler->current_class != nullptr) {
-        auto class_name = compiler->current_class->getName().str();
+    if (in_class()) {
         param_types.insert(
             param_types.begin(),
             compiler->create_type<ReferenceType>(
-                compiler->name_resolver.classes[class_name]
+                compiler->name_resolver.classes[current_class]
             )
         );
         param_names.insert(param_names.begin(), "self");
@@ -932,6 +992,16 @@ bool ParserAssistant::pop_is_templated() {
     bool result = is_templated_stack.back();
     is_templated_stack.pop_back();
     return result;
+}
+
+void ParserAssistant::create_templated_class_type()
+{
+    auto args = pop_types();
+    auto name = pop_str();
+    pop_is_templated();
+    auto full_name = compiler->get_templated_class_full_name(name, args);
+    push_type<ClassType>(std::move(full_name));
+    templated_class_definitions.insert({ std::move(name), std::move(args) });
 }
 
 }
