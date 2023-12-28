@@ -1,4 +1,4 @@
-no_mangle int printf(str message, ...);
+nomangle int printf(str message, ...);
 
 void print(double d) { printf("%.2lf", d); }
 

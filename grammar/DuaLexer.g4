@@ -87,7 +87,7 @@ Void: 'void';
 
 Var: 'var';
 
-NoMangle: 'no_mangle';
+NoMangle: 'nomangle';
 
 SizeOf: 'sizeof';
 

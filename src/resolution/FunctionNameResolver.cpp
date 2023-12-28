@@ -23,7 +23,7 @@ void report_function_not_defined(const std::string& name)
 
 FunctionNameResolver::FunctionNameResolver(ModuleCompiler *compiler) : compiler(compiler) {}
 
-void FunctionNameResolver::register_function(std::string name, FunctionInfo info, bool no_mangle)
+void FunctionNameResolver::register_function(std::string name, FunctionInfo info, bool nomangle)
 {
     if (compiler->current_function != nullptr)
         report_internal_error("Nested functions are not allowed");
@@ -34,7 +34,7 @@ void FunctionNameResolver::register_function(std::string name, FunctionInfo info
     // Concrete types must be captured when registering
     info.type = info.type->with_concrete_types();
 
-    if (!no_mangle)
+    if (!nomangle)
         name = get_function_full_name(name, info.type->param_types);
 
     llvm::FunctionType* type = info.type->llvm_type();

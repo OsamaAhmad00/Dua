@@ -171,7 +171,7 @@ infix_op
     ;
 
 function_decl_no_simicolon
-    : no_mangle_or_none type identifier template_params_or_none
+    : nomangle_or_none type identifier template_params_or_none
         '(' param_list var_arg_or_none ')' { assistant.create_function_declaration(); }
     | type Infix infix_op '(' param_list ')' { assistant.create_infix_operator(); }
     ;
@@ -195,9 +195,9 @@ comma_separated_identifiers
     | identifier { assistant.inc_counter(); }
     ;
 
-no_mangle_or_none
-    : NoMangle      { assistant.no_mangle = true;  }
-    | /* empty */   { assistant.no_mangle = false; }
+nomangle_or_none
+    : NoMangle      { assistant.nomangle = true;  }
+    | /* empty */   { assistant.nomangle = false; }
     ;
 
 function_declaration

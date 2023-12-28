@@ -20,11 +20,11 @@ class FunctionDefinitionNode : public ASTNode
 public:
 
     std::string name;
-    bool no_mangle;
+    bool nomangle;
     size_t template_param_count;
 
     FunctionDefinitionNode(ModuleCompiler* compiler, std::string name, ASTNode* body,
-                           const FunctionType* function_type, bool no_mangle = false, size_t template_param_count = -1);
+                           const FunctionType* function_type, bool nomangle = false, size_t template_param_count = -1);
 
     void set_full_name();
 

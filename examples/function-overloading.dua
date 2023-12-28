@@ -1,4 +1,4 @@
-no_mangle int printf(str message, ...);
+nomangle int printf(str message, ...);
 
 
 // Case Basic function overloading
@@ -161,12 +161,12 @@ int main()
 }
 
 
-// Case no_mangle for methods
+// Case nomangle for methods
 // Panics
 
 class X
 {
-    no_mangle void func() { }
+    nomangle void func() { }
 }
 
 int main()

@@ -1,5 +1,5 @@
 
-no_mangle int printf(str message, ...);
+nomangle int printf(str message, ...);
 
 void print(int num) { printf("%d", num); }
 

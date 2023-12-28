@@ -219,7 +219,7 @@ Value ModuleCompiler::get_templated_function(const std::string& name, std::vecto
     stop_caching_types = true;
 
     // The full name is computed here.
-    templated.node->no_mangle = true;
+    templated.node->nomangle = true;
 
     // Temporarily reset the current function to nullptr
     // so that we don't get the nested functions error.
@@ -468,7 +468,7 @@ void ModuleCompiler::register_templated_class(const std::string &name, const std
 
         if (method->template_param_count != -1) {
             // Cloning the method node here because we're going to restore its function type later
-            auto node = create_node<FunctionDefinitionNode>(method_name, method->body, concrete_type, method->no_mangle, method->template_param_count);
+            auto node = create_node<FunctionDefinitionNode>(method_name, method->body, concrete_type, method->nomangle, method->template_param_count);
             add_templated_function(node, std::move(template_params), std::move(info), full_name, true);
         } else {
             // Setting the full name after the substitution of the concrete class type
@@ -531,7 +531,7 @@ const ClassType* ModuleCompiler::define_templated_class(const std::string &name,
     auto& methods = templated.node->methods;
     std::vector<std::string> old_names(methods.size());
     std::vector<const FunctionType*> old_types(methods.size());
-    std::vector<bool> old_no_mangle(methods.size());
+    std::vector<bool> old_nomangle(methods.size());
 
     for (size_t i = 0; i < methods.size(); i++)
     {
@@ -552,7 +552,7 @@ const ClassType* ModuleCompiler::define_templated_class(const std::string &name,
 
         method->function_type = create_type<FunctionType>(ret, new_param_types, is_var_arg);
 
-        old_no_mangle[i] = method->no_mangle;
+        old_nomangle[i] = method->nomangle;
 
         method->set_full_name();
     }
@@ -575,7 +575,7 @@ const ClassType* ModuleCompiler::define_templated_class(const std::string &name,
         auto& method = methods[i];
         method->name = std::move(old_names[i]);
         method->function_type = old_types[i];
-        method->no_mangle = old_no_mangle[i];
+        method->nomangle = old_nomangle[i];
     }
 
     current_class = old_class;

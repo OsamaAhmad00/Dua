@@ -196,7 +196,7 @@ public:
     bool is_packed = false;
     // Don't mangle the name of the function. If this is true,
     //  function overloading won't be applicable for the function.
-    bool no_mangle = false;
+    bool nomangle = false;
     bool is_in_function = false;
 
     std::vector<bool> is_templated_stack;

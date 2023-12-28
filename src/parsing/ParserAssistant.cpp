@@ -260,9 +260,9 @@ void ParserAssistant::create_function_declaration()
         param_names.insert(param_names.begin(), "self");
     }
 
-    if (no_mangle) {
+    if (nomangle) {
         if (in_class())
-            report_error("Can't use the no_mangle keyword for methods");
+            report_error("Can't use the nomangle keyword for methods");
         if (is_templated)
             report_error("Non-mangled templated functions are not supported yet");
     }
@@ -277,7 +277,7 @@ void ParserAssistant::create_function_declaration()
     if (is_templated)
         template_param_count = template_params.size();
 
-    push_node<FunctionDefinitionNode>(std::move(name), nullptr, function_type, no_mangle, template_param_count);
+    push_node<FunctionDefinitionNode>(std::move(name), nullptr, function_type, nomangle, template_param_count);
     auto func = (FunctionDefinitionNode*)nodes.back();
 
     if (in_templated_class) {
@@ -831,7 +831,7 @@ void ParserAssistant::prepare_constructor()
         report_error("Constructors can only be defined inside classes");
     push_type<VoidType>();
     push_str("constructor");
-    no_mangle = false;
+    nomangle = false;
 }
 
 void ParserAssistant::finish_constructor()
@@ -848,7 +848,7 @@ void ParserAssistant::prepare_destructor()
         report_error("Destructors can only be defined inside classes");
     push_type<VoidType>();
     push_str("destructor");
-    no_mangle = false;
+    nomangle = false;
 }
 
 void ParserAssistant::add_field_constructor_args() {
@@ -888,7 +888,7 @@ void ParserAssistant::prepare_copy_constructor()
         report_error("Copy constructors can only be defined inside classes");
     push_type<VoidType>();
     push_str("=constructor");
-    no_mangle = false;
+    nomangle = false;
 }
 
 void ParserAssistant::finish_copy_constructor()

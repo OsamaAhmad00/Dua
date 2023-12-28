@@ -34,7 +34,7 @@ public:
 
     [[nodiscard]] llvm::IRBuilder<>& builder() const;
 
-    void register_function(std::string name, FunctionInfo info, bool no_mangle = false);
+    void register_function(std::string name, FunctionInfo info, bool nomangle = false);
     // Used to resolve between applicable candidate functions
     [[nodiscard]] std::string get_winning_function(const std::string& name, const std::vector<const Type*>& arg_types, bool panic_on_not_found = true) const;
     FunctionInfo& get_function(const std::string& name, const std::vector<const Type*>& param_types);
