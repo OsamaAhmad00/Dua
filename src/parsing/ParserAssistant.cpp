@@ -997,4 +997,8 @@ void ParserAssistant::create_is_type() {
     push_node<IsTypeNode>(pop_type(), pop_type());
 }
 
+void ParserAssistant::create_no_ref() {
+    push_type<NoRefType>(pop_type());
+}
+
 }

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <AST/ASTNode.hpp>
-#include <types/IntegerTypes.hpp>
 
 namespace dua
 {

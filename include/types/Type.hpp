@@ -20,8 +20,8 @@ struct Type
     virtual std::string as_key() const = 0;
     virtual bool operator==(const Type& other) const;
     virtual bool operator!=(const Type& other) const;
-    const Type* get_contained_type() const;
-    const Type* get_concrete_type() const;
+    virtual const Type* get_contained_type() const;
+    virtual const Type* get_concrete_type() const;
     virtual ~Type() = default;
 
     llvm::Type* operator->() const;

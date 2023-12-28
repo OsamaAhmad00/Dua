@@ -70,6 +70,7 @@
 #include "types/ReferenceType.hpp"
 #include "types/IdentifierType.hpp"
 #include "types/TypeOfType.hpp"
+#include "types/NoRefType.hpp"
 
 #include "utils/TextManipulation.hpp"
 #include "utils/ErrorReporting.hpp"
@@ -283,6 +284,7 @@ public:
     void create_identifier_lvalue();
     void create_templated_class_type();
     void create_is_type();
+    void create_no_ref();
 
     template<typename T>
     void create_unary_expr() {

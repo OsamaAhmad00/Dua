@@ -97,6 +97,8 @@ TypeName: 'typename';
 
 IsType: 'istype';
 
+NoRef: 'noref';
+
 TypeAlias: 'typealias';
 
 Packed: 'packed';

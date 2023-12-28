@@ -31,7 +31,7 @@ const Type* TypeOfType::get_concrete_type() const
             }
         }
     }
-    return node->get_type();
+    return node->get_type()->get_concrete_type();
 }
 
 Value TypeOfType::default_value() const {

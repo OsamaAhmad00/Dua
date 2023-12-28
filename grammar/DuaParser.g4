@@ -510,6 +510,7 @@ type
     | type '*'                                  { assistant.create_pointer_type();   }
     | type '&'                                  { assistant.create_reference_type(); }
     | TypeOf '(' expression ')'                 { assistant.create_type_of();        }
+    | NoRef '(' type ')'                        { assistant.create_no_ref();         }
     | primitive_type
     | identifier_type
     | templated_class_type

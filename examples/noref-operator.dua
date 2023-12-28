@@ -1,0 +1,39 @@
+no_mangle int printf(str message, ...);
+
+
+// Case Primitive types
+// Outputs "i32 i64\ni32 i64"
+
+int main()
+{
+    printf("%s %s\n", typename(noref(i32&)), typename(noref(long&)));
+    printf("%s %s\n", typename(noref(i32)), typename(noref(long)));
+}
+
+
+// Case Class types
+// Outputs "X X X X"
+
+class X {}
+
+int main()
+{
+    typealias Y = X;
+
+    printf("%s %s ", typename(noref(X&)), typename(noref(Y&)));
+    printf("%s %s", typename(noref(X)), typename(noref(Y)));
+}
+
+
+// Case Templated types
+// Outputs "1100"
+
+class X<T> {}
+
+int main()
+{
+    printf("%d", (int)istype(noref(X<int>&), X<int>));
+    printf("%d", (int)istype(noref(X<long>&), X<long>));
+    printf("%d", (int)istype(noref(X<int>&), X<long>));
+    printf("%d", (int)istype(noref(X<int>), X<long>));
+}
