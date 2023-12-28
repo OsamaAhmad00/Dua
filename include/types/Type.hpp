@@ -18,8 +18,8 @@ struct Type
     virtual llvm::Type* llvm_type() const = 0;
     virtual std::string to_string() const = 0;
     virtual std::string as_key() const = 0;
-    virtual bool operator==(const Type& other);
-    virtual bool operator!=(const Type& other);
+    virtual bool operator==(const Type& other) const;
+    virtual bool operator!=(const Type& other) const;
     const Type* get_contained_type() const;
     const Type* get_concrete_type() const;
     virtual ~Type() = default;

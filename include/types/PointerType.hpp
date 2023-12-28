@@ -25,7 +25,7 @@ public:
 
     std::string as_key() const override { return element_type->as_key() + "ptr"; }
 
-    bool operator==(const Type& other) override;
+    bool operator==(const Type& other) const override;
 };
 
 }

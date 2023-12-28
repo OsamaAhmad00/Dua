@@ -1,4 +1,4 @@
-#include <AST/values/TypeNameNode.hpp>
+#include "AST/operators/TypeNameNode.hpp"
 #include "types/PointerType.hpp"
 #include "types/IntegerTypes.hpp"
 

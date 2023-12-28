@@ -2,15 +2,29 @@
 #include <ModuleCompiler.hpp>
 #include <AST/lvalue/LoadedLValueNode.hpp>
 #include <AST/lvalue/VariableNode.hpp>
+#include "types/PointerType.hpp"
 
 namespace dua
 {
 
 const Type* TypeOfType::get_concrete_type() const
 {
-    // TODO improve this so that it doesn't
     if (auto l = node->as<LoadedLValueNode>(); l != nullptr) {
         if (auto v = l->lvalue->as<VariableNode>(); v != nullptr) {
+            if (v->is_templated)
+            {
+                // Classes first, then functions
+                std::string name;
+                name = compiler->get_templated_class_full_name(v->name, v->template_args);
+                if (compiler->get_name_resolver().has_class(name))
+                    return compiler->get_typing_system().get_type(name);
+
+                name = compiler->get_templated_function_full_name(v->name, v->template_args);
+                if (compiler->get_name_resolver().has_function(name)) {
+                    auto func_type = compiler->get_name_resolver().get_function_no_overloading(name).type;
+                    return compiler->create_type<PointerType>(func_type);
+                }
+            }
             if (compiler->get_typing_system().identifier_types.contains(v->name)) {
                 // This is actually a class type, not a variable expression
                 return compiler->get_typing_system().get_type(v->name);
@@ -26,10 +40,6 @@ Value TypeOfType::default_value() const {
 
 llvm::Type *TypeOfType::llvm_type() const {
     return get_concrete_type()->llvm_type();
-}
-
-bool TypeOfType::operator==(const Type &other) {
-    return *get_concrete_type() == other;
 }
 
 std::string TypeOfType::to_string() const {

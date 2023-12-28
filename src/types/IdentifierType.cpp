@@ -16,8 +16,8 @@ llvm::Type *IdentifierType::llvm_type() const {
     return get_concrete_type()->llvm_type();
 }
 
-bool IdentifierType::operator==(const Type &other) {
-    return *get_concrete_type() == other;
+bool IdentifierType::operator==(const Type &other) const {
+    return *get_concrete_type() == *other.get_concrete_type();
 }
 
 }

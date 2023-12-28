@@ -24,7 +24,7 @@ public:
 
     std::string as_key() const override { return "Unresolved(" + name + ")"; }
 
-    bool operator==(const Type& other) override;
+    bool operator==(const Type& other) const override;
 };
 
 }

@@ -10,7 +10,6 @@
 #include "AST/BlockNode.hpp"
 #include "AST/IfNode.hpp"
 #include "AST/SequentialEvalNode.hpp"
-#include "AST/SizeOfNode.hpp"
 #include "AST/DeferredActionNode.hpp"
 #include "AST/FreeNode.hpp"
 
@@ -47,7 +46,10 @@
 #include "AST/values/FloatValueNodes.hpp"
 #include "AST/values/IntegerValueNodes.hpp"
 #include "AST/values/StringValueNode.hpp"
-#include "AST/values/TypeNameNode.hpp"
+
+#include "AST/operators/TypeNameNode.hpp"
+#include "AST/operators/SizeOfNode.hpp"
+#include "AST/operators/IsTypeNode.hpp"
 
 #include "AST/lvalue/LValueNode.hpp"
 #include "AST/lvalue/VariableNode.hpp"
@@ -259,11 +261,9 @@ public:
     void create_identifier_type();
     void create_field_access();
     void create_inferred_definition();
-    void create_size_of_type();
-    void create_size_of_expression();
+    void create_size_of();
     void create_type_of();
-    void create_typename_type();
-    void create_typename_expression();
+    void create_type_name();
     void create_function_type();
     void create_malloc();
     void create_free();
@@ -282,6 +282,7 @@ public:
     void create_type_alias();
     void create_identifier_lvalue();
     void create_templated_class_type();
+    void create_is_type();
 
     template<typename T>
     void create_unary_expr() {

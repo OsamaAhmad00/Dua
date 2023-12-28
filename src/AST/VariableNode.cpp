@@ -21,11 +21,6 @@ VariableNode::VariableNode(ModuleCompiler *compiler, std::string name, std::vect
 
 Value VariableNode::eval()
 {
-    if (name_resolver().symbol_table.contains(name)) {
-        // This searches locally first, then globally if not found.
-        return compiler->create_value(name_resolver().symbol_table.get(name).get(), get_type());
-    }
-
     if (is_templated) {
         // This is a templated function reference for sure since no identifier
         // is allowed to be templated, except for types and function reference.
@@ -34,6 +29,11 @@ Value VariableNode::eval()
         //  wrap it in a pointer type.
         func.type = compiler->create_type<PointerType>(func.type);
         return func;
+    }
+
+    if (name_resolver().symbol_table.contains(name)) {
+        // This searches locally first, then globally if not found.
+        return compiler->create_value(name_resolver().symbol_table.get(name).get(), get_type());
     }
 
     // Not found. Has to be a function reference

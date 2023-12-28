@@ -762,15 +762,9 @@ void ParserAssistant::create_inferred_definition()
     create_variable_definition();
 }
 
-void ParserAssistant::create_size_of_type()
+void ParserAssistant::create_size_of()
 {
     push_node<SizeOfNode>(pop_type());
-}
-
-void ParserAssistant::create_size_of_expression()
-{
-    create_type_of();
-    create_size_of_type();
 }
 
 void ParserAssistant::create_type_of()
@@ -778,14 +772,9 @@ void ParserAssistant::create_type_of()
     push_type<TypeOfType>(pop_node());
 }
 
-void ParserAssistant::create_typename_type()
+void ParserAssistant::create_type_name()
 {
     push_node<TypeNameNode>(pop_type());
-}
-
-void ParserAssistant::create_typename_expression() {
-    create_type_of();
-    create_typename_type();
 }
 
 void ParserAssistant::create_function_type()
@@ -1002,6 +991,10 @@ void ParserAssistant::create_templated_class_type()
     auto full_name = compiler->get_templated_class_full_name(name, args);
     push_type<ClassType>(std::move(full_name));
     templated_class_definitions.insert({ std::move(name), std::move(args) });
+}
+
+void ParserAssistant::create_is_type() {
+    push_node<IsTypeNode>(pop_type(), pop_type());
 }
 
 }

@@ -95,6 +95,8 @@ TypeOf: 'typeof';
 
 TypeName: 'typename';
 
+IsType: 'istype';
+
 TypeAlias: 'typealias';
 
 Packed: 'packed';

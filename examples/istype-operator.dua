@@ -1,0 +1,120 @@
+no_mangle int printf(str message, ...);
+
+
+// Case primitive types
+// Outputs "101001"
+
+int main()
+{
+    int x;
+    int y;
+    long z;
+
+    printf(
+        "%d%d%d%d%d%d",
+        (int)istype(x, y),
+        (int)istype(y, z),
+        (int)istype(x, int),
+        (int)istype(y, long),
+        (int)istype(int, long),
+        (int)istype(long, long)
+    );
+
+}
+
+
+// Case Class types
+// Outputs "011010"
+
+class X {}
+class Y {}
+
+int main()
+{
+    X x;
+    Y y;
+
+    printf(
+        "%d%d%d%d%d%d",
+        (int)istype(x, y),
+        (int)istype(y, Y),
+        (int)istype(x, X),
+        (int)istype(y, long),
+        (int)istype(X, X),
+        (int)istype(Y, X)
+    );
+}
+
+
+// Case Templated types
+// Outputs "011001"
+
+class X<T> {}
+class Y<T> {}
+
+int main()
+{
+    X<int> xi;
+    X<long> xl;
+    Y<int> yi;
+
+    printf(
+        "%d%d%d%d%d%d",
+        (int)istype(xi, yi),
+        (int)istype(yi, Y<int>),
+        (int)istype(xi, X<int>),
+        (int)istype(xl, X<int>),
+        (int)istype(X<int>, X<long>),
+        (int)istype(Y<int>, Y<int>)
+    );
+}
+
+
+// Case Function types
+// Outputs "10"
+
+int main()
+{
+    printf(
+        "%d%d",
+        (int)istype(main, int()*),
+        (int)istype(main, void(int, int*)*)
+    );
+}
+
+
+// Case Non-existing types
+// Panics
+
+int main()
+{
+    istype(X, Y);
+}
+
+
+// Case Reference types
+// Outputs "0"
+
+int main()
+{
+    printf("%d", (int)istype(int, int&));
+}
+
+
+// Case TypeAliases
+// Outputs "0011"
+
+int main()
+{
+    typealias x = int;
+    typealias y = long;
+    typealias z = y;
+
+    printf(
+        "%d%d%d%d",
+        (int)istype(x, y),
+        (int)istype(x, z),
+        (int)istype(z, y),
+        (int)istype(long, y)
+    );
+}

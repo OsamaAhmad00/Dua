@@ -270,10 +270,9 @@ expression
     | expression                '(' arg_list ')' { assistant.create_expr_function_call();  }
     | New identifier { assistant.create_identifier_type(); } optional_constructor_args { assistant.create_malloc(); }
     | New type { assistant.push_counter(); assistant.create_malloc(); }
-    | SizeOf '(' expression ')'   { assistant.create_size_of_expression();  }
-    | SizeOf '(' type ')'         { assistant.create_size_of_type();        }
-    | TypeName '(' expression ')' { assistant.create_typename_expression(); }
-    | TypeName '(' type ')'       { assistant.create_typename_type();       }
+    | SizeOf '(' expr_or_type ')'   { assistant.create_size_of();   }
+    | TypeName '(' expr_or_type ')' { assistant.create_type_name(); }
+    | IsType '(' expr_or_type ',' expr_or_type ')' { assistant.create_is_type(); }
     | loaded_lvalue
     | lvalue '++' { assistant.create_post_inc(); }
     | lvalue '--' { assistant.create_post_dec(); }
@@ -316,6 +315,11 @@ expression
     | lvalue '&='  expression  { assistant.create_compound_assignment<BitwiseAndNode>(); }
     | lvalue '^='  expression  { assistant.create_compound_assignment<XorNode>(); }
     | lvalue '|='  expression  { assistant.create_compound_assignment<BitwiseOrNode>(); }
+    ;
+
+expr_or_type
+    : expression { assistant.create_type_of(); }
+    | type
     ;
 
 function_call
@@ -501,11 +505,11 @@ types_list @init { assistant.push_counter(); }
     ;
 
 type
-    : type '(' types_list var_arg_or_none ')'   { assistant.create_function_type();        }
-    | type '[' size ']'                         { assistant.create_array_type();           }
-    | type '*'                                  { assistant.create_pointer_type();         }
-    | type '&'                                  { assistant.create_reference_type();       }
-    | TypeOf '(' expression ')'                 { assistant.create_type_of();              }
+    : type '(' types_list var_arg_or_none ')'   { assistant.create_function_type();  }
+    | type '[' size ']'                         { assistant.create_array_type();     }
+    | type '*'                                  { assistant.create_pointer_type();   }
+    | type '&'                                  { assistant.create_reference_type(); }
+    | TypeOf '(' expression ')'                 { assistant.create_type_of();        }
     | primitive_type
     | identifier_type
     | templated_class_type

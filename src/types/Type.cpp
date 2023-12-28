@@ -7,20 +7,12 @@
 namespace dua
 {
 
-bool Type::operator==(const Type &other) {
-     return llvm_type() == other.llvm_type();
+bool Type::operator==(const Type &other) const {
+     return get_concrete_type() == other.get_concrete_type();
 }
 
-bool Type::operator!=(const Type &other) {
+bool Type::operator!=(const Type &other) const {
      return !(*this == other);
-}
-
-llvm::Type *Type::operator->() const {
-     return llvm_type();
-}
-
-Type::operator llvm::Type *() const {
-     return llvm_type();
 }
 
 const Type* Type::get_winning_type(const Type *other, bool panic_on_failure, const std::string& message) const {
@@ -43,9 +35,12 @@ const Type* Type::get_contained_type() const {
 }
 
 const Type *Type::get_concrete_type() const {
-    if (auto i = this->as<IdentifierType>(); i != nullptr)
+    auto type = this;
+    if (auto t = type->as<TypeOfType>(); t != nullptr)
+        type = t->get_concrete_type();
+    if (auto i = type->as<IdentifierType>(); i != nullptr)
         return i->get_concrete_type();
-    return this;
+    return type;
 }
 
 template <>

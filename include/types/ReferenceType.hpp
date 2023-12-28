@@ -34,7 +34,7 @@ public:
 
     std::string as_key() const override { return element_type->as_key() + "ref"; }
 
-    bool operator==(const Type& other) override { return *element_type == other; }
+    bool operator==(const Type& other) const override { return *element_type == other; }
 };
 
 }

@@ -25,8 +25,6 @@ public:
     std::string to_string() const override;
 
     std::string as_key() const override;
-
-    bool operator==(const Type& other) override;
 };
 
 }

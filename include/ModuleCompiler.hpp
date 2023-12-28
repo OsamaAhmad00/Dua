@@ -127,6 +127,7 @@ public:
     Value get_templated_function(const std::string& name, std::vector<const Type*>& template_args);
     Value get_templated_function(const std::string& name, std::vector<const Type*>& template_args, const std::vector<const Type*>& arg_types, bool use_arg_types = true);
     long long get_winner_templated_function(const std::string& name, const std::vector<TemplatedFunctionNode>& functions, const std::vector<const Type*>& template_args, const std::vector<const Type*>& arg_types, bool panic_on_not_found = true);
+    bool has_templated_function(const std::string& name);
 
     std::string get_templated_class_key(std::string name, size_t args_count);
     std::string get_templated_class_full_name(const std::string& name, const std::vector<const Type*>& template_args);
@@ -136,6 +137,7 @@ public:
     const ClassType* get_templated_class(const std::string& name, const std::vector<const Type*>& template_args);
     void register_templated_class(const std::string& name, const std::vector<const Type*>& template_args);
     const ClassType* define_templated_class(const std::string& name, const std::vector<const Type*>& template_args);
+    bool has_templated_class(const std::string& name);
 
     ~ModuleCompiler();
 

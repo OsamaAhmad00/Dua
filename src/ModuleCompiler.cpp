@@ -431,6 +431,7 @@ void ModuleCompiler::register_templated_class(const std::string &name, const std
 
     auto cls = create_type<ClassType>(full_name);
     name_resolver.classes[full_name] = cls;
+    typing_system.insert_type(full_name, cls);
 
     templated_class_bindings[full_name] = { templated.template_params, template_args };
 
@@ -589,6 +590,14 @@ const ClassType* ModuleCompiler::define_templated_class(const std::string &name,
     templated_definition_depth--;
 
     return cls;
+}
+
+bool ModuleCompiler::has_templated_function(const std::string &name) {
+    return templated_functions.find(name) != templated_functions.end();
+}
+
+bool ModuleCompiler::has_templated_class(const std::string &name) {
+    return templated_classes.find(name) != templated_classes.end();
 }
 
 }

@@ -2,6 +2,7 @@
 
 #include <AST/ASTNode.hpp>
 #include <utils/ErrorReporting.hpp>
+#include <types/IntegerTypes.hpp>
 
 namespace dua
 {
