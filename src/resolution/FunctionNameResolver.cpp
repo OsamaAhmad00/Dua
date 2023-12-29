@@ -148,13 +148,20 @@ void FunctionNameResolver::cast_function_args(std::vector<Value> &args, const Fu
                 args[i] = compiler->create_value(args[i].memory_location, param_type);
             }
             args[i] = compiler->typing_system.cast_value(args[i], param_type);
-        } else if (args[i].get()->getType() == builder().getFloatTy()) {
-            // Variadic functions promote floats to doubles
-            auto double_type = compiler->create_type<F64Type>();
-            args[i] = compiler->create_value(
-                compiler->typing_system.cast_value(args[i], double_type).get(),
-                double_type
-            );
+        } else {
+            if (auto ref = args[i].type->as<ReferenceType>(); ref != nullptr) {
+                // No references in variadic arguments
+                args[i].memory_location = args[i].get();
+                args[i].turn_to_memory_address();
+            }
+            if (args[i].get()->getType() == builder().getFloatTy()) {
+                // Variadic functions promote floats to doubles
+                auto double_type = compiler->create_type<F64Type>();
+                args[i] = compiler->create_value(
+                    compiler->typing_system.cast_value(args[i], double_type).get(),
+                    double_type
+                );
+            }
         }
     }
 }
@@ -323,7 +330,7 @@ llvm::IRBuilder<>& FunctionNameResolver::builder() const
     return compiler->builder;
 }
 
-std::string FunctionNameResolver::get_winning_function(const std::string &name, const std::vector<const Type*> &arg_types, bool panic_on_not_found) const
+std::string FunctionNameResolver::get_winning_function(const std::string &name, const std::vector<const Type*> &arg_types, bool panic_on_not_found, bool panic_on_ambiguity) const
 {
     auto key = name;
     if (name != "main") key += '.';
@@ -401,7 +408,7 @@ std::string FunctionNameResolver::get_winning_function(const std::string &name, 
 
     if (result_list.size() != 1)
     {
-        if (!panic_on_not_found) return "";
+        if (!panic_on_ambiguity) return "";
 
         std::string message = "More than one overload of the function '" + name + "' is applicable to the function call."
                                                                                  " Applicable functions are:\n";
@@ -446,9 +453,8 @@ std::string FunctionNameResolver::get_function_name_with_exact_type(const std::s
     return "";  // Unreachable
 }
 
-Value FunctionNameResolver::call_infix_operator(const Value &lhs, const Value &rhs, const std::string &name)
-{
-    auto full_name = get_winning_function("infix." + name, { lhs.type, rhs.type }, false);
+Value FunctionNameResolver::call_operator(const std::string& position_name, const Value& lhs, const Value& rhs, const std::string& name) {
+    auto full_name = get_winning_function(position_name + "." + name, { lhs.type, rhs.type }, false);
     if (full_name.empty())
         return {};
     auto func = compiler->module.getFunction(full_name);
@@ -457,12 +463,28 @@ Value FunctionNameResolver::call_infix_operator(const Value &lhs, const Value &r
     return call_function(value, {lhs, rhs});
 }
 
-const Type *FunctionNameResolver::get_infix_operator_return_type(const Type *t1, const Type *t2, const std::string& name)
+Value FunctionNameResolver::call_infix_operator(const Value &lhs, const Value &rhs, const std::string& name) {
+    return call_operator("infix", lhs, rhs, name);
+}
+
+Value FunctionNameResolver::call_postfix_operator(const Value &lhs, const Value &rhs, const std::string& name) {
+    return call_operator("postfix", lhs, rhs, name);
+}
+
+const Type *FunctionNameResolver::get_operator_return_type(const std::string& position_name, const Type *t1, const Type *t2, const std::string& name)
 {
-    auto full_name = get_winning_function("infix." + name, { t1, t2 }, false);
+    auto full_name = get_winning_function(position_name + "." + name, { t1, t2 }, false);
     if (full_name.empty())
         return nullptr;
     return functions[full_name].type->return_type;
+}
+
+const Type *FunctionNameResolver::get_infix_operator_return_type(const Type *t1, const Type *t2, const std::string& name) {
+    return get_operator_return_type("infix", t1, t2, name);
+}
+
+const Type *FunctionNameResolver::get_postfix_operator_return_type(const Type *t1, const Type *t2, const std::string& name) {
+    return get_operator_return_type("postfix", t1, t2, name);
 }
 
 }

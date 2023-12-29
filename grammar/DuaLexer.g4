@@ -49,6 +49,7 @@ OpenCurly: '{';
 CloseCurly: '}';
 OpenBracket: '[';
 CloseBracket: ']';
+IndexingOperator: '[]';
 RightArrow: '->';
 Simicolon: ';';
 
@@ -72,6 +73,7 @@ Colon: ':';
 VarArg: '...';
 
 Infix: 'infix';
+Postfix: 'postfix';
 
 I64: ('i64' | 'long' );
 I32: ('i32' | 'int'  );

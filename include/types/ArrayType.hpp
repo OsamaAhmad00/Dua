@@ -22,6 +22,8 @@ public:
 
     const Type* get_element_type() const { return element_type; }
 
+    const Type* get_concrete_type() const override;
+
     std::string to_string() const override { return element_type->to_string() + "[" + std::to_string(size) + "]"; }
 
     std::string as_key() const override { return element_type->as_key() + "_Arr_" + std::to_string(size) + "_"; }

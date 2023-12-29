@@ -47,4 +47,9 @@ void Value::set(llvm::Value *value) {
     loaded_value = value;
 }
 
+void Value::turn_to_memory_address() {
+    memory_location = loaded_value;
+    loaded_value = nullptr;
+}
+
 }

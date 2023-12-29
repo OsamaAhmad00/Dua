@@ -7,8 +7,8 @@ namespace dua
 {
 
 FunctionDefinitionNode::FunctionDefinitionNode(dua::ModuleCompiler *compiler,
-               std::string name, dua::ASTNode *body, const FunctionType* function_type, bool nomangle, size_t template_param_count)
-        : name(std::move(name)), body(body), function_type(function_type), nomangle(nomangle), template_param_count(template_param_count)
+               std::string name, dua::ASTNode *body, const FunctionType* function_type, bool nomangle, size_t template_param_count, bool is_operator)
+        : name(std::move(name)), body(body), function_type(function_type), nomangle(nomangle), template_param_count(template_param_count), is_operator(is_operator)
 {
     this->compiler = compiler;
 

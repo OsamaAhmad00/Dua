@@ -170,10 +170,15 @@ infix_op
     | '=' { assistant.push_str("Assignment"); }
     ;
 
+postfix_op
+    : '[]' { assistant.push_str("Indexing"); }
+    ;
+
 function_decl_no_simicolon
     : nomangle_or_none type identifier template_params_or_none
         '(' param_list var_arg_or_none ')' { assistant.create_function_declaration(); }
     | type Infix infix_op '(' param_list ')' { assistant.create_infix_operator(); }
+    | type Postfix postfix_op '(' param_list ')' { assistant.create_postfix_operator(); }
     ;
 
 no_template
@@ -274,6 +279,7 @@ expression
     | TypeName '(' expr_or_type ')' { assistant.create_type_name(); }
     | IsType '(' expr_or_type ',' expr_or_type ')' { assistant.create_is_type(); }
     | loaded_lvalue
+    | expression '[' expression ']' { assistant.create_indexing(); }
     | lvalue '++' { assistant.create_post_inc(); }
     | lvalue '--' { assistant.create_post_dec(); }
     | '++' lvalue { assistant.create_pre_inc(); }
@@ -454,7 +460,6 @@ loaded_lvalue
 
 lvalue
     : '(' lvalue ')'
-    | lvalue '[' expression ']' { assistant.create_array_indexing(); }
     | '*' loaded_lvalue { assistant.create_dereference(); }
     | '*' '(' expression ')' { assistant.create_dereference(); }
     | lvalue '.' identifier template_args_or_none { assistant.create_field_access(); }

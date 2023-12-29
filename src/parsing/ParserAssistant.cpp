@@ -84,9 +84,6 @@ void ParserAssistant::finish_parsing()
         for (auto& field : concrete_fields)
             field.type = field.type->get_concrete_type();
 
-        compiler->typing_system.pop_scope();
-        compiler->typing_system.identifier_types.restore_prev_state();
-
         auto class_type = cls->llvm_type();
         if (class_type->isSized())
             report_error("Redefinition of the templated class " + cls->name + " with " + std::to_string(template_args.size()) + " template parameters");
@@ -94,6 +91,9 @@ void ParserAssistant::finish_parsing()
         body.resize(cls->fields().size());
         for (size_t i = 0; i < body.size(); i++)
             body[i] = cls->fields()[i].type->llvm_type();
+
+        compiler->typing_system.pop_scope();
+        compiler->typing_system.identifier_types.restore_prev_state();
 
         bool is_packed = compiler->templated_classes[key].node->is_packed;
 
@@ -605,10 +605,10 @@ void ParserAssistant::create_loaded_lvalue() {
     push_node<LoadedLValueNode>(node);
 }
 
-void ParserAssistant::create_array_indexing() {
-    auto index = pop_node();
-    auto arr = pop_node_as<LValueNode>();
-    push_node<ArrayIndexingNode>(arr, index);
+void ParserAssistant::create_indexing() {
+    auto rhs = pop_node();
+    auto lhs = pop_node();
+    push_node<IndexingNode>(lhs, rhs);
 }
 
 void ParserAssistant::create_logical_and()
@@ -902,7 +902,7 @@ void ParserAssistant::finish_copy_constructor()
     nodes.push_back(constructor);
 }
 
-void ParserAssistant::create_infix_operator()
+void ParserAssistant::create_operator(const std::string& position_name)
 {
     auto param_count = pop_counter();
     std::vector<const Type*> param_types(param_count);
@@ -920,25 +920,25 @@ void ParserAssistant::create_infix_operator()
     bool is_method = in_class();
     if (param_count + is_method != 2) {
         if (is_method) {
-            report_error("Class infix operators expect exactly one parameter (in " + current_class + "::" + name + " operator)");
+            report_error("Class " + position_name + " operators expect exactly one parameter (in " + current_class + "::" + name + " operator)");
         } else {
-            report_error("Global infix operators expect exactly two parameters (in the global " + name + " operator)");
+            report_error("Global " + position_name + " operators expect exactly two parameters (in the global " + name + " operator)");
         }
     }
 
     auto return_type = pop_type();
 
     if (in_class()) {
+        auto self_type = in_templated_class ? (const Type*)compiler->create_type<I64Type>() :
+                    compiler->create_type<ReferenceType>(compiler->create_type<IdentifierType>(current_class));
         param_types.insert(
             param_types.begin(),
-            compiler->create_type<ReferenceType>(
-                compiler->name_resolver.classes[current_class]
-            )
+            self_type
         );
         param_names.insert(param_names.begin(), "self");
     }
 
-    name = "infix." + name + ".";
+    name = position_name + "." + name;
 
     auto function_type = compiler->create_type<FunctionType>(return_type, std::move(param_types), false);
     FunctionInfo info {
@@ -946,9 +946,15 @@ void ParserAssistant::create_infix_operator()
         std::move(param_names)
     };
 
-    push_node<FunctionDefinitionNode>(std::move(name), nullptr, function_type, false);
+    push_node<FunctionDefinitionNode>(std::move(name), nullptr, function_type, false, -1, true);
 
-    function_definitions.push_back({ (FunctionDefinitionNode*)nodes.back(), std::move(info) });
+    auto func = (FunctionDefinitionNode*)nodes.back();
+    if (in_templated_class) {
+        // Templated classes would add their own templated methods upon instantiation of concrete classes
+        compiler->add_templated_class_method_info(current_class, func, std::move(info), {});
+    } else {
+        function_definitions.push_back({func, std::move(info)});
+    }
 }
 
 void ParserAssistant::set_current_function()
@@ -999,6 +1005,14 @@ void ParserAssistant::create_is_type() {
 
 void ParserAssistant::create_no_ref() {
     push_type<NoRefType>(pop_type());
+}
+
+void ParserAssistant::create_infix_operator() {
+    create_operator("infix");
+}
+
+void ParserAssistant::create_postfix_operator() {
+    create_operator("postfix");
 }
 
 }

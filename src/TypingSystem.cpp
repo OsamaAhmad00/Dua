@@ -13,8 +13,11 @@ namespace dua
 
 TypingSystem::TypingSystem(ModuleCompiler *compiler) : compiler(compiler) {}
 
-static llvm::Value* _cast_value(const Value& value, const Type* type, bool panic_on_failure, llvm::IRBuilder<>& builder, llvm::Module& module)
+static llvm::Value* _cast_value(const Value& value, const Type* type, bool panic_on_failure, ModuleCompiler* compiler)
 {
+    auto& builder = *compiler->get_builder();
+    auto& module = *compiler->get_module();
+
     llvm::Type* source_type = value.get()->getType();
     llvm::Type* target_type = type->llvm_type();
     llvm::Value* v = value.get();
@@ -46,6 +49,21 @@ static llvm::Value* _cast_value(const Value& value, const Type* type, bool panic
                 return builder.CreateZExt(v, target_type);
             return builder.CreateSExt(v, target_type);
         }
+    }
+
+    auto source_ref = value.type->as<ReferenceType>();
+    auto target_ref = type->as<ReferenceType>();
+
+    if (source_ref) {
+        // Cast a reference to a non-reference type
+        Value non_reference = value;
+        non_reference.turn_to_memory_address();
+        non_reference.type = source_ref->get_element_type();
+        auto non_ref_target_type = target_ref ? target_ref->get_element_type() : type;
+        return _cast_value(non_reference, non_ref_target_type, panic_on_failure, compiler);
+    } else if (target_ref) {
+        // Cast a non-reference to a reference
+        return _cast_value(value, target_ref->get_element_type(), panic_on_failure, compiler);
     }
 
     if (source_type->isPointerTy() && target_type->isPointerTy())
@@ -95,7 +113,7 @@ Value TypingSystem::cast_value(const dua::Value &value, const Type* target_type,
         return {};
     }
 
-    auto result = _cast_value(value, target_type, panic_on_failure, builder(), module());
+    auto result = _cast_value(value, target_type, panic_on_failure, compiler);
     return compiler->create_value(result, target_type, value.memory_location);
 }
 
@@ -155,10 +173,8 @@ static const T* is(const Type* t) { return dynamic_cast<const T*>(t); }
 int TypingSystem::similarity_score(const Type *t1, const Type *t2) const
 {
     // Strip any wrappers, including references
-    if (auto t = t1->get_contained_type(); t != nullptr)
-        t1 = t;
-    if (auto t = t2->get_contained_type(); t != nullptr)
-        t2 = t;
+    t1 = t1->get_contained_type();
+    t2 = t2->get_contained_type();
 
     // This function relies on the fact that there is only one instance
     //  of each type. It compares pointers to determine whether the types

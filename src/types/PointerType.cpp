@@ -19,4 +19,8 @@ bool PointerType::operator==(const Type& other) const
     return false;
 }
 
+const Type *PointerType::get_concrete_type() const {
+    return compiler->create_type<PointerType>(element_type->get_concrete_type());
+}
+
 }

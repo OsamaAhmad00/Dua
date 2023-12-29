@@ -36,7 +36,7 @@ struct Type
         auto res = dynamic_cast<const T*>(this);
         if (res == nullptr) {
             auto t = get_contained_type();
-            if (t != nullptr) return t->as<T>();
+            if (t != this) return t->as<T>();
         }
         return res;
     }

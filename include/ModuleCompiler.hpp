@@ -89,6 +89,7 @@ public:
 
     llvm::IRBuilder<>* get_builder() { return &builder; }
     llvm::LLVMContext* get_context() { return &context; }
+    llvm::Module* get_module() { return &module; }
     NameResolver& get_name_resolver() { return name_resolver; }
     TypingSystem& get_typing_system() { return typing_system; }
     void push_deferred_node(ASTNode* node) { deferred_nodes.push_back(node); }

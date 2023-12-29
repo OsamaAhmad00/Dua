@@ -1,0 +1,51 @@
+nomangle int printf(str message, ...);
+
+
+// Case Indexing using an object
+// Outputs "12"
+
+class X
+{
+    int num = 3;
+}
+
+void postfix [](int i, X& x) {
+    printf("%d", i * x.num);
+}
+
+int main()
+{
+    int i = 4;
+    X x;
+    i[x];
+}
+
+
+// Case Indexing a templated class
+// Outputs "12345\n12345"
+
+class X<T>
+{
+    T[5] arr;
+
+    T& postfix [](int i) {
+        return arr[i];
+    }
+}
+
+int main()
+{
+    X<int> xi;
+    for (int i = 0; i < 5; i++)
+        xi[i] = i + 1;
+    for (int i = 0; i < 5; i++)
+        printf("%d", xi[i]);
+
+    printf("\n");
+
+    X<double> xd;
+    for (int i = 0; i < 5; i++)
+        xd[i] = i + 1;
+    for (int i = 0; i < 5; i++)
+        printf("%1.lf", xd[i]);
+}

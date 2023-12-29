@@ -1,11 +1,11 @@
 #pragma once
 
-#include <types/NonConcreteType.hpp>
+#include <types/Type.hpp>
 
 namespace dua
 {
 
-class IdentifierType : public DynamicType
+class IdentifierType : public Type
 {
     std::string name;
 

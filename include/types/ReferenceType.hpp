@@ -21,14 +21,13 @@ public:
             this->element_type = ref->get_element_type();
     }
 
-    Value default_value() const override {
-        report_internal_error("Reference types must be initialized");
-        return {};
-    }
+    Value default_value() const override;
 
     llvm::Type* llvm_type() const override { return element_type->llvm_type(); }
 
     const Type* get_element_type() const { return element_type; }
+
+    const Type* get_concrete_type() const override;
 
     std::string to_string() const override { return element_type->to_string() + "&"; }
 

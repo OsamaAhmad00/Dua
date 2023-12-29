@@ -31,16 +31,11 @@ const Type* Type::get_contained_type() const {
         result = ref->get_element_type();
     if (auto i = dynamic_cast<const IdentifierType*>(result); i != nullptr)
         result = i->get_concrete_type();
-    return (result == this) ? nullptr : result;
+    return result;
 }
 
 const Type *Type::get_concrete_type() const {
-    auto type = this;
-    if (auto t = type->as<TypeOfType>(); t != nullptr)
-        type = t->get_concrete_type();
-    if (auto i = type->as<IdentifierType>(); i != nullptr)
-        return i->get_concrete_type();
-    return type;
+    return this;
 }
 
 template <>

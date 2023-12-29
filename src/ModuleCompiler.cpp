@@ -453,7 +453,9 @@ void ModuleCompiler::register_templated_class(const std::string &name, const std
     auto& methods = templated.node->methods;
     for (auto & method : methods)
     {
-        auto method_name = full_name + "." + method->name;
+        auto method_name = method->name;
+        if (!method->is_operator)
+            method_name =  full_name + "." + method_name;
 
         auto new_param_types = method->function_type->param_types;
         // The first element is a placeholder
@@ -540,8 +542,9 @@ const ClassType* ModuleCompiler::define_templated_class(const std::string &name,
         if (method->template_param_count != -1)
             continue;
 
-        old_names[i] = std::move(method->name);
-        method->name = full_name + "." + old_names[i];
+        old_names[i] = method->name;
+        if (!method->is_operator)
+            method->name =  full_name + "." + method->name;
 
         old_types[i] = method->function_type;
         auto new_param_types = old_types[i]->param_types;

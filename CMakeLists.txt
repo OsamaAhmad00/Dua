@@ -93,7 +93,7 @@ set(DUA_SOURCES
     src/utils/TextManipulation.cpp
     src/utils/VectorOperations.cpp
 
-    src/AST/ArrayIndexingNode.cpp
+    src/AST/IndexingNode.cpp
     src/AST/AssignmentNode.cpp
     src/AST/ASTNode.cpp
     src/AST/BlockNode.cpp
@@ -129,6 +129,7 @@ set(DUA_SOURCES
     src/types/FunctionType.cpp
     src/types/IdentifierType.cpp
     src/types/TypeOfType.cpp
+    src/types/ReferenceType.cpp
 )
 
 set(DUA_PREREQUISITE_LIBS ${LLVM_LIBS} ${ANTLR4_LIBS} ${Boost_LIBRARIES})

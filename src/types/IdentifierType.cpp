@@ -5,7 +5,7 @@ namespace dua
 {
 
 const Type* IdentifierType::get_concrete_type() const {
-    return compiler->get_typing_system().get_type(name);
+    return compiler->get_typing_system().get_type(name)->get_concrete_type();
 }
 
 Value IdentifierType::default_value() const {

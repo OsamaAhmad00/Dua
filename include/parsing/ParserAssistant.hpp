@@ -53,7 +53,7 @@
 
 #include "AST/lvalue/LValueNode.hpp"
 #include "AST/lvalue/VariableNode.hpp"
-#include "AST/lvalue/ArrayIndexingNode.hpp"
+#include "AST/IndexingNode.hpp"
 #include "AST/lvalue/DereferenceNode.hpp"
 #include "AST/lvalue/ClassFieldNode.hpp"
 #include "AST/lvalue/LoadedLValueNode.hpp"
@@ -256,7 +256,7 @@ public:
     void create_break();
     void create_do_while();
     void create_loaded_lvalue();
-    void create_array_indexing();
+    void create_indexing();
     void create_logical_and();
     void create_logical_or();
     void create_identifier_type();
@@ -277,7 +277,6 @@ public:
     void create_func_ref();
     void prepare_copy_constructor();
     void finish_copy_constructor();
-    void create_infix_operator();
     void set_current_function();
     void create_reference_type();
     void create_type_alias();
@@ -306,6 +305,10 @@ public:
     }
 
     void add_field_constructor_args();
+
+    void create_operator(const std::string& position_name);
+    void create_infix_operator();
+    void create_postfix_operator();
 
     void enter_conditional();
     size_t leave_conditional();

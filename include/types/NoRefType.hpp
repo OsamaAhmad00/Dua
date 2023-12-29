@@ -25,7 +25,7 @@ public:
     const Type* get_concrete_type() const override {
         auto type = element_type->get_concrete_type();
         if (auto r = type->as<ReferenceType>(); r != nullptr)
-            return r->get_element_type();
+            return r->get_element_type()->get_concrete_type();
         return type;
     }
 

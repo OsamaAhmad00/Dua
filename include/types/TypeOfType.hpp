@@ -1,13 +1,13 @@
 #pragma once
 
-#include <types/NonConcreteType.hpp>
+#include <types/Type.hpp>
 
 namespace dua
 {
 
 class ASTNode;
 
-class TypeOfType : public StaticType
+class TypeOfType : public Type
 {
     ASTNode* node;
 
