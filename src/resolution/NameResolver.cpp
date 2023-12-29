@@ -4,7 +4,8 @@
 namespace dua
 {
 
-NameResolver::NameResolver(ModuleCompiler *compiler) : compiler(compiler), FunctionNameResolver(compiler) {}
+NameResolver::NameResolver(ModuleCompiler *compiler) : compiler(compiler), FunctionNameResolver(compiler),
+                                                       TemplatedNameResolver(compiler) {}
 
 void NameResolver::add_fields_constructor_args(std::string constructor_name, std::vector<FieldConstructorArgs> args)
 {

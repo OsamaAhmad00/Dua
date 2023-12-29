@@ -2,6 +2,8 @@
 
 #include <SymbolTable.hpp>
 #include <resolution/FunctionNameResolver.hpp>
+#include <resolution/TemplatedNameResolver.hpp>
+#include <resolution/CommonStructs.hpp>
 #include <types/FunctionType.hpp>
 #include <types/ClassType.hpp>
 #include <llvm/IR/IRBuilder.h>
@@ -12,13 +14,7 @@ namespace dua
 
 class ASTNode;
 
-struct FieldConstructorArgs
-{
-    std::string name;
-    std::vector<ASTNode*> args;
-};
-
-class NameResolver : public FunctionNameResolver
+class NameResolver : public FunctionNameResolver, public TemplatedNameResolver
 {
 
 public:

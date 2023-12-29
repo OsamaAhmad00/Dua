@@ -29,7 +29,7 @@ Value ClassFieldNode::eval()
     if (is_templated) {
         // This is a templated method reference for sure since no identifier
         // is allowed to be templated, except for types and function reference.
-        auto func = compiler->get_templated_function(full_name, template_args);
+        auto func = compiler->get_name_resolver().get_templated_function(full_name, template_args);
         // This returns a function type. If this is a function reference, we should
         //  wrap it in a pointer type.
         func.type = compiler->create_type<PointerType>(func.type);
@@ -52,7 +52,7 @@ const Type* ClassFieldNode::get_type()
     auto full_name = get_full_name();
 
     if (is_templated) {
-        return set_type(compiler->create_type<PointerType>(compiler->get_templated_function(full_name, template_args).type));
+        return set_type(compiler->create_type<PointerType>(compiler->get_name_resolver().get_templated_function(full_name, template_args).type));
     }
 
     const Type* t;

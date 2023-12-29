@@ -1,4 +1,6 @@
 #include "parsing/ParserAssistant.hpp"
+#include "resolution/TemplatedNameResolver.hpp"
+
 
 
 namespace dua
@@ -47,7 +49,7 @@ void ParserAssistant::finish_parsing()
 
     for (auto& [constructor, args, owner_class, in_templated_class] : constructors_field_args) {
         if (in_templated_class) {
-            compiler->templated_class_field_constructor_args[owner_class].push_back({ constructor, std::move(args) });
+            compiler->name_resolver.templated_class_field_constructor_args[owner_class].push_back({ constructor, std::move(args) });
         } else {
             constructor->set_full_name();
             compiler->name_resolver.add_fields_constructor_args(constructor->name, std::move(args));
@@ -62,21 +64,21 @@ void ParserAssistant::finish_parsing()
     std::vector<llvm::Type*> body;
 
     for (auto& [name, template_args] : templated_class_definitions)
-        compiler->register_templated_class(name, template_args);
+        compiler->name_resolver.register_templated_class(name, template_args);
 
     for (auto& [name, template_args] : templated_class_definitions)
     {
-        auto cls = compiler->get_templated_class(name, template_args);
+        auto cls = compiler->name_resolver.get_templated_class(name, template_args);
 
         // Copying the fields from the templated class to the concrete class
-        auto key = compiler->get_templated_class_key(name, template_args.size());
+        auto key = compiler->name_resolver.get_templated_class_key(name, template_args.size());
         auto& templated_fields = compiler->name_resolver.class_fields[key];
         auto& concrete_fields = compiler->name_resolver.class_fields[cls->name];
         concrete_fields = templated_fields;
 
         compiler->typing_system.identifier_types.keep_only_first_n_scopes(1);
         compiler->typing_system.push_scope();
-        auto& template_params = compiler->templated_classes[key].template_params;
+        auto& template_params = compiler->name_resolver.templated_classes[key].template_params;
         for (size_t i = 0; i < template_args.size(); i++)
             compiler->typing_system.insert_type(template_params[i], template_args[i]);
 
@@ -95,7 +97,7 @@ void ParserAssistant::finish_parsing()
         compiler->typing_system.pop_scope();
         compiler->typing_system.identifier_types.restore_prev_state();
 
-        bool is_packed = compiler->templated_classes[key].node->is_packed;
+        bool is_packed = compiler->name_resolver.templated_classes[key].node->is_packed;
 
         class_type->setBody(std::move(body), is_packed);
     }
@@ -112,8 +114,8 @@ void ParserAssistant::finish_parsing()
     }
 
     for (auto& [name, template_args] : templated_class_definitions) {
-        auto cls = compiler->get_templated_class(name, template_args);
-        compiler->define_templated_class(name, template_args);
+        auto cls = compiler->name_resolver.get_templated_class(name, template_args);
+        compiler->name_resolver.define_templated_class(name, template_args);
     }
 
     current_class = "";
@@ -282,10 +284,10 @@ void ParserAssistant::create_function_declaration()
 
     if (in_templated_class) {
         // Templated classes would add their own templated methods upon instantiation of concrete classes
-        compiler->add_templated_class_method_info(current_class, func, std::move(info), std::move(template_params));
+        compiler->name_resolver.add_templated_class_method_info(current_class, func, std::move(info), std::move(template_params));
     } else if (is_templated) {
         // Templated functions will be registered upon instantiation
-        compiler->add_templated_function(func, std::move(template_params), std::move(info), current_class, in_templated_class);
+        compiler->name_resolver.add_templated_function(func, std::move(template_params), std::move(info), current_class, in_templated_class);
     } else {
         function_definitions.push_back({func, std::move(info)});
     }
@@ -694,7 +696,7 @@ void ParserAssistant::start_class_definition()
     if (in_templated_class) {
         auto template_param_count = general_counters.back();
         auto& name = strings[strings.size() - 1 - template_param_count];
-        current_class = compiler->get_templated_class_key(name, template_param_count);
+        current_class = compiler->name_resolver.get_templated_class_key(name, template_param_count);
     } else {
         current_class = strings.back();
     }
@@ -734,7 +736,7 @@ void ParserAssistant::create_class()
 
     auto cls = (ClassDefinitionNode*)nodes.back();
     if (in_templated_class)
-        compiler->add_templated_class(cls, std::move(template_params));
+        compiler->name_resolver.add_templated_class(cls, std::move(template_params));
     else
         class_definitions.push_back(cls);
 
@@ -951,7 +953,7 @@ void ParserAssistant::create_operator(const std::string& position_name)
     auto func = (FunctionDefinitionNode*)nodes.back();
     if (in_templated_class) {
         // Templated classes would add their own templated methods upon instantiation of concrete classes
-        compiler->add_templated_class_method_info(current_class, func, std::move(info), {});
+        compiler->name_resolver.add_templated_class_method_info(current_class, func, std::move(info), {});
     } else {
         function_definitions.push_back({func, std::move(info)});
     }
@@ -994,7 +996,7 @@ void ParserAssistant::create_templated_class_type()
     auto args = pop_types();
     auto name = pop_str();
     pop_is_templated();
-    auto full_name = compiler->get_templated_class_full_name(name, args);
+    auto full_name = compiler->name_resolver.get_templated_class_full_name(name, args);
     push_type<ClassType>(std::move(full_name));
     templated_class_definitions.insert({ std::move(name), std::move(args) });
 }

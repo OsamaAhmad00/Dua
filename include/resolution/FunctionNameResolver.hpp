@@ -4,6 +4,7 @@
 #include "types/FunctionType.hpp"
 #include "types/ClassType.hpp"
 #include <llvm/IR/IRBuilder.h>
+#include <resolution/CommonStructs.hpp>
 
 
 namespace dua
@@ -13,12 +14,6 @@ class ModuleCompiler;
 class ASTNode;
 class FunctionDefinitionNode;
 struct Value;
-
-struct FunctionInfo
-{
-    const FunctionType* type;
-    std::vector<std::string> param_names;
-};
 
 class FunctionNameResolver
 {

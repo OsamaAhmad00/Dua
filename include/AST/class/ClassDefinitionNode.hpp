@@ -12,7 +12,7 @@ class TypeAliasNode;
 class ClassDefinitionNode : public ASTNode
 {
     friend class ParserAssistant;
-    friend class ModuleCompiler;
+    friend class TemplatedNameResolver;
 
     std::string name;
     std::vector<ClassFieldDefinitionNode*> fields;

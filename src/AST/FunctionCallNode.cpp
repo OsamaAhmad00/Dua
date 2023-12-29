@@ -93,7 +93,7 @@ Value FunctionCallNode::call_templated_function()
     std::vector<const Type*> arg_types(args.size());
     for (size_t i = 0; i < args.size(); i++)
         arg_types[i] = args[i]->get_type();
-    auto func = compiler->get_templated_function(name, template_args, std::move(arg_types));
+    auto func = compiler->get_name_resolver().get_templated_function(name, template_args, std::move(arg_types));
     return name_resolver().call_function(func, eval_args());
 }
 

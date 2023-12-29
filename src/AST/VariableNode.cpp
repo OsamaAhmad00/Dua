@@ -24,7 +24,7 @@ Value VariableNode::eval()
     if (is_templated) {
         // This is a templated function reference for sure since no identifier
         // is allowed to be templated, except for types and function reference.
-        auto func = compiler->get_templated_function(name, template_args);
+        auto func = compiler->get_name_resolver().get_templated_function(name, template_args);
         // This returns a function type. If this is a function reference, we should
         //  wrap it in a pointer type.
         func.type = compiler->create_type<PointerType>(func.type);
@@ -59,7 +59,7 @@ const Type* VariableNode::get_type()
     if (is_templated) {
         // This is definitely a templated function reference.
         // Wrap the function type in a pointer
-        return set_type(compiler->create_type<PointerType>(compiler->get_templated_function(name, template_args).type));
+        return set_type(compiler->create_type<PointerType>(compiler->get_name_resolver().get_templated_function(name, template_args).type));
     }
 
     const Type* t;

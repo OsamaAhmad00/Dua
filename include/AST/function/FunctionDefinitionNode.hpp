@@ -7,7 +7,7 @@ namespace dua
 
 class FunctionDefinitionNode : public ASTNode
 {
-    friend class ModuleCompiler;
+    friend class TemplatedNameResolver;
 
     ASTNode* body;  // Can be nullptr in case of declaration
 
