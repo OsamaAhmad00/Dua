@@ -28,7 +28,12 @@ Value BlockNode::eval()
     return result;
 }
 
-const Type* BlockNode::get_type() {
+const Type* BlockNode::get_type()
+{
+    if (compiler->clear_type_cache) type = nullptr;
+
+    if (type != nullptr) return type;
+
     return elements.back()->get_type();
 }
 

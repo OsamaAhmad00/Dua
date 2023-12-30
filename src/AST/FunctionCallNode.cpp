@@ -80,6 +80,8 @@ Value FunctionCallNode::eval()
 
 const Type *FunctionCallNode::get_type()
 {
+    if (compiler->clear_type_cache) type = nullptr;
+
     if (type != nullptr) return type;
 
     std::vector<const Type*> arg_types(args.size());

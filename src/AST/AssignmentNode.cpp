@@ -32,7 +32,12 @@ Value AssignmentExpressionNode::eval()
     return rhs_res;
 }
 
-const Type* AssignmentExpressionNode::get_type() {
+const Type* AssignmentExpressionNode::get_type()
+{
+    if (compiler->clear_type_cache) type = nullptr;
+
+    if (type != nullptr) return type;
+
     return set_type(lhs->get_type());
 }
 

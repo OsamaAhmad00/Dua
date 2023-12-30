@@ -66,12 +66,18 @@ public:                                                                         
                                                                                       \
     const Type* get_type() override                                                   \
     {                                                                                 \
+        if (compiler->clear_type_cache) type = nullptr;                               \
+                                                                                      \
         if (type != nullptr) return type;                                             \
+                                                                                      \
         auto ltype = lhs->get_type();                                                 \
         auto rtype = rhs->get_type();                                                 \
+                                                                                      \
         auto infix_type = name_resolver()                                             \
             .get_infix_operator_return_type(ltype, rtype, #NAME);                     \
+                                                                                      \
         if (infix_type != nullptr) return set_type(infix_type);                       \
+                                                                                      \
         return set_type(ltype->get_winning_type(rtype, true,                          \
             "There is no " #NAME " operator defined for the types " +                 \
             ltype->to_string() + " and " + rtype->to_string()));                      \

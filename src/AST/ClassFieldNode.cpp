@@ -47,6 +47,8 @@ Value ClassFieldNode::eval()
 
 const Type* ClassFieldNode::get_type()
 {
+    if (compiler->clear_type_cache) type = nullptr;
+
     if (type != nullptr) return type;
 
     auto full_name = get_full_name();

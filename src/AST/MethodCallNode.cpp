@@ -26,8 +26,12 @@ Value MethodCallNode::eval()
 
 const Type* MethodCallNode::get_type()
 {
+    if (compiler->clear_type_cache) type = nullptr;
+
     if (type != nullptr) return type;
+
     process();
+
     return set_type(FunctionCallNode::get_type());
 }
 

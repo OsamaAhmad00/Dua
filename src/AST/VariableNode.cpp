@@ -54,6 +54,8 @@ Value VariableNode::eval()
 
 const Type* VariableNode::get_type()
 {
+    if (compiler->clear_type_cache) type = nullptr;
+
     if (type != nullptr) return type;
 
     if (is_templated) {

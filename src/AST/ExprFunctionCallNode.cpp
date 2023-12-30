@@ -47,8 +47,12 @@ Value ExprFunctionCallNode::eval()
     return name_resolver().call_function(func->eval(), std::move(evaluated));
 }
 
-const Type *ExprFunctionCallNode::get_type() {
+const Type *ExprFunctionCallNode::get_type()
+{
+    if (compiler->clear_type_cache) type = nullptr;
+
     if (type != nullptr) return type;
+
     return set_type(get_function_type(func)->return_type);
 }
 

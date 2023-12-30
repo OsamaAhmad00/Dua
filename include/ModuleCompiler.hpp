@@ -139,13 +139,18 @@ private:
     //  order to determine how many scopes to destruct upon a return instruction
     std::vector<size_t> function_scope_count;
 
+    // A cache of the resulting LLVM IR, used to
+    //  avoid performing the same computations
+    std::string result;
+
+public:
+
     // Mainly used when evaluating a templated nodes, in which the type of the children
     //  may change depending on the template arguments.
     bool stop_caching_types = false;
 
-    // A cache of the resulting LLVM IR, used to
-    //  avoid performing the same computations
-    std::string result;
+    // If true, nodes will clear their cache when getting their type
+    bool clear_type_cache = false;
 };
 
 }

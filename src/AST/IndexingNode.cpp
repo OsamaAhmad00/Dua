@@ -41,20 +41,31 @@ Value IndexingNode::eval()
 
 const Type *IndexingNode::get_type()
 {
+    if (compiler->clear_type_cache) type = nullptr;
+
+    if (type != nullptr) return type;
+
     auto t = name_resolver().get_postfix_operator_return_type(lhs->get_type(), rhs->get_type(), "Indexing");
+
     if (t != nullptr)
         return set_type(t);
+
     auto element_type = get_element_type(lhs, rhs);
+
     const Type* result = nullptr;
+
     if (auto pointer_type = element_type->as<PointerType>(); pointer_type != nullptr) {
         result = pointer_type->get_element_type();
     }
+
     if (result == nullptr) {
         if (auto array_type = element_type->as<ArrayType>(); array_type != nullptr)
             result = array_type->get_element_type();
     }
+
     if (result == nullptr)
         report_error("Can't use the default index operator with a non-lvalue expression");
+
     return set_type(result);
 }
 

@@ -113,9 +113,14 @@ Value IfNode::eval()
     return compiler->create_value(phi, get_type());
 }
 
-const Type *IfNode::get_type() {
+const Type *IfNode::get_type()
+{
+    if (compiler->clear_type_cache) type = nullptr;
+
     if (type != nullptr) return type;
+
     if (is_expression) return set_type(branches.front()->get_type());
+
     return set_type(compiler->create_type<VoidType>());
 }
 

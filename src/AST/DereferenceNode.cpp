@@ -19,7 +19,10 @@ Value DereferenceNode::eval()
 
 const Type* DereferenceNode::get_type()
 {
+    if (compiler->clear_type_cache) type = nullptr;
+
     if (type != nullptr) return type;
+
     return set_type(assert_ptr(address->get_type()));
 }
 

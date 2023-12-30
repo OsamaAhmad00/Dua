@@ -19,7 +19,10 @@ Value LoadedLValueNode::eval()
 
 const Type *LoadedLValueNode::get_type()
 {
+    if (compiler->clear_type_cache) type = nullptr;
+
     if (type != nullptr) return type;
+
     auto result = lvalue->get_type();
     const Type* ptr = result->as<PointerType>();
     if (ptr == nullptr) {
