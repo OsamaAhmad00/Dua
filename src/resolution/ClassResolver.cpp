@@ -56,7 +56,7 @@ void ClassResolver::create_vtable(const std::string &class_name)
     if (vtables.find(class_name) != vtables.end())
         report_error("Redefinition of the class " + class_name);
 
-    auto methods = compiler->get_name_resolver().get_class_methods(class_name);
+    auto methods = compiler->get_name_resolver().get_class_methods(class_name, true);
 
     std::vector<llvm::Type*> body(methods.size());
 

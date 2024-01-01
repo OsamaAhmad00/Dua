@@ -36,7 +36,8 @@ public:
     FunctionInfo& get_function(const std::string& name, const std::vector<Value>& args);
     std::string get_function_name_with_exact_type(const std::string& name, const FunctionType* type) const;
     FunctionInfo& get_function_no_overloading(const std::string &name);
-    std::vector<NamedFunctionValue> get_class_methods(std::string name);
+    std::vector<NamedFunctionValue> get_class_methods(std::string name, bool non_templated_only = false);
+    bool is_function_templated(const std::string& name);
 
     [[nodiscard]] bool has_function(const std::string& name, bool try_as_method = true) const;
     Value call_function(const std::string &name, std::vector<Value> args = {});

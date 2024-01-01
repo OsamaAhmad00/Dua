@@ -493,7 +493,7 @@ const Type *FunctionNameResolver::get_postfix_operator_return_type(const Type *t
     return get_operator_return_type("postfix", t1, t2, name);
 }
 
-std::vector<NamedFunctionValue> FunctionNameResolver::get_class_methods(std::string name)
+std::vector<NamedFunctionValue> FunctionNameResolver::get_class_methods(std::string name, bool non_templated_only)
 {
     auto begin = functions.lower_bound(name);
     name.back()++;
@@ -501,11 +501,20 @@ std::vector<NamedFunctionValue> FunctionNameResolver::get_class_methods(std::str
     std::vector<NamedFunctionValue> result;
     while (begin != end)
     {
-        auto func = compiler->module.getFunction(begin->first);
-        result.push_back({begin->first, func, begin->second.type});
+        if (!non_templated_only || !is_function_templated(begin->first)) {
+            auto func = compiler->module.getFunction(begin->first);
+            result.push_back({begin->first, func, begin->second.type});
+        }
         begin++;
     }
     return result;
+}
+
+bool FunctionNameResolver::is_function_templated(const std::string &name) {
+    auto it = functions.find(name);
+    if (it == functions.end())
+        report_internal_error("Function " + name + " not defined");
+    return it->second.is_templated;
 }
 
 }

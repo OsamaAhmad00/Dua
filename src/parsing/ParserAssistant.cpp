@@ -288,7 +288,8 @@ void ParserAssistant::create_function_declaration()
     auto function_type = compiler->create_type<FunctionType>(return_type, std::move(param_types), is_var_arg);
     FunctionInfo info {
         function_type,
-        std::move(param_names)
+        std::move(param_names),
+        is_templated
     };
 
     size_t template_param_count = -1;
