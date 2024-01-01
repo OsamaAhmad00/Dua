@@ -2,7 +2,6 @@
 #include "resolution/TemplatedNameResolver.hpp"
 
 
-
 namespace dua
 {
 
@@ -74,6 +73,8 @@ void ParserAssistant::finish_parsing()
     for (auto& [name, template_args] : templated_class_definitions)
     {
         auto cls = compiler->name_resolver.get_templated_class(name, template_args);
+
+        compiler->name_resolver.create_vtable(cls->name);
 
         // Copying the fields from the templated class to the concrete class
         auto key = compiler->name_resolver.get_templated_class_key(name, template_args.size());

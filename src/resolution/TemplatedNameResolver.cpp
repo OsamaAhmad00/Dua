@@ -370,8 +370,6 @@ void TemplatedNameResolver::register_templated_class(const std::string &name, co
         }
     }
 
-    compiler->name_resolver.create_vtable(cls->name);
-
     compiler->typing_system.pop_scope();
 
     templated_definition_depth--;

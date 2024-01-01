@@ -309,7 +309,7 @@ void FunctionNameResolver::call_destructor(const Value& value)
 
     std::string name = class_type->name + ".destructor";
     if (!has_function(name))
-        return;
+        report_internal_error("A destructor is not defined for the class " + class_type->name);
 
     // Call the destructors of fields first
     // Fields are destructed in the reverse order of definition.
@@ -321,7 +321,14 @@ void FunctionNameResolver::call_destructor(const Value& value)
     });
 
     auto instance = compiler->create_value(value.get(), compiler->create_type<ReferenceType>(value.type));
-    call_function(name, { instance });
+    auto full_name = get_function_full_name(name, { instance.type });
+    auto vtable_ptr = class_type->get_field(instance, ".vtable_ptr");
+    auto vtable_instance = compiler->builder.CreateLoad(compiler->name_resolver.get_vtable_type(class_type->name)->llvm_type(), vtable_ptr.get());
+    auto class_vtable = compiler->name_resolver.get_vtable_instance(class_type->name);
+    auto destructor_type = compiler->name_resolver.get_function_no_overloading(full_name).type;
+    auto destructor_ptr = class_vtable->get_method(full_name, destructor_type->llvm_type()->getPointerTo(), vtable_instance);
+    auto destructor = compiler->create_value(destructor_ptr, destructor_type);
+    call_function(destructor, { instance });
 }
 
 llvm::IRBuilder<>& FunctionNameResolver::builder() const
