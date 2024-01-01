@@ -111,16 +111,23 @@ Value FunctionDefinitionNode::define_function()
     }
 
     size_t pos;
-    for (auto& ctor : std::vector<std::string>{ ".constructor.", ".=constructor." }) {
+    for (auto& ctor : { ".constructor.", ".=constructor." }) {
         pos = name.find(ctor);
         if (pos != std::string::npos) break;
     }
 
-    if (pos != std::string::npos) {
+    if (pos != std::string::npos)
+    {
         // This is a constructor call.
         auto class_name = name.substr(0, pos);
         auto class_type = name_resolver().get_class(class_name);
-        initialize_constructor(class_type);
+//
+//        // Store the pointer to the vtable at the appropriate location
+//        auto instance = compiler->create_value(function->args().begin(), class_type);
+//        auto ptr = class_type->get_field(instance, ".vtable").get();
+//        builder().CreateStore(name_resolver().get_vtable_instance(class_name)->instance, ptr);
+
+        construct_fields(class_type);
     }
 
     body->eval();
@@ -173,7 +180,7 @@ Value FunctionDefinitionNode::define_function()
     return compiler->create_value(function, get_type());
 }
 
-void FunctionDefinitionNode::initialize_constructor(const ClassType *class_type)
+void FunctionDefinitionNode::construct_fields(const ClassType *class_type)
 {
     // Call the constructors of the fields first, then the constructor of this class.
     // Constructors are called in the order of definition of fields in the class.
@@ -182,6 +189,7 @@ void FunctionDefinitionNode::initialize_constructor(const ClassType *class_type)
     auto self = name_resolver().symbol_table.get("self");
     for (auto& field : class_type->fields())
     {
+        if (field.name.empty()) continue;  // A placeholder
         bool found = false;
         auto type = class_type->get_field(field.name).type;
         auto ptr = class_type->get_field(self, field.name).get();

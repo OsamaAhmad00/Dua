@@ -257,10 +257,8 @@ void FunctionNameResolver::call_constructor(const Value &value, std::vector<Valu
     //  thus, initializing the fields first.
 
     std::string name = class_type->name + ".constructor";
-    if (!has_function(name)) {
-        // Constructor is not defined. Noting to do here
-        return;
-    }
+    if (!has_function(name))
+        report_internal_error("A constructor is not defined for class " + class_type->name);
 
     auto instance = compiler->create_value(value.get(), compiler->create_type<ReferenceType>(value.type));
     args.insert(args.begin(), instance);
@@ -317,6 +315,7 @@ void FunctionNameResolver::call_destructor(const Value& value)
     // Fields are destructed in the reverse order of definition.
     std::for_each(class_type->fields().rbegin(), class_type->fields().rend(), [&](auto& field) {
         // TODO don't search for the field twice, once for the type and once for the ptr
+        if (field.name == ".vtable_ptr" || field.name.empty()) return;
         auto f = class_type->get_field(value, field.name);
         call_destructor(f);
     });
@@ -485,6 +484,21 @@ const Type *FunctionNameResolver::get_infix_operator_return_type(const Type *t1,
 
 const Type *FunctionNameResolver::get_postfix_operator_return_type(const Type *t1, const Type *t2, const std::string& name) {
     return get_operator_return_type("postfix", t1, t2, name);
+}
+
+std::vector<NamedFunctionValue> FunctionNameResolver::get_class_methods(std::string name)
+{
+    auto begin = functions.lower_bound(name);
+    name.back()++;
+    auto end = functions.lower_bound(name);
+    std::vector<NamedFunctionValue> result;
+    while (begin != end)
+    {
+        auto func = compiler->module.getFunction(begin->first);
+        result.push_back({begin->first, func, begin->second.type});
+        begin++;
+    }
+    return result;
 }
 
 }

@@ -11,7 +11,8 @@ ClassType::ClassType(ModuleCompiler *compiler, std::string name)
     this->compiler = compiler;
 
     // Just to make sure the type is declared before usage.
-    llvm::StructType::create(compiler->context, this->name);
+    if (llvm::StructType::getTypeByName(*compiler->get_context(), this->name) == nullptr)
+        llvm::StructType::create(compiler->context, this->name);
 }
 
 Value ClassType::default_value() const

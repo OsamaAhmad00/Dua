@@ -9,6 +9,7 @@ namespace dua
 class MethodCallNode : public FunctionCallNode
 {
     bool processed = false;
+    bool is_callable_field = false;
     void process();
 
     std::string instance_name;

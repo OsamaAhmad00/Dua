@@ -12,16 +12,64 @@ void MethodCallNode::process()
 
     auto instance = name_resolver().symbol_table.get(instance_name);
     auto class_type = instance.type->as<ClassType>();
-    name = class_type->name + "." + name;
-    auto ref_type = compiler->create_type<ReferenceType>(class_type);
-    args.insert(args.begin(), compiler->create_node<VariableNode>(instance_name, ref_type));
+    if (class_type == nullptr)
+        report_error(instance_name + " is not of a class type, and has no method with the name " + name);
+
+    is_callable_field = false;
+    for (auto& field : class_type->fields()) {
+        if (field.name == name) {
+            is_callable_field = true;
+            break;
+        }
+    }
+
+    if (!is_callable_field) {
+        auto ref_type = compiler->create_type<ReferenceType>(class_type);
+        args.insert(args.begin(), compiler->create_node<VariableNode>(instance_name, ref_type));
+    }
+
     processed = true;
 }
 
 Value MethodCallNode::eval()
 {
     process();
-    return FunctionCallNode::eval();
+
+    auto instance = name_resolver().symbol_table.get(instance_name);
+    auto class_type = instance.type->as<ClassType>();
+
+    if (is_callable_field)
+        return call_reference(class_type->get_field(instance, name), eval_args());
+
+    if (is_templated)
+    {
+        // Templated virtual methods are not supported. If the method is
+        //  templated, call the method without dynamic dispatch.
+        auto old_name = name;
+        name = class_type->name + "." + name;
+        auto result = call_templated_function();
+        name = old_name;
+        return result;
+    }
+
+    auto args = eval_args();
+    std::vector<const Type*> arg_types(args.size());
+    for (size_t i = 0; i < args.size(); i++)
+        arg_types[i] = args[i].type;
+
+    // Load the symbol table. The symbol table may be of a child class.
+    // The type tho, will be considered of the current class
+    auto vtable = name_resolver().get_vtable_instance(class_type->name);
+    auto vtable_ptr_ptr = class_type->get_field(instance, ".vtable_ptr");
+    auto vtable_type = name_resolver().get_vtable_type(class_type->name)->llvm_type();
+    auto vtable_ptr = builder().CreateLoad(vtable_type, vtable_ptr_ptr.get(), ".vtable");
+    auto full_name = class_type->name + "." + name;
+    full_name = name_resolver().get_winning_function(full_name, arg_types);
+    auto method_type = name_resolver().get_function(class_type->name + "." + name, args).type;
+    auto method_ptr = vtable->get_method(full_name, method_type->llvm_type()->getPointerTo(), vtable_ptr);
+    auto method = compiler->create_value(method_ptr, method_type);
+
+    return name_resolver().call_function(method, std::move(args));
 }
 
 const Type* MethodCallNode::get_type()

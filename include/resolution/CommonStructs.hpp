@@ -56,4 +56,11 @@ struct TemplatedClassFieldConstructorArgs
     std::vector<FieldConstructorArgs> args;
 };
 
+struct NamedFunctionValue
+{
+    std::string name;
+    llvm::Function* ptr;
+    const Type* type;
+};
+
 }

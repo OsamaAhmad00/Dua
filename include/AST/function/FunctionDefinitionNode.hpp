@@ -15,7 +15,7 @@ class FunctionDefinitionNode : public ASTNode
 
     Value define_function();
 
-    void initialize_constructor(const ClassType* class_type);
+    void construct_fields(const ClassType* class_type);
 
 public:
 

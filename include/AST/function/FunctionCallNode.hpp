@@ -13,7 +13,9 @@ protected:
 
     Value call_templated_function();
 
-    std::vector<Value> eval_args(bool is_method = false);
+    std::vector<Value> eval_args();
+
+    Value call_reference(const Value& reference, std::vector<Value> args);
 
     std::string name;
     std::vector<ASTNode*> args;

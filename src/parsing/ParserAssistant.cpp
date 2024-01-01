@@ -66,6 +66,11 @@ void ParserAssistant::finish_parsing()
     for (auto& [name, template_args] : templated_class_definitions)
         compiler->name_resolver.register_templated_class(name, template_args);
 
+    // The missing methods are registered right after all classes (including templated ones)
+    //  are registered, and before the classes are defined, so that these missing methods
+    //  are visible to the class definitions.
+    create_missing_methods();
+
     for (auto& [name, template_args] : templated_class_definitions)
     {
         auto cls = compiler->name_resolver.get_templated_class(name, template_args);
@@ -75,6 +80,10 @@ void ParserAssistant::finish_parsing()
         auto& templated_fields = compiler->name_resolver.class_fields[key];
         auto& concrete_fields = compiler->name_resolver.class_fields[cls->name];
         concrete_fields = templated_fields;
+        // We need to add the vtable before method evaluation, and after method
+        // registration so that the offsets of the fields in methods are correct
+        // Non-const direct access
+        concrete_fields.insert(concrete_fields.begin(), compiler->name_resolver.get_vtable_field(cls->name));
 
         compiler->typing_system.identifier_types.keep_only_first_n_scopes(1);
         compiler->typing_system.push_scope();
@@ -105,11 +114,19 @@ void ParserAssistant::finish_parsing()
     for (auto& cls : class_definitions)
     {
         auto class_type = compiler->name_resolver.get_class(cls->name)->llvm_type();
+
+        compiler->name_resolver.create_vtable(cls->name);
+        auto& f = compiler->name_resolver.class_fields[cls->name];
+        f.insert(f.begin(), compiler->name_resolver.get_vtable_field(cls->name));
+
         if (class_type->isSized())
             report_error("Redefinition of the class " + cls->name);
+
         body.resize(cls->fields.size());
         for (size_t i = 0; i < body.size(); i++)
             body[i] = cls->fields[i]->get_type()->llvm_type();
+        auto vtable_type = compiler->name_resolver.get_vtable_type(cls->name);
+        body.insert(body.begin(), vtable_type->llvm_type());
         class_type->setBody(std::move(body), cls->is_packed);
     }
 
@@ -120,8 +137,6 @@ void ParserAssistant::finish_parsing()
 
     current_class = "";
     is_in_function = false;
-
-    create_missing_methods();
 }
 
 void ParserAssistant::create_missing_methods()
