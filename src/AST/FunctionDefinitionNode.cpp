@@ -121,12 +121,6 @@ Value FunctionDefinitionNode::define_function()
         // This is a constructor call.
         auto class_name = name.substr(0, pos);
         auto class_type = name_resolver().get_class(class_name);
-//
-//        // Store the pointer to the vtable at the appropriate location
-//        auto instance = compiler->create_value(function->args().begin(), class_type);
-//        auto ptr = class_type->get_field(instance, ".vtable").get();
-//        builder().CreateStore(name_resolver().get_vtable_instance(class_name)->instance, ptr);
-
         construct_fields(class_type);
     }
 

@@ -493,7 +493,7 @@ const Type *FunctionNameResolver::get_postfix_operator_return_type(const Type *t
     return get_operator_return_type("postfix", t1, t2, name);
 }
 
-std::vector<NamedFunctionValue> FunctionNameResolver::get_class_methods(std::string name, bool non_templated_only)
+std::vector<NamedFunctionValue> FunctionNameResolver::get_class_methods(std::string name, bool for_a_vtable)
 {
     auto begin = functions.lower_bound(name);
     name.back()++;
@@ -501,7 +501,7 @@ std::vector<NamedFunctionValue> FunctionNameResolver::get_class_methods(std::str
     std::vector<NamedFunctionValue> result;
     while (begin != end)
     {
-        if (!non_templated_only || !is_function_templated(begin->first)) {
+        if (!for_a_vtable || (!is_function_templated(begin->first) && !is_function_a_constructor(begin->first))) {
             auto func = compiler->module.getFunction(begin->first);
             result.push_back({begin->first, func, begin->second.type});
         }
@@ -515,6 +515,15 @@ bool FunctionNameResolver::is_function_templated(const std::string &name) {
     if (it == functions.end())
         report_internal_error("Function " + name + " not defined");
     return it->second.is_templated;
+}
+
+bool FunctionNameResolver::is_function_a_constructor(const std::string &name)
+{
+    for (auto& ctor : { ".constructor.", ".=constructor." }) {
+        auto pos = name.find(ctor);
+        if (pos != std::string::npos) return true;
+    }
+    return false;
 }
 
 }

@@ -34,11 +34,7 @@ Value ClassDefinitionNode::eval()
 
     // Now evaluate methods
     for (auto & method : methods) {
-        auto& func_name = method->name;
-        if (ends_with(func_name, ".constructor"))
-            compiler->push_deferred_node(method);
-        else
-            method->eval();
+        method->eval();
     }
 
     current_class() = old_class;
