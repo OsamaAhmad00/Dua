@@ -339,9 +339,18 @@ expr_or_type
     ;
 
 function_call
-    : lvalue '.' identifier template_args_or_none '(' arg_list ')' { assistant.create_method_call();   }
-    | lvalue { assistant.create_loaded_lvalue(); } '->' identifier template_args_or_none '(' arg_list ')' { assistant.create_method_call(); }
-    | identifier template_args_or_none '(' arg_list ')' { assistant.create_function_call(); }
+    : instance_access identifier template_args_or_none '(' arg_list ')' { assistant.create_method_call(); }
+    | full_function_identifier   template_args_or_none '(' arg_list ')' { assistant.create_function_call(); }
+    ;
+
+full_function_identifier
+    : identifier
+    | class_type '::' identifier { assistant.create_method_identifier(); }
+    ;
+
+instance_access
+    : lvalue '.'
+    | lvalue '->' { assistant.create_loaded_lvalue(); }
     ;
 
 template_args_or_none

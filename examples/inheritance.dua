@@ -53,3 +53,13 @@ int main()
     Z z;
     z.print();
 }
+
+
+// Case Calling a method of a parent class
+// Outputs "X"
+
+int main()
+{
+    Y y;
+    X::print(y);
+}

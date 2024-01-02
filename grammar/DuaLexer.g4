@@ -56,6 +56,7 @@ Simicolon: ';';
 Class: 'class';
 Extends: 'extends';
 Dot: '.';
+ScopeResolution: '::';
 
 If: 'if';
 Else: 'else';

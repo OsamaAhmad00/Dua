@@ -287,6 +287,7 @@ public:
     void create_templated_class_type();
     void create_is_type();
     void create_no_ref();
+    void create_method_identifier();
 
     template<typename T>
     void create_unary_expr() {

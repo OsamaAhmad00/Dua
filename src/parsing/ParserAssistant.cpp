@@ -1050,4 +1050,11 @@ void ParserAssistant::create_postfix_operator() {
     create_operator("postfix");
 }
 
+void ParserAssistant::create_method_identifier() {
+    auto cls_type = pop_type();
+    auto method = pop_str();
+    // Is the to_string method sufficient?
+    push_str(cls_type->to_string() + "." + method);
+}
+
 }
