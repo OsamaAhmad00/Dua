@@ -65,4 +65,19 @@ Value ClassType::get_field(const Value& instance, size_t index) const
     return compiler->create_value(result, fields()[index].type);
 }
 
+int ClassType::ancestor_distance(const ClassType *ancestor) const {
+    auto distance = 0;
+    auto parent = this;
+    while (true) {
+        auto it = compiler->name_resolver.parent_classes.find(parent->name);
+        if (it == compiler->name_resolver.parent_classes.end())
+            break;
+        parent = it->second;
+        distance++;
+        if (parent == ancestor)
+            return distance;
+    }
+    return -1;
+}
+
 }

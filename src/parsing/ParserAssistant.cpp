@@ -70,6 +70,18 @@ void ParserAssistant::finish_parsing()
     //  are visible to the class definitions.
     create_missing_methods();
 
+    // Parent classes are processes after all classes (including templated ones) are defined,
+    //  and all global aliases are defined as well.
+    auto& classes = compiler->name_resolver.classes;
+    for (auto& [name, parent] : parent_classes) {
+        auto concrete_class = parent->get_concrete_type()->as<ClassType>();
+        if (concrete_class == nullptr)
+            report_error("Class " + name + " inherits from the type " + parent->to_string() + ", which is not a class type");
+        if (classes.find(concrete_class->name) == classes.end())
+            report_error("The class " + concrete_class->name + ", which is the parent of the class " + name + " is not defined");
+        compiler->name_resolver.parent_classes[name] = concrete_class;
+    }
+
     for (auto& [name, template_args] : templated_class_definitions)
     {
         auto cls = compiler->name_resolver.get_templated_class(name, template_args);
@@ -506,11 +518,11 @@ void ParserAssistant::create_method_call()
     auto args = pop_args();
     auto template_args = pop_types();
     auto func_name = pop_str();
-    auto instance_name = pop_str();
+    auto instance = pop_node();
     if (pop_is_templated())
-        push_node<MethodCallNode>(std::move(instance_name), std::move(func_name), std::move(args), std::move(template_args));
+        push_node<MethodCallNode>(instance, std::move(func_name), std::move(args), std::move(template_args));
     else
-        push_node<MethodCallNode>(std::move(instance_name), std::move(func_name), std::move(args));
+        push_node<MethodCallNode>(instance, std::move(func_name), std::move(args));
 }
 
 void ParserAssistant::create_expr_function_call()
@@ -748,6 +760,10 @@ void ParserAssistant::create_class()
     auto template_params = pop_strings();
 
     auto name = pop_str();
+
+    auto parent = pop_type();
+    if (parent != nullptr)
+        parent_classes[name] = parent;
 
     push_node<ClassDefinitionNode>(std::move(name), std::move(fields), std::move(methods), std::move(aliases), is_packed, in_templated_class);
 

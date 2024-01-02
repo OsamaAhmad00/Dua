@@ -50,6 +50,8 @@ public:
     Value get_field(const Value& instance, const std::string& name) const;
 
     Value get_field(const Value& instance, size_t index) const;
+
+    int ancestor_distance(const ClassType* ancestor) const;
 };
 
 }

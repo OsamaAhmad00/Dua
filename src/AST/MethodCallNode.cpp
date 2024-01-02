@@ -1,6 +1,7 @@
 #include <AST/function/MethodCallNode.hpp>
 #include <types/ReferenceType.hpp>
 #include <AST/lvalue/VariableNode.hpp>
+#include "types/PointerType.hpp"
 
 namespace dua
 {
@@ -10,10 +11,7 @@ void MethodCallNode::process()
     if (processed)
         return;
 
-    auto instance = name_resolver().symbol_table.get(instance_name);
-    auto class_type = instance.type->as<ClassType>();
-    if (class_type == nullptr)
-        report_error(instance_name + " is not of a class type, and has no method with the name " + name);
+    auto class_type = get_instance_type();
 
     is_callable_field = false;
     for (auto& field : class_type->fields()) {
@@ -23,10 +21,8 @@ void MethodCallNode::process()
         }
     }
 
-    if (!is_callable_field) {
-        auto ref_type = compiler->create_type<ReferenceType>(class_type);
-        args.insert(args.begin(), compiler->create_node<VariableNode>(instance_name, ref_type));
-    }
+    if (!is_callable_field)
+        args.insert(args.begin(), instance_node);
 
     processed = true;
 }
@@ -35,11 +31,15 @@ Value MethodCallNode::eval()
 {
     process();
 
-    auto instance = name_resolver().symbol_table.get(instance_name);
-    auto class_type = instance.type->as<ClassType>();
+    auto instance = instance_node->eval();
+
+    auto class_type = get_instance_type();
 
     if (is_callable_field)
         return call_reference(class_type->get_field(instance, name), eval_args());
+
+    auto args = eval_args();
+    args[0].type = compiler->create_type<ReferenceType>(class_type);
 
     if (is_templated)
     {
@@ -47,12 +47,11 @@ Value MethodCallNode::eval()
         //  templated, call the method without dynamic dispatch.
         auto old_name = name;
         name = class_type->name + "." + name;
-        auto result = call_templated_function();
+        auto result = call_templated_function(std::move(args));
         name = old_name;
         return result;
     }
 
-    auto args = eval_args();
     std::vector<const Type*> arg_types(args.size());
     for (size_t i = 0; i < args.size(); i++)
         arg_types[i] = args[i].type;
@@ -80,7 +79,41 @@ const Type* MethodCallNode::get_type()
 
     process();
 
-    return set_type(FunctionCallNode::get_type());
+    auto instance_type = instance_node->get_type();
+    auto class_type = instance_type->as<ClassType>();
+    if (class_type == nullptr)
+        report_error("Can't call a method " + name + " from the type " + instance_type->to_string() + ", which is not of a class type");
+    auto method_type = name_resolver().get_function(class_type->name + "." + name, get_arg_types()).type;
+
+    return set_type(method_type->return_type);
+}
+
+std::vector<const Type*> MethodCallNode::get_arg_types()
+{
+    process();
+
+    std::vector<const Type*> arg_types(args.size());
+    for (size_t i = 0; i < args.size(); i++)
+        arg_types[i] = args[i]->get_type();
+
+    auto ptr_type = arg_types[0]->as<PointerType>();
+    assert(ptr_type != nullptr);
+    arg_types[0] = compiler->create_type<ReferenceType>(ptr_type->get_element_type());
+
+    return arg_types;
+}
+
+const ClassType *MethodCallNode::get_instance_type()
+{
+    auto instance_type = instance_node->get_type();
+    auto ptr_type = instance_type->as<PointerType>();
+    if (ptr_type == nullptr)
+        report_error(instance_type->to_string() + " is not an lvalue type, and has no method with the name " + name);
+    auto element_type = ptr_type->get_element_type();
+    auto class_type = element_type->get_contained_type()->as<ClassType>();
+    if (class_type == nullptr)
+        report_error(element_type->to_string() + " is not of a class type, and has no method with the name " + name);
+    return class_type;
 }
 
 }

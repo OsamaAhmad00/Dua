@@ -31,22 +31,20 @@ std::vector<Value> FunctionCallNode::eval_args()
 
 Value FunctionCallNode::eval()
 {
-    if (is_templated)
-        return call_templated_function();
+    auto evaluated_args = eval_args();
 
-    std::vector<const Type*> arg_types(args.size());
-    for (size_t i = 0; i < args.size(); i++)
-        arg_types[i] = args[i]->get_type();
+    if (is_templated)
+        return call_templated_function(std::move(evaluated_args));
 
     if (name_resolver().has_function(name))
-        return name_resolver().call_function(name, eval_args());
+        return name_resolver().call_function(name, std::move(evaluated_args));
 
     if (!name_resolver().symbol_table.contains(name))
         report_error("The identifier " + name + " doesn't refer to either a function or a function reference");
 
     auto reference = name_resolver().symbol_table.get(name);
 
-    return call_reference(reference, eval_args());
+    return call_reference(reference, std::move(evaluated_args));
 }
 
 const Type *FunctionCallNode::get_type()
@@ -62,13 +60,13 @@ const Type *FunctionCallNode::get_type()
     return set_type(name_resolver().get_function(name, arg_types).type->return_type);
 }
 
-Value FunctionCallNode::call_templated_function()
+Value FunctionCallNode::call_templated_function(std::vector<Value> args)
 {
     std::vector<const Type*> arg_types(args.size());
     for (size_t i = 0; i < args.size(); i++)
-        arg_types[i] = args[i]->get_type();
+        arg_types[i] = args[i].type;
     auto func = compiler->get_name_resolver().get_templated_function(name, template_args, std::move(arg_types));
-    return name_resolver().call_function(func, eval_args());
+    return name_resolver().call_function(func, std::move(args));
 }
 
 Value FunctionCallNode::call_reference(const Value &reference, std::vector<Value> args) {

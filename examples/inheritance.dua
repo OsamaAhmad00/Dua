@@ -1,0 +1,40 @@
+nomangle int printf(str message, ...);
+
+class X
+{
+    void print() {
+        printf("X");
+    }
+}
+
+class Y extends X
+{
+    void print() {
+        printf("Y");
+    }
+}
+
+
+// Case Basic method overriding
+// Outputs "Y"
+
+int main()
+{
+    Y y;
+    X& x = y;
+    x.print();
+}
+
+
+// Case Passing as a parent reference
+// Outputs "Y"
+
+void func(X& x) {
+    x.print();
+}
+
+int main()
+{
+    Y y;
+    func(y);
+}

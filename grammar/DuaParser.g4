@@ -61,9 +61,19 @@ class_decl_no_semicolon
     ;
 
 class_definition
-    : class_decl_no_semicolon optional_packed
+    : class_decl_no_semicolon class_optionals
        scope_begin { assistant.start_class_definition(); }
        class_elements_or_none scope_end { assistant.create_class(); }
+    ;
+
+class_optionals
+    : optional_packed optional_parent_class
+    | optional_parent_class optional_packed
+    ;
+
+optional_parent_class
+    : Extends class_type
+    | /* empty */ { assistant.push_null_type(); }
     ;
 
 optional_packed
@@ -329,8 +339,9 @@ expr_or_type
     ;
 
 function_call
-    : identifier '.' identifier template_args_or_none '(' arg_list ')' { assistant.create_method_call();   }
-    | identifier                template_args_or_none '(' arg_list ')' { assistant.create_function_call(); }
+    : lvalue '.' identifier template_args_or_none '(' arg_list ')' { assistant.create_method_call();   }
+    | lvalue { assistant.create_loaded_lvalue(); } '->' identifier template_args_or_none '(' arg_list ')' { assistant.create_method_call(); }
+    | identifier template_args_or_none '(' arg_list ')' { assistant.create_function_call(); }
     ;
 
 template_args_or_none
@@ -518,6 +529,11 @@ type
     | NoRef '(' type ')'                        { assistant.create_no_ref();         }
     | primitive_type
     | identifier_type
+    | templated_class_type
+    ;
+
+class_type
+    : identifier_type
     | templated_class_type
     ;
 

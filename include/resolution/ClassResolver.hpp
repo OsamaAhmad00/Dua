@@ -19,11 +19,10 @@ public:
     ClassResolver(ModuleCompiler* compiler) : compiler(compiler) {}
 
     std::unordered_map<std::string, const ClassType*> classes;
-    // Instead of having the fields be stored in the class type,
-    //  and having them getting duplicated on each clone, let's
-    //  keep the fields info in one place, and refer to it by name.
+    // TODO move these maps into the class type
     std::unordered_map<std::string, std::vector<ClassField>> class_fields;
     std::unordered_map<std::string, std::vector<FieldConstructorArgs>> fields_args;
+    std::unordered_map<std::string, const ClassType*> parent_classes;
 
     // Stores the address of the global instance of the vtable for each class
     std::unordered_map<std::string, VTable*> vtables;
@@ -36,6 +35,7 @@ public:
     VTable* get_vtable_instance(const std::string& class_name);
     const Type* get_vtable_type(const std::string& class_name);
     ClassField get_vtable_field(const std::string& class_name);
+    std::vector<NamedFunctionValue> get_all_class_methods(const std::string& class_name);
 
     virtual ~ClassResolver();
 };

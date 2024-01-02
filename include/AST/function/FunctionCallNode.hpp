@@ -11,7 +11,7 @@ class FunctionCallNode : public ASTNode
 
 protected:
 
-    Value call_templated_function();
+    Value call_templated_function(std::vector<Value> args);
 
     std::vector<Value> eval_args();
 

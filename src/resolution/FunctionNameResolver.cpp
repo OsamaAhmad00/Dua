@@ -376,8 +376,8 @@ std::string FunctionNameResolver::get_winning_function(const std::string &name, 
         auto& info = current->second;
         current++;
         auto score = compiler->typing_system.type_list_similarity_score(
-            info.type->param_types,
             arg_types,
+            info.type->param_types,
             info.type->is_var_arg
         );
         if (score == -1) continue;

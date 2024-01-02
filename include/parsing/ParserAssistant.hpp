@@ -153,6 +153,8 @@ class ParserAssistant
 
     std::vector<FieldConstructorArgs> fields_args;
 
+    std::unordered_map<std::string, const Type*> parent_classes;
+
     // Flags
     bool declared_malloc = false;
     bool declared_free = false;
@@ -214,6 +216,7 @@ public:
     void push_type(Args...args) { types.push_back(compiler->create_type<T>(args...)); }
 
     void push_null_node() { nodes.push_back(nullptr); }
+    void push_null_type() { types.push_back(nullptr); }
 
     bool in_class() { return !current_class.empty() || in_templated_class; }
 

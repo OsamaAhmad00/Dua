@@ -186,6 +186,12 @@ int TypingSystem::similarity_score(const Type *t1, const Type *t2) const
     //  but there are types that are castable to each other, in
     //  which some additional checks are necessary
 
+    if (auto c1 = is<ClassType>(t1); c1 != nullptr) {
+        if (auto c2 = is<ClassType>(t2); c2 != nullptr) {
+            return c1->ancestor_distance(c2);
+        }
+    }
+
     if (is<IntegerType>(t1)) {
         if (is<IntegerType>(t2)) return 1;
         if (is<FloatType>(t2))   return 2;

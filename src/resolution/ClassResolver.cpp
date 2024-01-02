@@ -54,9 +54,9 @@ ClassField ClassResolver::get_vtable_field(const std::string &class_name) {
 void ClassResolver::create_vtable(const std::string &class_name)
 {
     if (vtables.find(class_name) != vtables.end())
-        report_error("Redefinition of the class " + class_name);
+        return;
 
-    auto methods = compiler->get_name_resolver().get_class_methods(class_name, true);
+    auto methods = get_all_class_methods(class_name);
 
     std::vector<llvm::Type*> body(methods.size());
 
@@ -99,6 +99,52 @@ const Type *ClassResolver::get_vtable_type(const std::string &class_name) {
     auto vtable_type = compiler->create_type<ClassType>(vtable_name);
     auto ptr_type = compiler->create_type<PointerType>(vtable_type);
     return ptr_type;
+}
+
+std::vector<NamedFunctionValue> ClassResolver::get_all_class_methods(const std::string &class_name)
+{
+    auto class_methods = compiler->get_name_resolver().get_class_methods(class_name, true);
+
+    auto it = parent_classes.find(class_name);
+    if (it == parent_classes.end())
+        return class_methods;
+
+    auto parent = it->second;
+    create_vtable(parent->name);
+    auto parent_vtable = get_vtable_instance(parent->name);
+
+    std::vector<NamedFunctionValue> methods(parent_vtable->method_indices.size());
+
+    for (auto& method : class_methods)
+    {
+        auto self_param_position = method.name.find(class_name + "&");  // This must not be npos
+        auto stripped_name = method.name.substr(class_name.size() + 1, self_param_position - (class_name.size() + 1 + 1));
+        auto params_without_self = method.name.substr(self_param_position + class_name.size() + 1);
+        auto parent_method_name = parent->name;
+        parent_method_name += ".";
+        parent_method_name += stripped_name;
+        parent_method_name += ".";
+        parent_method_name += parent->name;
+        parent_method_name += "&";
+        parent_method_name += params_without_self;
+        auto index = parent_vtable->method_indices.find(parent_method_name);
+        if (index == parent_vtable->method_indices.end())
+            methods.push_back(method);
+        else
+            methods[index->second] = method;
+    }
+
+    for (auto& [name, index] : parent_vtable->method_indices) {
+        if (!methods[index].name.empty()) {
+            // This method is overwritten by the current class implementation
+            continue;
+        }
+        auto func = compiler->get_module()->getFunction(name);
+        auto type = compiler->get_name_resolver().get_function_no_overloading(name).type;
+        methods[index] = { name, func, type};
+    }
+
+    return methods;
 }
 
 llvm::Value* VTable::get_method(const std::string &name, llvm::Type* type, llvm::Value* instance)
