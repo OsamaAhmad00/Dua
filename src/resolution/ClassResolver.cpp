@@ -87,9 +87,11 @@ void ClassResolver::create_vtable(const std::string &class_name)
 
     auto instance = new VTable { class_type, instance_ptr, vtable_type };
 
-    for (size_t i = 0; i < methods.size(); i++) {
+    for (size_t i = 0; i < methods.size(); i++)
         instance->method_indices[methods[i].name] = i;
-    }
+
+    for (auto& method : methods)
+        instance->method_names_without_class_prefix[method.name_without_class_prefix] = method.name;
 
     vtables[class_name] = instance;
 }
@@ -105,15 +107,23 @@ std::vector<NamedFunctionValue> ClassResolver::get_all_class_methods(const std::
 {
     auto class_methods = compiler->get_name_resolver().get_class_methods(class_name, true);
 
+    std::vector<NamedFunctionValue> methods;
+
     auto it = parent_classes.find(class_name);
-    if (it == parent_classes.end())
-        return class_methods;
+    if (it == parent_classes.end()) {
+        methods.resize(class_methods.size());
+        for (size_t i = 0; i < methods.size(); i++) {
+            methods[i] = class_methods[i];
+            methods[i].name_without_class_prefix = methods[i].name.substr(class_name.size() + 1);
+        }
+        return methods;
+    }
 
     auto parent = it->second;
     create_vtable(parent->name);
     auto parent_vtable = get_vtable_instance(parent->name);
 
-    std::vector<NamedFunctionValue> methods(parent_vtable->method_indices.size());
+    methods.resize(parent_vtable->method_indices.size());
 
     for (auto& method : class_methods)
     {
@@ -127,6 +137,7 @@ std::vector<NamedFunctionValue> ClassResolver::get_all_class_methods(const std::
         parent_method_name += parent->name;
         parent_method_name += "&";
         parent_method_name += params_without_self;
+        method.name_without_class_prefix = method.name.substr(self_param_position);
         auto index = parent_vtable->method_indices.find(parent_method_name);
         if (index == parent_vtable->method_indices.end())
             methods.push_back(method);
@@ -141,7 +152,7 @@ std::vector<NamedFunctionValue> ClassResolver::get_all_class_methods(const std::
         }
         auto func = compiler->get_module()->getFunction(name);
         auto type = compiler->get_name_resolver().get_function_no_overloading(name).type;
-        methods[index] = { name, func, type};
+        methods[index] = { name, func, type, name.substr(parent->name.size() + 1) };
     }
 
     return methods;

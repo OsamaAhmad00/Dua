@@ -526,4 +526,85 @@ bool FunctionNameResolver::is_function_a_constructor(const std::string &name)
     return false;
 }
 
+std::string FunctionNameResolver::get_winning_method(const ClassType *owner, const std::string &name,
+                                                     const std::vector<const Type *> &arg_types,
+                                                     bool panic_on_not_found, bool panic_on_ambiguity) const
+{
+    auto key = name;
+    auto vtable = compiler->name_resolver.get_vtable_instance(owner->name);
+    auto begin = vtable->method_names_without_class_prefix.lower_bound(key);
+    key.back()++;
+    auto end = vtable->method_names_without_class_prefix.lower_bound(key);
+
+    if (begin == end)
+    {
+        if (panic_on_not_found)
+            report_error("Function " + name + " is undefined");
+
+        else return "";
+    }
+
+    std::map<int, std::vector<std::pair<std::string, const FunctionType*>>> scores;
+
+    auto current = begin;
+    while (current != end)
+    {
+        auto& name = current->second;
+        auto& info = compiler->name_resolver.get_function_no_overloading(name);
+        current++;
+        auto score = compiler->typing_system.type_list_similarity_score(
+                arg_types,
+                info.type->param_types,
+                info.type->is_var_arg
+        );
+        if (score == -1) continue;
+        scores[score].emplace_back(name, info.type);
+    }
+
+    if (scores.empty())
+    {
+        if (!panic_on_not_found) return "";
+
+        std::string message = "There are no applicable overloads for the function '" + name + "' with ";
+        if (arg_types.empty()) {
+            message += "no arguments";
+        } else {
+            message += "the provided arguments:\n(";
+            message += arg_types.front()->to_string();
+            for (size_t i = 1; i < arg_types.size(); i++) {
+                message += ", " + arg_types[i]->to_string();
+            }
+            message += ")";
+        }
+
+        message += "\nFunction overloads are:\n";
+
+        current = begin;
+        while (current != end) {
+            auto& info = compiler->name_resolver.get_function_no_overloading(current->first);
+            message += info.type->to_string() + '\n', current++;
+        }
+        message.pop_back();  // The extra '\n'
+
+        report_error(message);
+    }
+
+    auto& result_list = scores.begin()->second;
+
+    if (result_list.size() != 1)
+    {
+        if (!panic_on_ambiguity) return "";
+
+        std::string message = "More than one overload of the function '" + name + "' is applicable to the function call."
+                                                                                  " Applicable functions are:\n";
+        for (auto& overload : result_list)
+            message += overload.second->to_string() + '\n';
+        message.pop_back();  // The extra '\n'
+
+        report_error(message);
+    }
+
+    return result_list.front().first;
+}
+
 }

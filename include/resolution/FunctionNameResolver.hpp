@@ -31,7 +31,8 @@ public:
 
     void register_function(std::string name, FunctionInfo info, bool nomangle = false);
     // Used to resolve between applicable candidate functions
-    [[nodiscard]] std::string get_winning_function(const std::string& name, const std::vector<const Type*>& arg_types, bool panic_on_not_found = true, bool panic_on_ambeguity = true) const;
+    [[nodiscard]] std::string get_winning_function(const std::string& name, const std::vector<const Type*>& arg_types, bool panic_on_not_found = true, bool panic_on_ambiguity = true) const;
+    [[nodiscard]] std::string get_winning_method(const ClassType* owner, const std::string& name, const std::vector<const Type*>& arg_types, bool panic_on_not_found = true, bool panic_on_ambiguity = true) const;
     FunctionInfo& get_function(const std::string& name, const std::vector<const Type*>& param_types);
     FunctionInfo& get_function(const std::string& name, const std::vector<Value>& args);
     std::string get_function_name_with_exact_type(const std::string& name, const FunctionType* type) const;

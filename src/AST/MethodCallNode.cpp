@@ -62,9 +62,8 @@ Value MethodCallNode::eval()
     auto vtable_ptr_ptr = class_type->get_field(instance, ".vtable_ptr");
     auto vtable_type = name_resolver().get_vtable_type(class_type->name)->llvm_type();
     auto vtable_ptr = builder().CreateLoad(vtable_type, vtable_ptr_ptr.get(), ".vtable");
-    auto full_name = class_type->name + "." + name;
-    full_name = name_resolver().get_winning_function(full_name, arg_types);
-    auto method_type = name_resolver().get_function(class_type->name + "." + name, args).type;
+    auto full_name = name_resolver().get_winning_method(class_type, name, arg_types);
+    auto method_type = name_resolver().get_function(full_name, args).type;
     auto method_ptr = vtable->get_method(full_name, method_type->llvm_type()->getPointerTo(), vtable_ptr);
     auto method = compiler->create_value(method_ptr, method_type);
 

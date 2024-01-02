@@ -38,3 +38,18 @@ int main()
     Y y;
     func(y);
 }
+
+
+// Case Inheriting a method
+// Outputs "X"
+
+class Z extends X
+{
+
+}
+
+int main()
+{
+    Z z;
+    z.print();
+}

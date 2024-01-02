@@ -62,6 +62,7 @@ struct NamedFunctionValue
     std::string name;
     llvm::Function* ptr;
     const Type* type;
+    std::string name_without_class_prefix;
 };
 
 }

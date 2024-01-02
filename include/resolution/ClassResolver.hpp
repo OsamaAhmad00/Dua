@@ -1,6 +1,7 @@
 #pragma once
 
 #include <resolution/CommonStructs.hpp>
+#include <map>
 #include "Value.hpp"
 
 namespace dua
@@ -48,6 +49,7 @@ struct VTable
 
     // A map of the method name to its index in the vtable
     std::unordered_map<std::string, size_t> method_indices;
+    std::map<std::string, std::string> method_names_without_class_prefix;
 
     llvm::Value* get_method(const std::string& name, llvm::Type* type, llvm::Value* instance = nullptr);
 };
