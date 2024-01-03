@@ -104,11 +104,26 @@ struct DeferredTemplatedClassDefinition
     }
 };
 
+struct ClassInfo
+{
+    // This is a struct that contains information used to define both
+    //  templated and non-templated classes. This is used to define
+    //  classes in a topological order in terms of inheritance
+    bool is_templated;
+    std::string name;
+    ClassDefinitionNode* node;
+    std::vector<std::string> children;
+    std::vector<const Type*> template_args;
+    ParentClassInfo parent;
+};
+
 //  This class is used to make the semantic-actions in the parser grammar file
 //  as minimal as possible, making the grammar clearer, and also the code more
 //  isolated from the grammar, thus, more readable.
 class ParserAssistant
 {
+    friend class TemplatedNameResolver;
+
     ModuleCompiler* compiler = nullptr;
 
     std::string current_class;
@@ -153,7 +168,10 @@ class ParserAssistant
 
     std::vector<FieldConstructorArgs> fields_args;
 
-    std::unordered_map<std::string, const Type*> parent_classes;
+    // Used to define the body of classes in a topological order, so that
+    //  a definition of a class can just copy the fields of the direct
+    //  parent only, without the need to copy all fields of all ancestors
+    std::unordered_map<std::string, ClassInfo> class_info;
 
     // Flags
     bool declared_malloc = false;

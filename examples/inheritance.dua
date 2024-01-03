@@ -63,3 +63,63 @@ int main()
     Y y;
     X::print(y);
 }
+
+
+// Case Inheriting from a templated class
+// Outputs "i32"
+
+class G<T>
+{
+    void print() {
+        printf("%s", typename(T));
+    }
+}
+
+class H extends G<int> {}
+
+int main()
+{
+    H h;
+    h.print();
+}
+
+
+// Case Passing a template parameter as a template arg to the parent
+// Outputs "i32"
+
+class G<T>
+{
+    void print() {
+        printf("%s", typename(T));
+    }
+}
+
+class H<T> extends G<T> {}
+
+int main()
+{
+    H<int> h;
+    h.print();
+}
+
+
+// TODO Case Nesting a template parameter as a parent template arg
+// Outputs "i32"
+//
+// class G<T>
+// {
+//     void print() {
+//         printf("%s", typename(T));
+//     }
+// }
+//
+// // Here, a >>> will be confused with the >>> operator
+// class H<T> extends G<G<G<T> > > {}
+//
+// int main()
+// {
+//     H<int> h;
+//     h.print();
+// }
+
+

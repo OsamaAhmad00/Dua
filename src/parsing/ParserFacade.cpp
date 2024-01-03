@@ -25,11 +25,18 @@ TranslationUnitNode* ParserFacade::parse(const std::string& str) const
 
     // Create a parser from the token stream
     DuaParser parser(&tokens);
+
+    module_compiler.parser_assistant = &parser.assistant;
+
     auto handler = std::make_shared<ThrowExceptionErrorStrategy>();
     parser.setErrorHandler(handler);
     parser.set_module_compiler(&module_compiler);
 
-    return parser.parse();
+    auto result = parser.parse();
+
+    module_compiler.parser_assistant = nullptr;
+
+    return result;
 }
 
 }

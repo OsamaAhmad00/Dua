@@ -28,6 +28,7 @@ public:
     friend class Value;
     friend class Type;
     friend class ClassType;
+    friend class ParserFacade;
 
     ModuleCompiler(const std::string& module_name, const std::string& code);
 
@@ -59,6 +60,8 @@ public:
     NameResolver& get_name_resolver() { return name_resolver; }
     TypingSystem& get_typing_system() { return typing_system; }
     void push_deferred_node(ASTNode* node) { deferred_nodes.push_back(node); }
+
+    void create_the_object_class();
 
     void push_scope();
     Scope<Value> pop_scope();
@@ -95,6 +98,8 @@ private:
     llvm::LLVMContext context;
     llvm::Module module;
     llvm::IRBuilder<> builder;
+
+    ParserAssistant* parser_assistant;
 
     // Its insertion point is not guaranteed to be anywhere
     //  and thus, can be used at any point in time. This can

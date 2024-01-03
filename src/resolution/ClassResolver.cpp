@@ -137,7 +137,7 @@ std::vector<NamedFunctionValue> ClassResolver::get_all_class_methods(const std::
         parent_method_name += parent->name;
         parent_method_name += "&";
         parent_method_name += params_without_self;
-        method.name_without_class_prefix = method.name.substr(self_param_position);
+        method.name_without_class_prefix = method.name.substr(class_name.size() + 1);
         auto index = parent_vtable->method_indices.find(parent_method_name);
         if (index == parent_vtable->method_indices.end())
             methods.push_back(method);

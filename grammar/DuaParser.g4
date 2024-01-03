@@ -10,11 +10,9 @@ options {
 
 @parser::members
 {
-private:
+public:
 
     ParserAssistant assistant;
-
-public:
 
     void set_module_compiler(ModuleCompiler* compiler) {
         assistant.set_module_compiler(compiler);
@@ -72,8 +70,8 @@ class_optionals
     ;
 
 optional_parent_class
-    : Extends class_type
-    | /* empty */ { assistant.push_null_type(); }
+    : Extends identifier template_args_or_none
+    | /* empty */ { assistant.push_str("Object"); } no_template
     ;
 
 optional_packed

@@ -6,6 +6,7 @@
 #include <ModuleCompiler.hpp>
 #include <resolution/NameResolver.hpp>
 #include <types/ReferenceType.hpp>
+#include <parsing/ParserAssistant.hpp>
 
 namespace dua
 {
@@ -58,6 +59,7 @@ Value TemplatedNameResolver::get_templated_function(const std::string& name, std
     {
         // If one overload belongs to a class, all other overloads will belong to it too.
         compiler->typing_system.push_scope();
+        compiler->name_resolver.push_scope();
         auto class_name = any_overload.owner_class->getName().str();
         auto& bindings = templated_class_bindings[class_name];
         for (size_t i = 0; i < bindings.params.size(); i++)
@@ -78,6 +80,7 @@ Value TemplatedNameResolver::get_templated_function(const std::string& name, std
     //  parameters to the template arguments, and will
     //  shadow the outer scope types that collide if exists.
     compiler->typing_system.push_scope();
+    compiler->name_resolver.push_scope();
 
     for (size_t i = 0; i < template_args.size(); i++)
         compiler->typing_system.insert_type(templated.template_params[i], template_args[i]);
@@ -94,7 +97,6 @@ Value TemplatedNameResolver::get_templated_function(const std::string& name, std
         auto func = compiler->module.getFunction(full_name);
         auto type = compiler->name_resolver.get_function_no_overloading(full_name).type;
 
-        compiler->typing_system.pop_scope();
         compiler->typing_system.identifier_types.restore_prev_state();
         compiler->name_resolver.symbol_table.restore_prev_state();
         templated_definition_depth--;
@@ -136,8 +138,6 @@ Value TemplatedNameResolver::get_templated_function(const std::string& name, std
 
     compiler->current_class = old_class;
     compiler->current_function = old_func;
-
-    compiler->typing_system.pop_scope();
 
     compiler->typing_system.identifier_types.restore_prev_state();
     compiler->name_resolver.symbol_table.restore_prev_state();
@@ -244,12 +244,12 @@ std::string TemplatedNameResolver::get_templated_class_full_name(const std::stri
     return get_templated_function_full_name(name, template_args);
 }
 
-void TemplatedNameResolver::add_templated_class(ClassDefinitionNode* node, std::vector<std::string> template_params)
+void TemplatedNameResolver::add_templated_class(ClassDefinitionNode* node, std::vector<std::string> template_params, ParentClassInfo parent)
 {
     auto name = get_templated_class_key(node->name, template_params.size());
     if (templated_classes.find(name) != templated_classes.end())
         report_error("Redefinition of the templated class " + node->name + " with " + std::to_string(template_params.size()) + " template parameters");
-    templated_classes[std::move(name)] = {node, std::move(template_params)};
+    templated_classes[std::move(name)] = { node, std::move(template_params), std::move(parent) };
 }
 
 const ClassType* TemplatedNameResolver::get_templated_class(const std::string &name, const std::vector<const Type*>& template_args)
@@ -270,6 +270,7 @@ const ClassType* TemplatedNameResolver::get_templated_class(const std::string &n
     //  parameters to the template arguments, and will
     //  shadow the outer scope types that collide if exists.
     compiler->typing_system.push_scope();
+    compiler->name_resolver.push_scope();
 
     for (size_t i = 0; i < template_args.size(); i++)
         compiler->typing_system.insert_type(templated.template_params[i], template_args[i]);
@@ -281,7 +282,6 @@ const ClassType* TemplatedNameResolver::get_templated_class(const std::string &n
 
     auto cls = compiler->name_resolver.get_class(full_name);
 
-    compiler->typing_system.pop_scope();
     compiler->typing_system.identifier_types.restore_prev_state();
     compiler->name_resolver.symbol_table.restore_prev_state();
     templated_definition_depth--;
@@ -294,7 +294,7 @@ void TemplatedNameResolver::add_templated_class_method_info(const std::string &c
     auto key = cls + "." + method->name;
     if (method->template_param_count != -1)
         key += "." + std::to_string(method->template_param_count);
-    key += info.type->as_key();
+    key += "." + info.type->as_key();
     templated_class_method_info[key] = { std::move(info), std::move(template_params) };
 }
 
@@ -302,7 +302,7 @@ TemplatedClassMethodInfo TemplatedNameResolver::get_templated_class_method_info(
     auto key = cls + "." + method;
     if (template_param_count != -1)
         key += "." + std::to_string(template_param_count);
-    key += type->as_key();
+    key += "." + type->as_key();
     auto it = templated_class_method_info.find(key);
     if (it == templated_class_method_info.end())
         report_internal_error("There is no info stored for the method " + method + " of the templated class " + cls);
@@ -337,9 +337,16 @@ void TemplatedNameResolver::register_templated_class(const std::string &name, co
     //  parameters to the template arguments, and will
     //  shadow the outer scope types that collide if exists.
     compiler->typing_system.push_scope();
+    compiler->name_resolver.push_scope();
 
     for (size_t i = 0; i < template_args.size(); i++)
         compiler->typing_system.insert_type(templated.template_params[i], template_args[i]);
+
+    // Make a copy, and substitute concrete types
+    auto parent_info = it->second.parent;
+    for (auto& type : parent_info.template_args)
+        type = type->get_concrete_type();
+    compiler->name_resolver.parent_classes[full_name] = get_parent_class(parent_info);
 
     auto& methods = templated.node->methods;
     for (auto & method : methods)
@@ -370,7 +377,6 @@ void TemplatedNameResolver::register_templated_class(const std::string &name, co
         }
     }
 
-    compiler->typing_system.pop_scope();
 
     templated_definition_depth--;
 
@@ -396,6 +402,7 @@ const ClassType* TemplatedNameResolver::define_templated_class(const std::string
     //  parameters to the template arguments, and will
     //  shadow the outer scope types that collide if exists.
     compiler->typing_system.push_scope();
+    compiler->name_resolver.push_scope();
 
     for (size_t i = 0; i < template_args.size(); i++)
         compiler->typing_system.insert_type(templated.template_params[i], template_args[i]);
@@ -475,8 +482,6 @@ const ClassType* TemplatedNameResolver::define_templated_class(const std::string
     compiler->current_class = old_class;
     compiler->current_function = old_func;
 
-    compiler->typing_system.pop_scope();
-
     compiler->typing_system.identifier_types.restore_prev_state();
     compiler->name_resolver.symbol_table.restore_prev_state();
 
@@ -492,6 +497,53 @@ bool TemplatedNameResolver::has_templated_function(const std::string &name) {
 
 bool TemplatedNameResolver::has_templated_class(const std::string &name) {
     return templated_classes.find(name) != templated_classes.end();
+}
+
+const ClassType *TemplatedNameResolver::get_parent_class(const ParentClassInfo &parent_info)
+{
+    // Parent classes are processes after all classes (including templated ones) are defined,
+    //  and all global aliases are defined as well.
+
+    if (parent_info.is_templated) {
+        auto template_args = parent_info.template_args;
+        for (auto& type : template_args)
+            type = type->get_concrete_type();
+        auto full_name = get_templated_class_full_name(parent_info.name, template_args);
+        auto& classes = compiler->name_resolver.classes;
+        if (classes.find(full_name) == classes.end()) {
+            // The templated parent class is not registered yet.
+            // This is the correct place to define it at, because
+            //  its template args may be a template parameter
+            //  of the child, which are bound only at the moment
+            // The fact that it's not registered at this point, means
+            //  that it won't be used except as a parent to this class
+            //  and maybe for some other classes that are not defined yet.
+            //  This means that we can just both register it and define
+            //  it here with no problem.
+            register_templated_class(parent_info.name, template_args);
+            define_templated_class(parent_info.name, template_args);
+
+            // FIXME The classes are tightly coupled. Find another way to register this information
+            // This is the only place in which all information are present. This is a quick dirty
+            //  hack to register the info of the parent class.
+            auto& info = compiler->parser_assistant->class_info[full_name];  // Using the full name to avoid collisions
+            if (!info.name.empty())
+                report_error("Redefinition of the templated class " + parent_info.name + " with " + std::to_string(template_args.size()) + " template parameters");
+            info.template_args = template_args;
+            info.is_templated = true;
+            info.name = parent_info.name;
+        }
+        return get_templated_class(parent_info.name, parent_info.template_args);
+    } else {
+        auto parent = compiler->typing_system.get_type(parent_info.name);
+        auto concrete_class = parent->get_concrete_type()->as<ClassType>();
+        if (concrete_class == nullptr)
+            report_error("The type " + parent->to_string() + " is not a class type, and can't be a parent class");
+        auto& classes = compiler->name_resolver.classes;
+        if (classes.find(concrete_class->name) == classes.end())
+            report_error("The parent class " + parent_info.name + " is not defined");
+        return concrete_class;
+    }
 }
 
 }

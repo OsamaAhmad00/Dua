@@ -24,6 +24,8 @@ ModuleCompiler::ModuleCompiler(const std::string &module_name, const std::string
 
     function_scope_count.push_back(0);
 
+    create_the_object_class();
+
     // Parse
     TranslationUnitNode* ast = parser.parse(code);
 
@@ -117,6 +119,12 @@ void ModuleCompiler::push_scope_counter() {
 
 void ModuleCompiler::pop_scope_counter() {
     function_scope_count.pop_back();
+}
+
+void ModuleCompiler::create_the_object_class() {
+    auto type = create_type<ClassType>("Object");
+    typing_system.insert_type("Object", type);
+    name_resolver.classes["Object"] = type;
 }
 
 }

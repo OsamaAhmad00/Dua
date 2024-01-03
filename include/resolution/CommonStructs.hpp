@@ -32,10 +32,18 @@ struct TemplatedFunctionNode
     bool in_templated_class = false;
 };
 
+struct ParentClassInfo
+{
+    std::string name;
+    bool is_templated;
+    std::vector<const Type*> template_args;
+};
+
 struct TemplatedClassNode
 {
     ClassDefinitionNode* node;
     std::vector<std::string> template_params;
+    ParentClassInfo parent;
 };
 
 struct TemplatedClassMethodInfo
