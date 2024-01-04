@@ -460,3 +460,11 @@ int main()
     x.func<int>(1);
     x.func(1);
 }
+
+
+// Case Repeating a template parameter
+// Panics
+
+class X<T, T> { }
+
+int main() { }

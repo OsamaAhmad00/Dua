@@ -3,13 +3,27 @@
 #include <Value.hpp>
 #include <AST/function/FunctionDefinitionNode.hpp>
 #include <AST/class/ClassDefinitionNode.hpp>
-#include <ModuleCompiler.hpp>
 #include <resolution/NameResolver.hpp>
 #include <types/ReferenceType.hpp>
 #include <parsing/ParserAssistant.hpp>
 
 namespace dua
 {
+
+void check_template_params(const std::vector<std::string>& template_params, const std::string& description = "")
+{
+    for (size_t i = 0; i < template_params.size(); i++) {
+        for (size_t j = i + 1; j < template_params.size(); j++) {
+            if (template_params[i] == template_params[j]) {
+                std::string message = "The template parameter " + template_params[i] + " is repeated";
+                if (!description.empty())
+                    message += " in " + description;
+                message += ". Can't have more than one template parameter with the same name";
+                report_error(message);
+            }
+        }
+    }
+}
 
 std::string TemplatedNameResolver::get_templated_function_key(std::string name, size_t args_count) {
     // Templated functions are prefixed with a special keyword to avoid
@@ -20,6 +34,7 @@ std::string TemplatedNameResolver::get_templated_function_key(std::string name, 
 void TemplatedNameResolver::add_templated_function(FunctionDefinitionNode* node, std::vector<std::string> template_params, FunctionInfo info, const std::string& class_name, bool in_templated_class)
 {
     auto name = get_templated_function_key(node->name, template_params.size());
+    check_template_params(template_params, "the function " + name);
     auto& functions = templated_functions[std::move(name)];
     for (auto& function : functions) {
         if (*function.info.type == *info.type) {
@@ -247,6 +262,7 @@ std::string TemplatedNameResolver::get_templated_class_full_name(const std::stri
 void TemplatedNameResolver::add_templated_class(ClassDefinitionNode* node, std::vector<std::string> template_params, const IdentifierType* parent)
 {
     auto name = get_templated_class_key(node->name, template_params.size());
+    check_template_params(template_params, "the class " + name);
     if (templated_classes.find(name) != templated_classes.end())
         report_error("Redefinition of the templated class " + node->name + " with " + std::to_string(template_params.size()) + " template parameters");
     templated_classes[std::move(name)] = { node, std::move(template_params), std::move(parent) };
@@ -298,6 +314,7 @@ const ClassType* TemplatedNameResolver::get_templated_class(const std::string &n
 void TemplatedNameResolver::add_templated_class_method_info(const std::string &cls, FunctionDefinitionNode* method, FunctionInfo info, std::vector<std::string> template_params) {
     // TODO compute the key as the hash of the triple { name, template param count, type pointer }
     auto key = cls + "." + method->name;
+    check_template_params(template_params, "the method " + key);
     if (method->template_param_count != -1)
         key += "." + std::to_string(method->template_param_count);
     key += "." + info.type->as_key();

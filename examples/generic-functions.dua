@@ -236,3 +236,11 @@ int main()
     func();
     func<int>();
 }
+
+
+// Case Repeating a template parameter
+// Panics
+
+void func<T, T>() { }
+
+int main() { }
