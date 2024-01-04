@@ -38,7 +38,12 @@ const Type *Type::get_concrete_type() const {
     return this;
 }
 
-template <>
+bool Type::is_resolvable_now() const {
+    auto concrete_type = get_concrete_type();
+    return this == concrete_type || concrete_type->is_resolvable_now();
+}
+
+    template <>
 const ReferenceType* Type::as<ReferenceType>() const {
     return dynamic_cast<const ReferenceType*>(this);
 }

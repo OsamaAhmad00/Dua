@@ -22,6 +22,7 @@ struct Type
     virtual bool operator!=(const Type& other) const;
     virtual const Type* get_contained_type() const;
     virtual const Type* get_concrete_type() const;
+    virtual bool is_resolvable_now() const;
     virtual ~Type() = default;
 
     llvm::Type* operator->() const;

@@ -47,13 +47,13 @@ public:
 
     std::string get_templated_class_key(std::string name, size_t args_count);
     std::string get_templated_class_full_name(const std::string& name, const std::vector<const Type*>& template_args);
-    void add_templated_class(ClassDefinitionNode* node, std::vector<std::string> template_params, ParentClassInfo parent);
+    void add_templated_class(ClassDefinitionNode* node, std::vector<std::string> template_params, const IdentifierType* parent);
     void add_templated_class_method_info(const std::string& cls, FunctionDefinitionNode* method, FunctionInfo info, std::vector<std::string> template_params);
     TemplatedClassMethodInfo get_templated_class_method_info(const std::string& cls, const std::string& method, const FunctionType* type, size_t template_param_count);
     const ClassType* get_templated_class(const std::string& name, const std::vector<const Type*>& template_args);
     void register_templated_class(const std::string& name, const std::vector<const Type*>& template_args);
     const ClassType* define_templated_class(const std::string& name, const std::vector<const Type*>& template_args);
-    const ClassType* get_parent_class(const ParentClassInfo& parent_info);
+    const ClassType* get_parent_class(const IdentifierType* parent);
     bool has_templated_class(const std::string& name);
 };
 

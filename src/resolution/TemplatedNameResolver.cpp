@@ -244,7 +244,7 @@ std::string TemplatedNameResolver::get_templated_class_full_name(const std::stri
     return get_templated_function_full_name(name, template_args);
 }
 
-void TemplatedNameResolver::add_templated_class(ClassDefinitionNode* node, std::vector<std::string> template_params, ParentClassInfo parent)
+void TemplatedNameResolver::add_templated_class(ClassDefinitionNode* node, std::vector<std::string> template_params, const IdentifierType* parent)
 {
     auto name = get_templated_class_key(node->name, template_params.size());
     if (templated_classes.find(name) != templated_classes.end())
@@ -272,13 +272,19 @@ const ClassType* TemplatedNameResolver::get_templated_class(const std::string &n
     compiler->typing_system.push_scope();
     compiler->name_resolver.push_scope();
 
-    for (size_t i = 0; i < template_args.size(); i++)
-        compiler->typing_system.insert_type(templated.template_params[i], template_args[i]);
+    auto concrete_args = template_args;
+    for (auto& arg : concrete_args)
+        arg = arg->get_concrete_type();
 
-    auto full_name = get_templated_class_full_name(name, template_args);
+    for (size_t i = 0; i < concrete_args.size(); i++)
+        compiler->typing_system.insert_type(templated.template_params[i], concrete_args[i]);
 
-    if (!compiler->name_resolver.has_class(full_name))
-        report_internal_error("The templated class " + full_name + " is not defined");
+    auto full_name = get_templated_class_full_name(name, concrete_args);
+
+    if (!compiler->name_resolver.has_class(full_name)) {
+        register_templated_class(name, concrete_args);
+        define_templated_class(name, concrete_args);
+    }
 
     auto cls = compiler->name_resolver.get_class(full_name);
 
@@ -318,14 +324,6 @@ void TemplatedNameResolver::register_templated_class(const std::string &name, co
 
     auto& templated = it->second;
 
-    auto full_name = get_templated_class_full_name(name, template_args);
-
-    auto cls = compiler->create_type<ClassType>(full_name);
-    compiler->name_resolver.classes[full_name] = cls;
-    compiler->typing_system.insert_type(full_name, cls);
-
-    templated_class_bindings[full_name] = { templated.template_params, template_args };
-
     // Registering the methods of the class
 
     templated_definition_depth++;
@@ -339,14 +337,23 @@ void TemplatedNameResolver::register_templated_class(const std::string &name, co
     compiler->typing_system.push_scope();
     compiler->name_resolver.push_scope();
 
-    for (size_t i = 0; i < template_args.size(); i++)
-        compiler->typing_system.insert_type(templated.template_params[i], template_args[i]);
+    auto concrete_args = template_args;
+    for (auto& arg : concrete_args)
+        arg = arg->get_concrete_type();
 
-    // Make a copy, and substitute concrete types
-    auto parent_info = it->second.parent;
-    for (auto& type : parent_info.template_args)
-        type = type->get_concrete_type();
-    compiler->name_resolver.parent_classes[full_name] = get_parent_class(parent_info);
+    for (size_t i = 0; i < template_args.size(); i++)
+        compiler->typing_system.insert_type(templated.template_params[i], concrete_args[i]);
+
+    auto full_name = get_templated_class_full_name(name, concrete_args);
+
+    auto cls = compiler->create_type<ClassType>(full_name);
+    compiler->name_resolver.classes[full_name] = cls;
+    compiler->typing_system.insert_global_type(full_name, cls);
+
+    templated_class_bindings[full_name] = { templated.template_params, concrete_args };
+
+    auto parent = it->second.parent;
+    compiler->name_resolver.parent_classes[full_name] = get_parent_class(parent);
 
     auto& methods = templated.node->methods;
     for (auto & method : methods)
@@ -376,7 +383,6 @@ void TemplatedNameResolver::register_templated_class(const std::string &name, co
             compiler->name_resolver.register_function(std::move(full_method_name), std::move(info), true);
         }
     }
-
 
     templated_definition_depth--;
 
@@ -428,10 +434,44 @@ const ClassType* TemplatedNameResolver::define_templated_class(const std::string
 
     auto cls = compiler->name_resolver.get_class(full_name);
 
-    auto& methods = templated.node->methods;
-    std::vector<std::string> old_names(methods.size());
-    std::vector<const FunctionType*> old_types(methods.size());
-    std::vector<bool> old_nomangle(methods.size());
+    // Making a copy to modify it freely
+    auto class_node = *templated.node;
+
+    std::vector<FunctionDefinitionNode> method_copies;
+    for (auto & method : class_node.methods)
+        method_copies.push_back(*method);
+
+    // It's important that we set it to the addresses after
+    //  pushing back all the nodes, because a vector may allocate
+    //  new memory location if the current is not enough
+    for (size_t i = 0; i < method_copies.size(); i++)
+        class_node.methods[i] = &method_copies[i];
+
+    auto& methods = class_node.methods;
+    auto& constructors = templated_class_field_constructor_args[key];
+
+    size_t constructors_count = 0;
+    for (size_t i = 0; i < methods.size(); i++) {
+        // Put the constructor nodes at the front
+        bool is_constructor = methods[i]->name == "constructor" || methods[i]->name == "=constructor";
+        if (is_constructor) {
+            // Put the constructor at the same place as the constructors in the constructors vector
+            for (size_t j = 0; j < constructors.size(); j++) {
+                if (templated.node->methods[i] == constructors[j].func && i != j) {
+                    // This will put the constructors at the same correct position in the
+                    //  templated node too, so that we don't need to do this on the next
+                    //  templated class instantiation
+                    std::swap(templated.node->methods[i], templated.node->methods[j]);
+                    std::swap(methods[i--], methods[j]);
+                    constructors_count--;
+                    break;
+                }
+            }
+            constructors_count++;
+        }
+    }
+
+    assert(constructors_count == constructors.size());
 
     for (size_t i = 0; i < methods.size(); i++)
     {
@@ -440,44 +480,30 @@ const ClassType* TemplatedNameResolver::define_templated_class(const std::string
         if (method->template_param_count != -1)
             continue;
 
-        old_names[i] = method->name;
         if (!method->is_operator)
             method->name =  full_name + "." + method->name;
 
-        old_types[i] = method->function_type;
-        auto new_param_types = old_types[i]->param_types;
+        auto new_param_types = method->function_type->param_types;
         // The first element is a placeholder
         new_param_types[0] =compiler->create_type<ReferenceType>(cls);
-        auto ret = old_types[i]->return_type;
-        auto is_var_arg = old_types[i]->is_var_arg;
+        auto ret = method->function_type->return_type;
+        auto is_var_arg = method->function_type->is_var_arg;
 
-        method->function_type = compiler->create_type<FunctionType>(ret, new_param_types, is_var_arg);
-
-        old_nomangle[i] = method->nomangle;
+        method->function_type = compiler->create_type<FunctionType>(ret, std::move(new_param_types), is_var_arg);
 
         method->set_full_name();
+
+        if (i < constructors_count) {
+            // Add field constructor args of the concrete class
+            // We do this after having the types (and the full names)
+            //  of methods updated, and before evaluating the methods
+            compiler->name_resolver.add_fields_constructor_args(method->name, constructors[i].args);
+        }
     }
 
-    // Add field constructor args of the concrete class
-    // We do this after having the types (and the full names)
-    //  of methods updated, and before evaluating the methods
-    auto& constructors = templated_class_field_constructor_args[key];
-    for (auto& constructor : constructors) {
-        compiler->name_resolver.add_fields_constructor_args(constructor.func->name, constructor.args);
-    }
-
-    std::swap(templated.node->name, full_name);
-    templated.node->is_templated = false;
-    templated.node->eval();
-    templated.node->is_templated = true;
-    std::swap(templated.node->name, full_name);
-
-    for (size_t i = 0; i < methods.size(); i++) {
-        auto& method = methods[i];
-        method->name = std::move(old_names[i]);
-        method->function_type = old_types[i];
-        method->nomangle = old_nomangle[i];
-    }
+    class_node.name = full_name;
+    class_node.is_templated = false;
+    class_node.eval();
 
     compiler->current_class = old_class;
     compiler->current_function = old_func;
@@ -499,18 +525,17 @@ bool TemplatedNameResolver::has_templated_class(const std::string &name) {
     return templated_classes.find(name) != templated_classes.end();
 }
 
-const ClassType *TemplatedNameResolver::get_parent_class(const ParentClassInfo &parent_info)
+const ClassType *TemplatedNameResolver::get_parent_class(const IdentifierType* parent)
 {
     // Parent classes are processes after all classes (including templated ones) are defined,
     //  and all global aliases are defined as well.
 
-    if (parent_info.is_templated) {
-        auto template_args = parent_info.template_args;
+    if (parent->is_templated) {
+        auto template_args = parent->template_args;
         for (auto& type : template_args)
             type = type->get_concrete_type();
-        auto full_name = get_templated_class_full_name(parent_info.name, template_args);
-        auto& classes = compiler->name_resolver.classes;
-        if (classes.find(full_name) == classes.end()) {
+        auto full_name = get_templated_class_full_name(parent->name, template_args);
+        if (!compiler->name_resolver.has_class(full_name)) {
             // The templated parent class is not registered yet.
             // This is the correct place to define it at, because
             //  its template args may be a template parameter
@@ -520,28 +545,28 @@ const ClassType *TemplatedNameResolver::get_parent_class(const ParentClassInfo &
             //  and maybe for some other classes that are not defined yet.
             //  This means that we can just both register it and define
             //  it here with no problem.
-            register_templated_class(parent_info.name, template_args);
-            define_templated_class(parent_info.name, template_args);
+            register_templated_class(parent->name, template_args);
+            define_templated_class(parent->name, template_args);
 
             // FIXME The classes are tightly coupled. Find another way to register this information
             // This is the only place in which all information are present. This is a quick dirty
             //  hack to register the info of the parent class.
             auto& info = compiler->parser_assistant->class_info[full_name];  // Using the full name to avoid collisions
             if (!info.name.empty())
-                report_error("Redefinition of the templated class " + parent_info.name + " with " + std::to_string(template_args.size()) + " template parameters");
+                report_error("Redefinition of the templated class " + parent->name + " with " + std::to_string(template_args.size()) + " template parameters");
             info.template_args = template_args;
             info.is_templated = true;
-            info.name = parent_info.name;
+            info.name = parent->name;
         }
-        return get_templated_class(parent_info.name, parent_info.template_args);
+        return compiler->name_resolver.get_class(full_name);
     } else {
-        auto parent = compiler->typing_system.get_type(parent_info.name);
-        auto concrete_class = parent->get_concrete_type()->as<ClassType>();
+        auto parent_type = compiler->typing_system.get_type(parent->name);
+        auto concrete_class = parent_type->get_concrete_type()->as<ClassType>();
         if (concrete_class == nullptr)
-            report_error("The type " + parent->to_string() + " is not a class type, and can't be a parent class");
+            report_error("The type " + parent_type->to_string() + " is not a class type, and can't be a parent class");
         auto& classes = compiler->name_resolver.classes;
         if (classes.find(concrete_class->name) == classes.end())
-            report_error("The parent class " + parent_info.name + " is not defined");
+            report_error("The parent class " + parent->name + " is not defined");
         return concrete_class;
     }
 }

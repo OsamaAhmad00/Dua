@@ -70,8 +70,8 @@ class_optionals
     ;
 
 optional_parent_class
-    : Extends identifier template_args_or_none
-    | /* empty */ { assistant.push_str("Object"); } no_template
+    : Extends identifier_type
+    | /* empty */ { assistant.push_type<IdentifierType>("Object"); }
     ;
 
 optional_packed
@@ -280,8 +280,8 @@ expression
     | cast_expression
     | '(' expression ')'
     | function_call
-    | expression                '(' arg_list ')' { assistant.create_expr_function_call();  }
-    | New identifier { assistant.create_identifier_type(); } optional_constructor_args { assistant.create_malloc(); }
+    | expression '(' arg_list ')' { assistant.create_expr_function_call();  }
+    | New identifier_type optional_constructor_args { assistant.create_malloc(); }
     | New type { assistant.push_counter(); assistant.create_malloc(); }
     | SizeOf '(' expr_or_type ')'   { assistant.create_size_of();   }
     | TypeName '(' expr_or_type ')' { assistant.create_type_name(); }
@@ -343,7 +343,7 @@ function_call
 
 full_function_identifier
     : identifier
-    | class_type '::' identifier { assistant.create_method_identifier(); }
+    | identifier_type '::' identifier { assistant.create_method_identifier(); }
     ;
 
 instance_access
@@ -536,20 +536,10 @@ type
     | NoRef '(' type ')'                        { assistant.create_no_ref();         }
     | primitive_type
     | identifier_type
-    | templated_class_type
-    ;
-
-class_type
-    : identifier_type
-    | templated_class_type
     ;
 
 identifier_type
-    : identifier { assistant.create_identifier_type(); }
-    ;
-
-templated_class_type
-    : identifier template_args_or_none { assistant.create_templated_class_type(); }
+    : identifier template_args_or_none { assistant.create_identifier_type(); }
     ;
 
 primitive_type

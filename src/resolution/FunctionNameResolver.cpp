@@ -262,6 +262,11 @@ void FunctionNameResolver::call_constructor(const Value &value, std::vector<Valu
 
     auto instance = compiler->create_value(value.get(), compiler->create_type<ReferenceType>(value.type));
     args.insert(args.begin(), instance);
+
+    for (auto arg : args) {
+        auto arg_copy = arg;
+    }
+
     call_function(name, std::move(args));
 }
 

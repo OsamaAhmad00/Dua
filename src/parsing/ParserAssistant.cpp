@@ -63,6 +63,17 @@ void ParserAssistant::finish_parsing()
 
     std::vector<llvm::Type*> body;
 
+    for (auto it = templated_class_definitions.begin(); it != templated_class_definitions.end(); ) {
+        auto& [name, template_args] = *it;
+        it++;
+        for (auto& arg : template_args) {
+            if (!arg->is_resolvable_now()) {
+                it = templated_class_definitions.erase(--it);
+                break;
+            }
+        }
+    }
+
     for (auto& [name, template_args] : templated_class_definitions) {
         compiler->name_resolver.register_templated_class(name, template_args);
     }
@@ -98,6 +109,9 @@ void ParserAssistant::finish_parsing()
 
     for (auto& root : class_info["Object"].children)
     {
+        if (class_info.find(root) == class_info.end())
+            continue;
+
         std::queue<ClassInfo*> queue;
         queue.push(&class_info[root]);
 
@@ -732,7 +746,7 @@ void ParserAssistant::register_class()
 
     auto cls = compiler->create_type<ClassType>(name);
     compiler->name_resolver.classes[name] = cls;
-    compiler->typing_system.insert_type(name, cls);
+    compiler->typing_system.insert_global_type(name, cls);
 }
 
 void ParserAssistant::finish_class_declaration() {
@@ -750,16 +764,14 @@ void ParserAssistant::start_class_definition()
     if (is_in_function)
         report_error("Can't define a class inside a function");
 
-    // - 1 for the parent class
-    in_templated_class = is_templated_stack[is_templated_stack.size() - 1 - 1];
+    in_templated_class = is_templated_stack.back();
 
     if (in_templated_class) {
-        // - 1 for the parent class
-        auto template_param_count = general_counters[general_counters.size() - 1 - 1];
-        auto& name = strings[strings.size() - 1 - template_param_count - 1];
+        auto template_param_count = general_counters.back();
+        auto& name = strings[strings.size() - 1 - template_param_count];
         current_class = compiler->name_resolver.get_templated_class_key(name, template_param_count);
     } else {
-        current_class = strings[strings.size() - 1 - 1];  // - 1 for the parent class
+        current_class = strings.back();
     }
 }
 
@@ -789,22 +801,18 @@ void ParserAssistant::create_class()
     // So that they are in the order of definition.
     std::reverse(fields.begin(), fields.end());
 
-    auto parent_name = pop_str();
-    auto is_parent_templated = pop_is_templated();
-    auto parent_template_args = pop_types();
-
     auto template_params = pop_strings();
     auto name = pop_str();
     auto is_templated = pop_is_templated();
 
-    auto parent_info = ParentClassInfo { parent_name, is_parent_templated, std::move(parent_template_args) };
+    auto parent_type = pop_type()->as<IdentifierType>();
 
     push_node<ClassDefinitionNode>(std::move(name), std::move(fields), std::move(methods), std::move(aliases), is_packed, is_templated);
 
     auto cls = (ClassDefinitionNode*)nodes.back();
 
     if (is_templated) {
-        compiler->name_resolver.add_templated_class(cls, std::move(template_params), std::move(parent_info));
+        compiler->name_resolver.add_templated_class(cls, std::move(template_params), parent_type);
     } else {
         auto& info = class_info[cls->name];
 
@@ -813,7 +821,7 @@ void ParserAssistant::create_class()
 
         info.is_templated = false;
         info.name = cls->name;
-        info.parent = std::move(parent_info);
+        info.parent = parent_type;
         info.node = cls;
     }
 
@@ -823,8 +831,14 @@ void ParserAssistant::create_class()
     inc_statements();
 }
 
-void ParserAssistant::create_identifier_type() {
-    push_type<IdentifierType>(pop_str());
+void ParserAssistant::create_identifier_type()
+{
+    auto name = pop_str();
+    auto args = pop_types();
+    auto is_templated = pop_is_templated();
+    if (is_templated)
+        templated_class_definitions.insert({ name, args });
+    push_type<IdentifierType>(std::move(name), is_templated, std::move(args));
 }
 
 void ParserAssistant::create_field_access() {
@@ -1066,16 +1080,6 @@ bool ParserAssistant::pop_is_templated() {
     bool result = is_templated_stack.back();
     is_templated_stack.pop_back();
     return result;
-}
-
-void ParserAssistant::create_templated_class_type()
-{
-    auto args = pop_types();
-    auto name = pop_str();
-    pop_is_templated();
-    auto full_name = compiler->name_resolver.get_templated_class_full_name(name, args);
-    push_type<ClassType>(std::move(full_name));
-    templated_class_definitions.insert({ std::move(name), std::move(args) });
 }
 
 void ParserAssistant::create_is_type() {

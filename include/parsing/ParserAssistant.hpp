@@ -114,7 +114,7 @@ struct ClassInfo
     ClassDefinitionNode* node;
     std::vector<std::string> children;
     std::vector<const Type*> template_args;
-    ParentClassInfo parent;
+    const IdentifierType* parent;
 };
 
 //  This class is used to make the semantic-actions in the parser grammar file
@@ -302,7 +302,6 @@ public:
     void create_reference_type();
     void create_type_alias();
     void create_identifier_lvalue();
-    void create_templated_class_type();
     void create_is_type();
     void create_no_ref();
     void create_method_identifier();

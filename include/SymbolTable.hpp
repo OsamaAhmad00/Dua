@@ -127,7 +127,10 @@ struct SymbolTable
 
     void restore_prev_state()
     {
+        // Global scope is kept
+        auto global_scope = scopes.front();
         scopes = std::move(switch_stack.back());
+        scopes.front() = std::move(global_scope);
         switch_stack.pop_back();
     }
 };

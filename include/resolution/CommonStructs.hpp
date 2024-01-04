@@ -9,6 +9,7 @@ namespace dua
 class ASTNode;
 class FunctionDefinitionNode;
 class ClassDefinitionNode;
+class IdentifierType;
 
 struct FunctionInfo
 {
@@ -43,7 +44,7 @@ struct TemplatedClassNode
 {
     ClassDefinitionNode* node;
     std::vector<std::string> template_params;
-    ParentClassInfo parent;
+    const IdentifierType* parent;
 };
 
 struct TemplatedClassMethodInfo

@@ -14,6 +14,7 @@ namespace dua
 {
 
 class ASTNode;
+class ParserAssistant;
 
 class ModuleCompiler
 {

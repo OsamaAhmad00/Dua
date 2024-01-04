@@ -289,11 +289,11 @@ Scope<const Type*> TypingSystem::pop_scope() {
 }
 
 void TypingSystem::insert_type(const std::string &name, const Type *type) {
-    identifier_types.insert(name, type);
+    identifier_types.insert(name, type->get_concrete_type());
 }
 
 void TypingSystem::insert_global_type(const std::string &name, const Type *type) {
-    identifier_types.insert_global(name, type);
+    identifier_types.insert_global(name, type->get_concrete_type());
 }
 
 const Type* TypingSystem::get_type(const std::string &name) {
