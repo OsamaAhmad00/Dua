@@ -353,7 +353,18 @@ instance_access
 
 template_args_or_none
     : '<' types_list '>' { assistant.push_is_templated(true); }
+    | '<' comma_terminated_types_list identifier { assistant.inc_counter(); } '<' types_list '>>'
+       { assistant.push_is_templated(true); assistant.push_is_templated(true); assistant.create_identifier_type(); }
+    | '<' comma_terminated_types_list identifier { assistant.inc_counter(); }
+       '<' comma_terminated_types_list identifier { assistant.inc_counter(); } '<' types_list '>>>'
+       { assistant.push_is_templated(true); assistant.push_is_templated(true); assistant.create_identifier_type(); }
+       { assistant.push_is_templated(true); assistant.push_is_templated(true); assistant.create_identifier_type(); }
     | /* empty */ no_template
+    ;
+
+comma_terminated_types_list
+    : types_list ','
+    | /* empty */  { assistant.push_counter(); }
     ;
 
 type_alias

@@ -104,20 +104,23 @@ int main()
 
 
 // Case Nesting a template parameter as a parent template arg
-// Returns 1
+// Outputs "10"
 
 class G<T>
 {
-    bool func() { return istype(T, G<G<int> >); }
+    int func() { return istype(T, G<G<int>>); }
 }
 
-// Here, a >>> will be confused with the >>> operator
-class H<T> extends G<G<G<T> > > {}
+class H<T> extends G<G<G<T>>> {}
+
+class L<T> extends G<G<G<G<G<G<G<T>>>>>>> {}
 
 int main()
 {
     H<int> h;
-    return h.func();
+    L<int> l;
+
+    printf("%d%d", h.func(), l.func());
 }
 
 
