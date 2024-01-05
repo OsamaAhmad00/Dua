@@ -2,6 +2,8 @@ nomangle int printf(str message, ...);
 
 class X
 {
+    int i = 3;
+
     void print() {
         printf("X");
     }
@@ -299,4 +301,39 @@ int main()
     H h;
     G& g = h;
     g.func();
+}
+
+
+// Case Accepting a parameter as a parent reference
+// Outputs "3"
+
+void func(X& x) {
+    printf("%d", x.i);
+}
+
+int main()
+{
+    Y y;
+    func(y);
+}
+
+
+// Case Accepting a parameter as an Object reference
+
+void func(Object& obj) {
+    printf("%p", &obj);
+}
+
+int main()
+{
+    X x;
+    func(x);
+}
+
+
+// Case Making an instance of the Object class
+
+int main()
+{
+    Object obj;
 }

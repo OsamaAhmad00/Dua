@@ -121,10 +121,27 @@ void ModuleCompiler::pop_scope_counter() {
     function_scope_count.pop_back();
 }
 
-void ModuleCompiler::create_the_object_class() {
+void ModuleCompiler::create_the_object_class()
+{
+    std::vector<const Type*> params = { create_type<ReferenceType>(create_type<ClassType>("Object")) };
+    auto info = FunctionInfo {
+            create_type<FunctionType>(create_type<VoidType>(), params),
+            {}
+    };
+    name_resolver.register_function("Object.destructor", std::move(info));
+    auto destructor = module.getFunction("Object.destructor.Object&");
+    auto bb = llvm::BasicBlock::Create(context, "entry", destructor);
+    auto ip = builder.saveIP();
+    builder.SetInsertPoint(bb);
+    builder.CreateRetVoid();
+    builder.restoreIP(ip);
+
     auto type = create_type<ClassType>("Object");
     typing_system.insert_type("Object", type);
     name_resolver.classes["Object"] = type;
+    name_resolver.create_vtable("Object");
+    name_resolver.class_fields["Object"].push_back(name_resolver.get_vtable_field("Object"));
+    type->llvm_type()->setBody(name_resolver.get_vtable_type("Object")->llvm_type());
 }
 
 }
