@@ -126,13 +126,13 @@ int main()
 }
 
 
-// Case Use of an alias before its definition
-// Panics
+// Case Use of a global alias before its definition
+// Outputs "i32"
 
 int main()
 {
     printf("%s", typename(x));
-    typealias x = int;
+    typealias x = long;
 }
 
 typealias x = int;

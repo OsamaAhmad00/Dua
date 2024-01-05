@@ -24,12 +24,12 @@ const Type* TypeOfType::get_concrete_type() const
                 name = compiler->get_name_resolver().get_templated_class_full_name(variable_name, v->template_args);
                 if (!compiler->get_name_resolver().has_class(name)) {
                     compiler->get_name_resolver().register_templated_class(variable_name, v->template_args);
-                    compiler->get_name_resolver().define_templated_class(variable_name, v->template_args);
+                    // compiler->get_name_resolver().define_templated_class(variable_name, v->template_args);
                 }
                 return compiler->get_typing_system().get_type(name)->get_concrete_type();
             }
             if (compiler->get_typing_system().identifier_types.contains(variable_name)) {
-                // This is actually a class type, not a variable expression
+                // This is actually a class type, or a type alias, not a variable expression
                 return compiler->get_typing_system().get_type(variable_name)->get_concrete_type();
             }
         }

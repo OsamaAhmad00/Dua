@@ -173,6 +173,8 @@ class ParserAssistant
     //  parent only, without the need to copy all fields of all ancestors
     std::unordered_map<std::string, ClassInfo> class_info;
 
+    std::vector<TypeAliasNode*> global_aliases;
+
     // Flags
     bool declared_malloc = false;
     bool declared_free = false;

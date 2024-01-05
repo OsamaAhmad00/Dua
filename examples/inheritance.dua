@@ -135,7 +135,7 @@ int main() { }
 
 
 // Case Inheriting the packing option
-// Outputs "13 16 13 16"
+// Outputs "13 16 18 24"
 
 class A packed
 {
@@ -151,17 +151,152 @@ class B
 
 class C extends A
 {
-    int i;
-    byte c;
+    int ii;
+    byte cc;
 }
 
 class D extends B
 {
-    int i;
-    byte c;
+    int ii;
+    byte cc;
 }
 
 int main()
 {
     printf("%d %d %d %d", sizeof(A), sizeof(B), sizeof(C), sizeof(D));
+}
+
+
+// Case Repeating a field
+// Panics
+
+class G
+{
+    int i;
+    int i;
+}
+
+int main() { }
+
+
+// Case Field with the same name as a parent field
+// Panics
+
+class G
+{
+    int i;
+}
+
+class H extends G
+{
+    int i;
+}
+
+int main() { }
+
+
+// Case Accessing a field of a parent
+// Outputs "3"
+
+class G
+{
+    int i = 3;
+}
+
+class H extends G
+{
+    void func() {
+        printf("%d", i);
+    }
+}
+
+int main()
+{
+    H h;
+    h.func();
+}
+
+
+// Case Accessing a templated parent field
+// Outputs "i32 i64"
+
+class G<T>
+{
+    T i;
+}
+
+class A extends G<int>
+{
+    void print() {
+        printf("%s ", typename(i));
+    }
+}
+
+class B extends G<long>
+{
+    void print() {
+        printf("%s", typename(i));
+    }
+}
+
+int main()
+{
+    A a;
+    B b;
+    a.print();
+    b.print();
+}
+
+
+// Case Overloading a parent class method
+// Outputs "03"
+
+class G
+{
+    int i = 3;
+
+    void func(int i) {
+        printf("%d", (int)(self.i == i));
+    }
+}
+
+class H extends G
+{
+    void func() {
+        printf("%d", i);
+    }
+}
+
+int main()
+{
+    H h;
+
+    h.func(4);
+    h.func();
+}
+
+
+// Case Calling a method that accesses a field from a parent reference
+// Outputs "3"
+
+class G
+{
+    void func() {
+        printf("0");
+    }
+}
+
+class H extends G
+{
+    int i = 3;
+    void func() {
+        printf("%d", i);
+    }
+}
+
+int main()
+{
+    H h;
+    G& g = h;
+    g.func();
 }

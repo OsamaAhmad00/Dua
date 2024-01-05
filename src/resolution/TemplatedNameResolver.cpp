@@ -299,7 +299,7 @@ const ClassType* TemplatedNameResolver::get_templated_class(const std::string &n
 
     if (!compiler->name_resolver.has_class(full_name)) {
         register_templated_class(name, concrete_args);
-        define_templated_class(name, concrete_args);
+        // define_templated_class(name, concrete_args);
     }
 
     auto cls = compiler->name_resolver.get_class(full_name);
@@ -566,7 +566,7 @@ const ClassType *TemplatedNameResolver::get_parent_class(const IdentifierType* p
             //  This means that we can just both register it and define
             //  it here with no problem.
             register_templated_class(parent->name, template_args);
-            define_templated_class(parent->name, template_args);
+            // define_templated_class(parent->name, template_args);
 
             // FIXME The classes are tightly coupled. Find another way to register this information
             // This is the only place in which all information are present. This is a quick dirty
