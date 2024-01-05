@@ -24,7 +24,7 @@ const static ClassType* get_class_from_ptr(ASTNode* node)
 Value ClassFieldNode::eval()
 {
 
-    auto full_name = get_full_name();
+    auto full_name = get_name();
 
     if (is_templated) {
         // This is a templated method reference for sure since no identifier
@@ -51,7 +51,7 @@ const Type* ClassFieldNode::get_type()
 
     if (type != nullptr) return type;
 
-    auto full_name = get_full_name();
+    auto full_name = get_name();
 
     if (is_templated) {
         return set_type(compiler->create_type<PointerType>(compiler->get_name_resolver().get_templated_function(full_name, template_args).type));
@@ -76,14 +76,14 @@ Value ClassFieldNode::eval_instance() const
     return instance_eval = instance->eval();
 }
 
-std::string ClassFieldNode::get_full_name() const
+std::string ClassFieldNode::get_name() const
 {
     auto class_type = get_class_from_ptr(instance);
     return class_type->name + "." + name;
 }
 
 bool ClassFieldNode::is_function() const {
-    return name_resolver().has_function(get_full_name());
+    return name_resolver().has_function(get_name());
 }
 
 }

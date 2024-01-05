@@ -24,6 +24,8 @@ public:
 
     const Type* get_element_type() override;
 
+    [[nodiscard]] virtual std::string get_name() const;
+
     [[nodiscard]] virtual bool is_function() const;
 };
 

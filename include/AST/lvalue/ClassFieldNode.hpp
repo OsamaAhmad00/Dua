@@ -25,7 +25,7 @@ public:
 
     [[nodiscard]] Value eval_instance() const;
 
-    [[nodiscard]] std::string get_full_name() const;
+    [[nodiscard]] std::string get_name() const override;
 
     [[nodiscard]] bool is_function() const override;
 };

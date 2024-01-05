@@ -87,4 +87,8 @@ bool VariableNode::is_function() const {
     return name_resolver().has_function(name);
 }
 
+std::string VariableNode::get_name() const {
+    return name;
+}
+
 }

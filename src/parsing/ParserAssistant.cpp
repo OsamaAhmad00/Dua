@@ -107,6 +107,8 @@ void ParserAssistant::finish_parsing()
     //  are visible to the class definitions.
     create_missing_methods();
 
+    auto object_class = compiler->get_name_resolver().get_class("Object");
+
     for (auto& root : class_info["Object"].children)
     {
         if (class_info.find(root) == class_info.end())
@@ -134,6 +136,15 @@ void ParserAssistant::finish_parsing()
                 auto key = compiler->name_resolver.get_templated_class_key(node->name, concrete_template_args.size());
                 auto full_name = compiler->name_resolver.get_templated_class_full_name(node->name, concrete_template_args);
                 compiler->name_resolver.create_vtable(full_name);
+
+                auto parent = compiler->name_resolver.parent_classes[full_name];
+                bool is_packed;
+                if (parent == object_class) {
+                    is_packed = compiler->name_resolver.templated_classes[key].node->is_packed;
+                }  else {
+                    auto parent_llvm = llvm::StructType::getTypeByName(compiler->context, parent->name);
+                    is_packed = parent_llvm->isPacked();
+                }
 
                 // Copying the fields from the templated class to the concrete class
                 auto& templated_fields = compiler->name_resolver.class_fields[key];
@@ -165,13 +176,20 @@ void ParserAssistant::finish_parsing()
                 compiler->typing_system.pop_scope();
                 compiler->typing_system.identifier_types.restore_prev_state();
 
-                bool is_packed = compiler->name_resolver.templated_classes[key].node->is_packed;
-
                 class_type->setBody(std::move(body), is_packed);
             }
             else
             {
                 auto class_type = compiler->name_resolver.get_class(node->name)->llvm_type();
+
+                auto parent = compiler->name_resolver.parent_classes[node->name];
+                bool is_packed;
+                if (parent == object_class) {
+                    is_packed = node->node->is_packed;
+                }  else {
+                    auto parent_llvm = llvm::StructType::getTypeByName(compiler->context, parent->name);
+                    is_packed = parent_llvm->isPacked();
+                }
 
                 compiler->name_resolver.create_vtable(node->name);
                 auto& f = compiler->name_resolver.class_fields[node->name];
@@ -182,7 +200,7 @@ void ParserAssistant::finish_parsing()
                     body[i] = node->node->fields[i]->get_type()->llvm_type();
                 auto vtable_type = compiler->name_resolver.get_vtable_type(node->name);
                 body.insert(body.begin(), vtable_type->llvm_type());
-                class_type->setBody(std::move(body), node->node->is_packed);
+                class_type->setBody(std::move(body), is_packed);
             }
         }
     }
@@ -743,6 +761,9 @@ void ParserAssistant::register_class()
         // No need to register it again
         return;
     }
+
+    if (compiler->name_resolver.has_function(name))
+        report_error("There is already a function with the name " + name + ". Can't have a class with the same name");
 
     auto cls = compiler->create_type<ClassType>(name);
     compiler->name_resolver.classes[name] = cls;

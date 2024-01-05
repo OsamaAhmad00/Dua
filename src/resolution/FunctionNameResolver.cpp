@@ -37,6 +37,9 @@ void FunctionNameResolver::register_function(std::string name, FunctionInfo info
     if (!nomangle)
         name = get_function_full_name(name, info.type->param_types);
 
+    if (compiler->name_resolver.has_class(name))
+        report_error("There is already a class with the name " + name + ". Can't have a function with the same name");
+
     llvm::FunctionType* type = info.type->llvm_type();
     llvm::Function* function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, name, compiler->module);
     llvm::verifyFunction(*function);
@@ -105,6 +108,9 @@ FunctionInfo &FunctionNameResolver::get_function(const std::string &name, const 
 
 bool FunctionNameResolver::has_function(const std::string &name, bool try_as_method) const
 {
+    if (compiler->name_resolver.has_class(name))
+        return false;
+
     if (try_as_method && compiler->current_class) {
         auto class_name = compiler->current_class->getName().str();
         if (has_function(class_name + "." + name, false))

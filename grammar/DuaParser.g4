@@ -64,9 +64,10 @@ class_definition
        class_elements_or_none scope_end { assistant.create_class(); }
     ;
 
+// Only one of them can be present
 class_optionals
-    : optional_packed optional_parent_class
-    | optional_parent_class optional_packed
+    : optional_packed { assistant.push_type<IdentifierType>("Object"); }
+    | optional_parent_class { assistant.is_packed = false; }
     ;
 
 optional_parent_class

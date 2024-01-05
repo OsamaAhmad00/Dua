@@ -124,3 +124,44 @@ int main()
 }
 
 
+// Case Specifying both a parent and a packing option
+// Panics
+
+// The packing option is inherited from the parent as well
+
+class G packed extends X { }
+
+int main() { }
+
+
+// Case Inheriting the packing option
+// Outputs "13 16 13 16"
+
+class A packed
+{
+    int i;
+    byte c;
+}
+
+class B
+{
+    int i;
+    byte c;
+}
+
+class C extends A
+{
+    int i;
+    byte c;
+}
+
+class D extends B
+{
+    int i;
+    byte c;
+}
+
+int main()
+{
+    printf("%d %d %d %d", sizeof(A), sizeof(B), sizeof(C), sizeof(D));
+}

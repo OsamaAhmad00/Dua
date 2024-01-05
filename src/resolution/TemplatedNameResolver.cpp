@@ -363,6 +363,9 @@ void TemplatedNameResolver::register_templated_class(const std::string &name, co
 
     auto full_name = get_templated_class_full_name(name, concrete_args);
 
+    if (compiler->name_resolver.has_function(full_name))
+        report_error("There is already a function with the name " + full_name + ". Can't have a class with the same name");
+
     auto cls = compiler->create_type<ClassType>(full_name);
     compiler->name_resolver.classes[full_name] = cls;
     compiler->typing_system.insert_global_type(full_name, cls);
