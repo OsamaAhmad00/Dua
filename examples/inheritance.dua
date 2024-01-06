@@ -337,3 +337,53 @@ int main()
 {
     Object obj;
 }
+
+
+// Case Having a parent pointer to an object
+// Outputs "Child"
+
+
+class G
+{
+    void func() {
+        printf("Parent");
+    }
+}
+
+class H extends G
+{
+    void func() {
+        printf("Child");
+    }
+}
+
+int main()
+{
+    G* g = new H;
+    g->func();
+    delete g;
+}
+
+
+// Case Calling the right destructor
+// Outputs "Child"
+
+class G
+{
+    destructor {
+        printf("Parent");
+    }
+}
+
+class H extends G
+{
+    destructor {
+        printf("Child");
+    }
+}
+
+int main()
+{
+    G* g = new H;
+    delete g;
+}

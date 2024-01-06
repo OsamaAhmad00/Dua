@@ -39,6 +39,10 @@ Value MethodCallNode::eval()
         return call_reference(class_type->get_field(instance, name), eval_args());
 
     auto args = eval_args();
+    // Reference types act as the same type as the llvm type they're referencing.
+    // This is a quick hack, in which the instance is loaded as an llvm pointer
+    //  first, then we change its type to be a reference type
+    args[0].get();
     args[0].type = compiler->create_type<ReferenceType>(class_type);
 
     if (is_templated)
