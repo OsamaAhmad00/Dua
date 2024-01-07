@@ -56,7 +56,9 @@ struct VTable
     std::unordered_map<std::string, size_t> method_indices;
     std::map<std::string, std::string> method_names_without_class_prefix;
 
+    llvm::Value* get_ith_element(size_t i, llvm::Type* type, llvm::Value* instance = nullptr);
     llvm::Value* get_method(const std::string& name, llvm::Type* type, llvm::Value* instance = nullptr);
+
 };
 
 }

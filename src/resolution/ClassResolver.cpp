@@ -171,13 +171,18 @@ llvm::Value* VTable::get_method(const std::string &name, llvm::Type* type, llvm:
 
     size_t index = it->second;
 
+    return get_ith_element(index, type, instance);
+}
+
+llvm::Value *VTable::get_ith_element(size_t i, llvm::Type* type, llvm::Value *instance)
+{
     if (instance == nullptr)
         instance = this->instance;
 
-    auto method_ptr_ptr = owner->compiler->get_builder()->CreateStructGEP(this->llvm_type, instance, index);
-    auto method_ptr = owner->compiler->get_builder()->CreateLoad(type, method_ptr_ptr);
+    auto ptr = owner->compiler->get_builder()->CreateStructGEP(this->llvm_type, instance, i);
+    auto value = owner->compiler->get_builder()->CreateLoad(type, ptr);
 
-    return method_ptr;
+    return value;
 }
 
 }

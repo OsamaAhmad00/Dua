@@ -99,6 +99,8 @@ TypeOf: 'typeof';
 
 TypeName: 'typename';
 
+ClassID: 'classid';
+
 IsType: 'istype';
 
 NoRef: 'noref';

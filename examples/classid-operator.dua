@@ -1,0 +1,69 @@
+nomangle int printf(str message, ...);
+
+void print(i64 i) { printf("%lld", i); }
+
+// Case ID of a primitive type
+// Panics
+
+int main()
+{
+    classid(int);
+}
+
+
+// Case ID of the Object type
+// Outputs "0"
+
+int main()
+{
+    print(classid(Object));
+}
+
+
+// Case ID of user-defined types
+// Outputs "1111"
+
+class X {}
+class Y {}
+class Z {}
+
+int main()
+{
+    X x;
+    Y y;
+    int b1 = classid(x) != classid(y);
+    int b2 = classid(y) != classid(Z);
+    int b3 = classid(x) != classid(Z);
+    int b4 = classid(x) == classid(X);
+    printf("%d%d%d%d", b1, b2, b3, b4);
+}
+
+
+// Case ID of templated types
+// Outputs "1111"
+
+class X<T> {}
+
+int main()
+{
+    X<int> x1;
+    X<long> x2;
+    int b1 = classid(x1) != classid(x2);
+    int b2 = classid(x1) != classid(X<byte>);
+    int b3 = classid(x2) != classid(X<byte>);
+    int b4 = classid(x1) == classid(X<int>);
+    printf("%d%d%d%d", b1, b2, b3, b4);
+}
+
+
+// Case Parent ID vs child ID
+// Outputs "1"
+
+class X<T> { }
+
+class Y extends X<int> { }
+
+int main()
+{
+    printf("%d", (int)(classid(Y) < classid(X<int>)));
+}

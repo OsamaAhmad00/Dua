@@ -23,7 +23,11 @@ bool Type::is_castable(const Type *type) const {
     return compiler->typing_system.is_castable(this, type);
 }
 
-const Type* Type::get_contained_type() const {
+const Type* Type::get_contained_type() const
+{
+    // This is done in this sequence so that a reference of
+    //  an identifier type would get stripped from the reference,
+    //  then get the concrete type
     auto result = this;
     if (auto t = dynamic_cast<const TypeOfType*>(result); t != nullptr)
         result = t->get_concrete_type();

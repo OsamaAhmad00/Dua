@@ -287,6 +287,8 @@ expression
     | New type { assistant.push_counter(); assistant.create_malloc(); }
     | SizeOf '(' expr_or_type ')'   { assistant.create_size_of();   }
     | TypeName '(' expr_or_type ')' { assistant.create_type_name(); }
+    | ClassID '(' expression ')' { assistant.push_null_type(); assistant.create_class_id(); }
+    | ClassID '(' type ')' { assistant.push_null_node(); assistant.create_class_id(); }
     | IsType '(' expr_or_type ',' expr_or_type ')' { assistant.create_is_type(); }
     | loaded_lvalue
     | expression '[' expression ']' { assistant.create_indexing(); }

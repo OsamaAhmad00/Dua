@@ -66,8 +66,17 @@ void ParserAssistant::finish_parsing()
     for (auto it = templated_class_definitions.begin(); it != templated_class_definitions.end(); ) {
         auto& [name, template_args] = *it;
         it++;
+        auto key = compiler->name_resolver.get_templated_class_key(name, template_args.size());
+        if (!compiler->name_resolver.has_templated_class(key)) {
+            // This is a templated function reference that got here by mistake
+            it = templated_class_definitions.erase(--it);
+            continue;
+        }
         for (auto& arg : template_args) {
             if (!arg->is_resolvable_now()) {
+                // This type will be resolved recursively somewhere else
+                // An example of this is a templated parent class with a template
+                //  argument that is a template parameter of the child.
                 it = templated_class_definitions.erase(--it);
                 break;
             }
@@ -1160,11 +1169,14 @@ void ParserAssistant::create_type_alias() {
 }
 
 void ParserAssistant::create_identifier_lvalue() {
+    auto name = pop_str();
     auto template_args = pop_types();
-    if (pop_is_templated())
-        push_node<VariableNode>(pop_str(), template_args);
-    else
-        push_node<VariableNode>(pop_str());
+    if (pop_is_templated()) {
+        templated_class_definitions.insert({ name, template_args });
+        push_node<VariableNode>(std::move(name), std::move(template_args));
+    } else {
+        push_node<VariableNode>(std::move(name));
+    }
 }
 
 void ParserAssistant::push_is_templated(bool is_templated) {
@@ -1198,6 +1210,10 @@ void ParserAssistant::create_method_identifier() {
     auto method = pop_str();
     // Is the to_string method sufficient?
     push_str(cls_type->to_string() + "." + method);
+}
+
+void ParserAssistant::create_class_id() {
+    push_node<ClassIDNode>(pop_node(), pop_type());
 }
 
 }
