@@ -58,7 +58,8 @@ void ClassResolver::create_vtable(const std::string &class_name)
 
     auto methods = get_all_class_methods(class_name);
 
-    std::vector<llvm::Type*> body(methods.size());
+    // + 1 for the class id
+    std::vector<llvm::Type*> body(methods.size() + 1);
 
     auto vtable_name = class_name + ".vtable";
 
@@ -66,14 +67,17 @@ void ClassResolver::create_vtable(const std::string &class_name)
     if (vtable_type == nullptr)
         vtable_type = llvm::StructType::create(*compiler->get_context(), vtable_name);
 
-    for (size_t i = 0; i < body.size(); i++)
-        body[i] = methods[i].type->llvm_type()->getPointerTo();
+    body[0] = compiler->get_builder()->getInt64Ty();
+    for (size_t i = 1; i < body.size(); i++)
+        body[i] = methods[i - 1].type->llvm_type()->getPointerTo();
 
     vtable_type->setBody(std::move(body));
 
-    std::vector<llvm::Constant*> content(methods.size());
-    for (size_t i = 0; i < content.size(); i++) {
-        content[i] = llvm::dyn_cast<llvm::Constant>(methods[i].ptr);
+    // + 1 for the class id
+    std::vector<llvm::Constant*> content(methods.size() + 1);
+    content[0] = compiler->get_builder()->getInt64(compiler->get_name_resolver().class_id[class_name]);
+    for (size_t i = 1; i < content.size(); i++) {
+        content[i] = llvm::dyn_cast<llvm::Constant>(methods[i - 1].ptr);
         assert(content[i] != nullptr);
     }
     auto value = llvm::ConstantStruct::get(vtable_type, std::move(content));
@@ -88,7 +92,7 @@ void ClassResolver::create_vtable(const std::string &class_name)
     auto instance = new VTable { class_type, instance_ptr, vtable_type };
 
     for (size_t i = 0; i < methods.size(); i++)
-        instance->method_indices[methods[i].name] = i;
+        instance->method_indices[methods[i].name] = i + 1;
 
     for (auto& method : methods)
         instance->method_names_without_class_prefix[method.name_without_class_prefix] = method.name;
@@ -142,17 +146,18 @@ std::vector<NamedFunctionValue> ClassResolver::get_all_class_methods(const std::
         if (index == parent_vtable->method_indices.end())
             methods.push_back(method);
         else
-            methods[index->second] = method;
+            methods[index->second - 1] = method;
     }
 
+    // The indices here are the indices in the vtable, which include the class ID.
     for (auto& [name, index] : parent_vtable->method_indices) {
-        if (!methods[index].name.empty()) {
+        if (!methods[index - 1].name.empty()) {
             // This method is overwritten by the current class implementation
             continue;
         }
         auto func = compiler->get_module()->getFunction(name);
         auto type = compiler->get_name_resolver().get_function_no_overloading(name).type;
-        methods[index] = { name, func, type, name.substr(parent->name.size() + 1) };
+        methods[index - 1] = { name, func, type, name.substr(parent->name.size() + 1) };
     }
 
     return methods;

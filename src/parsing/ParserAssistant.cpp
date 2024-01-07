@@ -832,6 +832,7 @@ void ParserAssistant::register_class()
         report_error("There is already a function with the name " + name + ". Can't have a class with the same name");
 
     auto cls = compiler->create_type<ClassType>(name);
+    compiler->name_resolver.class_id[name] = compiler->name_resolver.classes.size();
     compiler->name_resolver.classes[name] = cls;
     compiler->typing_system.insert_global_type(name, cls);
 }

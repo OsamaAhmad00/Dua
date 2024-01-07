@@ -123,6 +123,8 @@ void ModuleCompiler::pop_scope_counter() {
 
 void ModuleCompiler::create_the_object_class()
 {
+    name_resolver.class_id["Object"] = 0;
+
     std::vector<const Type*> params = { create_type<ReferenceType>(create_type<ClassType>("Object")) };
     auto info = FunctionInfo {
             create_type<FunctionType>(create_type<VoidType>(), params),
