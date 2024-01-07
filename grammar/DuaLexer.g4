@@ -57,6 +57,7 @@ Class: 'class';
 Extends: 'extends';
 Dot: '.';
 ScopeResolution: '::';
+Super: 'Super';
 
 If: 'if';
 Else: 'else';

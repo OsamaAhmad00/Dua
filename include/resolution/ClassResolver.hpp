@@ -24,6 +24,8 @@ public:
     std::unordered_map<std::string, std::vector<ClassField>> class_fields;
     std::unordered_map<std::string, std::vector<FieldConstructorArgs>> fields_args;
     std::unordered_map<std::string, const ClassType*> parent_classes;
+    // The number of fields introduced newly in a class
+    std::unordered_map<std::string, size_t> owned_fields_count;
 
     // Stores the address of the global instance of the vtable for each class
     std::unordered_map<std::string, VTable*> vtables;

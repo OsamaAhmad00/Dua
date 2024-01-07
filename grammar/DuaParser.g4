@@ -127,6 +127,7 @@ fields_constructor_params
 
 field_constructor_params
     : identifier '(' arg_list ')'
+    | Super { assistant.push_str("Super"); } '(' arg_list ')'
     ;
 
 destructor

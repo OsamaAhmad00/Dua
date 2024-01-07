@@ -59,7 +59,7 @@ class Y
         printf("Y: default constructor\n");
     }
 
-    constructor(int i, int j) : y() {
+    constructor(int i, int j) {
         printf("Y: param constructor\n");
     }
 }

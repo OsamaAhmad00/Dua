@@ -387,3 +387,193 @@ int main()
     G* g = new H;
     delete g;
 }
+
+
+// Case The default calling of the super-class constructor
+// Outputs "Parent\nChild\n"
+
+
+class G
+{
+    constructor() {
+        printf("Parent\n");
+    }
+}
+
+class H extends G
+{
+    constructor() {
+        printf("Child\n");
+    }
+}
+
+int main()
+{
+    H h;
+}
+
+
+// Case Calling an overload of the super-class constructor
+// Outputs "Parent123\nChild\n"
+
+
+class G
+{
+    constructor() {
+        printf("Parent\n");
+    }
+
+    constructor(int i) {
+        printf("Parent%d\n", i);
+    }
+
+    constructor(int i, int k) {
+        printf("Parent%d%d\n", i, k);
+    }
+
+    constructor(int i, int k, int j) {
+        printf("Parent%d%d%d\n", i, k, j);
+    }
+}
+
+class H extends G
+{
+    constructor() : Super(1, 2, 3) {
+        printf("Child\n");
+    }
+}
+
+int main()
+{
+    H h;
+}
+
+
+// Case Deep constructor chain
+// Outputs "ABCDEFGH"
+
+class A
+{
+    constructor() {
+        printf("A");
+    }
+}
+
+class B extends A
+{
+    constructor() {
+        printf("B");
+    }
+}
+
+class C extends B
+{
+    constructor() {
+        printf("C");
+    }
+}
+
+class D extends C
+{
+    constructor() {
+        printf("D");
+    }
+}
+
+class E extends D
+{
+    constructor() {
+        printf("E");
+    }
+}
+
+class F extends E
+{
+    constructor() {
+        printf("F");
+    }
+}
+
+class G extends F
+{
+    constructor() {
+        printf("G");
+    }
+}
+
+class H extends G
+{
+    constructor() {
+        printf("H");
+    }
+}
+
+int main()
+{
+    H h;
+}
+
+
+// Case Initializing fields in current-class and super-class constructors
+// Outputs "12345"
+
+class G
+{
+    int a;
+    int b;
+
+    constructor(int a, int b) : a(a), b(b) {}
+}
+
+class H extends G
+{
+    int c;
+    long d;
+    int e;
+
+    constructor(int a, int b, int c, int d, int e) : Super(a, b), c(c), d(d), e(e) {}
+
+    void print() {
+        printf("%d%d%d%d%d", a, b, c, d, e);
+    }
+}
+
+int main()
+{
+    H h(1, 2, 3, 4, 5);
+    h.print();
+}
+
+
+// Case Overwriting the super-class initialization
+// Outputs "1233345"
+
+class G
+{
+    int a;
+    int b;
+
+    constructor(int a, int b) : a(1), b(2) {
+        printf("%d%d", self.a, self.b);
+    }
+}
+
+class H extends G
+{
+    int c;
+    long d;
+    int e;
+
+    constructor(int a, int b, int c, int d, int e) : a(3), b(3), Super(a, b), c(c), d(d), e(e) {}
+
+    void print() {
+        printf("%d%d%d%d%d", a, b, c, d, e);
+    }
+}
+
+int main()
+{
+    H h(1, 2, 3, 4, 5);
+    h.print();
+}
+

@@ -153,6 +153,8 @@ void ParserAssistant::finish_parsing()
                 auto& concrete_fields = compiler->name_resolver.class_fields[full_name];
                 assert(concrete_fields.empty());
 
+                compiler->name_resolver.owned_fields_count[full_name] = templated_fields.size();
+
                 // Ignore the vtable field
                 for (size_t i = 1; i < parent_fields.size(); i++)
                     for (auto &field : templated_fields)
@@ -213,6 +215,8 @@ void ParserAssistant::finish_parsing()
                 compiler->name_resolver.create_vtable(node->name);
 
                 auto& fields = compiler->name_resolver.class_fields[node->name];
+
+                compiler->name_resolver.owned_fields_count[node->name] = fields.size();
 
                 // Ignore the vtable field
                 for (size_t i = 1; i < parent_fields.size(); i++)

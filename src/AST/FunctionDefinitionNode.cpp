@@ -2,6 +2,7 @@
 #include <types/VoidType.hpp>
 #include <utils/TextManipulation.hpp>
 #include "types/ReferenceType.hpp"
+#include "types/PointerType.hpp"
 
 namespace dua
 {
@@ -180,9 +181,75 @@ void FunctionDefinitionNode::construct_fields(const ClassType *class_type)
     // Constructors are called in the order of definition of fields in the class.
     auto& class_fields_args = name_resolver().get_fields_args(name);
 
-    auto self = name_resolver().symbol_table.get("self");
-    for (auto& field : class_type->fields())
+    for (size_t i = 0; i < class_fields_args.size(); i++)
     {
+        if (class_fields_args[i].name != "Super")
+        {
+            bool found = false;
+            for (auto &field: class_type->fields()) {
+                if (field.name == class_fields_args[i].name) {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                report_error("Can't initialize the field " + class_fields_args[i].name + " in the constructor " + name +
+                             ", which is not a field of the class " + class_type->name);
+            }
+        }
+
+        for (size_t j = i + 1; j < class_fields_args.size(); j++) {
+            if (class_fields_args[i].name == class_fields_args[j].name) {
+                if (class_fields_args[i].name == "Super") {
+                    report_error("Can't have more than one call to the constructor of the super-class (in the constructor " + name + ")");
+                } else {
+                    report_error("The field argument " + class_fields_args[i].name + " is present more than once in the constructor " + name);
+                }
+            }
+        }
+    }
+
+    auto self = name_resolver().symbol_table.get("self");
+
+    if (class_type->name != "Object")
+    {
+        // Before any initialization, call the parent constructor first
+        std::vector<Value> parent_args;
+        auto parent = compiler->get_name_resolver().parent_classes[class_type->name];
+        auto parent_ptr = compiler->create_type<PointerType>(parent);
+        // TODO Change this way of dealing with references and pointers
+        // The self reference is of a reference type, and when converted to an LLVM type,
+        //  it's represented just as the type it's pointing to. LLVM typing typing systems
+        //  expect a pointer type, thus, we set the type as a pointer, cast it, the set it
+        //  back again as a reference
+        auto self_as_parent = self;
+        self_as_parent.type = compiler->create_type<PointerType>(class_type);
+        self_as_parent = self_as_parent.cast_as(parent_ptr);
+        self_as_parent.type = compiler->create_type<ReferenceType>(parent);
+
+        for (auto& field_args : class_fields_args)
+        {
+            if (field_args.name == "Super")
+            {
+                parent_args.resize(field_args.args.size());
+                for (size_t i = 0; i < parent_args.size(); i++)
+                    parent_args[i] = field_args.args[i]->eval();
+                break;
+            }
+        }
+
+        compiler->get_name_resolver().call_constructor(self_as_parent, std::move(parent_args));
+    }
+
+    auto& fields = class_type->fields();
+    size_t new_fields_count = compiler->get_name_resolver().owned_fields_count[class_type->name];
+    size_t parent_fields_count = fields.size() - new_fields_count;
+
+    for (size_t i = 0; i < fields.size(); i++)
+    {
+        auto& field = fields[i];
+
         if (field.name.empty()) continue;  // A placeholder
         bool found = false;
         auto type = class_type->get_field(field.name).type;
@@ -200,18 +267,35 @@ void FunctionDefinitionNode::construct_fields(const ClassType *class_type)
             }
         }
 
+        auto instance = compiler->create_value(ptr, type);
+
+        if (i != 0 && i < parent_fields_count)
+        {
+            // Parent fields should only be set in case there is a constructor argument,
+            //  otherwise, the parent constructor takes care of them.
+            // There is an exception for the vtable, which is at index 0
+            if (found)
+                name_resolver().call_constructor(instance, std::move(args));
+            continue;
+        }
+
         // If not, check if there is a default initializer list
         if (!found) {
             args.insert(args.end(), field.default_args.begin(), field.default_args.end());
         }
 
+        // For a field with a name x:
+        //  Constructor initializer list -> constructor() : x(a, b, c)
+        //  Default initializer list -> X x(1, 2, 3)
+        //  Default value -> X x = 3
+        //  Type default value -> for most types, just a zero-initialization
         // If no constructor initializer list, no default initializer list,
         //  initialize it with the default value if exists, or with the type
         //  default value.
         // If it's not assigned a value, then it has an empty arg list
         bool has_empty_args = field.default_value == nullptr;
-        auto instance = compiler->create_value(ptr, type);
         if (!has_empty_args && args.empty()) {
+            // If the argument list is empty, and there are no default args, just copy the default value
             auto arg = compiler->create_value(field.default_value, field.type);
             name_resolver().call_copy_constructor(instance, arg);
         } else {
