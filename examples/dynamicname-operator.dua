@@ -1,16 +1,16 @@
 nomangle int printf(str message, ...);
 
 
-// Case Name of the object with id 0
+// Case Name of the object class
 // Outputs "Object"
 
 int main()
 {
-    printf("%s", dynamicname(0));
+    printf("%s", dynamicname(Object));
 }
 
 
-// Case Name of a classes
+// Case Name of user-defined classes
 // Outputs "XYZ"
 
 class X { }
@@ -22,4 +22,30 @@ int main()
     X x;
     Y y;
     printf("%s%s%s", dynamicname(x), dynamicname(y), dynamicname(Z));
+}
+
+
+// Case Names of templated classes
+// Outputs "Templated.X.1.i32"
+
+class X<T> { }
+
+int main()
+{
+    printf("%s", dynamicname(X<int>));
+}
+
+
+// Case Accessing name through a parent class
+// Outputs "Y"
+
+class X { }
+
+class Y extends X { }
+
+int main()
+{
+    Y y;
+    X& x = y;
+    printf("%s", dynamicname(x));
 }

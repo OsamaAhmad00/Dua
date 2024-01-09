@@ -44,8 +44,6 @@ public:
     const Type* get_vtable_type(const std::string& class_name);
     ClassField get_vtable_field(const std::string& class_name);
     std::vector<NamedFunctionValue> get_all_class_methods(const std::string& class_name);
-    void create_class_names_array();
-    Value get_class_name(Value id);
 
     virtual ~ClassResolver();
 };

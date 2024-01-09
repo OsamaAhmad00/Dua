@@ -50,7 +50,6 @@
 #include "AST/operators/TypeNameNode.hpp"
 #include "AST/operators/SizeOfNode.hpp"
 #include "AST/operators/IsTypeNode.hpp"
-#include "AST/operators/ClassIDNode.hpp"
 #include "AST/operators/DynamicNameNode.hpp"
 
 #include "AST/lvalue/LValueNode.hpp"

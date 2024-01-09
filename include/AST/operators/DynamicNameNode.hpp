@@ -5,14 +5,16 @@
 namespace dua
 {
 
-class DynamicNameNode : public ValueNode {
+class DynamicNameNode : public ValueNode
+{
 
-    ASTNode* id;
+    ASTNode* instance;
+    const Type* target_type;
 
 public:
 
-    DynamicNameNode(ModuleCompiler* compiler, ASTNode* id)
-            : id(id) { this->compiler = compiler; }
+    DynamicNameNode(ModuleCompiler* compiler, ASTNode* instance, const Type* type)
+        : instance(instance), target_type(type) { this->compiler = compiler; }
 
     Value eval() override;
 

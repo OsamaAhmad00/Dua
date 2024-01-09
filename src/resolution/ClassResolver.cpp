@@ -61,7 +61,7 @@ void ClassResolver::create_vtable(const std::string &class_name)
 
     auto methods = get_all_class_methods(class_name);
 
-    // + 1 for the class id
+    // + 1 for the class name pointer
     std::vector<llvm::Type*> body(methods.size() + 1);
 
     auto vtable_name = class_name + ".vtable";
@@ -70,15 +70,17 @@ void ClassResolver::create_vtable(const std::string &class_name)
     if (vtable_type == nullptr)
         vtable_type = llvm::StructType::create(*compiler->get_context(), vtable_name);
 
-    body[0] = compiler->get_builder()->getInt64Ty();
+    auto name_str = compiler->create_string(class_name + "_name", class_name);
+
+    body[0] = name_str.type->llvm_type();
     for (size_t i = 1; i < body.size(); i++)
         body[i] = methods[i - 1].type->llvm_type()->getPointerTo();
 
     vtable_type->setBody(std::move(body));
 
-    // + 1 for the class id
+    // + 1 for the class name pointer
     std::vector<llvm::Constant*> content(methods.size() + 1);
-    content[0] = compiler->get_builder()->getInt64(compiler->get_name_resolver().class_id[class_name]);
+    content[0] = name_str.get_constant();
     for (size_t i = 1; i < content.size(); i++) {
         content[i] = llvm::dyn_cast<llvm::Constant>(methods[i - 1].ptr);
         assert(content[i] != nullptr);
@@ -164,49 +166,6 @@ std::vector<NamedFunctionValue> ClassResolver::get_all_class_methods(const std::
     }
 
     return methods;
-}
-
-void ClassResolver::create_class_names_array()
-{
-    std::vector<llvm::Constant*> array_content(class_id.size());
-    for (auto& [name, id] : class_id) {
-        array_content[id] = compiler->create_string(name + "_name", name).get_constant();
-    }
-
-    auto type = compiler->create_type<ArrayType>(
-        compiler->create_type<PointerType>(
-            compiler->create_type<I8Type>()
-        ),
-        array_content.size()
-    );
-
-    auto llvm_type = type->llvm_type();
-
-    llvm::Constant* array_initializer = llvm::ConstantArray::get(llvm_type, std::move(array_content));
-
-    compiler->get_module()->getOrInsertGlobal(".class_names", llvm_type);
-    llvm::GlobalVariable* array = compiler->get_module()->getGlobalVariable(".class_names");
-    array->setInitializer(array_initializer);
-    array->setConstant(true);
-
-    class_names_array.set(array);
-    class_names_array.type = type;
-}
-
-Value ClassResolver::get_class_name(Value id)
-{
-    if (class_names_array.is_null())
-        report_internal_error("Can't resolve names of classes dynamically before the registration of all classes");
-
-    auto& builder = *compiler->get_builder();
-    auto zero = builder.getInt64(0);
-    auto array_type = class_names_array.type->as<ArrayType>();
-    auto element_type = array_type->get_element_type();
-    auto indices = std::vector<llvm::Value*> { zero, id.get() };
-    auto ptr = builder.CreateGEP(array_type->llvm_type(), class_names_array.get(), indices);
-    auto name = builder.CreateLoad(element_type->llvm_type(), ptr);
-
-    return compiler->create_value(name, element_type);
 }
 
 llvm::Value* VTable::get_method(const std::string &name, llvm::Type* type, llvm::Value* instance)
