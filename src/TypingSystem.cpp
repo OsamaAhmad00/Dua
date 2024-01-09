@@ -28,8 +28,8 @@ static llvm::Value* _cast_value(const Value& value, const Type* type, bool panic
     }
 
     llvm::DataLayout dl(&module);
-    unsigned int source_width = dl.getTypeAllocSize(source_type);
-    unsigned int target_width = dl.getTypeAllocSize(target_type);
+    unsigned int source_width = dl.getTypeSizeInBits(source_type);
+    unsigned int target_width = dl.getTypeSizeInBits(target_type);
 
     // If the types are both integer types, use the Trunc or ZExt or SExt instructions
     if (source_type->isIntegerTy() && target_type->isIntegerTy())
@@ -68,6 +68,9 @@ static llvm::Value* _cast_value(const Value& value, const Type* type, bool panic
 
     if (source_type->isPointerTy() && target_type->isPointerTy())
         return builder.CreateBitCast(v, target_type);
+
+    if (source_type->isPointerTy() && target_type->isIntegerTy())
+        return builder.CreatePtrToInt(v, target_type);
 
     if (source_type->isIntegerTy() && target_type->isPointerTy())
         return builder.CreateIntToPtr(v, target_type);
@@ -128,6 +131,10 @@ const Type* TypingSystem::get_winning_type(const Type* lhs, const Type* rhs, boo
 
     if (l->isIntegerTy() && r->isIntegerTy())
         return (l_width >= r_width) ? lhs : rhs;
+
+    // TODO should it return the lhs arbitrarily?
+    if (l->isPointerTy() && r->isPointerTy())
+        return lhs;
 
     if (l->isPointerTy() && r->isIntegerTy())
         return lhs;
@@ -217,6 +224,7 @@ int TypingSystem::similarity_score(const Type *t1, const Type *t2) const
             if (score == -1) return -1;
             return score + 1;
         }
+        if (is<IntegerType>(t2)) return 3;  // Just like the score from int to pointer
         return -1;
     }
 

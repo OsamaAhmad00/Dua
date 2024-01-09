@@ -27,7 +27,7 @@ int main()
 
 
 // Case Cast a pointer to an integer
-// Panics
+// Outputs "2"
 
 int main()
 {

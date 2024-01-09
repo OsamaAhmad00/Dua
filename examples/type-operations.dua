@@ -2,6 +2,21 @@ nomangle int printf(str message, ...);
 
 void print(double d) { printf("%.2lf", d); }
 
+
+// CASE Pointer Comparison
+// Outputs "111"
+
+int main()
+{
+    int* i = 2324;
+    float* f = 2324;
+
+    int b1 = i == f;
+
+    printf("%d%d%d", b1, b1, b1);
+}
+
+
 // CASE Integer Addition
 // Returns 5
 

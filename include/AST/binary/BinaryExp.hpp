@@ -2,12 +2,12 @@
 
 #include <AST/ASTNode.hpp>
 #include <utils/ErrorReporting.hpp>
-#include <types/IntegerTypes.hpp>
+#include <types/FloatTypes.hpp>
 
 namespace dua
 {
 
-#define SAME_TYPE_BINARY_EXP_NODE(NAME, INT_OP, FLOAT_OP, LABEL, INT_ONLY)            \
+#define SAME_TYPE_BINARY_EXP_NODE(NAME, INT_OP, FLOAT_OP, LABEL, NO_FLOAT)            \
 class NAME##Node : public ASTNode                                                     \
 {                                                                                     \
     ASTNode* lhs;                                                                     \
@@ -27,13 +27,13 @@ public:                                                                         
             report_error("Can't perform the operation " #NAME " between the types "   \
                 + lhs.type->to_string() + " and " + rhs.type->to_string());           \
         llvm::Value* ptr;                                                             \
-        if (type->as<IntegerType>())                                                  \
-            ptr = compiler->get_builder()->INT_OP(l.get(), r.get(), LABEL);           \
-        else {                                                                        \
-            if (INT_ONLY)                                                             \
+        if (type->as<FloatType>()) {                                                  \
+            if (NO_FLOAT)                                                             \
                 report_error("The operation " #NAME                                   \
                     " is applicable only on integer types");                          \
             ptr = compiler->get_builder()->FLOAT_OP(l.get(), r.get(), LABEL);         \
+        } else {                                                                      \
+            ptr = compiler->get_builder()->INT_OP(l.get(), r.get(), LABEL);           \
         }                                                                             \
                                                                                       \
         /* This is necessary for making sure that the type returned is actually */    \
