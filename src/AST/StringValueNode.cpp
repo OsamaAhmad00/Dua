@@ -10,13 +10,7 @@ int StringValueNode::counter = 0;
 Value StringValueNode::eval()
 {
     if (is_nullptr) return type->default_value();
-    auto& pool = string_pool();
-    auto it = pool.find(value);
-    if (it != pool.end())
-        return compiler->create_value(it->second, get_type());
-    auto result = builder().CreateGlobalStringPtr(value, "StringLiteral" + std::to_string(counter++));
-    pool[value] = result;
-    return compiler->create_value(result, get_type());
+    return compiler->create_string("StringLiteral" + std::to_string(counter++), value);
 }
 
 const Type *StringValueNode::get_type() {

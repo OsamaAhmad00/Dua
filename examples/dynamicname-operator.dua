@@ -1,0 +1,25 @@
+nomangle int printf(str message, ...);
+
+
+// Case Name of the object with id 0
+// Outputs "Object"
+
+int main()
+{
+    printf("%s", dynamicname(0));
+}
+
+
+// Case Name of a classes
+// Outputs "XYZ"
+
+class X { }
+class Y { }
+class Z { }
+
+int main()
+{
+    X x;
+    Y y;
+    printf("%s%s%s", dynamicname(x), dynamicname(y), dynamicname(Z));
+}

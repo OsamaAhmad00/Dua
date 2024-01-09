@@ -91,6 +91,8 @@ public:
     void create_dua_init_function();
     void complete_dua_init_function();
 
+    Value create_string(const std::string& name, const std::string& value);
+
     ~ModuleCompiler();
 
 private:

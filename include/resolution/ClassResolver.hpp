@@ -27,6 +27,8 @@ public:
     // The number of fields introduced newly in a class
     std::unordered_map<std::string, size_t> owned_fields_count;
 
+    Value class_names_array;
+
     // Each class has a unique id representing it
     std::unordered_map<std::string, size_t> class_id;
 
@@ -42,6 +44,8 @@ public:
     const Type* get_vtable_type(const std::string& class_name);
     ClassField get_vtable_field(const std::string& class_name);
     std::vector<NamedFunctionValue> get_all_class_methods(const std::string& class_name);
+    void create_class_names_array();
+    Value get_class_name(Value id);
 
     virtual ~ClassResolver();
 };

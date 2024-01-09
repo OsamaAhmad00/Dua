@@ -4,6 +4,9 @@
 #include <Value.hpp>
 #include <ModuleCompiler.hpp>
 #include "types/PointerType.hpp"
+#include "types/ArrayType.hpp"
+#include "types/IntegerTypes.hpp"
+#include "AST/values/StringValueNode.hpp"
 
 namespace dua
 {
@@ -161,6 +164,49 @@ std::vector<NamedFunctionValue> ClassResolver::get_all_class_methods(const std::
     }
 
     return methods;
+}
+
+void ClassResolver::create_class_names_array()
+{
+    std::vector<llvm::Constant*> array_content(class_id.size());
+    for (auto& [name, id] : class_id) {
+        array_content[id] = compiler->create_string(name + "_name", name).get_constant();
+    }
+
+    auto type = compiler->create_type<ArrayType>(
+        compiler->create_type<PointerType>(
+            compiler->create_type<I8Type>()
+        ),
+        array_content.size()
+    );
+
+    auto llvm_type = type->llvm_type();
+
+    llvm::Constant* array_initializer = llvm::ConstantArray::get(llvm_type, std::move(array_content));
+
+    compiler->get_module()->getOrInsertGlobal(".class_names", llvm_type);
+    llvm::GlobalVariable* array = compiler->get_module()->getGlobalVariable(".class_names");
+    array->setInitializer(array_initializer);
+    array->setConstant(true);
+
+    class_names_array.set(array);
+    class_names_array.type = type;
+}
+
+Value ClassResolver::get_class_name(Value id)
+{
+    if (class_names_array.is_null())
+        report_internal_error("Can't resolve names of classes dynamically before the registration of all classes");
+
+    auto& builder = *compiler->get_builder();
+    auto zero = builder.getInt64(0);
+    auto array_type = class_names_array.type->as<ArrayType>();
+    auto element_type = array_type->get_element_type();
+    auto indices = std::vector<llvm::Value*> { zero, id.get() };
+    auto ptr = builder.CreateGEP(array_type->llvm_type(), class_names_array.get(), indices);
+    auto name = builder.CreateLoad(element_type->llvm_type(), ptr);
+
+    return compiler->create_value(name, element_type);
 }
 
 llvm::Value* VTable::get_method(const std::string &name, llvm::Type* type, llvm::Value* instance)

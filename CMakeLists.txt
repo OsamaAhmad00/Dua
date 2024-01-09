@@ -124,6 +124,7 @@ set(DUA_SOURCES
     src/AST/TypeNameNode.cpp
     src/AST/MethodCallNode.cpp
     src/AST/ClassIDNode.cpp
+    src/AST/DynamicNameNode.cpp
 
     src/types/Type.cpp
     src/types/ArrayType.cpp

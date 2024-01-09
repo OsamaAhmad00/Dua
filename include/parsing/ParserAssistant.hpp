@@ -51,6 +51,7 @@
 #include "AST/operators/SizeOfNode.hpp"
 #include "AST/operators/IsTypeNode.hpp"
 #include "AST/operators/ClassIDNode.hpp"
+#include "AST/operators/DynamicNameNode.hpp"
 
 #include "AST/lvalue/LValueNode.hpp"
 #include "AST/lvalue/VariableNode.hpp"
@@ -309,6 +310,8 @@ public:
     void create_no_ref();
     void create_method_identifier();
     void create_class_id();
+    void create_dynamic_name_from_id();
+    void create_dynamic_name();
 
     template<typename T>
     void create_unary_expr() {

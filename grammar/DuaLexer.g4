@@ -99,6 +99,8 @@ TypeOf: 'typeof';
 
 TypeName: 'typename';
 
+DynamicName: 'dynamicname';
+
 ClassID: 'classid';
 
 IsType: 'istype';

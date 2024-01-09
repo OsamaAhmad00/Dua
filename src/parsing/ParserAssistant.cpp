@@ -259,6 +259,8 @@ void ParserAssistant::finish_parsing()
     for (auto alias : global_aliases)
         alias->eval();
 
+    compiler->name_resolver.create_class_names_array();
+
     for (auto& root : class_info["Object"].children)
     {
         if (class_info.find(root) == class_info.end())
@@ -1215,5 +1217,15 @@ void ParserAssistant::create_method_identifier() {
 void ParserAssistant::create_class_id() {
     push_node<ClassIDNode>(pop_node(), pop_type());
 }
+
+void ParserAssistant::create_dynamic_name_from_id() {
+    push_node<DynamicNameNode>(pop_node());
+}
+
+void ParserAssistant::create_dynamic_name() {
+    create_class_id();
+    create_dynamic_name_from_id();
+}
+
 
 }

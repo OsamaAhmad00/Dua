@@ -5,7 +5,8 @@
 namespace dua
 {
 
-class StringValueNode : public ValueNode {
+class StringValueNode : public ValueNode
+{
 
     bool is_nullptr;
     std::string value;

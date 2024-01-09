@@ -6,6 +6,8 @@
 #include "AST/class/ClassDefinitionNode.hpp"
 #include "types/ReferenceType.hpp"
 #include "AST/variable/ClassFieldDefinitionNode.hpp"
+#include "types/PointerType.hpp"
+#include "types/IntegerTypes.hpp"
 
 namespace dua
 {
@@ -144,6 +146,17 @@ void ModuleCompiler::create_the_object_class()
     name_resolver.create_vtable("Object");
     name_resolver.class_fields["Object"].push_back(name_resolver.get_vtable_field("Object"));
     type->llvm_type()->setBody(name_resolver.get_vtable_type("Object")->llvm_type());
+}
+
+Value ModuleCompiler::create_string(const std::string &name, const std::string &value)
+{
+    auto type = create_type<PointerType>(create_type<I8Type>());
+    auto it = string_pool.find(value);
+    if (it != string_pool.end())
+        return create_value(it->second, type);
+    auto result = builder.CreateGlobalStringPtr(value, name, 0, &module);
+    string_pool[value] = result;
+    return create_value(result, type);
 }
 
 }
