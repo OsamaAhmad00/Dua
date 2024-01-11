@@ -1215,5 +1215,9 @@ void ParserAssistant::create_dynamic_name() {
     push_node<DynamicNameNode>(pop_node(), pop_type());
 }
 
+void ParserAssistant::create_dynamic_cast() {
+    push_node<DynamicCastNode>(pop_node(), pop_type());
+}
+
 
 }

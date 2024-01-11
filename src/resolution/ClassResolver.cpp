@@ -4,7 +4,6 @@
 #include <Value.hpp>
 #include <ModuleCompiler.hpp>
 #include "types/PointerType.hpp"
-#include "types/ArrayType.hpp"
 #include "types/IntegerTypes.hpp"
 #include "AST/values/StringValueNode.hpp"
 
@@ -61,8 +60,8 @@ void ClassResolver::create_vtable(const std::string &class_name)
 
     auto methods = get_all_class_methods(class_name);
 
-    // + 1 for the class name pointer
-    std::vector<llvm::Type*> body(methods.size() + 1);
+    // + 2 for the class name pointer and the parent pointer
+    std::vector<llvm::Type*> body(methods.size() + VTable::RESERVED_FIELDS_COUNT);
 
     auto vtable_name = class_name + ".vtable";
 
@@ -72,17 +71,22 @@ void ClassResolver::create_vtable(const std::string &class_name)
 
     auto name_str = compiler->create_string(class_name + "_name", class_name);
 
+    auto parent_vtable = (class_name == "Object") ? llvm::Constant::getNullValue(vtable_type->getPointerTo())
+            : get_vtable_instance(parent_classes[class_name]->name)->instance;
+
     body[0] = name_str.type->llvm_type();
-    for (size_t i = 1; i < body.size(); i++)
-        body[i] = methods[i - 1].type->llvm_type()->getPointerTo();
+    body[1] = parent_vtable->getType();
+    for (size_t i = VTable::RESERVED_FIELDS_COUNT; i < body.size(); i++)
+        body[i] = methods[i - VTable::RESERVED_FIELDS_COUNT].type->llvm_type()->getPointerTo();
 
     vtable_type->setBody(std::move(body));
 
-    // + 1 for the class name pointer
-    std::vector<llvm::Constant*> content(methods.size() + 1);
+    // + 2 for the class name pointer and the parent pointer
+    std::vector<llvm::Constant*> content(methods.size() + VTable::RESERVED_FIELDS_COUNT);
     content[0] = name_str.get_constant();
-    for (size_t i = 1; i < content.size(); i++) {
-        content[i] = llvm::dyn_cast<llvm::Constant>(methods[i - 1].ptr);
+    content[1] = parent_vtable;
+    for (size_t i = VTable::RESERVED_FIELDS_COUNT; i < content.size(); i++) {
+        content[i] = llvm::dyn_cast<llvm::Constant>(methods[i - VTable::RESERVED_FIELDS_COUNT].ptr);
         assert(content[i] != nullptr);
     }
     auto value = llvm::ConstantStruct::get(vtable_type, std::move(content));
@@ -97,7 +101,7 @@ void ClassResolver::create_vtable(const std::string &class_name)
     auto instance = new VTable { class_type, instance_ptr, vtable_type };
 
     for (size_t i = 0; i < methods.size(); i++)
-        instance->method_indices[methods[i].name] = i + 1;
+        instance->method_indices[methods[i].name] = i + VTable::RESERVED_FIELDS_COUNT;
 
     for (auto& method : methods)
         instance->method_names_without_class_prefix[method.name_without_class_prefix] = method.name;
@@ -151,18 +155,18 @@ std::vector<NamedFunctionValue> ClassResolver::get_all_class_methods(const std::
         if (index == parent_vtable->method_indices.end())
             methods.push_back(method);
         else
-            methods[index->second - 1] = method;
+            methods[index->second - VTable::RESERVED_FIELDS_COUNT] = method;
     }
 
-    // The indices here are the indices in the vtable, which include the class ID.
+    // The indices here are the indices in the vtable, which include the class name pointer and the parent pointer.
     for (auto& [name, index] : parent_vtable->method_indices) {
-        if (!methods[index - 1].name.empty()) {
+        if (!methods[index - VTable::RESERVED_FIELDS_COUNT].name.empty()) {
             // This method is overwritten by the current class implementation
             continue;
         }
         auto func = compiler->get_module()->getFunction(name);
         auto type = compiler->get_name_resolver().get_function_no_overloading(name).type;
-        methods[index - 1] = { name, func, type, name.substr(parent->name.size() + 1) };
+        methods[index - VTable::RESERVED_FIELDS_COUNT] = { name, func, type, name.substr(parent->name.size() + 1) };
     }
 
     return methods;

@@ -290,6 +290,7 @@ expression
     | DynamicName '(' expression ')' { assistant.push_null_type(); assistant.create_dynamic_name(); }
     | DynamicName '(' type ')' { assistant.push_null_node(); assistant.create_dynamic_name(); }
     | IsType '(' expr_or_type ',' expr_or_type ')' { assistant.create_is_type(); }
+    | expression As type { assistant.create_dynamic_cast(); }
     | loaded_lvalue
     | expression '[' expression ']' { assistant.create_indexing(); }
     | lvalue '++' { assistant.create_post_inc(); }

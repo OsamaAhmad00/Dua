@@ -39,10 +39,10 @@ ProgramExecution execute_program(const std::string& program, const std::vector<s
 
     bool within_limit = true;
     auto output = std::async(&capture_output, std::ref(is), std::ref(within_limit));
-    auto start = std::chrono::system_clock::now();
+    auto start = std::chrono::steady_clock::now();
 
     output.wait_for(std::chrono::milliseconds(time_limit));
-    auto current = std::chrono::system_clock::now();
+    auto current = std::chrono::steady_clock::now();
     auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds >(current - start).count();
     within_limit = milliseconds < time_limit;
     c.terminate();

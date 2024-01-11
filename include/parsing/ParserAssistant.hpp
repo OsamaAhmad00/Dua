@@ -14,6 +14,7 @@
 #include "AST/FreeNode.hpp"
 
 #include "AST/class/ClassDefinitionNode.hpp"
+#include "AST/class/DynamicCastNode.hpp"
 
 #include "AST/variable/GlobalVariableDefinitionNode.hpp"
 #include "AST/variable/LocalVariableDefinitionNode.hpp"
@@ -311,6 +312,7 @@ public:
     void create_class_id();
     void create_dynamic_name_from_id();
     void create_dynamic_name();
+    void create_dynamic_cast();
 
     template<typename T>
     void create_unary_expr() {

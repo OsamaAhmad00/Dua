@@ -101,6 +101,8 @@ TypeName: 'typename';
 
 DynamicName: 'dynamicname';
 
+As: 'as';
+
 ClassID: 'classid';
 
 IsType: 'istype';

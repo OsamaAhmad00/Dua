@@ -50,6 +50,10 @@ public:
 
 struct VTable
 {
+    // 1 - The class name pointer
+    // 2 - The parent pointer
+    static const int RESERVED_FIELDS_COUNT = 2;
+
     const ClassType* owner;
     llvm::GlobalVariable* instance;
     llvm::Type* llvm_type;

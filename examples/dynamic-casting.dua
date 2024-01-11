@@ -1,0 +1,175 @@
+nomangle int printf(str message, ...);
+
+
+// Case Casting to a child class
+// Outputs "Child"
+
+class Parent { }
+
+class Child extends Parent
+{
+    void func() {
+        printf("Child");
+    }
+}
+
+int main()
+{
+    Child c;
+    Parent* p = &c;
+
+    Child* cc = p as Child*;
+    cc->func();
+}
+
+
+// Case Unsuccessful cast
+// Outputs "0"
+
+class Parent { }
+
+class Child extends Parent { }
+
+int main()
+{
+    Parent p;
+    var c = &p as Child*;
+    printf("%d", (int)c);
+}
+
+
+// Case Long chain of inheritance
+// Outputs "Child"
+
+class Parent1 { }
+
+class Parent2 extends Parent1 { }
+
+class Parent3 extends Parent2 { }
+
+class Parent4 extends Parent3 { }
+
+class Parent5 extends Parent4 { }
+
+class Parent6 extends Parent5 { }
+
+class Child extends Parent6
+{
+    void func() {
+        printf("Child");
+    }
+}
+
+int main()
+{
+    Child c;
+    Parent1* p = &c;
+
+    Child* cc = p as Child*;
+    cc->func();
+}
+
+
+// Case Long chain of inheritance with unsuccessful cast
+// Outputs "0"
+
+class Parent1 { }
+
+class Parent2 extends Parent1 { }
+
+class Parent3 extends Parent2 { }
+
+class Parent4 extends Parent3 { }
+
+class Parent5 extends Parent4 { }
+
+class Parent6 extends Parent5 { }
+
+class Child extends Parent6 { }
+
+int main()
+{
+    Parent3 p;
+    Child* c = &p as Child*;
+    printf("%d", (int)c);
+}
+
+
+// Case Casting to an Object class
+// Outputs "Success"
+
+class X { }
+
+int main()
+{
+    X x;
+    var o = &x as Object*;
+    if (o != null)
+        printf("Success");
+    else
+        printf("Failure");
+}
+
+
+// Case Casting to a non-existing class
+// Panics
+
+class X { }
+
+int main()
+{
+    X x;
+    auto y = &x as Y*;
+}
+
+
+// Case Casting a non-class type
+// Panics
+
+class X { }
+
+int main()
+{
+    int i = 3;
+    var x = &i as X*;
+}
+
+
+// Case Casting to a non-class type
+// Panics
+
+class X { }
+
+int main()
+{
+    X x;
+    var i = &x as int*;
+}
+
+
+// Case Casting to a non-pointer type
+// Panics
+
+class X { }
+
+class Y extends X { }
+
+int main()
+{
+    Y y;
+    var x = &y as X;
+}
+
+
+// Case Casting a non-pointer type
+// Panics
+
+class X { }
+
+class Y extends X { }
+
+int main()
+{
+    Y y;
+    var x = y as X*;
+}

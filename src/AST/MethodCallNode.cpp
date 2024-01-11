@@ -2,6 +2,7 @@
 #include <types/ReferenceType.hpp>
 #include <AST/lvalue/VariableNode.hpp>
 #include "types/PointerType.hpp"
+#include "AST/lvalue/LoadedLValueNode.hpp"
 
 namespace dua
 {
@@ -32,6 +33,15 @@ Value MethodCallNode::eval()
     process();
 
     auto instance = instance_node->eval();
+
+    if (instance.type->get_concrete_type()->as<PointerType>() == nullptr) {
+        if (instance_node->as<LoadedLValueNode>() != nullptr) {
+            report_error("Can't use a dereferenced " + instance.type->to_string() +
+                         " in method calls. Are you using -> instead of . when calling the method " + name + "?");
+        }
+        report_error(instance.type->to_string() +
+                     " is not an lvalue expression, and can't be used in the call to the method " + name);
+    }
 
     auto class_type = get_instance_type();
 
@@ -109,13 +119,19 @@ std::vector<const Type*> MethodCallNode::get_arg_types()
 const ClassType *MethodCallNode::get_instance_type()
 {
     auto instance_type = instance_node->get_type();
-    auto ptr_type = instance_type->as<PointerType>();
-    if (ptr_type == nullptr)
+
+    const Type* element_type;
+    if (auto ptr_type = instance_type->as<PointerType>(); ptr_type != nullptr)
+        element_type= ptr_type->get_element_type();
+    else if (auto ref_type = instance_type->as<ReferenceType>(); ref_type != nullptr)
+        element_type= ref_type->get_element_type();
+    else
         report_error(instance_type->to_string() + " is not an lvalue type, and has no method with the name " + name);
-    auto element_type = ptr_type->get_element_type();
+
     auto class_type = element_type->get_contained_type()->as<ClassType>();
     if (class_type == nullptr)
         report_error(element_type->to_string() + " is not of a class type, and has no method with the name " + name);
+
     return class_type;
 }
 
