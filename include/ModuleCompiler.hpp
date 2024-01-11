@@ -91,6 +91,10 @@ public:
     void create_dua_init_function();
     void complete_dua_init_function();
 
+    // A function used when performing dynamic casting
+    void create_dynamic_casting_function();
+    void delete_dynamic_casting_function();
+
     Value create_string(const std::string& name, const std::string& value);
 
     ~ModuleCompiler();

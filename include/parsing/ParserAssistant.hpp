@@ -180,6 +180,7 @@ class ParserAssistant
     // Flags
     bool declared_malloc = false;
     bool declared_free = false;
+    bool used_dynamic_casting = false;
 
     std::string pop_str() {
         auto result = std::move(strings.back());

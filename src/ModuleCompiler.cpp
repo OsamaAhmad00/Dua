@@ -28,6 +28,8 @@ ModuleCompiler::ModuleCompiler(const std::string &module_name, const std::string
 
     create_the_object_class();
 
+    create_dynamic_casting_function();
+
     // Parse
     TranslationUnitNode* ast = parser.parse(code);
 
@@ -157,6 +159,87 @@ Value ModuleCompiler::create_string(const std::string &name, const std::string &
     auto result = builder.CreateGlobalStringPtr(value, name, 0, &module);
     string_pool[value] = result;
     return create_value(result, type);
+}
+
+void ModuleCompiler::create_dynamic_casting_function()
+{
+    std::vector<const Type*> param_types = { create_type<PointerType>(create_type<ClassType>("Object")),
+                         create_type<PointerType>(create_type<ClassType>("Object")) };
+    auto info = FunctionInfo {
+        create_type<FunctionType>(create_type<I8Type>(), param_types),
+        {"init_vtable", "target_vtable"}
+    };
+
+    name_resolver.register_function(".is_vtable_reachable", std::move(info), true);
+
+    auto function = module.getFunction(".is_vtable_reachable");
+
+    // Loop while the current vtable instance pointer is not the target vtable pointer, or if
+    //  you reach the root (a null pointer)
+    //  This is equivalent to:
+    //      auto ptr = vtable_ptr;
+    //      while (ptr && ptr != target_ptr)
+    //          ptr = parent_vtable(ptr);
+    //      if (ptr == null) return null
+    //      return pointer as target_type
+
+    auto entry_bb = llvm::BasicBlock::Create(context, "entry", function);
+    auto test_null_bb = llvm::BasicBlock::Create(context, "test_null", function);
+    auto proceed_bb = llvm::BasicBlock::Create(context, "proceed", function);
+    auto load_parent_bb = llvm::BasicBlock::Create(context, "load_parent", function);
+    auto end_bb = llvm::BasicBlock::Create(context, "end", function);
+
+    auto any_vtable = name_resolver.get_vtable_instance("Object");
+
+    auto init_vtable = function->args().begin();
+    auto target_vtable = function->args().begin() + 1;
+
+    // Even though vtables of different classes are different in structure, the only part
+    //  we're concerned with is the pointer of the parent vtable instance, which is always
+    //  in the same position, regardless of the vtable type. For this reason, if we're only
+    //  accessing the parent vtable pointer, we can treat any vtable instance as any vtable.
+    auto vtable_llvm_type = init_vtable->getType();
+
+    builder.SetInsertPoint(entry_bb);
+
+    auto current_vtable_ptr = builder.CreateAlloca(vtable_llvm_type, nullptr, "current_vtable");
+    builder.CreateStore(init_vtable, current_vtable_ptr);
+
+    builder.CreateBr(test_null_bb);
+
+    builder.SetInsertPoint(test_null_bb);
+
+    auto current_vtable = builder.CreateLoad(vtable_llvm_type->getPointerTo(), current_vtable_ptr);
+
+    auto is_null = builder.CreateICmpNE(current_vtable, llvm::Constant::getNullValue(current_vtable->getType()));
+    builder.CreateCondBr(is_null, proceed_bb, end_bb);
+
+    builder.SetInsertPoint(proceed_bb);
+
+    auto is_target = builder.CreateICmpEQ(current_vtable, target_vtable);
+    builder.CreateCondBr(is_target, end_bb, load_parent_bb);
+
+    builder.SetInsertPoint(load_parent_bb);
+
+    // Any vtable is usable here
+    auto parent_ptr = any_vtable->get_ith_element(1, vtable_llvm_type, current_vtable);
+    builder.CreateStore(parent_ptr, current_vtable_ptr);
+    builder.CreateBr(test_null_bb);
+
+    builder.SetInsertPoint(end_bb);
+
+    auto phi = builder.CreatePHI(builder.getInt1Ty(), 2, "result");
+    phi->addIncoming(builder.getInt1(1), proceed_bb);
+    phi->addIncoming(builder.getInt1(0), test_null_bb);
+
+    auto result = builder.CreateZExt(phi, builder.getInt8Ty());
+
+    builder.CreateRet(result);
+}
+
+void ModuleCompiler::delete_dynamic_casting_function() {
+    auto function = module.getFunction(".is_vtable_reachable");
+    function->eraseFromParent();
 }
 
 }

@@ -47,6 +47,9 @@ void ParserAssistant::finish_parsing()
     //  class definitions because class members may use the typeof operator on a
     //  function name or something similar
 
+    if (!used_dynamic_casting)
+        compiler->delete_dynamic_casting_function();
+
     for (auto& [constructor, args, owner_class, in_templated_class] : constructors_field_args) {
         if (in_templated_class) {
             compiler->name_resolver.templated_class_field_constructor_args[owner_class].push_back({ constructor, std::move(args) });
@@ -1217,6 +1220,7 @@ void ParserAssistant::create_dynamic_name() {
 
 void ParserAssistant::create_dynamic_cast() {
     push_node<DynamicCastNode>(pop_node(), pop_type());
+    used_dynamic_casting = true;
 }
 
 
