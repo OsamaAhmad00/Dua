@@ -57,14 +57,20 @@ void FileTestCasesRunner::run()
                 expected_output.push_back('\n');
             }
 
-            auto temp_name = uuid();
+            // TODO encode the name in a more collision-prone way
+            auto encoded_name = name;
+            for (auto& c : encoded_name) {
+                if (c == ' ') c = '_';
+                else if (!std::isalpha(c)) c = '$';
+            }
+
             // Windows will complain if the extension is not .exe,
             //  and it doesn't hurt when run on Unix-based systems.
-            auto exe_name = temp_name + +".exe";
+            auto exe_name = encoded_name + ".exe";
 
-            std::vector<std::string> n = {temp_name};
-            std::vector<std::string> c = {code};
-            std::vector<std::string> a = {"-o", exe_name};
+            std::vector<std::string> n = { encoded_name };
+            std::vector<std::string> c = { code };
+            std::vector<std::string> a = { "-o", exe_name };
 
             bool succeeded;
 
