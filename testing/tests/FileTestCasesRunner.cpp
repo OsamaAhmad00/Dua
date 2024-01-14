@@ -61,7 +61,7 @@ void FileTestCasesRunner::run()
             auto encoded_name = name;
             for (auto& c : encoded_name) {
                 if (c == ' ') c = '_';
-                else if (!std::isalpha(c)) c = '$';
+                else if (!std::isalpha(c)) c = '-';
             }
 
             // Windows will complain if the extension is not .exe,

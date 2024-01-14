@@ -209,7 +209,8 @@ void ModuleCompiler::create_dynamic_casting_function()
 
     builder.SetInsertPoint(test_null_bb);
 
-    auto current_vtable = builder.CreateLoad(vtable_llvm_type->getPointerTo(), current_vtable_ptr);
+    llvm::Value* current_vtable = builder.CreateLoad(vtable_llvm_type->getPointerTo(), current_vtable_ptr);
+    current_vtable = builder.CreatePointerCast(current_vtable, target_vtable->getType());
 
     auto is_null = builder.CreateICmpNE(current_vtable, llvm::Constant::getNullValue(current_vtable->getType()));
     builder.CreateCondBr(is_null, proceed_bb, end_bb);

@@ -14,4 +14,9 @@ dua::Value ReferenceType::default_value() const {
     return {};
 }
 
+bool ReferenceType::operator==(const Type &other) const {
+    auto ref = (&other)->as<ReferenceType>();
+    return ref && *ref->element_type == *element_type;
+}
+
 }
