@@ -1,4 +1,6 @@
 #include <AST/variable/ClassFieldDefinitionNode.hpp>
+#include "types/PointerType.hpp"
+#include "types/ReferenceType.hpp"
 
 
 namespace dua
@@ -9,6 +11,9 @@ llvm::Constant* ClassFieldDefinitionNode::get_constant(Value value, const Type* 
     value.set(value.as<llvm::Constant>());
     if (value.is_null())
         report_error("Can't initialize class fields with a non-constant expression (in " + field_name + ")");
+
+    if (auto ref = target_type->as<ReferenceType>(); ref != nullptr)
+        target_type = compiler->create_type<PointerType>(ref->get_element_type());
 
     auto casted = typing_system().cast_value(value, target_type, false).as<llvm::Constant>();
 
@@ -32,8 +37,13 @@ NoneValue ClassFieldDefinitionNode::eval()
     if (name_resolver().has_function(class_name + "." + name))
         report_error("The identifier " + full_name + " is defined as both a field and a method");
 
-    llvm::Constant* default_value = initializer ?
-                                    get_constant(init_value, type, full_name) : nullptr;
+    llvm::Constant* default_value = nullptr;
+    if (initializer != nullptr) {
+        auto as_ref = this->type->as<ReferenceType>();
+        if (as_ref != nullptr)
+            init_value.set(init_value.memory_location);
+        default_value = get_constant(init_value, type, full_name);
+    }
 
     std::vector<Value> default_args;
     if (!args.empty())
@@ -41,13 +51,17 @@ NoneValue ClassFieldDefinitionNode::eval()
         default_args.resize(args.size());
         for (size_t i = 0; i < args.size(); i++)
         {
-            auto constant = get_constant(
-                    args[i]->eval(),
-                    args[i]->get_type(),
-                    full_name
-            );
+            auto arg = args[i]->eval();
+            if (type->as<ReferenceType>() != nullptr)
+                arg.set(arg.memory_location);
 
-            default_args[i] = compiler->create_value(constant, args[i]->get_type());
+            arg.set(get_constant(
+                arg,
+                arg.type,
+                full_name
+            ));
+
+            default_args[i] = arg;
         }
     }
 

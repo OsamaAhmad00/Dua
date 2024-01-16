@@ -69,6 +69,10 @@ Value FunctionDefinitionNode::define_function()
         auto class_value = compiler->create_value(first_arg, class_type);
         for (size_t i = 0; i < fields.size(); i++) {
             auto f = class_type->get_field(class_value, i);
+            if (f.type->as<ReferenceType>() != nullptr) {
+                f.memory_location = f.get();
+                f.set(nullptr);
+            }
             name_resolver().symbol_table.insert(fields[i].name, f);
         }
     }
@@ -251,6 +255,7 @@ void FunctionDefinitionNode::construct_fields(const ClassType *class_type)
         auto& field = fields[i];
 
         if (field.name.empty()) continue;  // A placeholder
+
         bool found = false;
         auto type = class_type->get_field(field.name).type;
         auto ptr = class_type->get_field(self, field.name).get();
@@ -284,6 +289,27 @@ void FunctionDefinitionNode::construct_fields(const ClassType *class_type)
             args.insert(args.end(), field.default_args.begin(), field.default_args.end());
         }
 
+        if (field.type->as<ReferenceType>() != nullptr)
+        {
+            // TODO move this into the constructor call function
+            if (field.default_value != nullptr) {
+                // If there is a default value, then there are no args for sure (both together would result in a parsing error)
+                builder().CreateStore(field.default_value, instance.get());
+                return;
+            }
+
+            // For reference types, no constructor is called
+            if (args.size() != 1)
+                report_error("The reference field " + class_type->name + "::" + field.name + " expects exactly one referenced argument");
+
+            auto& arg = args.front();
+            if (arg.memory_location == nullptr)
+                report_error("The reference field " + class_type->name + "::" + field.name + " is assigned a non-lvalue argument");
+
+            builder().CreateStore(arg.memory_location, instance.get());
+            return;
+        }
+
         // For a field with a name x:
         //  Constructor initializer list -> constructor() : x(a, b, c)
         //  Default initializer list -> X x(1, 2, 3)
@@ -293,8 +319,7 @@ void FunctionDefinitionNode::construct_fields(const ClassType *class_type)
         //  initialize it with the default value if exists, or with the type
         //  default value.
         // If it's not assigned a value, then it has an empty arg list
-        bool has_empty_args = field.default_value == nullptr;
-        if (!has_empty_args && args.empty()) {
+        if (field.default_value != nullptr && args.empty()) {
             // If the argument list is empty, and there are no default args, just copy the default value
             auto arg = compiler->create_value(field.default_value, field.type);
             name_resolver().call_copy_constructor(instance, arg);

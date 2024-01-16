@@ -42,7 +42,14 @@ Value ClassFieldNode::eval()
     }
 
     auto class_type = get_class_from_ptr(instance);
-    return compiler->create_value(class_type->get_field(eval_instance(), name).get(), get_type());
+    auto result = class_type->get_field(eval_instance(), name);
+    if (result.type->as<ReferenceType>() != nullptr) {
+        result.memory_location = result.get();
+        result.set(nullptr);
+    }
+    result.type = compiler->create_type<PointerType>(result.type);
+
+    return result;
 }
 
 const Type* ClassFieldNode::get_type()

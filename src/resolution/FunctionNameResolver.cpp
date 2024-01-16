@@ -156,9 +156,10 @@ void FunctionNameResolver::cast_function_args(std::vector<Value> &args, const Fu
             args[i] = compiler->typing_system.cast_value(args[i], param_type);
         } else {
             if (auto ref = args[i].type->as<ReferenceType>(); ref != nullptr) {
-                // No references in variadic arguments
+                // References are passed as pointers, but there are no references in
+                //  variadic arguments, thus, load the value and pass it by value.
                 args[i].memory_location = args[i].get();
-                args[i].turn_to_memory_address();
+                args[i].set(nullptr);
             }
             if (args[i].get()->getType() == builder().getFloatTy()) {
                 // Variadic functions promote floats to doubles
@@ -268,10 +269,6 @@ void FunctionNameResolver::call_constructor(const Value &value, std::vector<Valu
 
     auto instance = compiler->create_value(value.get(), compiler->create_type<ReferenceType>(value.type));
     args.insert(args.begin(), instance);
-
-    for (auto arg : args) {
-        auto arg_copy = arg;
-    }
 
     call_function(name, std::move(args));
 }

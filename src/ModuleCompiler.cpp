@@ -30,10 +30,10 @@ ModuleCompiler::ModuleCompiler(const std::string &module_name, const std::string
 
     create_dynamic_casting_function();
 
+    create_dua_init_function();
+
     // Parse
     TranslationUnitNode* ast = parser.parse(code);
-
-    create_dua_init_function();
 
     // Generate LLVM IR
     ast->eval();

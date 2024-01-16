@@ -119,6 +119,10 @@ void ParserAssistant::finish_parsing()
     //  are visible to the class definitions.
     create_missing_methods();
 
+    // Evaluate all global variable definitions before defining functions and classes
+    for (auto node : global_variable_nodes)
+        node->eval();
+
     auto object_class = compiler->get_name_resolver().get_class("Object");
 
     for (auto& root : class_info["Object"].children)
@@ -201,8 +205,11 @@ void ParserAssistant::finish_parsing()
                 auto class_type = cls->llvm_type();
 
                 body.resize(concrete_fields.size());
-                for (size_t i = 0; i < body.size(); i++)
+                for (size_t i = 0; i < body.size(); i++) {
                     body[i] = concrete_fields[i].type->llvm_type();
+                    if (concrete_fields[i].type->as<ReferenceType>() != nullptr)
+                        body[i] = body[i]->getPointerTo();
+                }
 
                 class_type->setBody(std::move(body), is_packed);
 
@@ -251,8 +258,11 @@ void ParserAssistant::finish_parsing()
                 fields = std::move(all_fields);
 
                 body.resize(fields.size());
-                for (size_t i = 0; i < body.size(); i++)
+                for (size_t i = 0; i < body.size(); i++) {
                     body[i] = fields[i].type->llvm_type();
+                    if (fields[i].type->as<ReferenceType>() != nullptr)
+                        body[i] = body[i]->getPointerTo();
+                }
 
                 class_type->setBody(std::move(body), is_packed);
             }
@@ -366,6 +376,7 @@ void ParserAssistant::create_variable_declaration()
 
     if (is_in_global_scope()) {
         push_node<GlobalVariableDefinitionNode>(std::move(name), type, nullptr);
+        global_variable_nodes.push_back((GlobalVariableDefinitionNode*)nodes.back());
     } else {
         if (is_in_function) {
             push_node<LocalVariableDefinitionNode>(std::move(name), type, nullptr);

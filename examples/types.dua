@@ -82,3 +82,35 @@ int main()
     str message = "Hello, world!";
     printf(message);
 }
+
+
+// Case Address of a reference
+// Outputs "1"
+
+int* get_addr(int& i) {
+    return &i;
+}
+
+int main()
+{
+    int i;
+    int& ii = i;
+    int b = &i == get_addr(ii);
+    printf("%d", b);
+}
+
+
+// Case Passing a reference type by value
+// Outputs "3"
+
+void func(int i)
+{
+    printf("%d", i);
+}
+
+int main()
+{
+    int i = 3;
+    int& ii = i;
+    func(ii);
+}

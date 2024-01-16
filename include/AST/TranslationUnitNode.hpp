@@ -2,6 +2,7 @@
 
 #include <AST/ASTNode.hpp>
 #include <types/VoidType.hpp>
+#include "AST/variable/GlobalVariableDefinitionNode.hpp"
 
 namespace dua
 {
@@ -22,7 +23,8 @@ public:
     NoneValue eval() override
     {
         for (auto element : elements)
-            element->eval();
+            if (element->as<GlobalVariableDefinitionNode>() == nullptr)
+                element->eval();
         return none_value();
     }
 };

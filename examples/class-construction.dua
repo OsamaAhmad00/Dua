@@ -2,6 +2,114 @@ nomangle int printf(str message, ...);
 
 void print(int num) { printf("%d", num); }
 
+// Case Initializing a reference type in the constructor
+// Outputs "3"
+
+class X
+{
+    int& num;
+
+    constructor(int& num) : num(num) {}
+}
+
+int main()
+{
+    int n = 2;
+    X x(n);
+    n = 3;
+    printf("%d", x.num);
+}
+
+
+// Case Initializing a reference type in by assigning
+// Outputs "4"
+
+int i = 3;
+
+class X
+{
+    int& num = i;
+}
+
+int main()
+{
+    X x;
+    i = 4;
+    printf("%d", x.num);
+}
+
+
+// Case Initializing a reference type by default constructor args
+// Outputs "4"
+
+int i = 3;
+
+class X
+{
+    int& num(i);
+}
+
+int main()
+{
+    X x;
+    i = 4;
+    printf("%d", x.num);
+}
+
+
+// Case Passing a reference field around
+// Outputs "123"
+
+class X
+{
+    int& x;
+
+    constructor(int& x) : x(x) { }
+
+    void func() {
+        x = 2;
+    }
+}
+
+void func(int& value) {
+    value = 3;
+}
+
+int main()
+{
+    int num = 1;
+    print(num);
+    X x(num);
+    x.func();
+    print(num);
+    func(num);
+    print(num);
+}
+
+
+// Case Accessing a reference field through self
+// Outputs "4"
+
+class X
+{
+    int& num;
+
+    constructor(int& num) : num(num) { }
+
+    void func() {
+        self.num = 4;
+    }
+}
+
+int main()
+{
+    int n = 1;
+    X x(n);
+    x.func();
+    print(n);
+}
+
+
 // Case Constructor with parameters call
 // Outputs "a1b2c3Aa4b4c4Ba9b8c7CD"
 

@@ -167,6 +167,7 @@ class ParserAssistant
     std::set<DeferredTemplatedClassDefinition> templated_class_definitions;
     std::vector<DeferredFunctionDeclaration> function_definitions;
     std::vector<DeferredFieldArgs> constructors_field_args;
+    std::vector<GlobalVariableDefinitionNode*> global_variable_nodes;
 
     std::vector<FieldConstructorArgs> fields_args;
 

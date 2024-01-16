@@ -39,7 +39,10 @@ bool Value::is_null() const {
 llvm::Value* Value::get() const {
     if (loaded_value != nullptr) return loaded_value;
     if (memory_location == nullptr) return loaded_value;
-    loaded_value = typing_system->builder().CreateLoad(type->llvm_type(), memory_location);
+    auto llvm_type = type->llvm_type();
+    if (type->as<ReferenceType>() != nullptr)
+        llvm_type = llvm_type->getPointerTo();
+    loaded_value = typing_system->builder().CreateLoad(llvm_type, memory_location);
     return loaded_value;
 }
 

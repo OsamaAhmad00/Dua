@@ -13,7 +13,11 @@ Value AssignmentExpressionNode::eval()
     if (auto infix = name_resolver().call_infix_operator(lhs_res, rhs_res, "Assignment"); !infix.is_null())
         return infix;
 
-    if (lhs_res.type->as<ReferenceType>() != nullptr)
+    // FIXME Some places put the address of the reference variables in the loaded_value,
+    //  and some put it in the memory_location. To get around this, if the memory location
+    //  is nullptr, just move the loaded_value into the memory location. This may lead to
+    //  some nasty bugs, instead of detecting that memory_location is not set correctly.
+    if (lhs_res.type->as<ReferenceType>() != nullptr && lhs_res.memory_location == nullptr)
         lhs_res.memory_location = lhs_res.get();
 
     if (lhs_res.memory_location == nullptr)
