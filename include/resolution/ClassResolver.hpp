@@ -29,9 +29,6 @@ public:
 
     Value class_names_array;
 
-    // Each class has a unique id representing it
-    std::unordered_map<std::string, size_t> class_id;
-
     // Stores the address of the global instance of the vtable for each class
     std::unordered_map<std::string, VTable*> vtables;
 
