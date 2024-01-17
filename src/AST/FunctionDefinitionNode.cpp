@@ -69,9 +69,19 @@ Value FunctionDefinitionNode::define_function()
         auto class_value = compiler->create_value(first_arg, class_type);
         for (size_t i = 0; i < fields.size(); i++) {
             auto f = class_type->get_field(class_value, i);
-            if (f.type->as<ReferenceType>() != nullptr) {
+            if (auto ref = f.type->as<ReferenceType>(); ref != nullptr) {
+                // We turn the field into an unallocated reference here
+                // Reference fields has two indirections instead of one.
+                //  Normal references would just hold the address of the
+                //  referenced variable, and getting the value would be
+                //  a matter of dereferencing the address. For reference
+                //  fields, first, dereference the offset in the class to
+                //  get the pointer, then dereference the pointer to get
+                //  the value. This is why we store into the memory_location,
+                //  to get two dereferences instead of one
                 f.memory_location = f.get();
                 f.set(nullptr);
+                f.type = ref->get_unallocated();
             }
             name_resolver().symbol_table.insert(fields[i].name, f);
         }
@@ -104,10 +114,11 @@ Value FunctionDefinitionNode::define_function()
         const auto& arg = function->args().begin() + i;
         arg->setName(info.param_names[i]);
         auto type = info.type->param_types[i];
-        if (auto ref = dynamic_cast<const ReferenceType*>(type); ref != nullptr) {
+        if (auto ref = type->as<ReferenceType>(); ref != nullptr) {
             // If it's a reference type, the llvm type of the parameter will be a pointer type,
-            // which will hold the address of the variable, just like the result of an alloca.
-            auto value = compiler->create_value(arg, ref);
+            //  which will hold the address of the variable, just like the result of an alloca.
+            // We turn the reference into an unallocated reference here
+            auto value = compiler->create_value(arg, ref->get_unallocated());
             name_resolver().symbol_table.insert(info.param_names[i], value);
         } else {
             auto value = compiler->create_value(arg, type);
@@ -230,7 +241,7 @@ void FunctionDefinitionNode::construct_fields(const ClassType *class_type)
         auto self_as_parent = self;
         self_as_parent.type = compiler->create_type<PointerType>(class_type);
         self_as_parent = self_as_parent.cast_as(parent_ptr);
-        self_as_parent.type = compiler->create_type<ReferenceType>(parent);
+        self_as_parent.type = compiler->create_type<ReferenceType>(parent, true);
 
         for (auto& field_args : class_fields_args)
         {
@@ -294,6 +305,7 @@ void FunctionDefinitionNode::construct_fields(const ClassType *class_type)
             // TODO move this into the constructor call function
             if (field.default_value != nullptr) {
                 // If there is a default value, then there are no args for sure (both together would result in a parsing error)
+                // Store the address of the referenced variable (field.default_value) into the field
                 builder().CreateStore(field.default_value, instance.get());
                 return;
             }
@@ -306,6 +318,7 @@ void FunctionDefinitionNode::construct_fields(const ClassType *class_type)
             if (arg.memory_location == nullptr)
                 report_error("The reference field " + class_type->name + "::" + field.name + " is assigned a non-lvalue argument");
 
+            // Store the address of the referenced variable (arg.memory_location) into the field
             builder().CreateStore(arg.memory_location, instance.get());
             return;
         }

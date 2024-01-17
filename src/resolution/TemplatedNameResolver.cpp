@@ -384,8 +384,8 @@ void TemplatedNameResolver::register_templated_class(const std::string &name, co
             method_name =  full_name + "." + method_name;
 
         auto new_param_types = method->function_type->param_types;
-        // The first element is a placeholder
-        new_param_types[0] = compiler->create_type<ReferenceType>(cls);
+        // The first element is a placeholder, and we need to replace it with the instance type
+        new_param_types[0] = compiler->create_type<ReferenceType>(cls, true);
         auto ret = method->function_type->return_type;
         auto is_var_arg = method->function_type->is_var_arg;
 
@@ -505,8 +505,8 @@ const ClassType* TemplatedNameResolver::define_templated_class(const std::string
             method->name =  full_name + "." + method->name;
 
         auto new_param_types = method->function_type->param_types;
-        // The first element is a placeholder
-        new_param_types[0] =compiler->create_type<ReferenceType>(cls);
+        // The first element is a placeholder, and we need to replace it with the self type
+        new_param_types[0] =compiler->create_type<ReferenceType>(cls, true);
         auto ret = method->function_type->return_type;
         auto is_var_arg = method->function_type->is_var_arg;
 

@@ -14,24 +14,13 @@ Value FunctionType::default_value() const {
     return compiler->create_value(llvm::Constant::getNullValue(llvm_type()), this);
 }
 
-llvm::Type* get_llvm_representation(const Type* type)
-{
-    // Reference types are represented as pointers, and the address of the
-    //  referenced variable is passed. This won't create collision between
-    //  a function that accepts a pointer, and a function that accepts a
-    //  reference, because the dua::Type of the two parameters is still different.
-    if (auto ref = type->as<ReferenceType>(); ref != nullptr)
-        return ref->get_element_type()->llvm_type()->getPointerTo();
-    return type->llvm_type();
-}
-
 llvm::FunctionType* FunctionType::llvm_type() const
 {
     if (llvm_type_cache != nullptr) return llvm_type_cache;
-    llvm::Type* ret = get_llvm_representation(return_type);
+    llvm::Type* ret = return_type->llvm_type();
     std::vector<llvm::Type*> params(param_types.size());
     for (size_t i = 0; i < param_types.size(); i++) {
-        params[i] = get_llvm_representation(param_types[i]);
+        params[i] = param_types[i]->llvm_type();
     }
     return llvm::FunctionType::get(ret, std::move(params), is_var_arg);
 }

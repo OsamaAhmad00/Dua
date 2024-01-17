@@ -207,8 +207,6 @@ void ParserAssistant::finish_parsing()
                 body.resize(concrete_fields.size());
                 for (size_t i = 0; i < body.size(); i++) {
                     body[i] = concrete_fields[i].type->llvm_type();
-                    if (concrete_fields[i].type->as<ReferenceType>() != nullptr)
-                        body[i] = body[i]->getPointerTo();
                 }
 
                 class_type->setBody(std::move(body), is_packed);
@@ -260,8 +258,6 @@ void ParserAssistant::finish_parsing()
                 body.resize(fields.size());
                 for (size_t i = 0; i < body.size(); i++) {
                     body[i] = fields[i].type->llvm_type();
-                    if (fields[i].type->as<ReferenceType>() != nullptr)
-                        body[i] = body[i]->getPointerTo();
                 }
 
                 class_type->setBody(std::move(body), is_packed);
@@ -319,7 +315,7 @@ void ParserAssistant::create_empty_method_if_doesnt_exist(const ClassType* cls, 
 
     auto type = compiler->create_type<FunctionType>(
         compiler->create_type<VoidType>(),
-        std::vector<const Type*>{ compiler->create_type<ReferenceType>(cls) },
+        std::vector<const Type*>{ compiler->create_type<ReferenceType>(cls, true) },
         false
     );
 
@@ -436,7 +432,7 @@ void ParserAssistant::create_function_declaration()
             name = current_class + '.' + name;
         // This i64 type is just a placeholder
         auto self_type = in_templated_class ? (const Type*)compiler->create_type<I64Type>()
-                : compiler->create_type<ReferenceType>(compiler->name_resolver.classes[current_class]);
+                : compiler->create_type<ReferenceType>(compiler->name_resolver.classes[current_class], true);
         param_types.insert(param_types.begin(), self_type);
         param_names.insert(param_names.begin(), "self");
     }
@@ -1135,7 +1131,7 @@ void ParserAssistant::create_operator(const std::string& position_name)
 
     if (in_class()) {
         auto self_type = in_templated_class ? (const Type*)compiler->create_type<I64Type>() :
-                    compiler->create_type<ReferenceType>(compiler->create_type<IdentifierType>(current_class));
+                    compiler->create_type<ReferenceType>(compiler->create_type<IdentifierType>(current_class), true);
         param_types.insert(
             param_types.begin(),
             self_type
@@ -1168,7 +1164,9 @@ void ParserAssistant::set_current_function()
 }
 
 void ParserAssistant::create_reference_type() {
-    push_type<ReferenceType>(pop_type());
+    // Reference types start as allocated, and if the allocation is
+    //  going to be optimized away, it'll be unallocated
+    push_type<ReferenceType>(pop_type(), true);
 }
 
 void ParserAssistant::create_type_alias() {

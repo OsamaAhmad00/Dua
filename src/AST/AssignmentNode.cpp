@@ -1,6 +1,9 @@
 #include <AST/AssignmentExpressionNode.hpp>
+#include <AST/lvalue/LoadedLValueNode.hpp>
 #include <utils/ErrorReporting.hpp>
 #include "types/PointerType.hpp"
+#include "types/ReferenceType.hpp"
+#include "AST/IndexingNode.hpp"
 
 namespace dua
 {
@@ -13,12 +16,40 @@ Value AssignmentExpressionNode::eval()
     if (auto infix = name_resolver().call_infix_operator(lhs_res, rhs_res, "Assignment"); !infix.is_null())
         return infix;
 
-    // FIXME Some places put the address of the reference variables in the loaded_value,
-    //  and some put it in the memory_location. To get around this, if the memory location
-    //  is nullptr, just move the loaded_value into the memory location. This may lead to
-    //  some nasty bugs, instead of detecting that memory_location is not set correctly.
-    if (lhs_res.type->as<ReferenceType>() != nullptr && lhs_res.memory_location == nullptr)
+    // Here, we're assigning an expression to an expression.
+    // Since there is no infix operator defined to these two
+    //  types, the lhs must be a LoadedLValueNode, or an
+    //  IndexingNode, and we should assign to the memory_location of it.
+    auto loaded = lhs->as<LoadedLValueNode>();
+    auto indexing = lhs->as<IndexingNode>();
+    assert(loaded || indexing);
+
+    if (indexing != nullptr && lhs_res.memory_location == nullptr)
+    {
+        // If the lhs is an IndexingNode, and its value is not loaded,
+        //  it should be turned into a loaded value first (put the result
+        //  into the memory location, and turn the type into its element type)
+        const Type* element_type = nullptr;
+        if (auto ref = lhs_res.type->as<ReferenceType>(); ref != nullptr)
+            element_type = ref->get_element_type();
+        else if (auto ptr = lhs_res.type->as<ReferenceType>(); ptr != nullptr)
+            element_type = ptr->get_element_type();
+        else
+            report_error("There is no assignment operator defined for the types "
+                         + lhs_res.type->to_string() + " and " + rhs_res.type->to_string());
+
         lhs_res.memory_location = lhs_res.get();
+        lhs_res.set(nullptr);
+        lhs_res.type = element_type;
+    }
+
+    if (auto ref = lhs_res.type->as<ReferenceType>(); ref != nullptr) {
+        // When assigning to an allocated type, you need to load the pointer first
+        if (ref->is_allocated()) {
+            lhs_res.memory_location = lhs_res.get();
+            lhs_res.type = ref->get_unallocated();
+        }
+    }
 
     if (lhs_res.memory_location == nullptr)
         report_error("There is no assignment operator defined for the types "

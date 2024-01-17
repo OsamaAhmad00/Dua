@@ -129,7 +129,7 @@ void ModuleCompiler::create_the_object_class()
 {
     name_resolver.class_id["Object"] = 0;
 
-    std::vector<const Type*> params = { create_type<ReferenceType>(create_type<ClassType>("Object")) };
+    std::vector<const Type*> params = { create_type<ReferenceType>(create_type<ClassType>("Object"), true) };
     auto info = FunctionInfo {
             create_type<FunctionType>(create_type<VoidType>(), params),
             {}

@@ -31,9 +31,25 @@ Value VariableNode::eval()
         return func;
     }
 
-    if (name_resolver().symbol_table.contains(name)) {
+    if (name_resolver().symbol_table.contains(name))
+    {
         // This searches locally first, then globally if not found.
-        return compiler->create_value(name_resolver().symbol_table.get(name).get(), get_type());
+        // FIXME Symbol tables store the address in the loaded_value
+        //  field, which is confusing. Store it in the memory_location
+        //  field instead.
+        auto result = name_resolver().symbol_table.get(name);
+        if (auto ref = result.type->as<ReferenceType>(); ref != nullptr) {
+            // If it's unallocated, then the address is stored in the loaded_value, and
+            //  we're fine. If it's allocated, then we need to load the allocated variable
+            //  first to get the desired address.
+            if (ref->is_allocated()) {
+                // This is an exception. LValue nodes should return assignable addresses.
+                result.memory_location = result.get();
+                result.memory_location = nullptr;
+            }
+        }
+        result.type = get_type();
+        return result;
     }
 
     // Not found. Has to be a function reference
@@ -64,7 +80,7 @@ const Type* VariableNode::get_type()
         return set_type(compiler->create_type<PointerType>(compiler->get_name_resolver().get_templated_function(name, template_args).type));
     }
 
-    const Type* t;
+    const Type* t = nullptr;
 
     if (name_resolver().symbol_table.contains(name)) {
         t = name_resolver().symbol_table.get(name).type;
@@ -75,11 +91,21 @@ const Type* VariableNode::get_type()
         report_error("The identifier " + name + " is not defined");
     }
 
-    return set_type(compiler->create_type<PointerType>(t));
+    // References already point to some value. We just need to make
+    //  sure that the returned reference type is an allocated reference.
+    if (auto ref = t->as<ReferenceType>(); ref != nullptr)
+        t = ref->get_allocated();
+    else
+        t = compiler->create_type<PointerType>(t);
+
+    return set_type(t);
 }
 
 const Type *VariableNode::get_element_type()
 {
+    auto type = get_type();
+    if (auto ref = type->as<ReferenceType>(); ref != nullptr)
+        return ref->get_element_type();
     return ((PointerType*)get_type())->get_element_type();
 }
 

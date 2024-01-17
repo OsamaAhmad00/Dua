@@ -1,5 +1,6 @@
 #include "AST/lvalue/ClassFieldNode.hpp"
 #include "types/PointerType.hpp"
+#include "types/ReferenceType.hpp"
 
 namespace dua
 {
@@ -15,10 +16,16 @@ static const ClassType* get_class(const Type* type)
 const static ClassType* get_class_from_ptr(ASTNode* node)
 {
     auto type = node->get_type();
-    auto ptr = dynamic_cast<const PointerType*>(type);
-    if (ptr == nullptr)
+
+    const Type* element_type = nullptr;
+    if (auto ptr = type->as<PointerType>(); ptr != nullptr)
+        element_type = ptr->get_element_type();
+    else if (auto ref = type->as<ReferenceType>(); ref != nullptr)
+        element_type = ref->get_element_type();
+    else
         report_internal_error("Field access on a non-pointer (" + type->to_string() + ") type");
-    return get_class(ptr->get_element_type());
+
+    return get_class(element_type);
 }
 
 Value ClassFieldNode::eval()
@@ -43,11 +50,23 @@ Value ClassFieldNode::eval()
 
     auto class_type = get_class_from_ptr(instance);
     auto result = class_type->get_field(eval_instance(), name);
-    if (result.type->as<ReferenceType>() != nullptr) {
+    if (auto ref = result.type->as<ReferenceType>(); ref != nullptr) {
+        // Reference fields has two indirections instead of one.
+        //  Normal references would just hold the address of the
+        //  referenced variable, and getting the value would be
+        //  a matter of dereferencing the address. For reference
+        //  fields, first, dereference the offset in the class to
+        //  get the pointer, then dereference the pointer to get
+        //  the value. This is why we store into the memory_location,
+        //  to get two dereferences instead of one
         result.memory_location = result.get();
         result.set(nullptr);
+        // The returned reference is allocated, since after the value is
+        //  loaded, it'll store the pointer, not the value itself
+        result.type = ref->get_allocated();
+    } else {
+        result.type = compiler->create_type<PointerType>(result.type);
     }
-    result.type = compiler->create_type<PointerType>(result.type);
 
     return result;
 }
@@ -74,12 +93,16 @@ const Type* ClassFieldNode::get_type()
         t = class_type->get_field(name).type;
     }
 
-    return set_type(compiler->create_type<PointerType>(t));
+    // References already point to some value
+    if (t->as<ReferenceType>() == nullptr)
+        t = compiler->create_type<PointerType>(t);
+
+    return set_type(t);
 }
 
 Value ClassFieldNode::eval_instance() const
 {
-    if (instance_eval.get() != nullptr) return instance_eval;
+    if (!instance_eval.is_null()) return instance_eval;
     return instance_eval = instance->eval();
 }
 

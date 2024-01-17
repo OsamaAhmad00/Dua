@@ -1,5 +1,6 @@
 #include <Value.hpp>
 #include <TypingSystem.hpp>
+#include <types/ReferenceType.hpp>
 
 namespace dua
 {
@@ -36,23 +37,19 @@ bool Value::is_null() const {
     return !(loaded_value || memory_location);
 }
 
-llvm::Value* Value::get() const {
-    if (loaded_value != nullptr) return loaded_value;
-    if (memory_location == nullptr) return loaded_value;
-    auto llvm_type = type->llvm_type();
-    if (type->as<ReferenceType>() != nullptr)
-        llvm_type = llvm_type->getPointerTo();
-    loaded_value = typing_system->builder().CreateLoad(llvm_type, memory_location);
+llvm::Value* Value::get() const
+{
+    if (loaded_value == nullptr) {
+        if (memory_location == nullptr)
+            report_internal_error("memory_location is null!");
+        auto llvm_type = type->llvm_type();
+        loaded_value = typing_system->builder().CreateLoad(llvm_type, memory_location);
+    }
     return loaded_value;
 }
 
 void Value::set(llvm::Value *value) {
     loaded_value = value;
-}
-
-void Value::turn_to_memory_address() {
-    memory_location = loaded_value;
-    loaded_value = nullptr;
 }
 
 }

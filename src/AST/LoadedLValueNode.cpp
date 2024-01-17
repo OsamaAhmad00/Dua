@@ -1,6 +1,7 @@
 #include <AST/lvalue/LoadedLValueNode.hpp>
 #include <types/PointerType.hpp>
 #include "types/ArrayType.hpp"
+#include "types/ReferenceType.hpp"
 
 namespace dua
 {
@@ -23,8 +24,11 @@ const Type *LoadedLValueNode::get_type()
 
     if (type != nullptr) return type;
 
+    // A sanity check
     auto result = lvalue->get_type();
     const Type* ptr = result->as<PointerType>();
+    if (ptr == nullptr)
+        ptr = result->as<ReferenceType>();
     if (ptr == nullptr) {
         ptr = result->as<ArrayType>();
         assert(ptr != nullptr);

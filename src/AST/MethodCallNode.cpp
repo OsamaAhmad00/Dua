@@ -33,8 +33,12 @@ Value MethodCallNode::eval()
     process();
 
     auto instance = instance_node->eval();
+    auto instance_type = instance.type->get_concrete_type();
+    const Type* ptr_type = instance_type->as<PointerType>();
+    if (ptr_type == nullptr)
+        ptr_type = instance_type->as<ReferenceType>();
 
-    if (instance.type->get_concrete_type()->as<PointerType>() == nullptr) {
+    if (ptr_type == nullptr) {
         if (instance_node->as<LoadedLValueNode>() != nullptr) {
             report_error("Can't use a dereferenced " + instance.type->to_string() +
                          " in method calls. Are you using -> instead of . when calling the method " + name + "?");
@@ -49,11 +53,7 @@ Value MethodCallNode::eval()
         return call_reference(class_type->get_field(instance, name), eval_args());
 
     auto args = eval_args();
-    // Reference types act as the same type as the llvm type they're referencing.
-    // This is a quick hack, in which the instance is loaded as an llvm pointer
-    //  first, then we change its type to be a reference type
-    args[0].get();
-    args[0].type = compiler->create_type<ReferenceType>(class_type);
+    args[0].type = compiler->create_type<ReferenceType>(class_type, true);
 
     if (is_templated)
     {
@@ -111,7 +111,7 @@ std::vector<const Type*> MethodCallNode::get_arg_types()
 
     auto ptr_type = arg_types[0]->as<PointerType>();
     assert(ptr_type != nullptr);
-    arg_types[0] = compiler->create_type<ReferenceType>(ptr_type->get_element_type());
+    arg_types[0] = compiler->create_type<ReferenceType>(ptr_type->get_element_type(), true);
 
     return arg_types;
 }
@@ -120,11 +120,11 @@ const ClassType *MethodCallNode::get_instance_type()
 {
     auto instance_type = instance_node->get_type();
 
-    const Type* element_type;
+    const Type* element_type = nullptr;
     if (auto ptr_type = instance_type->as<PointerType>(); ptr_type != nullptr)
-        element_type= ptr_type->get_element_type();
+        element_type = ptr_type->get_element_type();
     else if (auto ref_type = instance_type->as<ReferenceType>(); ref_type != nullptr)
-        element_type= ref_type->get_element_type();
+        element_type = ref_type->get_element_type();
     else
         report_error(instance_type->to_string() + " is not an lvalue type, and has no method with the name " + name);
 

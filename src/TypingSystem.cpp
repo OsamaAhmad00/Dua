@@ -13,23 +13,73 @@ namespace dua
 
 TypingSystem::TypingSystem(ModuleCompiler *compiler) : compiler(compiler) {}
 
-static llvm::Value* _cast_value(const Value& value, const Type* type, bool panic_on_failure, ModuleCompiler* compiler)
+static Value _cast_value(const Value& value, const Type* type, bool panic_on_failure, ModuleCompiler* compiler)
 {
     auto& builder = *compiler->get_builder();
     auto& module = *compiler->get_module();
 
     llvm::Type* source_type = value.get()->getType();
     llvm::Type* target_type = type->llvm_type();
-    llvm::Value* v = value.get();
+
+    Value result = value;
+    result.type = type;
 
     // If the types are equal, return the value as it is
+    // One reason to compare by llvm types is that reference
+    //  types can be allocated or unallocated, both compare
+    //  as equal, but have different representations.
     if (source_type == target_type) {
-        return v;
+        return result;
+    }
+
+    auto source_ref = value.type->as<ReferenceType>();
+    auto target_ref = type->as<ReferenceType>();
+
+    // Here, the source and the target can both still be a reference to
+    //  the same type, one is allocated and the other is not. They can
+    //  be references to different types as well
+    // Casting result to a reference is always an allocated reference,
+    //  even if the target is unallocated reference, since the creation
+    //  of unallocated references has to deal with symbol tables
+    if (source_ref)
+    {
+        if (target_ref) {
+            // If the target is reference as well, just return
+            //  the pointer. When loaded, will be loaded with
+            //  the appropriate type
+            if (!source_ref->is_allocated()) {
+                assert(result.memory_location != nullptr);
+                result.set(result.memory_location);
+                result.memory_location = nullptr;
+            }
+            return result;
+        } else {
+            // If the target is unallocated, load the address
+            if (source_ref->is_allocated())
+                result.memory_location = value.get();
+            result.type = source_ref->get_element_type();
+            return _cast_value(result, type, panic_on_failure, compiler);
+        }
+    }
+    else
+    {
+        if (target_ref) {
+            // If the source is a value type, and the target is a reference
+            //  type, just store the address, and when loading, load with the
+            //  appropriate type.
+            assert(result.memory_location != nullptr);
+            result.set(result.memory_location);
+            result.memory_location = nullptr;
+            return result;
+        }
+        // else, the below code will handle it
     }
 
     llvm::DataLayout dl(&module);
     unsigned int source_width = dl.getTypeSizeInBits(source_type);
     unsigned int target_width = dl.getTypeSizeInBits(target_type);
+
+    llvm::Value* v = value.get();
 
     // If the types are both integer types, use the Trunc or ZExt or SExt instructions
     if (source_type->isIntegerTy() && target_type->isIntegerTy())
@@ -39,52 +89,47 @@ static llvm::Value* _cast_value(const Value& value, const Type* type, bool panic
             //  converting between an i8 and i1, which both give a size
             //  of 1 byte.
             // Truncate the value to fit the smaller type
-            return builder.CreateTrunc(v, target_type);
+            result.set(builder.CreateTrunc(v, target_type));
         } else if (source_width < target_width) {
             // Extend the value to fit the larger type
             // A 1 bit number can only store 0 or 1, no negative numbers here.
             // If sign-extended however, the 1 (considered the sign) will propagate,
             // resulting in a binary representation of a bunch of 1s.
             if (source_type == builder.getInt1Ty())
-                return builder.CreateZExt(v, target_type);
-            return builder.CreateSExt(v, target_type);
+                result.set(builder.CreateZExt(v, target_type));
+            else
+                result.set(builder.CreateSExt(v, target_type));
         }
+        return result;
     }
 
-    auto source_ref = value.type->as<ReferenceType>();
-    auto target_ref = type->as<ReferenceType>();
-
-    if (source_ref) {
-        // Cast a reference to a non-reference type
-        Value non_reference = value;
-        non_reference.turn_to_memory_address();
-        non_reference.type = source_ref->get_element_type();
-        auto non_ref_target_type = target_ref ? target_ref->get_element_type() : type;
-        return _cast_value(non_reference, non_ref_target_type, panic_on_failure, compiler);
-    } else if (target_ref) {
-        // Cast a non-reference to a reference
-        return _cast_value(value, target_ref->get_element_type(), panic_on_failure, compiler);
+    if (source_type->isPointerTy() && target_type->isPointerTy()) {
+        result.set(builder.CreateBitCast(v, target_type));
+        return result;
     }
 
-    if (source_type->isPointerTy() && target_type->isPointerTy())
-        return builder.CreateBitCast(v, target_type);
+    if (source_type->isPointerTy() && target_type->isIntegerTy()) {
+        result.set(builder.CreatePtrToInt(v, target_type));
+        return result;
+    }
 
-    if (source_type->isPointerTy() && target_type->isIntegerTy())
-        return builder.CreatePtrToInt(v, target_type);
-
-    if (source_type->isIntegerTy() && target_type->isPointerTy())
-        return builder.CreateIntToPtr(v, target_type);
+    if (source_type->isIntegerTy() && target_type->isPointerTy()) {
+        result.set(builder.CreateIntToPtr(v, target_type));
+        return result;
+    }
 
     if (source_type->isFloatingPointTy() && target_type->isFloatingPointTy()) {
         if (source_width > target_width) {
             // Truncate the value to fit the smaller type
-            return builder.CreateFPTrunc(v, target_type);
+            result.set(builder.CreateFPTrunc(v, target_type));
+            return result;
         } else if (source_width < target_width) {
             // Extend the value to fit the larger type
-            return builder.CreateFPExt(v, target_type);
+            result.set(builder.CreateFPExt(v, target_type));
+            return result;
         } else {
             // The types have the same bit width, no need to cast
-            return v;
+            return result;
         }
     }
 
@@ -92,12 +137,16 @@ static llvm::Value* _cast_value(const Value& value, const Type* type, bool panic
         // A 1 bit number can only store 0 or 1, no negative numbers here.
         // If considered to be signed however, the 1 will be considered a sign.
         if (source_type == builder.getInt1Ty())
-            return builder.CreateUIToFP(v, target_type);
-        return builder.CreateSIToFP(v, target_type);
+            result.set(builder.CreateUIToFP(v, target_type));
+        else
+            result.set(builder.CreateSIToFP(v, target_type));
+        return result;
     }
 
-    if (source_type->isFloatingPointTy() && target_type->isIntegerTy())
-        return builder.CreateFPToSI(v, target_type);
+    if (source_type->isFloatingPointTy() && target_type->isIntegerTy()) {
+        result.set(builder.CreateFPToSI(v, target_type));
+        return result;
+    }
 
     llvm::outs() << "Source type: ";
     source_type->print(llvm::outs());
@@ -105,7 +154,7 @@ static llvm::Value* _cast_value(const Value& value, const Type* type, bool panic
     target_type->print(llvm::outs());
     llvm::outs() << "\n";
     report_internal_error("Casting couldn't be done");
-    return nullptr;  // Unreachable
+    return result;  // Unreachable
 }
 
 Value TypingSystem::cast_value(const dua::Value &value, const Type* target_type, bool panic_on_failure) const
@@ -116,8 +165,11 @@ Value TypingSystem::cast_value(const dua::Value &value, const Type* target_type,
         return {};
     }
 
-    auto result = _cast_value(value, target_type, panic_on_failure, compiler);
-    return compiler->create_value(result, target_type, value.memory_location);
+    // Reference cast should be allocated
+    if (auto ref = target_type->as<ReferenceType>(); ref != nullptr)
+        target_type = ref->get_allocated();
+
+    return _cast_value(value, target_type, panic_on_failure, compiler);
 }
 
 const Type* TypingSystem::get_winning_type(const Type* lhs, const Type* rhs, bool panic_on_failure, const std::string& message) const

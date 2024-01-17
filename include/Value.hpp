@@ -24,8 +24,6 @@ public:
     Value(TypingSystem* typing_system, const Type* type, llvm::Value* memory_location);
     Value();
 
-    void turn_to_memory_address();
-
     // Delegates to TypingSystem
     [[nodiscard]] Value cast_as(const Type* type, bool panic_on_failure=true) const;
     [[nodiscard]] Value cast_as_bool(bool panic_on_failure=true) const;

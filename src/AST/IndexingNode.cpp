@@ -58,6 +58,10 @@ const Type *IndexingNode::get_type()
         result = pointer_type->get_element_type();
     }
 
+    if (auto reference_type = element_type->as<PointerType>(); reference_type != nullptr) {
+        result = reference_type->get_element_type();
+    }
+
     if (result == nullptr) {
         if (auto array_type = element_type->as<ArrayType>(); array_type != nullptr)
             result = array_type->get_element_type();

@@ -12,9 +12,6 @@ llvm::Constant* ClassFieldDefinitionNode::get_constant(Value value, const Type* 
     if (value.is_null())
         report_error("Can't initialize class fields with a non-constant expression (in " + field_name + ")");
 
-    if (auto ref = target_type->as<ReferenceType>(); ref != nullptr)
-        target_type = compiler->create_type<PointerType>(ref->get_element_type());
-
     auto casted = typing_system().cast_value(value, target_type, false).as<llvm::Constant>();
 
     if (casted == nullptr)
@@ -40,8 +37,10 @@ NoneValue ClassFieldDefinitionNode::eval()
     llvm::Constant* default_value = nullptr;
     if (initializer != nullptr) {
         auto as_ref = this->type->as<ReferenceType>();
-        if (as_ref != nullptr)
+        if (as_ref != nullptr) {
+            assert(init_value.memory_location != nullptr);
             init_value.set(init_value.memory_location);
+        }
         default_value = get_constant(init_value, type, full_name);
     }
 
@@ -52,8 +51,10 @@ NoneValue ClassFieldDefinitionNode::eval()
         for (size_t i = 0; i < args.size(); i++)
         {
             auto arg = args[i]->eval();
-            if (type->as<ReferenceType>() != nullptr)
+            if (type->as<ReferenceType>() != nullptr) {
+                assert(arg.memory_location != nullptr);
                 arg.set(arg.memory_location);
+            }
 
             arg.set(get_constant(
                 arg,

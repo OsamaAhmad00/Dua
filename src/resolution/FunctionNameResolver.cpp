@@ -137,30 +137,64 @@ bool FunctionNameResolver::has_function(const std::string &name, bool try_as_met
 
 void FunctionNameResolver::cast_function_args(std::vector<Value> &args, const FunctionType* type) const
 {
-    for (size_t i = args.size() - 1; i != (size_t)-1; i--) {
+    for (size_t i = args.size() - 1; i != (size_t)-1; i--)
+    {
+        auto arg_type = args[i].type;
+        auto arg_ref = arg_type->as<ReferenceType>();
+
         if (i < type->param_types.size())
         {
             // Only try to cast non-var-arg parameters
-            auto param_type = type->param_types[i];
-            if (auto ref = dynamic_cast<const ReferenceType*>(param_type); ref != nullptr) {
-                // If is a reference type, replace it with a pointer type.
-                param_type = compiler->create_type<PointerType>(ref->get_element_type());
-                if (auto arg_ref = args[i].type->as<ReferenceType>(); arg_ref != nullptr)
-                    args[i].memory_location = args[i].get();
-                if (args[i].memory_location == nullptr)
-                    report_error("Can't pass a non-lvalue expression (with " + args[i].type->to_string() + " type) as a reference");
 
-                // Cast the memory location instead of the actual loaded value
-                args[i] = compiler->create_value(args[i].memory_location, param_type);
+            auto param_type = type->param_types[i];
+            auto param_ref = param_type->as<ReferenceType>();
+
+            if (param_ref != nullptr)
+            {
+                if (arg_ref != nullptr) {
+                    if (!arg_ref->is_allocated()) {
+                        // If the arg is an unallocated reference, turn it into an
+                        //  allocated reference, since it's leaving the local scope
+                        assert(args[i].memory_location != nullptr);
+                        args[i].set(args[i].memory_location);
+                        args[i].type = arg_ref->get_allocated();
+                    }
+                } else {
+                    // Turn the argument into reference by passing its memory_location instead
+                    if (args[i].memory_location == nullptr)
+                        report_error("Can't pass a non-lvalue expression (with " + arg_type->to_string() + " type) as a reference");
+                    args[i].set(args[i].memory_location);
+                    args[i].type = compiler->create_type<ReferenceType>(arg_type, true);
+                    args[i].memory_location = nullptr;
+                }
+
             }
+            else
+            {
+                // Allocated references are already loaded.
+                // If the parameter is not a reference type, and the
+                //  argument is a reference, set the pointer as the
+                //  memory_location
+                if (arg_ref && arg_ref->is_allocated()) {
+                    args[i].memory_location = args[i].get();
+                    args[i].set(nullptr);
+                    args[i].type = arg_ref->get_element_type();
+                }
+            }
+
             args[i] = compiler->typing_system.cast_value(args[i], param_type);
-        } else {
-            if (auto ref = args[i].type->as<ReferenceType>(); ref != nullptr) {
+        }
+        else
+        {
+            if (arg_ref && arg_ref->is_allocated()) {
+                // Allocated references are already loaded.
                 // References are passed as pointers, but there are no references in
                 //  variadic arguments, thus, load the value and pass it by value.
                 args[i].memory_location = args[i].get();
                 args[i].set(nullptr);
+                args[i].type = arg_ref->get_contained_type();
             }
+
             if (args[i].get()->getType() == builder().getFloatTy()) {
                 // Variadic functions promote floats to doubles
                 auto double_type = compiler->create_type<F64Type>();
@@ -267,7 +301,7 @@ void FunctionNameResolver::call_constructor(const Value &value, std::vector<Valu
     if (!has_function(name))
         report_internal_error("A constructor is not defined for class " + class_type->name);
 
-    auto instance = compiler->create_value(value.get(), compiler->create_type<ReferenceType>(value.type));
+    auto instance = compiler->create_value(value.get(), compiler->create_type<ReferenceType>(value.type, true));
     args.insert(args.begin(), instance);
 
     call_function(name, std::move(args));
@@ -294,7 +328,7 @@ void FunctionNameResolver::call_copy_constructor(const Value &value, const Value
 
         std::string name = class_type->name + ".=constructor";
         if (has_function(name)) {
-            auto instance = compiler->create_value(value.get(), compiler->create_type<ReferenceType>(value.type));
+            auto instance = compiler->create_value(value.get(), compiler->create_type<ReferenceType>(value.type, true));
             call_function(name, { instance, arg });
             return;
         }
@@ -328,7 +362,7 @@ void FunctionNameResolver::call_destructor(const Value& value)
         call_destructor(f);
     });
 
-    auto instance = compiler->create_value(value.get(), compiler->create_type<ReferenceType>(value.type));
+    auto instance = compiler->create_value(value.get(), compiler->create_type<ReferenceType>(value.type, true));
     auto full_name = get_function_full_name(name, { instance.type });
     auto vtable_ptr = class_type->get_field(instance, ".vtable_ptr");
     auto vtable_instance = compiler->builder.CreateLoad(compiler->name_resolver.get_vtable_type(class_type->name)->llvm_type(), vtable_ptr.get());
