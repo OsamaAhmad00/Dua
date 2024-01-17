@@ -47,7 +47,7 @@ void TemplatedNameResolver::add_templated_function(FunctionDefinitionNode* node,
     functions.push_back({node, std::move(template_params), std::move(info), cls, in_templated_class });
 }
 
-Value TemplatedNameResolver::get_templated_function(const std::string& name, std::vector<const Type *> &template_args, const std::vector<const Type *> &arg_types, bool use_arg_types)
+Value TemplatedNameResolver::get_templated_function(const std::string& name, std::vector<const Type *> &template_args, const std::vector<const Type *> &arg_types, bool use_arg_types, bool panic_on_error)
 {
     // Templated functions are named as follows:
     //  original_name.template_param_count.param_types_separated_by_dots
@@ -57,9 +57,11 @@ Value TemplatedNameResolver::get_templated_function(const std::string& name, std
 
     auto it = templated_functions.find(get_templated_function_key(name, template_args.size()));
 
-    if (it == templated_functions.end())
+    if (it == templated_functions.end()) {
+        if (!panic_on_error) return {};
         report_error("The templated function " + name + " with "
                      + std::to_string(template_args.size()) + " template parameters is not defined");
+    }
 
     // Finding the best overload
 
@@ -84,8 +86,11 @@ Value TemplatedNameResolver::get_templated_function(const std::string& name, std
 
     long long idx = 0;
     if (!use_arg_types) {
-        if (functions.size() > 1)
-            report_error("Can't infer the correct overload for the templated function " + name + " without the knowledge of the argument types");
+        if (functions.size() > 1) {
+            if (!panic_on_error) return {};
+            report_error("Can't infer the correct overload for the templated function " + name +
+                         " without the knowledge of the argument types");
+        }
     } else {
         idx = get_winner_templated_function(name, functions, template_args, arg_types);
     }
@@ -165,8 +170,8 @@ Value TemplatedNameResolver::get_templated_function(const std::string& name, std
     return compiler->create_value(func, type);
 }
 
-Value TemplatedNameResolver::get_templated_function(const std::string& name, std::vector<const Type *> &template_args) {
-    return get_templated_function(std::move(name), template_args, std::vector<const Type*>{}, false);
+Value TemplatedNameResolver::get_templated_function(const std::string& name, std::vector<const Type *> &template_args, bool panic_on_error) {
+    return get_templated_function(std::move(name), template_args, std::vector<const Type*>{}, false, panic_on_error);
 }
 
 std::string TemplatedNameResolver::get_templated_function_full_name(std::string name, const std::vector<const Type *> &template_args)

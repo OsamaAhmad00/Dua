@@ -220,6 +220,28 @@ int main()
 }
 
 
+
+// Case Calling a templated method without referencing self
+// Outputs "i32"
+
+class X
+{
+    void a() {
+        b<int>();
+    }
+
+    void b<T>() {
+        printf("%s", typename(T));
+    }
+}
+
+int main()
+{
+    X x;
+    x.a();
+}
+
+
 // Case Templated and non-templated functions with the same name
 // Outputs "Non-templated\nTemplated\n"
 

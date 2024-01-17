@@ -96,8 +96,18 @@ const Type* MethodCallNode::get_type()
     auto class_type = instance_type->as<ClassType>();
     if (class_type == nullptr)
         report_error("Can't call a method " + name + " from the type " + instance_type->to_string() + ", which is not of a class type");
-    auto method_type = name_resolver().get_function(class_type->name + "." + name, get_arg_types()).type;
 
+    auto arg_types = get_arg_types();
+    auto full_name = class_type->name + "." + name;
+
+    if (is_templated) {
+        std::swap(name, full_name);
+        auto method_type = get_templated_function(arg_types);
+        std::swap(name, full_name);
+        return set_type(method_type.type->as<FunctionType>()->return_type);
+    }
+
+    auto method_type = name_resolver().get_function(std::move(full_name), std::move(arg_types)).type;
     return set_type(method_type->return_type);
 }
 

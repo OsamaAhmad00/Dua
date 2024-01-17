@@ -37,8 +37,8 @@ public:
     std::string get_templated_function_full_name(std::string name, const std::vector<const Type*>& template_args);
     std::string get_templated_function_full_name(std::string name, const std::vector<const Type*>& template_args, const std::vector<const Type*>& param_types);
     void add_templated_function(FunctionDefinitionNode* node, std::vector<std::string> template_params, FunctionInfo info, const std::string& class_name = "", bool in_templated_class = false);
-    Value get_templated_function(const std::string& name, std::vector<const Type*>& template_args);
-    Value get_templated_function(const std::string& name, std::vector<const Type*>& template_args, const std::vector<const Type*>& arg_types, bool use_arg_types = true);
+    Value get_templated_function(const std::string& name, std::vector<const Type*>& template_args, bool panic_on_error = true);
+    Value get_templated_function(const std::string& name, std::vector<const Type*>& template_args, const std::vector<const Type*>& arg_types, bool use_arg_types = true, bool panic_on_error = true);
     long long get_winner_templated_function(const std::string& name, const std::vector<TemplatedFunctionNode>& functions, const std::vector<const Type*>& template_args, const std::vector<const Type*>& arg_types, bool panic_on_not_found = true);
     bool has_templated_function(const std::string& name);
 
