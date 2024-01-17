@@ -149,6 +149,46 @@ int main()
 }
 
 
+// Case Defining a type alias inside a class
+// Outputs "i32"
+
+class G
+{
+    typealias i = int;
+
+    void func() {
+        i x = 3;
+        printf("%s", typename(x));
+    }
+}
+
+int main()
+{
+    G g;
+    g.func();
+}
+
+
+// Case Accessing an alias inside a class from outside
+// Panics
+
+class G
+{
+    typealias i = int;
+
+    void func() {
+        i x = 3;
+        printf("%s", typename(x));
+    }
+}
+
+int main()
+{
+    i x = 3;
+    printf("%s", typename(x));
+}
+
+
 // Case Undefined field access
 // Panics
 

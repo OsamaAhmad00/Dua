@@ -172,6 +172,10 @@ std::vector<NamedFunctionValue> ClassResolver::get_all_class_methods(const std::
     return methods;
 }
 
+std::vector<TypeAliasNode*>& ClassResolver::get_class_aliases(const std::string& class_name) {
+    return class_aliases[class_name];
+}
+
 llvm::Value* VTable::get_method(const std::string &name, llvm::Type* type, llvm::Value* instance)
 {
     auto it = method_indices.find(name);

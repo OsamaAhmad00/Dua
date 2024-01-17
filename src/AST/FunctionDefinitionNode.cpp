@@ -3,6 +3,7 @@
 #include <utils/TextManipulation.hpp>
 #include "types/ReferenceType.hpp"
 #include "types/PointerType.hpp"
+#include <AST/types/TypeAliasNode.hpp>
 
 namespace dua
 {
@@ -62,11 +63,19 @@ Value FunctionDefinitionNode::define_function()
 
         // Make class fields accessible from within the method
         compiler->push_scope();
+
         auto class_name = current_class()->getName().str();
         auto class_type = name_resolver().get_class(class_name);
+
         auto& fields = class_type->fields();
-        auto first_arg = function->args().begin();
-        auto class_value = compiler->create_value(first_arg, class_type);
+
+        auto self = function->args().begin();
+        auto class_value = compiler->create_value(self, class_type);
+
+        auto& aliases = name_resolver().get_class_aliases(class_name);
+        for (auto node : aliases)
+            node->eval();
+
         for (size_t i = 0; i < fields.size(); i++) {
             auto f = class_type->get_field(class_value, i);
             if (auto ref = f.type->as<ReferenceType>(); ref != nullptr) {

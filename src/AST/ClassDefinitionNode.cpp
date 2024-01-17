@@ -33,6 +33,10 @@ Value ClassDefinitionNode::eval()
         class_fields[i].default_value = parent_fields[i].default_value;
     }
 
+
+
+    typing_system().push_scope();
+
     // First, evaluate the aliases
     for (auto& alias : aliases)
         alias->eval();
@@ -46,6 +50,8 @@ Value ClassDefinitionNode::eval()
     for (auto & method : methods) {
         method->eval();
     }
+
+    typing_system().pop_scope();
 
     current_class() = old_class;
     current_function() = old_function;

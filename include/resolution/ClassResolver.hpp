@@ -10,6 +10,7 @@ namespace dua
 class ClassType;
 class ClassField;
 class VTable;
+class TypeAliasNode;
 
 class ClassResolver
 {
@@ -32,6 +33,8 @@ public:
     // Stores the address of the global instance of the vtable for each class
     std::unordered_map<std::string, VTable*> vtables;
 
+    std::unordered_map<std::string, std::vector<TypeAliasNode*>> class_aliases;
+
     const ClassType* get_class(const std::string& name);
     bool has_class(const std::string& name);
     void add_fields_constructor_args(std::string constructor_name, std::vector<FieldConstructorArgs> args);
@@ -41,6 +44,7 @@ public:
     const Type* get_vtable_type(const std::string& class_name);
     ClassField get_vtable_field(const std::string& class_name);
     std::vector<NamedFunctionValue> get_all_class_methods(const std::string& class_name);
+    std::vector<TypeAliasNode*>& get_class_aliases(const std::string& class_name);
 
     virtual ~ClassResolver();
 };
