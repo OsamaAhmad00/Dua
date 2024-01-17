@@ -61,15 +61,16 @@ Value TemplatedNameResolver::get_templated_function(const std::string& name, std
         report_error("The templated function " + name + " with "
                      + std::to_string(template_args.size()) + " template parameters is not defined");
 
-    templated_definition_depth++;
-
     // Finding the best overload
-    compiler->name_resolver.symbol_table.keep_only_first_n_scopes(templated_definition_depth);
-    compiler->typing_system.identifier_types.keep_only_first_n_scopes(templated_definition_depth);
 
     auto& functions = it->second;
-
     auto& any_overload = functions.front();
+
+    // Global scope. Other scopes such as the scopes of class fields, class type aliases,
+    //  and class template args will be pushed later
+    compiler->name_resolver.symbol_table.keep_only_last_n_scopes(0, true);
+    compiler->typing_system.identifier_types.keep_only_last_n_scopes(0, true);
+
     if (any_overload.in_templated_class)
     {
         // If one overload belongs to a class, all other overloads will belong to it too.
@@ -114,7 +115,6 @@ Value TemplatedNameResolver::get_templated_function(const std::string& name, std
 
         compiler->typing_system.identifier_types.restore_prev_state();
         compiler->name_resolver.symbol_table.restore_prev_state();
-        templated_definition_depth--;
 
         return compiler->create_value(func, type);
     }
@@ -158,7 +158,6 @@ Value TemplatedNameResolver::get_templated_function(const std::string& name, std
     compiler->name_resolver.symbol_table.restore_prev_state();
 
     compiler->stop_caching_types = old_type_cache_config;
-    templated_definition_depth--;
 
     auto func = compiler->module.getFunction(full_name);
     auto type = compiler->name_resolver.get_function_no_overloading(full_name).type;
@@ -277,10 +276,8 @@ const ClassType* TemplatedNameResolver::get_templated_class(const std::string &n
 
     auto& templated = it->second;
 
-    templated_definition_depth++;
-
-    compiler->name_resolver.symbol_table.keep_only_first_n_scopes(templated_definition_depth);
-    compiler->typing_system.identifier_types.keep_only_first_n_scopes(templated_definition_depth);
+    compiler->name_resolver.symbol_table.keep_only_last_n_scopes(0, true);
+    compiler->typing_system.identifier_types.keep_only_last_n_scopes(0, true);
 
     // A scope that will hold the bindings of the template
     //  parameters to the template arguments, and will
@@ -306,7 +303,6 @@ const ClassType* TemplatedNameResolver::get_templated_class(const std::string &n
 
     compiler->typing_system.identifier_types.restore_prev_state();
     compiler->name_resolver.symbol_table.restore_prev_state();
-    templated_definition_depth--;
 
     return cls;
 }
@@ -343,10 +339,8 @@ void TemplatedNameResolver::register_templated_class(const std::string &name, co
 
     // Registering the methods of the class
 
-    templated_definition_depth++;
-
-    compiler->name_resolver.symbol_table.keep_only_first_n_scopes(templated_definition_depth);
-    compiler->typing_system.identifier_types.keep_only_first_n_scopes(templated_definition_depth);
+    compiler->name_resolver.symbol_table.keep_only_last_n_scopes(0, true);
+    compiler->typing_system.identifier_types.keep_only_last_n_scopes(0, true);
 
     // A scope that will hold the bindings of the template
     //  parameters to the template arguments, and will
@@ -404,8 +398,6 @@ void TemplatedNameResolver::register_templated_class(const std::string &name, co
         }
     }
 
-    templated_definition_depth--;
-
     compiler->typing_system.identifier_types.restore_prev_state();
     compiler->name_resolver.symbol_table.restore_prev_state();
 }
@@ -419,10 +411,8 @@ const ClassType* TemplatedNameResolver::define_templated_class(const std::string
 
     auto& templated = it->second;
 
-    templated_definition_depth++;
-
-    compiler->name_resolver.symbol_table.keep_only_first_n_scopes(templated_definition_depth);
-    compiler->typing_system.identifier_types.keep_only_first_n_scopes(templated_definition_depth);
+    compiler->name_resolver.symbol_table.keep_only_last_n_scopes(0, true);
+    compiler->typing_system.identifier_types.keep_only_last_n_scopes(0, true);
 
     // A scope that will hold the bindings of the template
     //  parameters to the template arguments, and will
@@ -532,7 +522,6 @@ const ClassType* TemplatedNameResolver::define_templated_class(const std::string
     compiler->name_resolver.symbol_table.restore_prev_state();
 
     compiler->stop_caching_types = old_type_cache_config;
-    templated_definition_depth--;
 
     return cls;
 }

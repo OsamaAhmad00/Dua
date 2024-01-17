@@ -113,16 +113,21 @@ struct SymbolTable
         return top;
     }
 
-    void keep_only_first_n_scopes(size_t n)
+    void keep_only_last_n_scopes(size_t n, bool include_global_scope = true)
     {
-        if (n > scopes.size())
-            report_internal_error("Can't keep " + std::to_string(n) + " scopes. There are only " + std::to_string(scopes.size()) + " scopes");
+        if ((n + include_global_scope) > scopes.size())
+            report_internal_error("Can't keep " + std::to_string(n + include_global_scope) + " scopes. There are only " + std::to_string(scopes.size()) + " scopes");
 
         switch_stack.push_back(std::move(scopes));
 
-        scopes.resize(n);
-        for (size_t i = 0; i < n; i++)
-            scopes[i] = switch_stack.back()[i];
+        scopes.resize(n + include_global_scope);
+
+        if (include_global_scope)
+            scopes[0] = switch_stack.back()[0];
+
+        auto offset = switch_stack.back().size() - 1 - n;
+        for (size_t i = include_global_scope; i < n; i++)
+            scopes[i] = switch_stack.back()[offset + i];
     }
 
     void restore_prev_state()

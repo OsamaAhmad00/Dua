@@ -468,3 +468,49 @@ int main()
 class X<T, T> { }
 
 int main() { }
+
+
+// Case Referencing an unreachable variable
+// Panics
+
+class X<T>
+{
+    int x = num;
+}
+
+void f<T>()
+{
+    int num = 3;
+    t<int>();
+}
+
+void t<T>()
+{
+    int num = 3;
+    X<int> x;
+}
+
+int main()
+{
+    int num = 3;
+    t<int>();
+}
+
+
+// Case Referencing non-existent variables in a templated class, but not instantiating it
+
+class X<T>
+{
+    Y y;
+    Z z;
+
+    int main() {
+        x = y;
+        z = 3;
+    }
+}
+
+int main()
+{
+
+}

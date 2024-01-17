@@ -188,7 +188,7 @@ void ParserAssistant::finish_parsing()
                 for (size_t i = 1; i < parent_fields.size(); i++)
                     concrete_fields.push_back(parent_fields[i]);
 
-                compiler->typing_system.identifier_types.keep_only_first_n_scopes(1);
+                compiler->typing_system.identifier_types.keep_only_last_n_scopes(0, true);
                 compiler->typing_system.push_scope();
                 auto& template_params = compiler->name_resolver.templated_classes[key].template_params;
                 for (size_t i = 0; i < concrete_template_args.size(); i++)

@@ -29,9 +29,6 @@ class TemplatedNameResolver
     std::unordered_map<std::string, TemplateBindings> templated_class_bindings;
     std::unordered_map<std::string, std::vector<TemplatedClassFieldConstructorArgs>> templated_class_field_constructor_args;
 
-    // Used to determine the depth of the nested templated definitions
-    size_t templated_definition_depth = 0;
-
 public:
 
     TemplatedNameResolver(ModuleCompiler* compiler) : compiler(compiler) {}

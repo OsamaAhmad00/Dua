@@ -244,3 +244,68 @@ int main()
 void func<T, T>() { }
 
 int main() { }
+
+
+// Case Referencing an unreachable variable 1
+// Panics
+
+class X<T>
+{
+    void f<T>() {
+        int num = 3;
+        self.t<int>();
+    }
+
+    void t<T>() {
+        int num = 3;
+        func<int>();
+    }
+}
+
+void func<T>() {
+    int x = num;
+}
+
+int main()
+{
+    X<int> x;
+    x.f<int>();
+}
+
+
+// Case Referencing an unreachable variable 2
+// Panics
+
+class X<T>
+{
+    void func<T>() {
+        // This should panic
+        int i = num;
+    }
+}
+
+void func()
+{
+    int num = 3;
+    X<int> x;
+    x.func<int>();
+}
+
+int main()
+{
+    func();
+}
+
+
+// Case Referencing non-existent variables in a templated function, but not instantiating it
+
+void func<T>()
+{
+    x = y;
+    z = 3;
+}
+
+int main()
+{
+
+}
