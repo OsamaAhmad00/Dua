@@ -100,7 +100,9 @@ Value FunctionDefinitionNode::define_function()
         //  the self pointer is pushed to the stack, the variable
         //  on the stack would have a type of class** instead of class*.
         auto type = info.type->param_types[0];
-        name_resolver().symbol_table.insert("self", compiler->create_value(function->args().begin(), type));
+        auto self = function->args().begin();
+        self->setName("self");
+        name_resolver().symbol_table.insert("self", compiler->create_value(self, type));
 
         for (size_t j = 1; j < info.param_names.size(); j++)
             if (info.param_names[j] == "self")
