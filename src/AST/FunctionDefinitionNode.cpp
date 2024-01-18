@@ -138,7 +138,7 @@ Value FunctionDefinitionNode::define_function()
     }
 
     size_t pos;
-    for (auto& ctor : { ".constructor.", ".=constructor." }) {
+    for (auto& ctor : { ".constructor(", ".=constructor(" }) {
         pos = name.find(ctor);
         if (pos != std::string::npos) break;
     }

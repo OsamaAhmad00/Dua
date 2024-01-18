@@ -68,7 +68,7 @@ FunctionInfo& FunctionNameResolver::get_function_no_overloading(const std::strin
 
 std::string FunctionNameResolver::get_function_full_name(std::string name)
 {
-    name += '.';
+    name += '(';
     auto begin = functions.lower_bound(name);
     name.back()++;
     auto end = functions.lower_bound(name);
@@ -121,14 +121,7 @@ bool FunctionNameResolver::has_function(const std::string &name, bool try_as_met
     if (functions.find(name) != functions.end())
         return true;
 
-    // Function names given by the user can't contain the '.' character.
-    //  This character is added by the compiler to give different names
-    //  based on the types of the parameters for functions defined with
-    //  the same name. It's sufficient to search for this prefix only
-    //  to determine the existence of a function, with no regard to the
-    //  parameter types. Note that functions with no parameters are a
-    //  special case, but still has a '.' appended to them.
-    auto key = name + ".";
+    auto key = name + "(";
     auto begin = functions.lower_bound(key);
     key.back()++;
     auto end = functions.lower_bound(key);
@@ -381,7 +374,7 @@ llvm::IRBuilder<>& FunctionNameResolver::builder() const
 std::string FunctionNameResolver::get_winning_function(const std::string &name, const std::vector<const Type*> &arg_types, bool panic_on_not_found, bool panic_on_ambiguity) const
 {
     auto key = name;
-    if (name != "main") key += '.';
+    if (name != "main") key += '(';
     auto begin = functions.lower_bound(key);
     key.back()++;
     auto end = functions.lower_bound(key);
@@ -473,12 +466,17 @@ std::string FunctionNameResolver::get_winning_function(const std::string &name, 
 std::string FunctionNameResolver::get_function_full_name(std::string name, const std::vector<const Type*> &param_types)
 {
     if (name == "main") return name;
-    if (param_types.empty()) return name + ".";
+    name += '(';
     // is_var_arg is not part of the full name since you can't
     //  have two functions with the same parameters with the
     //  exception that one is a variadic and the other is not
-    for (auto type : param_types)
-        name += '.' + type->to_string();
+    bool first = true;
+    for (auto type : param_types) {
+        if (!first) name += ", ";
+        name += type->to_string();
+        first = false;
+    }
+    name += ')';
     return name;
 }
 
@@ -561,7 +559,7 @@ bool FunctionNameResolver::is_function_templated(const std::string &name) {
 
 bool FunctionNameResolver::is_function_a_constructor(const std::string &name)
 {
-    for (auto& ctor : { ".constructor.", ".=constructor." }) {
+    for (auto& ctor : { ".constructor(", ".=constructor(" }) {
         auto pos = name.find(ctor);
         if (pos != std::string::npos) return true;
     }

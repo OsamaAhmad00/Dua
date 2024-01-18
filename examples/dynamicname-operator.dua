@@ -26,7 +26,7 @@ int main()
 
 
 // Case Names of templated classes
-// Outputs "Templated.X.1.i32"
+// Outputs "Templated.X.1(i32)"
 
 class X<T> { }
 

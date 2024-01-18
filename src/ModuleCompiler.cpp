@@ -52,15 +52,15 @@ void ModuleCompiler::create_dua_init_function()
         {}
     };
 
-    name_resolver.register_function(".dua.init", std::move(info));
+    name_resolver.register_function(".dua.init", std::move(info), true);
 
-    auto function = module.getFunction(".dua.init.");
+    auto function = module.getFunction(".dua.init");
     llvm::BasicBlock::Create(context, "entry", function);
 }
 
 void ModuleCompiler::complete_dua_init_function()
 {
-    auto dua_init = module.getFunction(".dua.init.");
+    auto dua_init = module.getFunction(".dua.init");
     auto& init_ip = dua_init->getEntryBlock();
     builder.SetInsertPoint(&init_ip);
     for (auto node : deferred_nodes)
@@ -132,8 +132,11 @@ void ModuleCompiler::create_the_object_class()
             create_type<FunctionType>(create_type<VoidType>(), params),
             {}
     };
+
+    // The destructor name should be mangled so that it's compliant with the rest
+    //  of the methods, and overriding happens successfully
     name_resolver.register_function("Object.destructor", std::move(info));
-    auto destructor = module.getFunction("Object.destructor.Object&");
+    auto destructor = module.getFunction("Object.destructor(Object&)");
     auto bb = llvm::BasicBlock::Create(context, "entry", destructor);
     auto ip = builder.saveIP();
     builder.SetInsertPoint(bb);

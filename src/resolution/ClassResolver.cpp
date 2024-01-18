@@ -146,7 +146,7 @@ std::vector<NamedFunctionValue> ClassResolver::get_all_class_methods(const std::
         auto parent_method_name = parent->name;
         parent_method_name += ".";
         parent_method_name += stripped_name;
-        parent_method_name += ".";
+        parent_method_name += "(";
         parent_method_name += parent->name;
         parent_method_name += "&";
         parent_method_name += params_without_self;
