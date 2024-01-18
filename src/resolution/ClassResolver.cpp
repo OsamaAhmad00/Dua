@@ -96,6 +96,10 @@ void ClassResolver::create_vtable(const std::string &class_name)
     auto instance_ptr = compiler->get_module()->getGlobalVariable(instance_name);
     instance_ptr->setInitializer(value);
 
+    auto comdat = compiler->get_module()->getOrInsertComdat(instance_name);
+    comdat->setSelectionKind(llvm::Comdat::Any);
+    instance_ptr->setComdat(comdat);
+
     auto class_type = compiler->get_name_resolver().get_class(class_name);
 
     auto instance = new VTable { class_type, instance_ptr, vtable_type };

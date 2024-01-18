@@ -151,7 +151,7 @@ Value TemplatedNameResolver::get_templated_function(const std::string& name, std
 
     std::swap(templated.node->name, full_name);
     auto old_template_param_count = templated.node->template_param_count;
-    templated.node->template_param_count = -1;
+    templated.node->template_param_count = FunctionDefinitionNode::TEMPLATED_BUT_EVALUATE;
     templated.node->eval();
     templated.node->template_param_count = old_template_param_count;
     std::swap(templated.node->name, full_name);
@@ -316,7 +316,7 @@ void TemplatedNameResolver::add_templated_class_method_info(const std::string &c
     // TODO compute the key as the hash of the triple { name, template param count, type pointer }
     auto key = cls + "." + method->name;
     check_template_params(template_params, "the method " + key);
-    if (method->template_param_count != -1)
+    if (method->template_param_count != FunctionDefinitionNode::NOT_TEMPLATED)
         key += "." + std::to_string(method->template_param_count);
     key += "." + info.type->as_key();
     templated_class_method_info[key] = { std::move(info), std::move(template_params) };
@@ -392,7 +392,7 @@ void TemplatedNameResolver::register_templated_class(const std::string &name, co
         auto [info, template_params] = get_templated_class_method_info(key, method->name, method->function_type, method->template_param_count);
         info.type = concrete_type;
 
-        if (method->template_param_count != -1) {
+        if (method->template_param_count != FunctionDefinitionNode::NOT_TEMPLATED) {
             // Cloning the method node here because we're going to restore its function type later
             auto node = compiler->create_node<FunctionDefinitionNode>(method_name, method->body, concrete_type, method->nomangle, method->template_param_count);
             add_templated_function(node, std::move(template_params), std::move(info), full_name, true);
@@ -492,7 +492,7 @@ const ClassType* TemplatedNameResolver::define_templated_class(const std::string
     {
         auto& method = methods[i];
 
-        if (method->template_param_count != -1)
+        if (method->template_param_count != FunctionDefinitionNode::NOT_TEMPLATED)
             continue;
 
         if (!method->is_operator)

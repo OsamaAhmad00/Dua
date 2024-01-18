@@ -25,7 +25,7 @@ Value FunctionDefinitionNode::eval()
     //  across the module, regardless of the order
     //  of declaration/definition.
 
-    if (template_param_count != -1)
+    if (template_param_count >= 0)
         return none_value();
 
     set_full_name();
@@ -57,6 +57,8 @@ Value FunctionDefinitionNode::define_function()
 
     if (current_class() != nullptr)
     {
+        is_method = true;
+
         // Create an extra counter to avoid interfering
         // with the counter of the current method
         compiler->push_scope_counter();
@@ -102,7 +104,7 @@ Value FunctionDefinitionNode::define_function()
     //  shadow the names of the fields in case of collisions.
     compiler->push_scope();
 
-    if (current_class() != nullptr)
+    if (is_method)
     {
         // The self variable doesn't need to be manipulated, thus,
         //  it doesn't need to be pushed on the stack. Moreover, if
@@ -117,8 +119,15 @@ Value FunctionDefinitionNode::define_function()
             if (info.param_names[j] == "self")
                 report_error("The parameter name 'self' is reserved in class methods (the parameter number "
                     + std::to_string(j + 1) + " of the method " + name);
+    }
 
-        is_method = true;
+    if (is_method || template_param_count == TEMPLATED_BUT_EVALUATE) {
+        // Set the comdat selection kind to any, to avoid
+        //  redefinition errors while linking. This applies to
+        //  templated functions and templated class methods as well
+        auto comdat = module().getOrInsertComdat(name);
+        comdat->setSelectionKind(llvm::Comdat::SelectionKind::Any);
+        function->setComdat(comdat);
     }
 
     for (size_t i = is_method; i < info.param_names.size(); i++) {

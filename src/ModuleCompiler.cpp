@@ -143,6 +143,10 @@ void ModuleCompiler::create_the_object_class()
     builder.CreateRetVoid();
     builder.restoreIP(ip);
 
+    auto comdat = module.getOrInsertComdat("Object.destructor(Object&)");
+    comdat->setSelectionKind(llvm::Comdat::Any);
+    destructor->setComdat(comdat);
+
     auto type = create_type<ClassType>("Object");
     typing_system.insert_type("Object", type);
     name_resolver.classes["Object"] = type;

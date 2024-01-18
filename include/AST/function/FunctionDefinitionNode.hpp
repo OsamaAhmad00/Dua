@@ -19,15 +19,18 @@ class FunctionDefinitionNode : public ASTNode
 
 public:
 
+    static constexpr int NOT_TEMPLATED = -1;
+    static constexpr int TEMPLATED_BUT_EVALUATE = -2;
+
     std::string name;
     bool nomangle;
-    size_t template_param_count;
+    int template_param_count;
     // The function name doesn't get prefixed with
     // the name of the owner class if it's an operator
     bool is_operator;
 
     FunctionDefinitionNode(ModuleCompiler* compiler, std::string name, ASTNode* body,
-                           const FunctionType* function_type, bool nomangle = false, size_t template_param_count = -1, bool is_operator = false);
+                           const FunctionType* function_type, bool nomangle = false, size_t template_param_count = NOT_TEMPLATED, bool is_operator = false);
 
     void set_full_name();
 
