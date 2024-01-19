@@ -328,20 +328,12 @@ void ParserAssistant::create_empty_method_if_doesnt_exist(const ClassType* cls, 
 
     compiler->name_resolver.register_function(name, std::move(signature), true);
 
-    // This is a hack. Methods and templated functions get an any comdat.
-    //  So, define this method as a templated one, so that it gets an any
-    //  comdat as well. This is needed since the FunctionDefinitionNode
-    //  figures out whether it's a method or not by checking current_class,
-    //  and since these nodes are deferred, at the time of their execution,
-    //  current_class = nullptr.
-    // TODO embed the owner class information in the FunctionDefinitionNode
     compiler->push_deferred_node(
         compiler->create_node<FunctionDefinitionNode>(
             std::move(name),
             compiler->create_node<BlockNode>(std::vector<ASTNode*>{}),
             type,
-            true,
-            FunctionDefinitionNode::TEMPLATED_BUT_EVALUATE
+            true
         )
     );
 }

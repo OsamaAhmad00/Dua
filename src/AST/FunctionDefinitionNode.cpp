@@ -121,14 +121,11 @@ Value FunctionDefinitionNode::define_function()
                     + std::to_string(j + 1) + " of the method " + name);
     }
 
-    if (is_method || template_param_count == TEMPLATED_BUT_EVALUATE) {
-        // Set the comdat selection kind to any, to avoid
-        //  redefinition errors while linking. This applies to
-        //  templated functions and templated class methods as well
-        auto comdat = module().getOrInsertComdat(name);
-        comdat->setSelectionKind(llvm::Comdat::SelectionKind::Any);
-        function->setComdat(comdat);
-    }
+    // Set the comdat selection kind to any, to avoid
+    //  redefinition errors while linking.
+    auto comdat = module().getOrInsertComdat(name);
+    comdat->setSelectionKind(llvm::Comdat::SelectionKind::Any);
+    function->setComdat(comdat);
 
     for (size_t i = is_method; i < info.param_names.size(); i++) {
         const auto& arg = function->args().begin() + i;
