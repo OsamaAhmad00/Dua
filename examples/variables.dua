@@ -166,6 +166,18 @@ int main()
 // }
 
 
+// TODO Static global variable
+
+// Needs the ability to compile and link another file along with it
+//
+// static int i;
+//
+// int main()
+// {
+//     i = 3;
+// }
+
+
 // Case Extern local variable
 // Panics
 
@@ -179,6 +191,17 @@ int main()
 // Panics
 
 extern int i = 3;
+
+int main()
+{
+
+}
+
+
+// Case Initializing a global variable as both static and extern
+// Panics
+
+extern static int i;
 
 int main()
 {

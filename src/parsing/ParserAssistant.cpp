@@ -372,7 +372,7 @@ void ParserAssistant::create_variable_declaration()
 
     if (is_in_global_scope())
     {
-        push_node<GlobalVariableDefinitionNode>(std::move(name), type, nullptr, std::vector<ASTNode*>{}, is_extern);
+        push_node<GlobalVariableDefinitionNode>(std::move(name), type, nullptr, std::vector<ASTNode*>{}, is_extern, is_static);
         global_variable_nodes.push_back((GlobalVariableDefinitionNode*)nodes.back());
     }
     else

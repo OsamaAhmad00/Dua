@@ -15,6 +15,9 @@ Value GlobalVariableDefinitionNode::eval()
     if (initializer != nullptr && !args.empty())
         report_error("Can't have both an initializer and an initializer list (in " + name + ")");
 
+    if (is_extern && is_static)
+        report_error("Can't have both the static and the extern options together in the declaration of the global variable " + name);
+
     module().getOrInsertGlobal(name, type->llvm_type());
     llvm::GlobalVariable* variable = module().getGlobalVariable(name);
 
@@ -22,6 +25,8 @@ Value GlobalVariableDefinitionNode::eval()
         if (initializer != nullptr)
             report_error("Extern global variables can't have initializers (in the global variable " + name + " with type " + type->to_string() + ")");
         variable->setLinkage(llvm::GlobalVariable::LinkageTypes::ExternalLinkage);
+    } else if (is_static) {
+        variable->setLinkage(llvm::GlobalVariable::LinkageTypes::InternalLinkage);
     }
 
     // We're in the global scope now, and the evaluation has to be done inside

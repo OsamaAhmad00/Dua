@@ -225,6 +225,7 @@ public:
     bool nomangle = false;
     bool is_in_function = false;
     bool is_extern = false;
+    bool is_static = false;
 
     std::vector<bool> is_templated_stack;
 

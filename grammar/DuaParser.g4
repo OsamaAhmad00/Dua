@@ -154,7 +154,17 @@ function_decl_or_def
     ;
 
 variable_decl_no_simicolon
-    : extern_or_not type identifier { assistant.create_variable_declaration(); }
+    : variable_decl_optionals type identifier { assistant.create_variable_declaration(); }
+    ;
+
+variable_decl_optionals
+    : static_or_not extern_or_not
+    | extern_or_not static_or_not
+    ;
+
+static_or_not
+    : Static      { assistant.is_static = true;  }
+    | /* empty */ { assistant.is_static = false; }
     ;
 
 extern_or_not

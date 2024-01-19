@@ -54,6 +54,7 @@ RightArrow: '->';
 Simicolon: ';';
 
 Extern: 'extern';
+Static: 'static';
 
 Class: 'class';
 Extends: 'extends';
