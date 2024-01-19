@@ -174,10 +174,10 @@ extern_or_none
 
 // Every definition takes 4 arguments: type, name, expr, and args. Some of them may be empty (null or empty args)
 variable_def_no_simicolon
-    : type '(' types_list var_arg_or_none ')' '*' identifier '=' identifier template_args_or_none { assistant.create_func_ref(); }
-    | type identifier '=' expression { assistant.push_counter(); assistant.create_variable_definition(); }
-    | Var  identifier '=' expression { assistant.push_counter(); assistant.create_inferred_definition(); }
-    | type identifier { assistant.push_null_node(); } optional_constructor_args { assistant.create_variable_definition(); }
+    : static_or_none type '(' types_list var_arg_or_none ')' '*' identifier '=' identifier template_args_or_none { assistant.create_func_ref(); }
+    | static_or_none type identifier '=' expression { assistant.push_counter(); assistant.create_variable_definition(); }
+    | static_or_none Var  identifier '=' expression { assistant.push_counter(); assistant.create_inferred_definition(); }
+    | static_or_none type identifier { assistant.push_null_node(); } optional_constructor_args { assistant.create_variable_definition(); }
     ;
 
 optional_constructor_args
