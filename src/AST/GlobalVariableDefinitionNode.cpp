@@ -61,7 +61,13 @@ Value GlobalVariableDefinitionNode::eval()
     builder().restoreIP(old_position);
 
     if (!is_extern)
+    {
         variable->setInitializer(constant ? constant : type->default_value().get_constant());
+
+        auto comdat = module().getOrInsertComdat(name);
+        comdat->setSelectionKind(llvm::Comdat::Any);
+        variable->setComdat(comdat);
+    }
 
     variable->setConstant(false);
 
