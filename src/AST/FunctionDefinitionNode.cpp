@@ -9,8 +9,8 @@ namespace dua
 {
 
 FunctionDefinitionNode::FunctionDefinitionNode(dua::ModuleCompiler *compiler,
-               std::string name, dua::ASTNode *body, const FunctionType* function_type, bool nomangle, size_t template_param_count, bool is_operator)
-        : name(std::move(name)), body(body), function_type(function_type), nomangle(nomangle), template_param_count(template_param_count), is_operator(is_operator)
+               std::string name, dua::ASTNode *body, const FunctionType* function_type, bool nomangle, size_t template_param_count, bool is_operator, bool is_static)
+        : name(std::move(name)), body(body), function_type(function_type), nomangle(nomangle), template_param_count(template_param_count), is_operator(is_operator), is_static(is_static)
 {
     this->compiler = compiler;
 
@@ -46,6 +46,9 @@ Value FunctionDefinitionNode::define_function()
 
     if (!function->empty())
         report_error("Redefinition of the function " + name);
+
+    if (is_static)
+        function->setLinkage(llvm::Function::InternalLinkage);
 
     llvm::Function* old_function = current_function();
     llvm::BasicBlock* old_block = builder().GetInsertBlock();
@@ -121,11 +124,13 @@ Value FunctionDefinitionNode::define_function()
                     + std::to_string(j + 1) + " of the method " + name);
     }
 
-    // Set the comdat selection kind to any, to avoid
-    //  redefinition errors while linking.
-    auto comdat = module().getOrInsertComdat(name);
-    comdat->setSelectionKind(llvm::Comdat::SelectionKind::Any);
-    function->setComdat(comdat);
+    if (!is_static) {
+        // Set the comdat selection kind to any, to avoid
+        //  redefinition errors while linking.
+        auto comdat = module().getOrInsertComdat(name);
+        comdat->setSelectionKind(llvm::Comdat::SelectionKind::Any);
+        function->setComdat(comdat);
+    }
 
     for (size_t i = is_method; i < info.param_names.size(); i++) {
         const auto& arg = function->args().begin() + i;

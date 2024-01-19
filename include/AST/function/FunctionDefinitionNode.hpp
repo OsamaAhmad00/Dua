@@ -28,9 +28,11 @@ public:
     // The function name doesn't get prefixed with
     // the name of the owner class if it's an operator
     bool is_operator;
+    bool is_static;
 
     FunctionDefinitionNode(ModuleCompiler* compiler, std::string name, ASTNode* body,
-                           const FunctionType* function_type, bool nomangle = false, size_t template_param_count = NOT_TEMPLATED, bool is_operator = false);
+                           const FunctionType* function_type, bool nomangle = false,
+                           size_t template_param_count = NOT_TEMPLATED, bool is_operator = false, bool is_static = false);
 
     void set_full_name();
 

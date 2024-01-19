@@ -464,7 +464,7 @@ void ParserAssistant::create_function_declaration()
     if (is_templated)
         template_param_count = template_params.size();
 
-    push_node<FunctionDefinitionNode>(std::move(name), nullptr, function_type, nomangle, template_param_count);
+    push_node<FunctionDefinitionNode>(std::move(name), nullptr, function_type, nomangle, template_param_count, false, is_static);
     auto func = (FunctionDefinitionNode*)nodes.back();
 
     if (in_templated_class) {
@@ -1156,7 +1156,7 @@ void ParserAssistant::create_operator(const std::string& position_name)
         std::move(param_names)
     };
 
-    push_node<FunctionDefinitionNode>(std::move(name), nullptr, function_type, false, -1, true);
+    push_node<FunctionDefinitionNode>(std::move(name), nullptr, function_type, false, -1, true, is_static);
 
     auto func = (FunctionDefinitionNode*)nodes.back();
     if (in_templated_class) {

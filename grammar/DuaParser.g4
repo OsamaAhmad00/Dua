@@ -200,10 +200,10 @@ postfix_op
     ;
 
 function_decl_no_simicolon
-    : nomangle_or_none type identifier template_params_or_none
+    : static_or_not nomangle_or_none type identifier template_params_or_none
         '(' param_list var_arg_or_none ')' { assistant.create_function_declaration(); }
-    | type Infix infix_op '(' param_list ')' { assistant.create_infix_operator(); }
-    | type Postfix postfix_op '(' param_list ')' { assistant.create_postfix_operator(); }
+    | static_or_not type Infix infix_op '(' param_list ')' { assistant.create_infix_operator(); }
+    | static_or_not type Postfix postfix_op '(' param_list ')' { assistant.create_postfix_operator(); }
     ;
 
 no_template
