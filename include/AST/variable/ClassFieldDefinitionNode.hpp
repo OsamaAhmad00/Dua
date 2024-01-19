@@ -12,7 +12,7 @@ class ClassFieldDefinitionNode : public VariableDefinitionNode
 public:
 
     ClassFieldDefinitionNode(ModuleCompiler* compiler, std::string name,
-                                const Type* type, ASTNode* initializer, std::vector<ASTNode*> args = {})
+                                const Type* type, ASTNode* initializer = nullptr, std::vector<ASTNode*> args = {})
             : VariableDefinitionNode(compiler, std::move(name), type, initializer, std::move(args)) {}
 
     NoneValue eval() override;

@@ -154,7 +154,12 @@ function_decl_or_def
     ;
 
 variable_decl_no_simicolon
-    : type identifier { assistant.create_variable_declaration(); }
+    : extern_or_not type identifier { assistant.create_variable_declaration(); }
+    ;
+
+extern_or_not
+    : Extern      { assistant.is_extern = true;  }
+    | /* empty */ { assistant.is_extern = false; }
     ;
 
 // Every definition takes 4 arguments: type, name, expr, and args. Some of them may be empty (null or empty args)

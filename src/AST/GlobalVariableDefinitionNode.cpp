@@ -18,6 +18,12 @@ Value GlobalVariableDefinitionNode::eval()
     module().getOrInsertGlobal(name, type->llvm_type());
     llvm::GlobalVariable* variable = module().getGlobalVariable(name);
 
+    if (is_extern) {
+        if (initializer != nullptr)
+            report_error("Extern global variables can't have initializers (in the global variable " + name + " with type " + type->to_string() + ")");
+        variable->setLinkage(llvm::GlobalVariable::LinkageTypes::ExternalLinkage);
+    }
+
     // We're in the global scope now, and the evaluation has to be done inside
     // some basic block. Will move temporarily to the beginning of the main function.
     auto old_position = builder().saveIP();
@@ -54,7 +60,9 @@ Value GlobalVariableDefinitionNode::eval()
     // Restore the old position back
     builder().restoreIP(old_position);
 
-    variable->setInitializer(constant ? constant : type->default_value().get_constant());
+    if (!is_extern)
+        variable->setInitializer(constant ? constant : type->default_value().get_constant());
+
     variable->setConstant(false);
 
     name_resolver().symbol_table.insert_global(name, compiler->create_value(variable, type));

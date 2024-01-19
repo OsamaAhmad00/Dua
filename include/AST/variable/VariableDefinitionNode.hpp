@@ -17,7 +17,7 @@ public:
     std::vector<ASTNode*> args;
 
     VariableDefinitionNode(ModuleCompiler* compiler, std::string name, const Type* type,
-                           ASTNode* initializer, std::vector<ASTNode*> args)
+                           ASTNode* initializer = nullptr, std::vector<ASTNode*> args = {})
             : name(std::move(name)), initializer(initializer), args(std::move(args))
     { this->compiler = compiler; this->type = type; }
 

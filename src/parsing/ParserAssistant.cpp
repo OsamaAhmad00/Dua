@@ -378,17 +378,26 @@ void ParserAssistant::create_variable_declaration()
     auto name = pop_str();
     auto type = pop_type();
 
-    if (is_in_global_scope()) {
-        push_node<GlobalVariableDefinitionNode>(std::move(name), type, nullptr);
+    if (is_in_global_scope())
+    {
+        push_node<GlobalVariableDefinitionNode>(std::move(name), type, nullptr, std::vector<ASTNode*>{}, is_extern);
         global_variable_nodes.push_back((GlobalVariableDefinitionNode*)nodes.back());
-    } else {
+    }
+    else
+    {
+        if (is_extern) {
+            report_error("The extern keyword can only be used with global variable "
+                         "declarations (in the declaration of the variable " + name + " with type " +
+                         type->to_string() + ")");
+        }
+
         if (is_in_function) {
-            push_node<LocalVariableDefinitionNode>(std::move(name), type, nullptr);
+            push_node<LocalVariableDefinitionNode>(std::move(name), type);
         } else {
             // This is a field
             assert(in_class());
             compiler->name_resolver.class_fields[current_class].push_back({ name, type, nullptr, {} });
-            push_node<ClassFieldDefinitionNode>(std::move(name), type, nullptr);
+            push_node<ClassFieldDefinitionNode>(std::move(name), type);
         }
     }
 

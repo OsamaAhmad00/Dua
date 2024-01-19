@@ -53,6 +53,8 @@ IndexingOperator: '[]';
 RightArrow: '->';
 Simicolon: ';';
 
+Extern: 'extern';
+
 Class: 'class';
 Extends: 'extends';
 Dot: '.';

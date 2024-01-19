@@ -152,3 +152,35 @@ int main()
     int& ii = i;
     func(ii);
 }
+
+
+// TODO Extern global variable
+
+// Needs the ability to compile and link another file along with it
+//
+// extern int i;
+//
+// int main()
+// {
+//     i = 3;
+// }
+
+
+// Case Extern local variable
+// Panics
+
+int main()
+{
+    extern int i;
+}
+
+
+// Case Initializing an extern global variable
+// Panics
+
+extern int i = 3;
+
+int main()
+{
+
+}
