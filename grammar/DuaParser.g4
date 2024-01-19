@@ -158,16 +158,16 @@ variable_decl_no_simicolon
     ;
 
 variable_decl_optionals
-    : static_or_not extern_or_not
-    | extern_or_not static_or_not
+    : static_or_none extern_or_none
+    | extern_or_none static_or_none
     ;
 
-static_or_not
+static_or_none
     : Static      { assistant.is_static = true;  }
     | /* empty */ { assistant.is_static = false; }
     ;
 
-extern_or_not
+extern_or_none
     : Extern      { assistant.is_extern = true;  }
     | /* empty */ { assistant.is_extern = false; }
     ;
@@ -200,10 +200,15 @@ postfix_op
     ;
 
 function_decl_no_simicolon
-    : static_or_not nomangle_or_none type identifier template_params_or_none
+    : function_decl_optionals type identifier template_params_or_none
         '(' param_list var_arg_or_none ')' { assistant.create_function_declaration(); }
-    | static_or_not type Infix infix_op '(' param_list ')' { assistant.create_infix_operator(); }
-    | static_or_not type Postfix postfix_op '(' param_list ')' { assistant.create_postfix_operator(); }
+    | static_or_none type Infix infix_op '(' param_list ')' { assistant.create_infix_operator(); }
+    | static_or_none type Postfix postfix_op '(' param_list ')' { assistant.create_postfix_operator(); }
+    ;
+
+function_decl_optionals
+    : static_or_none nomangle_or_none
+    | nomangle_or_none static_or_none
     ;
 
 no_template
