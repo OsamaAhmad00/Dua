@@ -41,7 +41,7 @@ int main()
 
 class X { }
 
-class Y extends X { }
+class Y : X { }
 
 int main()
 {

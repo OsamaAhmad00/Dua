@@ -57,7 +57,6 @@ Extern: 'extern';
 Static: 'static';
 
 Class: 'class';
-Extends: 'extends';
 Dot: '.';
 ScopeResolution: '::';
 Super: 'Super';

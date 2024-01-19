@@ -6,7 +6,7 @@ nomangle int printf(str message, ...);
 
 class Parent { }
 
-class Child extends Parent
+class Child : Parent
 {
     void func() {
         printf("Child");
@@ -28,7 +28,7 @@ int main()
 
 class Parent { }
 
-class Child extends Parent { }
+class Child : Parent { }
 
 int main()
 {
@@ -43,17 +43,17 @@ int main()
 
 class Parent1 { }
 
-class Parent2 extends Parent1 { }
+class Parent2 : Parent1 { }
 
-class Parent3 extends Parent2 { }
+class Parent3 : Parent2 { }
 
-class Parent4 extends Parent3 { }
+class Parent4 : Parent3 { }
 
-class Parent5 extends Parent4 { }
+class Parent5 : Parent4 { }
 
-class Parent6 extends Parent5 { }
+class Parent6 : Parent5 { }
 
-class Child extends Parent6
+class Child : Parent6
 {
     void func() {
         printf("Child");
@@ -75,17 +75,17 @@ int main()
 
 class Parent1 { }
 
-class Parent2 extends Parent1 { }
+class Parent2 : Parent1 { }
 
-class Parent3 extends Parent2 { }
+class Parent3 : Parent2 { }
 
-class Parent4 extends Parent3 { }
+class Parent4 : Parent3 { }
 
-class Parent5 extends Parent4 { }
+class Parent5 : Parent4 { }
 
-class Parent6 extends Parent5 { }
+class Parent6 : Parent5 { }
 
-class Child extends Parent6 { }
+class Child : Parent6 { }
 
 int main()
 {
@@ -152,7 +152,7 @@ int main()
 
 class X { }
 
-class Y extends X { }
+class Y : X { }
 
 int main()
 {
@@ -166,7 +166,7 @@ int main()
 
 class X { }
 
-class Y extends X { }
+class Y : X { }
 
 int main()
 {

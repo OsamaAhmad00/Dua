@@ -71,7 +71,7 @@ class_optionals
     ;
 
 optional_parent_class
-    : Extends identifier_type
+    : ':' identifier_type
     | /* empty */ { assistant.push_type<IdentifierType>("Object"); }
     ;
 

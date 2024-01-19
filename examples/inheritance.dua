@@ -9,7 +9,7 @@ class X
     }
 }
 
-class Y extends X
+class Y : X
 {
     void print() {
         printf("Y");
@@ -45,7 +45,7 @@ int main()
 // Case Inheriting a method
 // Outputs "X"
 
-class Z extends X
+class Z : X
 {
 
 }
@@ -77,7 +77,7 @@ class G<T>
     }
 }
 
-class H extends G<int> {}
+class H : G<int> {}
 
 int main()
 {
@@ -96,7 +96,7 @@ class G<T>
     }
 }
 
-class H<T> extends G<T> {}
+class H<T> : G<T> {}
 
 int main()
 {
@@ -113,9 +113,9 @@ class G<T>
     int func() { return istype(T, G<G<int>>); }
 }
 
-class H<T> extends G<G<G<T>>> {}
+class H<T> : G<G<G<T>>> {}
 
-class L<T> extends G<G<G<G<G<G<G<T>>>>>>> {}
+class L<T> : G<G<G<G<G<G<G<T>>>>>>> {}
 
 int main()
 {
@@ -131,7 +131,7 @@ int main()
 
 // The packing option is inherited from the parent as well
 
-class G packed extends X { }
+class G packed : X { }
 
 int main() { }
 
@@ -151,13 +151,13 @@ class B
     byte c;
 }
 
-class C extends A
+class C : A
 {
     int ii;
     byte cc;
 }
 
-class D extends B
+class D : B
 {
     int ii;
     byte cc;
@@ -189,7 +189,7 @@ class G
     int i;
 }
 
-class H extends G
+class H : G
 {
     int i;
 }
@@ -205,7 +205,7 @@ class G
     int i = 3;
 }
 
-class H extends G
+class H : G
 {
     void func() {
         printf("%d", i);
@@ -227,14 +227,14 @@ class G<T>
     T i;
 }
 
-class A extends G<int>
+class A : G<int>
 {
     void print() {
         printf("%s ", typename(i));
     }
 }
 
-class B extends G<long>
+class B : G<long>
 {
     void print() {
         printf("%s", typename(i));
@@ -262,7 +262,7 @@ class G
     }
 }
 
-class H extends G
+class H : G
 {
     void func() {
         printf("%d", i);
@@ -288,7 +288,7 @@ class G
     }
 }
 
-class H extends G
+class H : G
 {
     int i = 3;
     void func() {
@@ -350,7 +350,7 @@ class G
     }
 }
 
-class H extends G
+class H : G
 {
     void func() {
         printf("Child");
@@ -375,7 +375,7 @@ class G
     }
 }
 
-class H extends G
+class H : G
 {
     destructor {
         printf("Child");
@@ -400,7 +400,7 @@ class G
     }
 }
 
-class H extends G
+class H : G
 {
     constructor() {
         printf("Child\n");
@@ -436,7 +436,7 @@ class G
     }
 }
 
-class H extends G
+class H : G
 {
     constructor() : Super(1, 2, 3) {
         printf("Child\n");
@@ -459,49 +459,49 @@ class A
     }
 }
 
-class B extends A
+class B : A
 {
     constructor() {
         printf("B");
     }
 }
 
-class C extends B
+class C : B
 {
     constructor() {
         printf("C");
     }
 }
 
-class D extends C
+class D : C
 {
     constructor() {
         printf("D");
     }
 }
 
-class E extends D
+class E : D
 {
     constructor() {
         printf("E");
     }
 }
 
-class F extends E
+class F : E
 {
     constructor() {
         printf("F");
     }
 }
 
-class G extends F
+class G : F
 {
     constructor() {
         printf("G");
     }
 }
 
-class H extends G
+class H : G
 {
     constructor() {
         printf("H");
@@ -525,7 +525,7 @@ class G
     constructor(int a, int b) : a(a), b(b) {}
 }
 
-class H extends G
+class H : G
 {
     int c;
     long d;
@@ -558,7 +558,7 @@ class G
     }
 }
 
-class H extends G
+class H : G
 {
     int c;
     long d;
