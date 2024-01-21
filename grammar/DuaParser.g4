@@ -303,8 +303,8 @@ expression
     | '(' expression ')'
     | function_call
     | expression '(' arg_list ')' { assistant.create_expr_function_call();  }
-    | New identifier_type optional_constructor_args { assistant.create_malloc(); }
-    | New type { assistant.push_counter(); assistant.create_malloc(); }
+    | New optional_size identifier_type optional_constructor_args { assistant.create_malloc(); }
+    | New type optional_size { assistant.push_counter(); assistant.create_malloc(); }
     | SizeOf '(' expr_or_type ')'   { assistant.create_size_of();   }
     | TypeName '(' expr_or_type ')' { assistant.create_type_name(); }
     | DynamicName '(' expression ')' { assistant.push_null_type(); assistant.create_dynamic_name(); }

@@ -1011,7 +1011,10 @@ void ParserAssistant::create_malloc()
 
         declared_malloc = true;
     }
-    push_node<MallocNode>(pop_type(), pop_args());
+
+    auto args = pop_args();
+    auto count = pop_node();
+    push_node<MallocNode>(pop_type(), std::move(args), count);
 }
 
 void ParserAssistant::create_free()
