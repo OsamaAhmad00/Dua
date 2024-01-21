@@ -58,3 +58,7 @@ int main()
     print(x->num);
     delete x;
 }
+
+
+// TODO Case Allocating multiple primitive types
+// Outputs

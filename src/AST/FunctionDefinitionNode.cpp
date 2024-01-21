@@ -124,7 +124,9 @@ Value FunctionDefinitionNode::define_function()
                     + std::to_string(j + 1) + " of the method " + name);
     }
 
-    if (!is_static) {
+    bool is_main = !is_method && name == "main";
+
+    if (!is_static && !is_main) {
         // Set the comdat selection kind to any, to avoid
         //  redefinition errors while linking.
         auto comdat = module().getOrInsertComdat(name);

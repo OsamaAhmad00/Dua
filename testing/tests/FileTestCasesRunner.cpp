@@ -89,7 +89,7 @@ void FileTestCasesRunner::run()
             long long time_limit = -1;
             for (auto& ch : expected_time_limit_str) ch = std::tolower(ch);
             if (expected_time_limit_str.empty()) {
-                time_limit = 2000;  // 2 seconds
+                time_limit = 2000, expected_time_limit_str = "2000";  // 2 seconds
             } else if (expected_time_limit_str != "infinite") {
                 try {
                     time_limit = std::stol(expected_time_limit_str);

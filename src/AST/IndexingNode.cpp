@@ -2,6 +2,7 @@
 #include "types/ArrayType.hpp"
 #include "AST/lvalue/LoadedLValueNode.hpp"
 #include "types/PointerType.hpp"
+#include "types/ReferenceType.hpp"
 
 namespace dua
 {
@@ -26,16 +27,24 @@ Value IndexingNode::eval()
 {
     auto lhs_eval = lhs->eval();
     auto rhs_eval = rhs->eval();
+
     auto postfix_operator_result = name_resolver().call_postfix_operator(lhs_eval, rhs_eval, "Indexing");
     if (!postfix_operator_result.is_null())
         return postfix_operator_result;
+
     // If the cast to an lvalue succeeds, then lhs_eval.memory_location is not null
     auto element_type = get_element_type(lhs, rhs);;
+    if (element_type->as<PointerType>() != nullptr) {
+        // Act as if this is an array
+        element_type = compiler->create_type<ArrayType>(element_type, LONG_LONG_MAX);
+    }
+
     auto memory_location = builder().CreateGEP(
         element_type->llvm_type(),
         lhs_eval.memory_location,
         { builder().getInt32(0), rhs_eval.get() }
     );
+
     return compiler->create_value(get_type(), memory_location);
 }
 
@@ -58,7 +67,7 @@ const Type *IndexingNode::get_type()
         result = pointer_type->get_element_type();
     }
 
-    if (auto reference_type = element_type->as<PointerType>(); reference_type != nullptr) {
+    if (auto reference_type = element_type->as<ReferenceType>(); reference_type != nullptr) {
         result = reference_type->get_element_type();
     }
 

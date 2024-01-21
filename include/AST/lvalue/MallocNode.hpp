@@ -10,10 +10,11 @@ class MallocNode : public LValueNode
 {
 
     std::vector<ASTNode*> args;
+    ASTNode* count;
 
 public:
 
-    MallocNode(ModuleCompiler* compiler, const Type* type, std::vector<ASTNode*> args);
+    MallocNode(ModuleCompiler* compiler, const Type* type, std::vector<ASTNode*> args, ASTNode* count);
 
     Value eval() override;
 

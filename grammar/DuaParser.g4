@@ -104,7 +104,7 @@ constructor
         no_template
         '(' param_list ')' { assistant.push_var_arg(false); }
         { assistant.create_function_declaration(); } optional_fields_constructor_params
-        function_body { assistant.finish_constructor(); }
+        { assistant.set_current_function(); } function_body { assistant.finish_constructor(); }
     ;
 
 copy_constructor
@@ -112,7 +112,7 @@ copy_constructor
         no_template
         '(' param_list ')' { assistant.push_var_arg(false); }
         { assistant.create_function_declaration(); } optional_fields_constructor_params
-        function_body { assistant.finish_copy_constructor(); }
+        { assistant.set_current_function(); } function_body { assistant.finish_copy_constructor(); }
     ;
 
 optional_fields_constructor_params
@@ -133,7 +133,7 @@ field_constructor_params
 destructor
     : { assistant.prepare_destructor(); } Destructor { assistant.push_var_arg(false); }
         no_template
-        { assistant.push_counter(); assistant.create_function_declaration(); } function_body
+        { assistant.push_counter(); assistant.create_function_declaration(); } { assistant.set_current_function(); } function_body
     ;
 
 variable_decl_or_def
@@ -343,17 +343,22 @@ expression
     | expression '||' expression { assistant.create_logical_or(); }
     | expression '?' expression ':' expression { assistant.create_ternary_operator(); }
     | <assoc=right> expression '=' expression { assistant.create_assignment(); }
-    | lvalue '+='  expression  { assistant.create_compound_assignment<AdditionNode>(); }
-    | lvalue '-='  expression  { assistant.create_compound_assignment<SubtractionNode>(); }
-    | lvalue '*='  expression  { assistant.create_compound_assignment<MultiplicationNode>(); }
-    | lvalue '/='  expression  { assistant.create_compound_assignment<DivisionNode>(); }
-    | lvalue '%='  expression  { assistant.create_compound_assignment<ModNode>(); }
-    | lvalue '<<=' expression  { assistant.create_compound_assignment<LeftShiftNode>(); }
-    | lvalue '>>=' expression  { assistant.create_compound_assignment<RightShiftNode>(); }
-    | lvalue '>>>=' expression { assistant.create_compound_assignment<ArithmeticRightShiftNode>(); }
-    | lvalue '&='  expression  { assistant.create_compound_assignment<BitwiseAndNode>(); }
-    | lvalue '^='  expression  { assistant.create_compound_assignment<XorNode>(); }
-    | lvalue '|='  expression  { assistant.create_compound_assignment<BitwiseOrNode>(); }
+    | <assoc=right> lvalue '+='  expression  { assistant.create_compound_assignment<AdditionNode>(); }
+    | <assoc=right> lvalue '-='  expression  { assistant.create_compound_assignment<SubtractionNode>(); }
+    | <assoc=right> lvalue '*='  expression  { assistant.create_compound_assignment<MultiplicationNode>(); }
+    | <assoc=right> lvalue '/='  expression  { assistant.create_compound_assignment<DivisionNode>(); }
+    | <assoc=right> lvalue '%='  expression  { assistant.create_compound_assignment<ModNode>(); }
+    | <assoc=right> lvalue '<<=' expression  { assistant.create_compound_assignment<LeftShiftNode>(); }
+    | <assoc=right> lvalue '>>=' expression  { assistant.create_compound_assignment<RightShiftNode>(); }
+    | <assoc=right> lvalue '>>>=' expression { assistant.create_compound_assignment<ArithmeticRightShiftNode>(); }
+    | <assoc=right> lvalue '&='  expression  { assistant.create_compound_assignment<BitwiseAndNode>(); }
+    | <assoc=right> lvalue '^='  expression  { assistant.create_compound_assignment<XorNode>(); }
+    | <assoc=right> lvalue '|='  expression  { assistant.create_compound_assignment<BitwiseOrNode>(); }
+    ;
+
+optional_size
+    : '[' expression ']'
+    | /* empty */ { assistant.push_node<I64ValueNode>(1); }
     ;
 
 expr_or_type
@@ -362,13 +367,19 @@ expr_or_type
     ;
 
 function_call
-    : instance_access identifier template_args_or_none '(' arg_list ')' { assistant.create_method_call(); }
+    : instance_access function_name template_args_or_none '(' arg_list ')' { assistant.create_method_call(); }
     | full_function_identifier   template_args_or_none '(' arg_list ')' { assistant.create_function_call(); }
     ;
 
 full_function_identifier
+    : function_name
+    | identifier_type '::' function_name { assistant.create_method_identifier(); }
+    ;
+
+function_name
     : identifier
-    | identifier_type '::' identifier { assistant.create_method_identifier(); }
+    | Constructor { assistant.push_str("constructor"); }
+    | Destructor  { assistant.push_str("destructor") ; }
     ;
 
 instance_access
@@ -564,7 +575,8 @@ types_list @init { assistant.push_counter(); }
     ;
 
 type
-    : type '(' types_list var_arg_or_none ')'   { assistant.create_function_type();  }
+    : '(' type ')'
+    | type '(' types_list var_arg_or_none ')'   { assistant.create_function_type();  }
     | type '[' size ']'                         { assistant.create_array_type();     }
     | type '*'                                  { assistant.create_pointer_type();   }
     | type '&'                                  { assistant.create_reference_type(); }

@@ -125,6 +125,9 @@ void ParserAssistant::finish_parsing()
 
     auto object_class = compiler->get_name_resolver().get_class("Object");
 
+    for (auto alias : global_aliases)
+        alias->eval();
+
     for (auto& root : class_info["Object"].children)
     {
         if (class_info.find(root) == class_info.end())
@@ -189,10 +192,16 @@ void ParserAssistant::finish_parsing()
                     concrete_fields.push_back(parent_fields[i]);
 
                 compiler->typing_system.identifier_types.keep_only_last_n_scopes(0, true);
+
                 compiler->typing_system.push_scope();
-                auto& template_params = compiler->name_resolver.templated_classes[key].template_params;
+                auto& templated_class = compiler->name_resolver.templated_classes[key];
+                auto& template_params = templated_class.template_params;
                 for (size_t i = 0; i < concrete_template_args.size(); i++)
                     compiler->typing_system.insert_type(template_params[i], concrete_template_args[i]);
+
+                compiler->typing_system.push_scope();
+                for (auto alias : templated_class.node->aliases)
+                    alias->eval();
 
                 // Set the types of the fields to the corresponding concrete type
                 for (auto& field : templated_fields) {
@@ -211,7 +220,6 @@ void ParserAssistant::finish_parsing()
 
                 class_type->setBody(std::move(body), is_packed);
 
-                compiler->typing_system.pop_scope();
                 compiler->typing_system.identifier_types.restore_prev_state();
             }
             else
@@ -227,13 +235,19 @@ void ParserAssistant::finish_parsing()
                     is_packed = parent_llvm->isPacked();
                 }
 
-                auto& parent_fields = compiler->name_resolver.class_fields[parent->name];
+                compiler->typing_system.identifier_types.keep_only_last_n_scopes(0, true);
+
+                compiler->typing_system.push_scope();
+                for (auto alias : node->node->aliases)
+                    alias->eval();
 
                 compiler->name_resolver.create_vtable(node->name);
 
                 auto& fields = compiler->name_resolver.class_fields[node->name];
 
                 compiler->name_resolver.owned_fields_count[node->name] = fields.size();
+
+                auto& parent_fields = compiler->name_resolver.class_fields[parent->name];
 
                 // Ignore the vtable field
                 for (size_t i = 1; i < parent_fields.size(); i++)
@@ -261,12 +275,11 @@ void ParserAssistant::finish_parsing()
                 }
 
                 class_type->setBody(std::move(body), is_packed);
+
+                compiler->typing_system.identifier_types.restore_prev_state();
             }
         }
     }
-
-    for (auto alias : global_aliases)
-        alias->eval();
 
     for (auto& root : class_info["Object"].children)
     {
@@ -293,6 +306,9 @@ void ParserAssistant::finish_parsing()
             }
         }
     }
+
+    // Only the global scope
+    assert(compiler->typing_system.identifier_types.size() == 1);
 
     current_class = "";
     is_in_function = false;

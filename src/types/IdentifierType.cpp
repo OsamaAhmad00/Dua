@@ -7,7 +7,12 @@ namespace dua
 const Type* IdentifierType::get_concrete_type() const
 {
     if (!is_templated)
-        return compiler->get_typing_system().get_type(name)->get_concrete_type();
+    {
+        auto type = compiler->get_typing_system().get_type(name);
+        if (type != this)
+            return type->get_concrete_type();
+        return compiler->get_name_resolver().get_class(name);
+    }
 
     auto concrete_types = template_args;
     for (auto& type : concrete_types)

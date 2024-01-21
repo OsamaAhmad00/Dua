@@ -1,0 +1,23 @@
+import "../lib/vector.dua"
+
+nomangle int printf(str message, ...);
+
+// Case pushing an element
+
+int main()
+{
+    Vector<int> v;
+    v.push(4);
+}
+
+
+// Case Popping an element
+// Outputs "4"
+
+int main()
+{
+    Vector<int> v;
+    v.push(4);
+    printf("%d\n", v[0]);
+    printf("%d\n", v.pop());
+}
