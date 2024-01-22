@@ -40,10 +40,6 @@ void FunctionNameResolver::register_function(std::string name, FunctionInfo info
     if (compiler->name_resolver.has_class(name))
         report_error("There is already a class with the name " + name + ". Can't have a function with the same name");
 
-    llvm::FunctionType* type = info.type->llvm_type();
-    llvm::Function* function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, name, compiler->module);
-    llvm::verifyFunction(*function);
-
     auto it = functions.find(name);
     if (it != functions.end()) {
         // Verify that the signatures are the same
@@ -51,6 +47,9 @@ void FunctionNameResolver::register_function(std::string name, FunctionInfo info
             report_error("Redefinition of the function " + name + " with a different signature");
         }
     } else {
+        llvm::FunctionType* type = info.type->llvm_type();
+        llvm::Function* function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, name, compiler->module);
+        llvm::verifyFunction(*function);
         functions[std::move(name)] = std::move(info);
     }
 }

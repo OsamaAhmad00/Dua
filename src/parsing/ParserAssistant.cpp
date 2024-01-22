@@ -1260,5 +1260,9 @@ void ParserAssistant::create_dynamic_cast() {
     used_dynamic_casting = true;
 }
 
+void ParserAssistant::create_address_of() {
+    push_node<AddressOfNode>(pop_node());
+}
+
 
 }

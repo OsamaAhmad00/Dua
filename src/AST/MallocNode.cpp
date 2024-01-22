@@ -1,5 +1,6 @@
 #include <AST/lvalue/MallocNode.hpp>
 #include "types/IntegerTypes.hpp"
+#include "types/ArrayType.hpp"
 
 namespace dua
 {
@@ -53,10 +54,12 @@ Value MallocNode::eval()
     builder().CreateCondBr(cmp, end_bb, body_bb);
 
     builder().SetInsertPoint(body_bb);
-    auto offset = builder().CreateMul(counter_val, bytes);
-    auto ptr_to_i64 = builder().CreatePtrToInt(pointer.get(), builder().getInt64Ty());
-    auto added = builder().CreateAdd(ptr_to_i64, offset);
-    auto instance = builder().CreateIntToPtr(added, alloc_type->getPointerTo());
+    auto array = compiler->create_type<ArrayType>(get_element_type(), LONG_LONG_MAX);
+    auto instance = builder().CreateGEP(
+        array->llvm_type(),
+        pointer.get(),
+        { builder().getInt32(0), counter_val }
+    );
     name_resolver().call_constructor(compiler->create_value(instance, get_element_type()), evaluated);
     auto inc = builder().CreateAdd(counter_val, builder().getInt64(1));
     builder().CreateStore(inc, counter);

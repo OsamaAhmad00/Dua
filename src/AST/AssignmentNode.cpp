@@ -43,11 +43,12 @@ Value AssignmentExpressionNode::eval()
         lhs_res.type = element_type;
     }
 
-    if (auto ref = lhs_res.type->as<ReferenceType>(); ref != nullptr) {
+    auto lhs_ref = lhs_res.type->as<ReferenceType>();
+    if (lhs_ref != nullptr) {
         // When assigning to an allocated type, you need to load the pointer first
-        if (ref->is_allocated()) {
+        if (lhs_ref->is_allocated()) {
             lhs_res.memory_location = lhs_res.get();
-            lhs_res.type = ref->get_unallocated();
+            lhs_res.type = lhs_ref->get_unallocated();
         }
     }
 
@@ -56,7 +57,13 @@ Value AssignmentExpressionNode::eval()
             + lhs_res.type->to_string() + " and " + rhs_res.type->to_string());
 
     if (*lhs_res.type != *rhs_res.type) {
-        Value alternative = typing_system().cast_value(rhs_res, lhs_res.type);
+        auto target_type = lhs_res.type;
+        if (lhs_ref != nullptr) {
+            // If the source is a reference, don't cast to a
+            //  reference type, rather cast to a value type.
+            target_type = lhs_ref->get_element_type();
+        }
+        Value alternative = typing_system().cast_value(rhs_res, target_type);
         if (alternative.is_null())
             report_error("Invalid assignment operation");
         rhs_res = alternative;

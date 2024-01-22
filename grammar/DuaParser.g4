@@ -182,7 +182,6 @@ variable_def_no_simicolon
 
 optional_constructor_args
     : '(' arg_list ')'
-    | arg_list
     | /* empty */ { assistant.push_counter(); }
     ;
 
@@ -299,20 +298,20 @@ expression
     | block_expression
     | if_expression
     | when_expression
-    | cast_expression
     | '(' expression ')'
     | function_call
     | expression '(' arg_list ')' { assistant.create_expr_function_call();  }
+    | expression '[' expression ']' { assistant.create_indexing(); }
+    | '(' type ')' expression { assistant.create_cast(); }
+    | '(' '(' type ')' ')' expression { assistant.create_forced_cast(); }
     | New optional_size identifier_type optional_constructor_args { assistant.create_malloc(); }
-    | New type optional_size { assistant.push_counter(); assistant.create_malloc(); }
+    | New optional_size type { assistant.push_counter(); assistant.create_malloc(); }
     | SizeOf '(' expr_or_type ')'   { assistant.create_size_of();   }
     | TypeName '(' expr_or_type ')' { assistant.create_type_name(); }
     | DynamicName '(' expression ')' { assistant.push_null_type(); assistant.create_dynamic_name(); }
     | DynamicName '(' type ')' { assistant.push_null_node(); assistant.create_dynamic_name(); }
     | IsType '(' expr_or_type ',' expr_or_type ')' { assistant.create_is_type(); }
-    | expression As type { assistant.create_dynamic_cast(); }
     | loaded_lvalue
-    | expression '[' expression ']' { assistant.create_indexing(); }
     | lvalue '++' { assistant.create_post_inc(); }
     | lvalue '--' { assistant.create_post_dec(); }
     | '++' lvalue { assistant.create_pre_inc(); }
@@ -321,7 +320,8 @@ expression
     | '-'  expression { assistant.create_unary_expr<NegativeExpressionNode>();          }
     | '!'  expression { assistant.create_unary_expr<NotExpressionNode>();               }
     | '~'  expression { assistant.create_unary_expr<BitwiseComplementExpressionNode>(); }
-    | '&' lvalue  // the lvalue production has loaded the address already, there is nothing to be done here.
+    | '&' expression  { assistant.create_address_of(); }
+    | expression As type { assistant.create_dynamic_cast(); }
     | expression '*' expression  { assistant.create_binary_expr<MultiplicationNode>(); }
     | expression '/' expression  { assistant.create_binary_expr<DivisionNode>();       }
     | expression '%' expression  { assistant.create_binary_expr<ModNode>();            }
@@ -405,11 +405,6 @@ comma_terminated_types_list
 
 type_alias
     : TypeAlias identifier '=' type ';' { assistant.create_type_alias(); }
-    ;
-
-cast_expression
-    : '(' type ')' expression { assistant.create_cast(); }
-    | '(' '(' type ')' ')' expression { assistant.create_forced_cast(); }
     ;
 
 return_statement

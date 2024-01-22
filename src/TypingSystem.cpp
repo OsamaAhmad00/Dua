@@ -54,9 +54,11 @@ static Value _cast_value(const Value& value, const Type* type, bool panic_on_fai
             }
             return result;
         } else {
-            // If the target is unallocated, load the address
-            if (source_ref->is_allocated())
+            // If the target is allocated, load the address
+            if (source_ref->is_allocated()) {
                 result.memory_location = value.get();
+                result.set(nullptr);
+            }
             result.type = source_ref->get_element_type();
             return _cast_value(result, type, panic_on_failure, compiler);
         }
@@ -174,8 +176,8 @@ Value TypingSystem::cast_value(const dua::Value &value, const Type* target_type,
 
 const Type* TypingSystem::get_winning_type(const Type* lhs, const Type* rhs, bool panic_on_failure, const std::string& message) const
 {
-    auto l = lhs->llvm_type();
-    auto r = rhs->llvm_type();
+    auto l = lhs->get_contained_type()->llvm_type();
+    auto r = rhs->get_contained_type()->llvm_type();
 
     llvm::DataLayout dl(&module());
     unsigned int l_width = dl.getTypeAllocSize(l);

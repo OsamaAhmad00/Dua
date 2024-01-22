@@ -2,7 +2,7 @@ import "../lib/vector.dua"
 
 nomangle int printf(str message, ...);
 
-// Case pushing an element
+// Case Pushing an element
 
 int main()
 {
@@ -18,6 +18,65 @@ int main()
 {
     Vector<int> v;
     v.push(4);
-    printf("%d\n", v[0]);
     printf("%d\n", v.pop());
 }
+
+
+// Case Expanding
+// Outputs "2 4 8 16 32 64 128 256 512 1024 \n"
+
+int main()
+{
+    Vector<int> v;
+
+    int c = 0;
+
+    int n = 1000;
+
+    for (int i = 0; i < n; i++)
+    {
+        if (v.size() != i)
+            printf("Wrong size: %d\n", v.size());
+
+        if (c != v.capacity()) {
+            c = v.capacity();
+            printf("%d ", c);
+        }
+
+        v.push(i);
+    }
+
+    for (int i = 0; i < n; i++) {
+        if (v[i] != i) {
+            printf("Wrong value (%d) at index %d %p %p\n", v[i], i, &v[i], &i);
+        }
+    }
+}
+
+
+// Case Trimming
+// Outputs "5 4 3 2 1 "
+
+int main()
+{
+    Vector<int> v;
+
+    int n = 5;
+
+    for (int i = 0; i < n; i++)
+    {
+        if (v.size() != i)
+            printf("Wrong size: %d\n", v.size());
+        v.push(i);
+    }
+
+    v.trim_to_fit();
+    for (int i = 0; i < n; i++)
+    {
+        printf("%d ", v.capacity());
+
+        v.pop();
+        v.trim_to_fit();
+    }
+}
+

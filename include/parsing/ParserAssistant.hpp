@@ -52,6 +52,7 @@
 #include "AST/operators/SizeOfNode.hpp"
 #include "AST/operators/IsTypeNode.hpp"
 #include "AST/operators/DynamicNameNode.hpp"
+#include "AST/operators/AddressOfNode.hpp"
 
 #include "AST/lvalue/LValueNode.hpp"
 #include "AST/lvalue/VariableNode.hpp"
@@ -317,6 +318,7 @@ public:
     void create_dynamic_name_from_id();
     void create_dynamic_name();
     void create_dynamic_cast();
+    void create_address_of();
 
     template<typename T>
     void create_unary_expr() {

@@ -1,46 +1,32 @@
 // TODO delete this
 nomangle int printf(str message, ...);
 
-i32& postfix[] (i32* ptr, i64 i)
-{
-    i64 offset = i * sizeof(i32);
-    i64 addr = ptr;
-    addr += offset;
-    return *((i32*)addr);
-}
-
 class Vector<T>
 {
     typealias size_t = long;
 
     size_t _size = 0;
-    size_t capacity;
+    size_t _capacity;
     T* buffer;
 
-    constructor(size_t n)
-    {
-        buffer = new[n] T;
-        capacity = n;
-    }
+    constructor(size_t n) : _capacity(n), buffer(new[n] T) { }
 
-    constructor() {
-        constructor(2);
-    }
+    constructor() { constructor(2); }
 
     size_t size() { return _size; }
 
+    size_t capacity() { return _capacity; }
+
     void push(T t) {
         expand_if_needed();
+        // printf("Pushing %d\n", t);
         buffer[_size++] = t;
     }
 
     T pop() {
         if (_size == 0)
             printf("Can't pop an empty vector of %s\n", typename(T));
-        _size--;
-        T result = buffer[_size];
-        shrink_if_possible();
-        return result;
+        return buffer[--_size];
     }
 
     T& postfix [](size_t i) {
@@ -53,36 +39,26 @@ class Vector<T>
 
     void expand_if_needed()
     {
-        if (_size != capacity)
-            return;
-
-        T* temp = new[_size * 2] T;
-
-        for (size_t i = 0; i < _size; i++) {
-            temp[i] = buffer[i];
-        }
-
-        delete buffer;
-        buffer = temp;
-
-        _size *= 2;
+        if (_size == _capacity)
+            alloc_new_buffer(_size * 2);
     }
 
-    void shrink_if_possible()
+    void trim_to_fit()
     {
-        if (_size != capacity / 4)
-            return;
+        alloc_new_buffer(_size);
+    }
 
-        T* temp = new[capacity / 2] T;
+    void alloc_new_buffer(size_t new_capacity)
+    {
+        T* temp = new[new_capacity] T;
 
-        for (size_t i = 0; i < _size; i++) {
+        for (size_t i = 0; i < _size; i++)
             temp[i] = buffer[i];
-        }
 
         delete buffer;
         buffer = temp;
 
-        _size = capacity / 4;
+        _capacity = new_capacity;
     }
 }
 

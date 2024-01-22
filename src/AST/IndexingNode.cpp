@@ -3,6 +3,7 @@
 #include "AST/lvalue/LoadedLValueNode.hpp"
 #include "types/PointerType.hpp"
 #include "types/ReferenceType.hpp"
+#include "types/IntegerTypes.hpp"
 
 namespace dua
 {
@@ -32,11 +33,15 @@ Value IndexingNode::eval()
     if (!postfix_operator_result.is_null())
         return postfix_operator_result;
 
-    // If the cast to an lvalue succeeds, then lhs_eval.memory_location is not null
+    auto index = rhs_eval.cast_as(compiler->create_type<I64Type>(), false);
+    if (index.is_null())
+        report_error("Can't use a " + rhs_eval.type->to_string() + " as an index");
+
     auto element_type = get_element_type(lhs, rhs);;
-    if (element_type->as<PointerType>() != nullptr) {
+    if (auto ptr = element_type->as<PointerType>(); ptr != nullptr) {
         // Act as if this is an array
-        element_type = compiler->create_type<ArrayType>(element_type, LONG_LONG_MAX);
+        lhs_eval.memory_location = lhs_eval.get();
+        element_type = compiler->create_type<ArrayType>(ptr->get_element_type(), LONG_LONG_MAX);
     }
 
     auto memory_location = builder().CreateGEP(
@@ -61,23 +66,22 @@ const Type *IndexingNode::get_type()
 
     auto element_type = get_element_type(lhs, rhs);
 
-    const Type* result = nullptr;
-
-    if (auto pointer_type = element_type->as<PointerType>(); pointer_type != nullptr) {
-        result = pointer_type->get_element_type();
-    }
+    const Type* result = element_type;
 
     if (auto reference_type = element_type->as<ReferenceType>(); reference_type != nullptr) {
         result = reference_type->get_element_type();
     }
 
-    if (result == nullptr) {
-        if (auto array_type = element_type->as<ArrayType>(); array_type != nullptr)
-            result = array_type->get_element_type();
+    if (auto pointer_type = element_type->as<PointerType>(); pointer_type != nullptr) {
+        result = pointer_type->get_element_type();
+    } else if (auto array_type = element_type->as<ArrayType>(); array_type != nullptr) {
+        result = array_type->get_element_type();
     }
 
     if (result == nullptr)
         report_error("Can't use the default index operator with a non-lvalue expression");
+
+    result = compiler->create_type<ReferenceType>(result, false);
 
     return set_type(result);
 }

@@ -60,5 +60,40 @@ int main()
 }
 
 
-// TODO Case Allocating multiple primitive types
-// Outputs
+// Case Allocating multiple primitive types
+// Outputs "00000"
+
+int main()
+{
+    var arr = new[5] int;
+    for (int i = 0; i < 5; i++)
+        print(arr[i]);
+}
+
+
+// Case Allocating multiple objects
+// Outputs "HelloHelloHello"
+
+class X
+{
+    constructor() { printf("Hello"); }
+}
+
+int main()
+{
+    var arr = new[3] X;
+}
+
+
+// Case Allocating multiple objects with constructor params
+// Outputs "55555"
+
+class X
+{
+    constructor(int i) { print(i); }
+}
+
+int main()
+{
+    var arr = new[5] X(5);
+}
