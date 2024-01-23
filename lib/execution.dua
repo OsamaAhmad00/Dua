@@ -1,0 +1,24 @@
+// These need to be static to not interfere with the definitions of c
+static int* stdin  = __get_stdin ();
+static int* stdout = __get_stdout();
+static int* stderr = __get_stderr();
+
+nomangle int* __get_stdin();
+
+nomangle int* __get_stdout();
+
+nomangle int* __get_stderr();
+
+nomangle void fprintf(int* stream, str message, ...);
+
+nomangle void exit(int exit_code);
+
+nomangle void getenv(str name);
+
+nomangle int system(str command);
+
+void panic(str message)
+{
+    fprintf(stderr, message);
+    exit(-1);
+}

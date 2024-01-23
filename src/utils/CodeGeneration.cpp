@@ -38,7 +38,8 @@ int run_clang(const std::vector<std::string>& args)
 {
     // FIXME make it detect the available versions of clang
 
-    std::string concatenated = " -Wno-override-module " + boost::algorithm::join(args, " ");
+    std::string additional_files = PROJECT_ROOT_DIR + "/lib/common.c ";
+    std::string concatenated = " -Wno-override-module " + additional_files + boost::algorithm::join(args, " ");
 
 #ifdef _WIN32
     auto prefix = "clang";

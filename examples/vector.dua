@@ -80,3 +80,37 @@ int main()
     }
 }
 
+
+// Case Popping an empty vector
+// Returns -1
+
+int main()
+{
+    Vector<double> v;
+    v.pop();
+}
+
+
+// Case Using a negative index
+// Returns -1
+
+int main()
+{
+    Vector<double> v;
+    v[-3];
+}
+
+
+// Case Using an index bigger than size
+// Returns -1
+
+int main()
+{
+    Vector<double> v;
+    v.push(1);
+    v.push(2);
+    v.push(3);
+    v[5];
+}
+
+

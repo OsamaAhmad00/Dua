@@ -4,6 +4,7 @@
 #include "types/PointerType.hpp"
 #include "types/ReferenceType.hpp"
 #include "types/IntegerTypes.hpp"
+#include "AST/values/StringValueNode.hpp"
 
 namespace dua
 {
@@ -17,6 +18,10 @@ const Type* get_element_type(ASTNode* lhs, ASTNode* rhs)
     if (result == nullptr) {
         if (auto i = lhs->as<IndexingNode>(); i != nullptr)
             result = i->get_type();
+    }
+    if (result == nullptr) {
+        if (auto i = lhs->as<StringValueNode>(); i != nullptr)
+            result = lhs->get_type();
     }
     if (result == nullptr)
         report_error("There is no indexing operator ([] operator) defined between for the types "

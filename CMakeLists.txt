@@ -138,6 +138,8 @@ set(DUA_SOURCES
 
 set(DUA_PREREQUISITE_LIBS ${LLVM_LIBS} ${ANTLR4_LIBS} ${Boost_LIBRARIES})
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPROJECT_ROOT_DIR=std::string{\\\"${PROJECT_SOURCE_DIR}\\\"}")
+
 add_executable(Dua
     main.cpp
     ${DUA_SOURCES}

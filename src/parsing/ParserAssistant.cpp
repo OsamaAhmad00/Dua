@@ -390,6 +390,8 @@ void ParserAssistant::create_variable_declaration()
     {
         push_node<GlobalVariableDefinitionNode>(std::move(name), type, nullptr, std::vector<ASTNode*>{}, is_extern, is_static);
         global_variable_nodes.push_back((GlobalVariableDefinitionNode*)nodes.back());
+        is_extern = false;
+        is_static = false;
     }
     else
     {
@@ -481,6 +483,7 @@ void ParserAssistant::create_function_declaration()
         template_param_count = template_params.size();
 
     push_node<FunctionDefinitionNode>(std::move(name), nullptr, function_type, nomangle, template_param_count, false, is_static);
+    is_static = false;
     auto func = (FunctionDefinitionNode*)nodes.back();
 
     if (in_templated_class) {
@@ -1176,6 +1179,7 @@ void ParserAssistant::create_operator(const std::string& position_name)
     };
 
     push_node<FunctionDefinitionNode>(std::move(name), nullptr, function_type, false, -1, true, is_static);
+    is_static = false;
 
     auto func = (FunctionDefinitionNode*)nodes.back();
     if (in_templated_class) {

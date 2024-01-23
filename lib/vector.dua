@@ -1,5 +1,4 @@
-// TODO delete this
-nomangle int printf(str message, ...);
+import "execution.dua"
 
 class Vector<T>
 {
@@ -19,21 +18,20 @@ class Vector<T>
 
     void push(T t) {
         expand_if_needed();
-        // printf("Pushing %d\n", t);
         buffer[_size++] = t;
     }
 
     T pop() {
         if (_size == 0)
-            printf("Can't pop an empty vector of %s\n", typename(T));
+            panic("Can't pop an empty vector");
         return buffer[--_size];
     }
 
     T& postfix [](size_t i) {
         if (i < 0)
-            printf("Can't have a negative index\n");
+            panic("Can't have a negative index\n");
         if (i >= _size)
-            printf("Can't have an index bigger than the size\n");
+            panic("Can't have an index bigger than the size\n");
         return buffer[i];
     }
 
@@ -45,11 +43,15 @@ class Vector<T>
 
     void trim_to_fit()
     {
-        alloc_new_buffer(_size);
+        if (_size > 0)
+            alloc_new_buffer(_size);
     }
 
     void alloc_new_buffer(size_t new_capacity)
     {
+        if (new_capacity <= 0)
+            panic("Cannot allocate a non-positive-sized buffer");
+
         T* temp = new[new_capacity] T;
 
         for (size_t i = 0; i < _size; i++)
@@ -59,6 +61,28 @@ class Vector<T>
         buffer = temp;
 
         _capacity = new_capacity;
+    }
+
+    void resize(size_t new_size)
+    {
+        if (new_size <= 0)
+            panic("Cannot resize to a non-positive size");
+
+        if (new_size > _capacity)
+            alloc_new_buffer(new_size);
+
+        _size = new_size;
+    }
+
+    void reserve(size_t amount)
+    {
+        if (amount <= 0)
+            panic("Cannot reserve a non-positive amount");
+
+        if (amount <= _capacity)
+            return;
+
+        alloc_new_buffer(amount);
     }
 }
 

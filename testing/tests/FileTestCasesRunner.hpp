@@ -10,7 +10,7 @@ class FileTestCasesRunner
     std::string filename;
     std::vector<std::string> args;
 
-    const std::string TESTS_PATH = "../../../examples/";
+    const std::string TESTS_PATH = PROJECT_ROOT_DIR + "/examples/";
 
 public:
 
