@@ -81,6 +81,28 @@ int main()
 }
 
 
+// Case Resizing
+// Outputs "10"
+
+int main()
+{
+    Vector<int> v;
+    v.resize(10);
+    printf("%d", v.size());
+}
+
+
+// Case Reserving
+// Outputs "10 0"
+
+int main()
+{
+    Vector<int> v;
+    v.reserve(10);
+    printf("%d %d", v.capacity(), v.size());
+}
+
+
 // Case Popping an empty vector
 // Returns -1
 
