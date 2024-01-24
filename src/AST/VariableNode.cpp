@@ -88,7 +88,7 @@ const Type* VariableNode::get_type()
         auto full_name = name_resolver().get_function_full_name(name);
         t = name_resolver().get_function_no_overloading(full_name).type;
     } else {
-        report_error("The identifier " + name + " is not defined");
+        compiler->report_error("The identifier " + name + " is not defined");
     }
 
     // References already point to some value. We just need to make

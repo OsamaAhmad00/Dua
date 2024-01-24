@@ -9,7 +9,7 @@
 namespace dua
 {
 
-const Type* get_element_type(ASTNode* lhs, ASTNode* rhs)
+const Type* IndexingNode::get_element_type(ASTNode* lhs, ASTNode* rhs)
 {
     const Type* result = nullptr;
     auto loaded_lvalue = lhs->as<LoadedLValueNode>();
@@ -24,7 +24,7 @@ const Type* get_element_type(ASTNode* lhs, ASTNode* rhs)
             result = lhs->get_type();
     }
     if (result == nullptr)
-        report_error("There is no indexing operator ([] operator) defined between for the types "
+        compiler->report_error("There is no indexing operator ([] operator) defined between for the types "
             + lhs->get_type()->to_string() + " and " + rhs->get_type()->to_string());
     return result;
 }
@@ -40,7 +40,7 @@ Value IndexingNode::eval()
 
     auto index = rhs_eval.cast_as(compiler->create_type<I64Type>(), false);
     if (index.is_null())
-        report_error("Can't use a " + rhs_eval.type->to_string() + " as an index");
+        compiler->report_error("Can't use a " + rhs_eval.type->to_string() + " as an index");
 
     auto element_type = get_element_type(lhs, rhs);;
     if (auto ptr = element_type->as<PointerType>(); ptr != nullptr) {
@@ -84,7 +84,7 @@ const Type *IndexingNode::get_type()
     }
 
     if (result == nullptr)
-        report_error("Can't use the default index operator with a non-lvalue expression");
+        compiler->report_error("Can't use the default index operator with a non-lvalue expression");
 
     result = compiler->create_type<ReferenceType>(result, false);
 

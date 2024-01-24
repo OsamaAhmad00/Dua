@@ -13,17 +13,17 @@ Value GlobalVariableDefinitionNode::eval()
         return result;
 
     if (initializer != nullptr && !args.empty())
-        report_error("Can't have both an initializer and an initializer list (in " + name + ")");
+        compiler->report_error("Can't have both an initializer and an initializer list (in " + name + ")");
 
     if (is_extern && is_static)
-        report_error("Can't have both the static and the extern options together in the declaration of the global variable " + name);
+        compiler->report_error("Can't have both the static and the extern options together in the declaration of the global variable " + name);
 
     module().getOrInsertGlobal(name, type->llvm_type());
     llvm::GlobalVariable* variable = module().getGlobalVariable(name);
 
     if (is_extern) {
         if (initializer != nullptr)
-            report_error("Extern global variables can't have initializers (in the global variable " + name + " with type " + type->to_string() + ")");
+            compiler->report_error("Extern global variables can't have initializers (in the global variable " + name + " with type " + type->to_string() + ")");
         variable->setLinkage(llvm::GlobalVariable::LinkageTypes::ExternalLinkage);
     } else if (is_static) {
         variable->setLinkage(llvm::GlobalVariable::LinkageTypes::InternalLinkage);
@@ -42,7 +42,7 @@ Value GlobalVariableDefinitionNode::eval()
 
         auto llvm_value = typing_system().cast_value(value, type).get();
         if (llvm_value == nullptr)
-            report_error("Type mismatch between the global variable " + name + " and its initializer");
+            compiler->report_error("Type mismatch between the global variable " + name + " and its initializer");
 
         auto casted = llvm::dyn_cast<llvm::Constant>(llvm_value);
         // If it's not a constant, then the initialization happens in the

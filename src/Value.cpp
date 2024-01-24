@@ -1,6 +1,7 @@
 #include <Value.hpp>
 #include <TypingSystem.hpp>
 #include <types/ReferenceType.hpp>
+#include <ModuleCompiler.hpp>
 
 namespace dua
 {
@@ -41,7 +42,7 @@ llvm::Value* Value::get() const
 {
     if (loaded_value == nullptr) {
         if (memory_location == nullptr)
-            report_internal_error("memory_location is null!");
+            typing_system->compiler->report_internal_error("memory_location is null!");
         auto llvm_type = type->llvm_type();
         loaded_value = typing_system->builder().CreateLoad(llvm_type, memory_location);
     }

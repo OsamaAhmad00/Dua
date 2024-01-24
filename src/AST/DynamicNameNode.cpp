@@ -60,7 +60,7 @@ Value DynamicNameNode::eval()
     auto class_type = concrete_type->as<ClassType>();
 
     if (class_type == nullptr)
-        report_error("The type " + concrete_type->to_string() + " is not a class type, and can't be used in the dynamicname operator");
+        compiler->report_error("The type " + concrete_type->to_string() + " is not a class type, and can't be used in the dynamicname operator");
 
     auto vtable = name_resolver().get_vtable_instance(class_type->name);
     llvm::Value* vtable_ptr = nullptr;

@@ -23,7 +23,7 @@ NoneValue DoWhileNode::eval()
     builder().SetInsertPoint(cond_block);
     auto cond_res = cond_exp->eval().cast_as_bool();
     if (cond_res.is_null())
-        report_error("The provided condition can't be casted to boolean value.");
+        compiler->report_error("The provided condition can't be casted to boolean value.");
     builder().CreateCondBr(cond_res.get(), body_block, end_block);
 
     builder().SetInsertPoint(body_block);

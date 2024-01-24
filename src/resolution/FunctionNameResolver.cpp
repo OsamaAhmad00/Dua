@@ -16,9 +16,9 @@ std::vector<const Type*> get_types(const std::vector<Value>& args)
     return types;
 }
 
-void report_function_not_defined(const std::string& name)
+void FunctionNameResolver::report_function_not_defined(const std::string& name)
 {
-    report_error("The function " + name + " is not declared/defined");
+    compiler->report_error("The function " + name + " is not declared/defined");
 }
 
 FunctionNameResolver::FunctionNameResolver(ModuleCompiler *compiler) : compiler(compiler) {}
@@ -26,7 +26,7 @@ FunctionNameResolver::FunctionNameResolver(ModuleCompiler *compiler) : compiler(
 void FunctionNameResolver::register_function(std::string name, FunctionInfo info, bool nomangle)
 {
     if (compiler->current_function != nullptr)
-        report_internal_error("Nested functions are not allowed");
+        compiler->report_internal_error("Nested functions are not allowed");
 
     // Registering the function in the module so that all
     //  functions are visible during AST evaluation.
@@ -38,13 +38,13 @@ void FunctionNameResolver::register_function(std::string name, FunctionInfo info
         name = get_function_full_name(name, info.type->param_types);
 
     if (compiler->name_resolver.has_class(name))
-        report_error("There is already a class with the name " + name + ". Can't have a function with the same name");
+        compiler->report_error("There is already a class with the name " + name + ". Can't have a function with the same name");
 
     auto it = functions.find(name);
     if (it != functions.end()) {
         // Verify that the signatures are the same
         if (it->second.type != info.type) {
-            report_error("Redefinition of the function " + name + " with a different signature");
+            compiler->report_error("Redefinition of the function " + name + " with a different signature");
         }
     } else {
         llvm::FunctionType* type = info.type->llvm_type();
@@ -83,7 +83,7 @@ std::string FunctionNameResolver::get_function_full_name(std::string name)
 
     // There exists more than one overload
     if (non_mangled != functions.end() || --end != begin)
-        report_error("Can't infer the overloaded function '" + name +
+        compiler->report_error("Can't infer the overloaded function '" + name +
         "' just from the name. Specifying the function type might help resolve this conflict");
 
     return begin->first;
@@ -154,7 +154,7 @@ void FunctionNameResolver::cast_function_args(std::vector<Value> &args, const Fu
                 } else {
                     // Turn the argument into reference by passing its memory_location instead
                     if (args[i].memory_location == nullptr)
-                        report_error("Can't pass a non-lvalue expression (with " + arg_type->to_string() + " type) as a reference");
+                        compiler->report_error("Can't pass a non-lvalue expression (with " + arg_type->to_string() + " type) as a reference");
                     args[i].set(args[i].memory_location);
                     args[i].type = compiler->create_type<ReferenceType>(arg_type, true);
                     args[i].memory_location = nullptr;
@@ -231,7 +231,7 @@ Value FunctionNameResolver::call_function(const std::string &name, std::vector<V
 
     auto function = compiler->module.getFunction(full_name);
     if (function == nullptr)
-        report_error("The function " + name + " is not defined");
+        compiler->report_error("The function " + name + " is not defined");
 
     auto& info = get_function_no_overloading(full_name);
 
@@ -248,7 +248,7 @@ Value FunctionNameResolver::call_function(const Value& func, std::vector<Value> 
 {
     auto type = func.type->as<FunctionType>();
     if (type == nullptr)
-        report_internal_error("Calling a non-function type");
+        compiler->report_internal_error("Calling a non-function type");
     cast_function_args(args, type);
     std::vector<llvm::Value*> llvm_args(args.size());
     for (size_t i = 0; i < args.size(); i++)
@@ -260,7 +260,7 @@ Value FunctionNameResolver::call_function(const Value& func, std::vector<Value> 
 void FunctionNameResolver::call_constructor(const Value &value, std::vector<Value> args)
 {
     if (!value.get()->getType()->isPointerTy())
-        report_internal_error("Trying to initialize a non-lvalue item");
+        compiler->report_internal_error("Trying to initialize a non-lvalue item");
 
     auto class_type = value.type->as<ClassType>();
 
@@ -271,7 +271,7 @@ void FunctionNameResolver::call_constructor(const Value &value, std::vector<Valu
         if (args.empty())
             args.push_back(compiler->create_value(value.type->default_value().get(), value.type));
         else if (args.size() != 1)
-            report_error("Cannot initialize a primitive type with more than one value");
+            compiler->report_error("Cannot initialize a primitive type with more than one value");
 
         auto casted = compiler->typing_system.cast_value(args[0], value.type);
         builder().CreateStore(casted.get(), value.get());
@@ -291,7 +291,7 @@ void FunctionNameResolver::call_constructor(const Value &value, std::vector<Valu
 
     std::string name = class_type->name + ".constructor";
     if (!has_function(name))
-        report_internal_error("A constructor is not defined for class " + class_type->name);
+        compiler->report_internal_error("A constructor is not defined for class " + class_type->name);
 
     auto instance = compiler->create_value(value.get(), compiler->create_type<ReferenceType>(value.type, true));
     args.insert(args.begin(), instance);
@@ -302,7 +302,7 @@ void FunctionNameResolver::call_constructor(const Value &value, std::vector<Valu
 void FunctionNameResolver::call_copy_constructor(const Value &value, const Value& arg)
 {
     if (!value.get()->getType()->isPointerTy())
-        report_internal_error("Trying to initialize a non-lvalue item");
+        compiler->report_internal_error("Trying to initialize a non-lvalue item");
 
     auto class_type = value.type->as<ClassType>();
 
@@ -343,7 +343,7 @@ void FunctionNameResolver::call_destructor(const Value& value)
 
     std::string name = class_type->name + ".destructor";
     if (!has_function(name))
-        report_internal_error("A destructor is not defined for the class " + class_type->name);
+        compiler->report_internal_error("A destructor is not defined for the class " + class_type->name);
 
     // Call the destructors of fields first
     // Fields are destructed in the reverse order of definition.
@@ -389,7 +389,7 @@ std::string FunctionNameResolver::get_winning_function(const std::string &name, 
         }
 
         if (panic_on_not_found)
-            report_error("Function " + name + " is undefined");
+            compiler->report_error("Function " + name + " is undefined");
 
         else return "";
     }
@@ -441,7 +441,7 @@ std::string FunctionNameResolver::get_winning_function(const std::string &name, 
             message += current->second.type->to_string() + '\n', current++;
         message.pop_back();  // The extra '\n'
 
-        report_error(message);
+        compiler->report_error(message);
     }
 
     auto& result_list = scores.begin()->second;
@@ -456,7 +456,7 @@ std::string FunctionNameResolver::get_winning_function(const std::string &name, 
             message += overload.second->to_string() + '\n';
         message.pop_back();  // The extra '\n'
 
-        report_error(message);
+        compiler->report_error(message);
     }
 
     return result_list.front().first;
@@ -487,13 +487,13 @@ std::string FunctionNameResolver::get_function_name_with_exact_type(const std::s
 
     if (non_mangled != functions.end() && non_mangled->second.type == type) {
         if (mangled != functions.end())
-            report_error("A resolution conflict between a mangled and a non-mangled functions with name " + name);
+            compiler->report_error("A resolution conflict between a mangled and a non-mangled functions with name " + name);
         return name;
     } else if (mangled != functions.end()) {
         return mangled_name;
     }
 
-    report_error("There is no overload for the function '" + name + "' with the type " + type->to_string());
+    compiler->report_error("There is no overload for the function '" + name + "' with the type " + type->to_string());
 
     return "";  // Unreachable
 }
@@ -552,7 +552,7 @@ std::vector<NamedFunctionValue> FunctionNameResolver::get_class_methods(std::str
 bool FunctionNameResolver::is_function_templated(const std::string &name) {
     auto it = functions.find(name);
     if (it == functions.end())
-        report_internal_error("Function " + name + " not defined");
+        compiler->report_internal_error("Function " + name + " not defined");
     return it->second.is_templated;
 }
 
@@ -578,7 +578,7 @@ std::string FunctionNameResolver::get_winning_method(const ClassType *owner, con
     if (begin == end)
     {
         if (panic_on_not_found)
-            report_error("Function " + name + " is undefined");
+            compiler->report_error("Function " + name + " is undefined");
 
         else return "";
     }
@@ -625,7 +625,7 @@ std::string FunctionNameResolver::get_winning_method(const ClassType *owner, con
         }
         message.pop_back();  // The extra '\n'
 
-        report_error(message);
+        compiler->report_error(message);
     }
 
     auto& result_list = scores.begin()->second;
@@ -640,7 +640,7 @@ std::string FunctionNameResolver::get_winning_method(const ClassType *owner, con
             message += overload.second->to_string() + '\n';
         message.pop_back();  // The extra '\n'
 
-        report_error(message);
+        compiler->report_error(message);
     }
 
     return result_list.front().first;

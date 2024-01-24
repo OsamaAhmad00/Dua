@@ -24,12 +24,13 @@ public:                                                                         
         auto l = lhs.cast_as(type, false);                                            \
         auto r = rhs.cast_as(type, false);                                            \
         if (l.is_null() || r.is_null())                                               \
-            report_error("Can't perform the operation " #NAME " between the types "   \
+            compiler->report_error("Can't perform the operation "                     \
+                #NAME " between the types "                                           \
                 + lhs.type->to_string() + " and " + rhs.type->to_string());           \
         llvm::Value* ptr;                                                             \
         if (type->as<FloatType>()) {                                                  \
             if (NO_FLOAT)                                                             \
-                report_error("The operation " #NAME                                   \
+                compiler->report_error("The operation " #NAME                         \
                     " is applicable only on integer types");                          \
             ptr = compiler->get_builder()->FLOAT_OP(l.get(), r.get(), LABEL);         \
         } else {                                                                      \

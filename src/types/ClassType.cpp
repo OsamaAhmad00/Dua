@@ -40,7 +40,7 @@ const ClassField& ClassType::get_field(const std::string &name) const {
         if (field.name == name)
             return field;
     }
-    report_error("Class " + this->name + " doesn't contain a member with the name " + name);
+    compiler->report_error("Class " + this->name + " doesn't contain a member with the name " + name);
 
     // Unreachable
     return fields().front();
@@ -51,7 +51,7 @@ Value ClassType::get_field(const Value& instance, const std::string &name) const
         if (fields()[i].name == name)
             return get_field(instance, i);
     }
-    report_error("Class " + this->name + " doesn't contain a member with the name " + name);
+    compiler->report_error("Class " + this->name + " doesn't contain a member with the name " + name);
     return {};
 }
 

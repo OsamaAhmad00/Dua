@@ -15,7 +15,7 @@ public:
     NoneValue eval() override {
         auto& s = continue_stack();
         if (s.empty())
-            report_internal_error("Not inside a loop");
+            compiler->report_internal_error("Not inside a loop");
         compiler->destruct_last_scope();
         builder().CreateBr(s.back());
         return none_value();

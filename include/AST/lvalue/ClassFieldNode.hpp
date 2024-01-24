@@ -11,6 +11,9 @@ class ClassFieldNode : public VariableNode
 
     ASTNode* instance;
 
+    const ClassType* get_class(const Type* type) const;
+    const ClassType* get_class_from_ptr(ASTNode* node) const;
+
 public:
 
     ClassFieldNode(ModuleCompiler* compiler, ASTNode* instance, std::string field_name)

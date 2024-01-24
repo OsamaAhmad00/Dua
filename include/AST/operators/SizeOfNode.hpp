@@ -32,7 +32,7 @@ public:
             //  is not a valid class type, thus, this is a variable.
             auto cls = target_type->as<ClassType>();
             if (cls == nullptr)
-                report_internal_error("sizeof operator called on an invalid type");
+                compiler->report_internal_error("sizeof operator called on an invalid type");
             type = name_resolver().symbol_table.get(cls->name).type->llvm_type();
         }
 

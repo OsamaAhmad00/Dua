@@ -29,6 +29,8 @@ class TemplatedNameResolver
     std::unordered_map<std::string, TemplateBindings> templated_class_bindings;
     std::unordered_map<std::string, std::vector<TemplatedClassFieldConstructorArgs>> templated_class_field_constructor_args;
 
+    void check_template_params(const std::vector<std::string>& template_params, const std::string& description = "");
+
 public:
 
     TemplatedNameResolver(ModuleCompiler* compiler) : compiler(compiler) {}

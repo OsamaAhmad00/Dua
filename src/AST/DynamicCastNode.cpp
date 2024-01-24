@@ -12,11 +12,11 @@ Value DynamicCastNode::eval()
     if (pointer_type != nullptr) {
         target_class = pointer_type->get_element_type()->as<ClassType>();
         if (target_class == nullptr) {
-            report_error("The type " + type->to_string() +
+            compiler->report_error("The type " + type->to_string() +
                          " a pointer to a non-class type, and can't be used as the target of a dynamic casting operation");
         }
     } else {
-        report_error("The type " + type->to_string() + " is not a pointer type, and can't be used as the target of a dynamic casting operation");
+        compiler->report_error("The type " + type->to_string() + " is not a pointer type, and can't be used as the target of a dynamic casting operation");
     }
 
     auto instance_ptr = instance->eval();
@@ -25,11 +25,11 @@ Value DynamicCastNode::eval()
         if (auto cls = ptr->get_element_type()->get_concrete_type()->as<ClassType>(); cls != nullptr) {
             source_class = cls;
         } else {
-            report_error("The type " + instance_ptr.type->to_string() +
+            compiler->report_error("The type " + instance_ptr.type->to_string() +
                          " is a pointer to a non-class type, and can't be used as the source of a dynamic casting operation");
         }
     } else {
-        report_error("The type " + instance_ptr.type->to_string() +
+        compiler->report_error("The type " + instance_ptr.type->to_string() +
                      " is not a pointer type, and can't be used as the source of a dynamic casting operation");
     }
 

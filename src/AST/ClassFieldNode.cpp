@@ -5,15 +5,15 @@
 namespace dua
 {
 
-static const ClassType* get_class(const Type* type)
+const ClassType* ClassFieldNode::get_class(const Type* type) const
 {
     auto casted = type->as<ClassType>();
     if (casted == nullptr)
-        report_error("Member access on a non-class (" + type->to_string() + ") type");
+        compiler->report_error("Member access on a non-class (" + type->to_string() + ") type");
     return casted;
 }
 
-const static ClassType* get_class_from_ptr(ASTNode* node)
+const ClassType* ClassFieldNode::get_class_from_ptr(ASTNode* node) const
 {
     auto type = node->get_type();
 
@@ -23,7 +23,7 @@ const static ClassType* get_class_from_ptr(ASTNode* node)
     else if (auto ref = type->as<ReferenceType>(); ref != nullptr)
         element_type = ref->get_element_type();
     else
-        report_internal_error("Field access on a non-pointer (" + type->to_string() + ") type");
+        compiler->report_internal_error("Field access on a non-pointer (" + type->to_string() + ") type");
 
     return get_class(element_type);
 }

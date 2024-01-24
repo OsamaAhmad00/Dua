@@ -7,7 +7,7 @@ namespace dua
 Value PostfixAdditionExpressionNode::eval()
 {
     if (lvalue->get_element_type()->as<IntegerType>() == nullptr)
-        report_error("Can't perform postfix increment/decrement on non-integer (" +
+        compiler->report_error("Can't perform postfix increment/decrement on non-integer (" +
             lvalue->get_element_type()->to_string() + ") types.");
     auto ptr = lvalue->eval();
     auto value = builder().CreateLoad(lvalue->get_element_type()->llvm_type(), ptr.get());

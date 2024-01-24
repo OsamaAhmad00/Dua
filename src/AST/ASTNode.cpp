@@ -1,5 +1,6 @@
 #include <AST/ASTNode.hpp>
 #include "types/VoidType.hpp"
+#include <utils/ErrorReporting.hpp>
 
 namespace dua
 {
@@ -18,7 +19,7 @@ llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, const 
     if (init)
     {
         if (!args.empty())
-            report_error("Can't have an both an initializer and an initialization "
+            compiler->report_error("Can't have an both an initializer and an initialization "
                          "list in the definition of a local variable (the variable " + name + ")");
         name_resolver().call_copy_constructor(value, *init);
     } else {

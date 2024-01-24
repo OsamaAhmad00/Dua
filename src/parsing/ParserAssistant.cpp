@@ -94,7 +94,7 @@ void ParserAssistant::finish_parsing()
         auto cls = compiler->name_resolver.get_templated_class(name, template_args);
         auto& info = class_info[cls->name];  // Using the full name to avoid collisions
         if (!info.name.empty())
-            report_error("Redefinition of the templated class " + cls->name + " with " + std::to_string(template_args.size()) + " template parameters");
+            compiler->report_error("Redefinition of the templated class " + cls->name + " with " + std::to_string(template_args.size()) + " template parameters");
         info.template_args = template_args;
         info.is_templated = true;
         info.name = name;
@@ -178,7 +178,7 @@ void ParserAssistant::finish_parsing()
                 for (size_t i = 1; i < parent_fields.size(); i++)
                     for (auto &field : templated_fields)
                         if (parent_fields[i].name ==field.name)
-                            report_error("The field " + parent_fields[i].name + " of the class " + full_name + " is already defined one of its parent classes");
+                            compiler->report_error("The field " + parent_fields[i].name + " of the class " + full_name + " is already defined one of its parent classes");
 
                 // We need to add the vtable before method evaluation, and after method
                 // registration so that the offsets of the fields in methods are correct
@@ -253,7 +253,7 @@ void ParserAssistant::finish_parsing()
                 for (size_t i = 1; i < parent_fields.size(); i++)
                     for (auto &field : fields)
                         if (parent_fields[i].name ==field.name)
-                            report_error("The field " + parent_fields[i].name + " of the class " + node->name + " is already defined one of its parent classes");
+                            compiler->report_error("The field " + parent_fields[i].name + " of the class " + node->name + " is already defined one of its parent classes");
 
                 std::vector<ClassField> all_fields;
                 // We need to exclude the vtable field of the parent
@@ -396,7 +396,7 @@ void ParserAssistant::create_variable_declaration()
     else
     {
         if (is_extern) {
-            report_error("The extern keyword can only be used with global variable "
+            compiler->report_error("The extern keyword can only be used with global variable "
                          "declarations (in the declaration of the variable " + name + " with type " +
                          type->to_string() + ")");
         }
@@ -431,7 +431,7 @@ void ParserAssistant::create_variable_definition()
 void ParserAssistant::create_function_declaration()
 {
     if (!is_in_global_scope() && !in_class())
-        report_error("Function declarations/definitions not allowed in a local scope");
+        compiler->report_error("Function declarations/definitions not allowed in a local scope");
 
     inc_statements();
 
@@ -466,9 +466,9 @@ void ParserAssistant::create_function_declaration()
 
     if (nomangle) {
         if (in_class())
-            report_error("Can't use the nomangle keyword for methods");
+            compiler->report_error("Can't use the nomangle keyword for methods");
         if (is_templated)
-            report_error("Non-mangled templated functions are not supported yet");
+            compiler->report_error("Non-mangled templated functions are not supported yet");
     }
 
     auto function_type = compiler->create_type<FunctionType>(return_type, std::move(param_types), is_var_arg);
@@ -876,7 +876,7 @@ void ParserAssistant::register_class()
     }
 
     if (compiler->name_resolver.has_function(name))
-        report_error("There is already a function with the name " + name + ". Can't have a class with the same name");
+        compiler->report_error("There is already a function with the name " + name + ". Can't have a class with the same name");
 
     auto cls = compiler->create_type<ClassType>(name);
     compiler->name_resolver.classes[name] = cls;
@@ -893,10 +893,10 @@ void ParserAssistant::finish_class_declaration() {
 void ParserAssistant::start_class_definition()
 {
     if (in_class())
-        report_error("Nested classes are not allowed");
+        compiler->report_error("Nested classes are not allowed");
 
     if (is_in_function)
-        report_error("Can't define a class inside a function");
+        compiler->report_error("Can't define a class inside a function");
 
     in_templated_class = is_templated_stack.back();
 
@@ -915,7 +915,7 @@ void ParserAssistant::create_class()
     size_t n = leave_scope();
 
     if (!is_in_global_scope())
-        report_error("Class " + current_class + " is defined in a non-global scope");
+        compiler->report_error("Class " + current_class + " is defined in a non-global scope");
 
     std::vector<ClassFieldDefinitionNode*> fields;
     std::vector<FunctionDefinitionNode*> methods;
@@ -929,7 +929,7 @@ void ParserAssistant::create_class()
             methods.push_back(m);
         else if (auto a = dynamic_cast<TypeAliasNode*>(node); a != nullptr)
             aliases.push_back(a);
-        else report_internal_error("Class member that's not a field, a method, or an alias");
+        else compiler->report_internal_error("Class member that's not a field, a method, or an alias");
     }
 
     // So that they are in the order of definition.
@@ -942,7 +942,7 @@ void ParserAssistant::create_class()
     for (size_t i = 0; i < fields.size(); i++)
         for (size_t j = i + 1; j < fields.size(); j++)
             if (fields[i]->name == fields[j]->name)
-                report_error("The field " + fields[i]->name + " of the class " + name + " is defined more than once");
+                compiler->report_error("The field " + fields[i]->name + " of the class " + name + " is defined more than once");
 
     auto parent_type = pop_type()->as<IdentifierType>();
 
@@ -955,7 +955,7 @@ void ParserAssistant::create_class()
         auto& info = class_info[cls->name];
 
         if (!info.name.empty())
-            report_error("Redefinition of the class " + cls->name);
+            compiler->report_error("Redefinition of the class " + cls->name);
 
         info.is_templated = false;
         info.name = cls->name;
@@ -1060,7 +1060,7 @@ void ParserAssistant::create_pointer_field_access() {
 void ParserAssistant::prepare_constructor()
 {
     if (!in_class())
-        report_error("Constructors can only be defined inside classes");
+        compiler->report_error("Constructors can only be defined inside classes");
     push_type<VoidType>();
     push_str("constructor");
     nomangle = false;
@@ -1077,7 +1077,7 @@ void ParserAssistant::finish_constructor()
 void ParserAssistant::prepare_destructor()
 {
     if (!in_class())
-        report_error("Destructors can only be defined inside classes");
+        compiler->report_error("Destructors can only be defined inside classes");
     push_type<VoidType>();
     push_str("destructor");
     nomangle = false;
@@ -1117,7 +1117,7 @@ void ParserAssistant::create_func_ref()
 void ParserAssistant::prepare_copy_constructor()
 {
     if (!in_class())
-        report_error("Copy constructors can only be defined inside classes");
+        compiler->report_error("Copy constructors can only be defined inside classes");
     push_type<VoidType>();
     push_str("=constructor");
     nomangle = false;
@@ -1128,7 +1128,7 @@ void ParserAssistant::finish_copy_constructor()
     auto constructor = pop_node_as<FunctionDefinitionNode>();
     auto& param_types = constructor->get_function_type()->param_types;
     if (param_types.size() != 2)  // One for the instance and one for the other object
-        report_error("Copy constructors must have exactly one parameter");
+        compiler->report_error("Copy constructors must have exactly one parameter");
     constructors_field_args.push_back({ constructor, std::move(fields_args), current_class, in_templated_class});
     fields_args.clear();
     nodes.push_back(constructor);
@@ -1152,9 +1152,9 @@ void ParserAssistant::create_operator(const std::string& position_name)
     bool is_method = in_class();
     if (param_count + is_method != 2) {
         if (is_method) {
-            report_error("Class " + position_name + " operators expect exactly one parameter (in " + current_class + "::" + name + " operator)");
+            compiler->report_error("Class " + position_name + " operators expect exactly one parameter (in " + current_class + "::" + name + " operator)");
         } else {
-            report_error("Global " + position_name + " operators expect exactly two parameters (in the global " + name + " operator)");
+            compiler->report_error("Global " + position_name + " operators expect exactly two parameters (in the global " + name + " operator)");
         }
     }
 

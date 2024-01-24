@@ -22,7 +22,7 @@ Value MallocNode::eval()
     auto c = count->eval();
     auto as_i64 = c.cast_as(compiler->create_type<I64Type>(), false);
     if (as_i64.is_null())
-        report_error("The type " + c.type->to_string() + " can't be used as the count for the new operator. (While allocating " + get_element_type()->to_string() + ")");
+        compiler->report_error("The type " + c.type->to_string() + " can't be used as the count for the new operator. (While allocating " + get_element_type()->to_string() + ")");
 
     llvm::Value* bytes = builder().getInt64(size);
     bytes = builder().CreateMul(as_i64.get(), bytes);

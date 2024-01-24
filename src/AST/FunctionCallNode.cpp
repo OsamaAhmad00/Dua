@@ -40,7 +40,7 @@ Value FunctionCallNode::eval()
         return name_resolver().call_function(name, std::move(evaluated_args));
 
     if (!name_resolver().symbol_table.contains(name))
-        report_error("The identifier " + name + " doesn't refer to either a function or a function reference");
+        compiler->report_error("The identifier " + name + " doesn't refer to either a function or a function reference");
 
     auto reference = name_resolver().symbol_table.get(name);
 
@@ -110,7 +110,7 @@ Value FunctionCallNode::call_reference(const Value &reference, std::vector<Value
 
     auto function_type = pointer_type ? dynamic_cast<const FunctionType*>(pointer_type->get_element_type()) : nullptr;
     if (function_type == nullptr)
-        report_error("The variable " + name + " is of type " + reference.type->to_string() + ", which is not callable");
+        compiler->report_error("The variable " + name + " is of type " + reference.type->to_string() + ", which is not callable");
 
     auto ptr = builder().CreateLoad(reference.type->llvm_type(), reference.get());
     auto value = compiler->create_value(ptr, function_type);

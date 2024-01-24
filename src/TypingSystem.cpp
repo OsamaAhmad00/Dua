@@ -11,7 +11,7 @@
 namespace dua
 {
 
-TypingSystem::TypingSystem(ModuleCompiler *compiler) : compiler(compiler) {}
+TypingSystem::TypingSystem(ModuleCompiler *compiler) : compiler(compiler), identifier_types(compiler) {}
 
 static Value _cast_value(const Value& value, const Type* type, bool panic_on_failure, ModuleCompiler* compiler)
 {
@@ -155,7 +155,7 @@ static Value _cast_value(const Value& value, const Type* type, bool panic_on_fai
     llvm::outs() << "\nTarget type: ";
     target_type->print(llvm::outs());
     llvm::outs() << "\n";
-    report_internal_error("Casting couldn't be done");
+    compiler->report_internal_error("Casting couldn't be done");
     return result;  // Unreachable
 }
 
@@ -163,7 +163,7 @@ Value TypingSystem::cast_value(const dua::Value &value, const Type* target_type,
 {
     if (!is_castable(value.type, target_type)) {
         if (panic_on_failure)
-            report_internal_error("Can't cast the type " + value.type->to_string() + " to " + target_type->to_string());
+            compiler->report_internal_error("Can't cast the type " + value.type->to_string() + " to " + target_type->to_string());
         return {};
     }
 
@@ -208,9 +208,9 @@ const Type* TypingSystem::get_winning_type(const Type* lhs, const Type* rhs, boo
     if (panic_on_failure)
     {
         if (!message.empty())
-            report_error(message);
+            compiler->report_error(message);
         else
-            report_error("Type mismatch: Can't have the types " + lhs->to_string()
+            compiler->report_error("Type mismatch: Can't have the types " + lhs->to_string()
                      + " and " + rhs->to_string() + " in an operation");
     }
 
@@ -361,7 +361,7 @@ void TypingSystem::insert_global_type(const std::string &name, const Type *type)
 const Type* TypingSystem::get_type(const std::string &name) {
     if (identifier_types.contains(name))
         return identifier_types.get(name);
-    report_error("The type/alias " + name + " is not defined");
+    compiler->report_error("The type/alias " + name + " is not defined");
     return nullptr;
 }
 

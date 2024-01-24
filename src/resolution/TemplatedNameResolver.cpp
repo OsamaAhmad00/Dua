@@ -10,7 +10,7 @@
 namespace dua
 {
 
-void check_template_params(const std::vector<std::string>& template_params, const std::string& description = "")
+void TemplatedNameResolver::check_template_params(const std::vector<std::string>& template_params, const std::string& description)
 {
     for (size_t i = 0; i < template_params.size(); i++) {
         for (size_t j = i + 1; j < template_params.size(); j++) {
@@ -19,7 +19,7 @@ void check_template_params(const std::vector<std::string>& template_params, cons
                 if (!description.empty())
                     message += " in " + description;
                 message += ". Can't have more than one template parameter with the same name";
-                report_error(message);
+                compiler->report_error(message);
             }
         }
     }
@@ -38,7 +38,7 @@ void TemplatedNameResolver::add_templated_function(FunctionDefinitionNode* node,
     auto& functions = templated_functions[std::move(name)];
     for (auto& function : functions) {
         if (*function.info.type == *info.type) {
-            report_error("Redefinition of the templated function " + node->name + " with the "
+            compiler->report_error("Redefinition of the templated function " + node->name + " with the "
                          + std::to_string(template_params.size()) + " template parameters and the signature " +
                          info.type->to_string());
         }
@@ -59,7 +59,7 @@ Value TemplatedNameResolver::get_templated_function(const std::string& name, std
 
     if (it == templated_functions.end()) {
         if (!panic_on_error) return {};
-        report_error("The templated function " + name + " with "
+        compiler->report_error("The templated function " + name + " with "
                      + std::to_string(template_args.size()) + " template parameters is not defined");
     }
 
@@ -88,7 +88,7 @@ Value TemplatedNameResolver::get_templated_function(const std::string& name, std
     if (!use_arg_types) {
         if (functions.size() > 1) {
             if (!panic_on_error) return {};
-            report_error("Can't infer the correct overload for the templated function " + name +
+            compiler->report_error("Can't infer the correct overload for the templated function " + name +
                          " without the knowledge of the argument types");
         }
     } else {
@@ -234,7 +234,7 @@ long long TemplatedNameResolver::get_winner_templated_function(const std::string
             message += func.info.type->to_string() + '\n';
         message.pop_back();  // The extra '\n'
 
-        report_error(message);
+        compiler->report_error(message);
     }
 
     auto& result_list = scores.begin()->second;
@@ -249,7 +249,7 @@ long long TemplatedNameResolver::get_winner_templated_function(const std::string
             message += functions[idx].info.type->to_string() + '\n';
         message.pop_back();  // The extra '\n'
 
-        report_error(message);
+        compiler->report_error(message);
     }
 
     return result_list.front();
@@ -268,7 +268,7 @@ void TemplatedNameResolver::add_templated_class(ClassDefinitionNode* node, std::
     auto name = get_templated_class_key(node->name, template_params.size());
     check_template_params(template_params, "the class " + name);
     if (templated_classes.find(name) != templated_classes.end())
-        report_error("Redefinition of the templated class " + node->name + " with " + std::to_string(template_params.size()) + " template parameters");
+        compiler->report_error("Redefinition of the templated class " + node->name + " with " + std::to_string(template_params.size()) + " template parameters");
     templated_classes[std::move(name)] = { node, std::move(template_params), std::move(parent) };
 }
 
@@ -277,7 +277,7 @@ const ClassType* TemplatedNameResolver::get_templated_class(const std::string &n
     auto key = get_templated_class_key(name, template_args.size());
     auto it = templated_classes.find(key);
     if (it == templated_classes.end())
-        report_error("The templated class " + name + " with " + std::to_string(template_args.size()) + " template parameters is not defined");
+        compiler->report_error("The templated class " + name + " with " + std::to_string(template_args.size()) + " template parameters is not defined");
 
     auto& templated = it->second;
 
@@ -329,7 +329,7 @@ TemplatedClassMethodInfo TemplatedNameResolver::get_templated_class_method_info(
     key += "." + type->as_key();
     auto it = templated_class_method_info.find(key);
     if (it == templated_class_method_info.end())
-        report_internal_error("There is no info stored for the method " + method + " of the templated class " + cls);
+        compiler->report_internal_error("There is no info stored for the method " + method + " of the templated class " + cls);
     return it->second;
 }
 
@@ -338,7 +338,7 @@ void TemplatedNameResolver::register_templated_class(const std::string &name, co
     auto key = get_templated_class_key(name, template_args.size());
     auto it = templated_classes.find(key);
     if (it == templated_classes.end())
-        report_error("The templated class " + name + " with " + std::to_string(template_args.size()) + " template parameters is not defined");
+        compiler->report_error("The templated class " + name + " with " + std::to_string(template_args.size()) + " template parameters is not defined");
 
     auto& templated = it->second;
 
@@ -367,7 +367,7 @@ void TemplatedNameResolver::register_templated_class(const std::string &name, co
     auto full_name = get_templated_class_full_name(name, concrete_args);
 
     if (compiler->name_resolver.has_function(full_name))
-        report_error("There is already a function with the name " + full_name + ". Can't have a class with the same name");
+        compiler->report_error("There is already a function with the name " + full_name + ". Can't have a class with the same name");
 
     auto cls = compiler->create_type<ClassType>(full_name);
     compiler->name_resolver.classes[full_name] = cls;
@@ -416,7 +416,7 @@ const ClassType* TemplatedNameResolver::define_templated_class(const std::string
     auto key = get_templated_class_key(name, template_args.size());
     auto it = templated_classes.find(key);
     if (it == templated_classes.end())
-        report_error("The templated class " + name + " with " + std::to_string(template_args.size()) + " template parameters is not defined");
+        compiler->report_error("The templated class " + name + " with " + std::to_string(template_args.size()) + " template parameters is not defined");
 
     auto& templated = it->second;
 
@@ -582,7 +582,7 @@ const ClassType *TemplatedNameResolver::get_parent_class(const IdentifierType* p
             //  hack to register the info of the parent class.
             auto& info = compiler->parser_assistant->class_info[full_name];  // Using the full name to avoid collisions
             if (!info.name.empty())
-                report_error("Redefinition of the templated class " + parent->name + " with " + std::to_string(template_args.size()) + " template parameters");
+                compiler->report_error("Redefinition of the templated class " + parent->name + " with " + std::to_string(template_args.size()) + " template parameters");
             info.template_args = template_args;
             info.is_templated = true;
             info.name = parent->name;
@@ -592,10 +592,10 @@ const ClassType *TemplatedNameResolver::get_parent_class(const IdentifierType* p
         auto parent_type = compiler->typing_system.get_type(parent->name);
         auto concrete_class = parent_type->get_concrete_type()->as<ClassType>();
         if (concrete_class == nullptr)
-            report_error("The type " + parent_type->to_string() + " is not a class type, and can't be a parent class");
+            compiler->report_error("The type " + parent_type->to_string() + " is not a class type, and can't be a parent class");
         auto& classes = compiler->name_resolver.classes;
         if (classes.find(concrete_class->name) == classes.end())
-            report_error("The parent class " + parent->name + " is not defined");
+            compiler->report_error("The parent class " + parent->name + " is not defined");
         return concrete_class;
     }
 }

@@ -6,7 +6,7 @@
 namespace dua
 {
 
-const FunctionType* get_function_type(ASTNode* func)
+const FunctionType* ExprFunctionCallNode::get_function_type(ASTNode* func)
 {
     auto type = func->get_type();
 
@@ -19,7 +19,7 @@ const FunctionType* get_function_type(ASTNode* func)
     }
 
     if (function_type == nullptr)
-        report_error("Instantiating a call on a " + type->to_string() + ", which is not callable");
+        compiler->report_error("Instantiating a call on a " + type->to_string() + ", which is not callable");
 
     return function_type;
 }

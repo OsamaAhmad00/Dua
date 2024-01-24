@@ -15,7 +15,7 @@ FunctionDefinitionNode::FunctionDefinitionNode(dua::ModuleCompiler *compiler,
     this->compiler = compiler;
 
     if (current_function() != nullptr)
-        report_internal_error("Nested functions are not allowed");
+        compiler->report_internal_error("Nested functions are not allowed");
 }
 
 Value FunctionDefinitionNode::eval()
@@ -42,10 +42,10 @@ Value FunctionDefinitionNode::define_function()
     llvm::Function* function = module().getFunction(name);
 
     if (!function)
-        report_internal_error("definition of an undeclared function");
+        compiler->report_internal_error("definition of an undeclared function");
 
     if (!function->empty())
-        report_error("Redefinition of the function " + name);
+        compiler->report_error("Redefinition of the function " + name);
 
     if (is_static)
         function->setLinkage(llvm::Function::InternalLinkage);
@@ -120,7 +120,7 @@ Value FunctionDefinitionNode::define_function()
 
         for (size_t j = 1; j < info.param_names.size(); j++)
             if (info.param_names[j] == "self")
-                report_error("The parameter name 'self' is reserved in class methods (the parameter number "
+                compiler->report_error("The parameter name 'self' is reserved in class methods (the parameter number "
                     + std::to_string(j + 1) + " of the method " + name);
     }
 
@@ -192,7 +192,7 @@ Value FunctionDefinitionNode::define_function()
     // It's ok for the main function to not return a value explicitly
     if (created_default_values && name != "main") {
         auto count = std::to_string(created_default_values);
-        report_warning("The function " + name + " doesn't return a value at "
+        compiler->report_warning("The function " + name + " doesn't return a value at "
             + count + " terminal positions. Returning the default value instead");
     }
 
@@ -233,7 +233,7 @@ void FunctionDefinitionNode::construct_fields(const ClassType *class_type)
             }
 
             if (!found) {
-                report_error("Can't initialize the field " + class_fields_args[i].name + " in the constructor " + name +
+                compiler->report_error("Can't initialize the field " + class_fields_args[i].name + " in the constructor " + name +
                              ", which is not a field of the class " + class_type->name);
             }
         }
@@ -241,9 +241,9 @@ void FunctionDefinitionNode::construct_fields(const ClassType *class_type)
         for (size_t j = i + 1; j < class_fields_args.size(); j++) {
             if (class_fields_args[i].name == class_fields_args[j].name) {
                 if (class_fields_args[i].name == "Super") {
-                    report_error("Can't have more than one call to the constructor of the super-class (in the constructor " + name + ")");
+                    compiler->report_error("Can't have more than one call to the constructor of the super-class (in the constructor " + name + ")");
                 } else {
-                    report_error("The field argument " + class_fields_args[i].name + " is present more than once in the constructor " + name);
+                    compiler->report_error("The field argument " + class_fields_args[i].name + " is present more than once in the constructor " + name);
                 }
             }
         }
@@ -336,11 +336,11 @@ void FunctionDefinitionNode::construct_fields(const ClassType *class_type)
 
             // For reference types, no constructor is called
             if (args.size() != 1)
-                report_error("The reference field " + class_type->name + "::" + field.name + " expects exactly one referenced argument");
+                compiler->report_error("The reference field " + class_type->name + "::" + field.name + " expects exactly one referenced argument");
 
             auto& arg = args.front();
             if (arg.memory_location == nullptr)
-                report_error("The reference field " + class_type->name + "::" + field.name + " is assigned a non-lvalue argument");
+                compiler->report_error("The reference field " + class_type->name + "::" + field.name + " is assigned a non-lvalue argument");
 
             // Store the address of the referenced variable (arg.memory_location) into the field
             builder().CreateStore(arg.memory_location, instance.get());

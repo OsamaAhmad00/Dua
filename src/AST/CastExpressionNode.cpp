@@ -11,7 +11,7 @@ Value CastExpressionNode::eval()
 
     Value result = typing_system().cast_value(expression->eval(), target_type);
     if (result.is_null())
-        report_error("Invalid cast operation");
+        compiler->report_error("Invalid cast operation");
     return result;
 }
 

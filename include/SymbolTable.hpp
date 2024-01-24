@@ -12,11 +12,34 @@ namespace dua
 template<typename T>
 struct Scope
 {
+    Scope(ModuleCompiler* compiler) : compiler(compiler) {}
+
+    Scope(const Scope& scope) : compiler(scope.compiler), map(scope.map) {}
+
+    Scope(Scope&& scope) : compiler(scope.compiler), map(std::move(scope.map)) {}
+
+    Scope& operator=(const Scope& scope) {
+        if (&scope != this) {
+            compiler = scope.compiler;
+            map = scope.map;
+        }
+        return *this;
+    }
+
+    Scope& operator=(Scope&& scope) {
+        if (&scope != this) {
+            compiler = scope.compiler;
+            map = std::move(scope.map);
+        }
+        return *this;
+    }
+
+    ModuleCompiler* compiler;
     std::unordered_map<std::string, T> map;
 
     Scope& insert(const std::string& name, const T& t) {
         if (contains(name)) {
-            report_error("The symbol " + name + " is already defined");
+            report_error("The symbol " + name + " is already defined", compiler);
         }
         map[name] = t;
         return *this;
@@ -24,7 +47,7 @@ struct Scope
 
     const T& get(const std::string& name) {
         if (!contains(name)) {
-            report_error("The symbol " + name + " is not defined");
+            report_error("The symbol " + name + " is not defined", compiler);
         }
         return map[name];
     }
@@ -37,18 +60,19 @@ struct Scope
 template<typename T>
 struct SymbolTable
 {
+    ModuleCompiler* compiler;
     std::vector<Scope<T>> scopes;
     // Used when switching to a temporary state in which
     //  all scopes but the global one are discarded.
     std::vector<std::vector<Scope<T>>> switch_stack;
 
-    SymbolTable() { push_scope(); }
+    SymbolTable(ModuleCompiler* compiler) : compiler(compiler) { push_scope(); }
 
     size_t size() const { return scopes.size(); }
 
     SymbolTable& insert(const std::string& name, const T& t, int scope_num = 1) {
         if (scopes.empty()) {
-            report_internal_error("There is no scope");
+            report_internal_error("There is no scope", compiler);
         }
         auto& scope = scopes[scopes.size() - scope_num];
         scope.insert(name, t);
@@ -62,7 +86,7 @@ struct SymbolTable
 
     const T& get(const std::string& name, bool include_global = true, int scope_num = 1) {
         if (scopes.empty()) {
-            report_internal_error("There is no scope");
+            report_internal_error("There is no scope", compiler);
         }
 
         for (int i = scopes.size() - scope_num; i >= 1 + !include_global; i--) {
@@ -81,7 +105,7 @@ struct SymbolTable
 
     bool contains(const std::string& name, bool include_global = true, int scope_num = 1) {
         if (scopes.empty()) {
-            report_internal_error("There is no scope");
+            report_internal_error("There is no scope", compiler);
         }
 
         for (int i = scopes.size() - scope_num; i >= !include_global; i--) {
@@ -103,7 +127,7 @@ struct SymbolTable
     }
 
     SymbolTable& push_scope() {
-        push_scope(Scope<T>());
+        push_scope(Scope<T>(compiler));
         return *this;
     }
 
@@ -116,11 +140,11 @@ struct SymbolTable
     void keep_only_last_n_scopes(size_t n, bool include_global_scope = true)
     {
         if ((n + include_global_scope) > scopes.size())
-            report_internal_error("Can't keep " + std::to_string(n + include_global_scope) + " scopes. There are only " + std::to_string(scopes.size()) + " scopes");
+            report_internal_error("Can't keep " + std::to_string(n + include_global_scope) + " scopes. There are only " + std::to_string(scopes.size()) + " scopes", compiler);
 
         switch_stack.push_back(std::move(scopes));
 
-        scopes.resize(n + include_global_scope);
+        scopes.resize(n + include_global_scope, Scope<T>(compiler));
 
         if (include_global_scope)
             scopes[0] = switch_stack.back()[0];

@@ -18,7 +18,7 @@ public:
     }
 
     Value default_value() const override {
-        report_internal_error("Reference types must be initialized");
+        compiler->report_internal_error("Reference types must be initialized");
         return {};
     }
 

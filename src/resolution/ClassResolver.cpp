@@ -27,7 +27,7 @@ std::vector<FieldConstructorArgs>& ClassResolver::get_fields_args(const std::str
 const ClassType *ClassResolver::get_class(const std::string &name) {
     auto it = classes.find(name);
     if (it == classes.end())
-        report_internal_error("The class " + name + " is not defined");
+        compiler->report_internal_error("The class " + name + " is not defined");
     return it->second;
 }
 
@@ -39,7 +39,7 @@ VTable* ClassResolver::get_vtable_instance(const std::string &class_name)
 {
     auto it = vtables.find(class_name);
     if (it == vtables.end())
-        report_internal_error("There is no vtable defined for the class " + class_name);
+        compiler->report_internal_error("There is no vtable defined for the class " + class_name);
     return it->second;
 }
 
@@ -184,7 +184,7 @@ llvm::Value* VTable::get_method(const std::string &name, llvm::Type* type, llvm:
 {
     auto it = method_indices.find(name);
     if (it == method_indices.end())
-        report_error("The class " + owner->name + " doesn't contain a method with the name " + name);
+        owner->compiler->report_error("The class " + owner->name + " doesn't contain a method with the name " + name);
 
     size_t index = it->second;
 

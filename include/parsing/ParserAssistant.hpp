@@ -207,7 +207,7 @@ class ParserAssistant
         auto result = pop_node();
         auto casted = dynamic_cast<T*>(result);
         if (casted == nullptr)
-            report_internal_error("Unexpected node type");
+            compiler->report_internal_error("Unexpected node type");
         return casted;
     }
 

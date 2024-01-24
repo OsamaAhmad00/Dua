@@ -35,7 +35,7 @@ Value AssignmentExpressionNode::eval()
         else if (auto ptr = lhs_res.type->as<ReferenceType>(); ptr != nullptr)
             element_type = ptr->get_element_type();
         else
-            report_error("There is no assignment operator defined for the types "
+            compiler->report_error("There is no assignment operator defined for the types "
                          + lhs_res.type->to_string() + " and " + rhs_res.type->to_string());
 
         lhs_res.memory_location = lhs_res.get();
@@ -53,7 +53,7 @@ Value AssignmentExpressionNode::eval()
     }
 
     if (lhs_res.memory_location == nullptr)
-        report_error("There is no assignment operator defined for the types "
+        compiler->report_error("There is no assignment operator defined for the types "
             + lhs_res.type->to_string() + " and " + rhs_res.type->to_string());
 
     if (*lhs_res.type != *rhs_res.type) {
@@ -65,7 +65,7 @@ Value AssignmentExpressionNode::eval()
         }
         Value alternative = typing_system().cast_value(rhs_res, target_type);
         if (alternative.is_null())
-            report_error("Invalid assignment operation");
+            compiler->report_error("Invalid assignment operation");
         rhs_res = alternative;
     }
 

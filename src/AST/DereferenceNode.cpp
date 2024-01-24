@@ -5,9 +5,9 @@
 namespace dua
 {
 
-const PointerType* assert_ptr(const Type* type) {
+const PointerType* DereferenceNode::assert_ptr(const Type* type) {
     auto ptr = type->as<PointerType>();
-    if (!ptr) report_error("Can't dereference a non-pointer type expression");
+    if (!ptr) compiler->report_error("Can't dereference a non-pointer type expression");
     return ptr;
 }
 

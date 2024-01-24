@@ -248,4 +248,63 @@ void ModuleCompiler::delete_dynamic_casting_function() {
     function->eraseFromParent();
 }
 
+// Wrapper functions for easier name resolution
+static void _report_error(const std::string& message) { report_error(message); }
+static void _report_internal_error(const std::string& message) { report_internal_error(message); }
+static void _report_warning(const std::string& message) { report_warning(message); }
+
+void ModuleCompiler::report_error(const std::string &message) {
+    _report_error(get_current_status() + message);
+}
+
+void ModuleCompiler::report_internal_error(const std::string &message) {
+    _report_internal_error(get_current_status() + message);
+}
+
+void ModuleCompiler::report_warning(const std::string &message) {
+    _report_warning(get_current_status() + message);
+}
+
+void report_error(const std::string& message, ModuleCompiler* compiler)
+{
+    compiler->report_error(message);
+}
+
+void report_internal_error(const std::string& message, ModuleCompiler* compiler)
+{
+    compiler->report_internal_error(message);
+}
+
+void report_warning(const std::string& message, ModuleCompiler* compiler)
+{
+    compiler->report_warning(message);
+}
+
+std::string ModuleCompiler::get_current_status()
+{
+    std::string result;
+
+    if (current_class != nullptr) {
+        auto class_name = current_class->getName().str();
+        result += "in class " + class_name;
+    }
+
+    if (current_function != nullptr) {
+        auto func_name = current_function->getName().str();
+        if (!result.empty())
+            result += ", ";
+        result += "in function " + func_name;
+    }
+
+    if (result.empty()) {
+        result = "In global scope";
+    }
+
+    result[0] = toupper(result[0]);
+
+    result += ":\n";
+
+    return result;
+}
+
 }

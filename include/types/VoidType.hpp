@@ -11,7 +11,7 @@ struct VoidType : Type
     VoidType(ModuleCompiler* compiler) { this->compiler = compiler; }
 
     Value default_value() const override {
-        report_internal_error("Void types have no value");
+        compiler->report_internal_error("Void types have no value");
         return {};
     }
 

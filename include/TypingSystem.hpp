@@ -14,6 +14,8 @@ class Value;
 
 class TypingSystem
 {
+    friend class Value;
+
     ModuleCompiler* compiler;
     mutable std::unordered_map<std::string, Type*> type_cache;
 

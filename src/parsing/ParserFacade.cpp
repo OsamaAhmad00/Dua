@@ -9,8 +9,14 @@ class ThrowExceptionErrorStrategy : public antlr4::DefaultErrorStrategy
 {
     void reportError(antlr4::Parser *recognizer, const antlr4::RecognitionException &e) override {
         DefaultErrorStrategy::reportError(recognizer, e);
-        report_error("Parsing error");
+        compiler->report_error("Parsing error");
     }
+
+public:
+
+    ModuleCompiler* compiler;
+
+    explicit ThrowExceptionErrorStrategy(ModuleCompiler* compiler) : compiler(compiler) {}
 };
 
 TranslationUnitNode* ParserFacade::parse(const std::string& str) const
@@ -28,7 +34,7 @@ TranslationUnitNode* ParserFacade::parse(const std::string& str) const
 
     module_compiler.parser_assistant = &parser.assistant;
 
-    auto handler = std::make_shared<ThrowExceptionErrorStrategy>();
+    auto handler = std::make_shared<ThrowExceptionErrorStrategy>(&module_compiler);
     parser.setErrorHandler(handler);
     parser.set_module_compiler(&module_compiler);
 

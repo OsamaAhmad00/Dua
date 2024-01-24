@@ -12,7 +12,7 @@ Value LocalVariableDefinitionNode::eval()
     auto full_name = (current_class() ? current_class()->getName().str() + "::" : "") + name;
 
     if (initializer != nullptr && !args.empty())
-        report_error("Can't have both an initializer and an initializer list (in " + full_name + ")");
+        compiler->report_error("Can't have both an initializer and an initializer list (in " + full_name + ")");
 
     // If it's a reference, just add a record to the symbol table and return
     if (auto ref = type->as<ReferenceType>(); ref != nullptr) {
@@ -28,11 +28,11 @@ Value LocalVariableDefinitionNode::eval()
             result.set(result.memory_location);
             element_type = result.type;
         } else {
-            report_error("Can't have a reference type to a non-lvalue expression");
+            compiler->report_error("Can't have a reference type to a non-lvalue expression");
         }
 
         if (!typing_system().is_castable(element_type, type))
-            report_error("Can't have a reference of type " + type->to_string() + " to an instance of type " + element_type->to_string());
+            compiler->report_error("Can't have a reference of type " + type->to_string() + " to an instance of type " + element_type->to_string());
         // Here, we perform the optimization of turning allocated reference into an unallocated one
         // FIXME the symbol table holds addresses of variables in the loaded_value field,
         //  instead of in the memory_location field. This means that we need not put the
@@ -60,12 +60,12 @@ Value LocalVariableDefinitionNode::eval()
     }
     else if (current_class() == nullptr)
     {
-        report_internal_error("Local variable definition in a non-local scope (the variable " + full_name + ")");
+        compiler->report_internal_error("Local variable definition in a non-local scope (the variable " + full_name + ")");
         return none_value();
     }
     else
     {
-        report_internal_error("Local variable definition in place of a field definition");
+        compiler->report_internal_error("Local variable definition in place of a field definition");
         return none_value();
     }
 }

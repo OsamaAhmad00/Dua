@@ -20,6 +20,7 @@ class FunctionNameResolver
     std::map<std::string, FunctionInfo> functions;
 
     void cast_function_args(std::vector<Value>& args, const FunctionType* type) const;
+    void report_function_not_defined(const std::string& name);
 
 public:
 

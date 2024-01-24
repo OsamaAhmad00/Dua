@@ -4,7 +4,7 @@
 namespace dua
 {
 
-NameResolver::NameResolver(ModuleCompiler *compiler) : compiler(compiler), FunctionNameResolver(compiler),
+NameResolver::NameResolver(ModuleCompiler *compiler) : compiler(compiler), FunctionNameResolver(compiler), symbol_table(compiler),
                                                        ClassResolver(compiler), TemplatedNameResolver(compiler) {}
 
 void NameResolver::destruct_all_variables(const Scope<Value> &scope)

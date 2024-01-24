@@ -61,7 +61,7 @@ Value IfNode::eval()
         builder().SetInsertPoint(jump_to_blocks[i]);
         auto condition = conditions[i]->eval().cast_as_bool();
         if (condition.is_null())
-            report_error("The provided condition can't be casted to boolean value.");
+            compiler->report_error("The provided condition can't be casted to boolean value.");
         builder().CreateCondBr(condition.get(), body_blocks[i], jump_to_blocks[i + 1]);
     }
 
@@ -96,7 +96,7 @@ Value IfNode::eval()
     for (auto& value : values) {
         auto casted = typing_system().cast_value(value, type);
         if (casted.is_null()) {
-            report_error("Mismatch in the types of the branches");
+            compiler->report_error("Mismatch in the types of the branches");
         }
     }
 

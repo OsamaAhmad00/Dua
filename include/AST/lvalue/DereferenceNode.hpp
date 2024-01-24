@@ -5,9 +5,13 @@
 namespace dua
 {
 
+class PointerType;
+
 class DereferenceNode : public LValueNode
 {
     ASTNode* address;
+
+    const PointerType* assert_ptr(const Type* type);
 
 public:
 

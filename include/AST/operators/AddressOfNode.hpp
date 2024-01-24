@@ -30,7 +30,7 @@ public:
         }
 
         if (value.memory_location == nullptr)
-            report_error("Can't use the & operator (address-of operator) with the type " + value.type->to_string());
+            compiler->report_error("Can't use the & operator (address-of operator) with the type " + value.type->to_string());
 
         value.set(value.memory_location);
         value.memory_location = nullptr;

@@ -13,7 +13,7 @@ Value ClassDefinitionNode::eval()
         return none_value();
 
     if (name_resolver().classes.find(name) == name_resolver().classes.end())
-        report_internal_error("Definition of the class " + name + " before registering it");
+        compiler->report_internal_error("Definition of the class " + name + " before registering it");
 
     auto old_class = current_class();
     current_class() = llvm::StructType::getTypeByName(context(), name);

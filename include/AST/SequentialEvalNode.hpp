@@ -17,7 +17,7 @@ public:
     {
         this->compiler = compiler;
         if (this->nodes.empty())
-            report_internal_error("Sequential node constructed with empty list");
+            compiler->report_internal_error("Sequential node constructed with empty list");
     }
 
     Value eval() override {

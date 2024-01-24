@@ -10,12 +10,12 @@ llvm::Constant* ClassFieldDefinitionNode::get_constant(Value value, const Type* 
 {
     value.set(value.as<llvm::Constant>());
     if (value.is_null())
-        report_error("Can't initialize class fields with a non-constant expression (in " + field_name + ")");
+        compiler->report_error("Can't initialize class fields with a non-constant expression (in " + field_name + ")");
 
     auto casted = typing_system().cast_value(value, target_type, false).as<llvm::Constant>();
 
     if (casted == nullptr)
-        report_error("Initializing the field " + field_name + " with a mismatching type expression");
+        compiler->report_error("Initializing the field " + field_name + " with a mismatching type expression");
 
     return casted;
 }
@@ -25,14 +25,14 @@ NoneValue ClassFieldDefinitionNode::eval()
     auto full_name = (current_class() ? current_class()->getName().str() + "::" : "") + name;
 
     if (initializer != nullptr && !args.empty())
-        report_error("Can't have both an initializer and an initializer list (in " + full_name + ")");
+        compiler->report_error("Can't have both an initializer and an initializer list (in " + full_name + ")");
 
     Value init_value;
     if (initializer) init_value = initializer->eval();
 
     auto class_name = current_class()->getName().str();
     if (name_resolver().has_function(class_name + "." + name))
-        report_error("The identifier " + full_name + " is defined as both a field and a method");
+        compiler->report_error("The identifier " + full_name + " is defined as both a field and a method");
 
     llvm::Constant* default_value = nullptr;
     if (initializer != nullptr) {

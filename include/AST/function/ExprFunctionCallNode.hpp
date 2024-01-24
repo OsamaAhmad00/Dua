@@ -9,6 +9,8 @@ class ExprFunctionCallNode : public ASTNode
 {
     friend class ParserAssistant;
 
+    const FunctionType* get_function_type(ASTNode* func);
+
 protected:
 
     ASTNode* func;

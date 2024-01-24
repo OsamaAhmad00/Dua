@@ -25,13 +25,13 @@ public:
         auto element_type = ((ArrayType*)type)->get_element_type();
         for (size_t i = 0; i < values.size(); i++) {
             if (!typing_system().is_castable(values[i]->get_type(), element_type))
-                report_error("Array initializer elements must be of the same type. Can't have both " +
+                compiler->report_error("Array initializer elements must be of the same type. Can't have both " +
                              type->to_string() + " and " + values[i]->get_type()->to_string() + " types in an initializer together");
             auto value = values[i]->eval();
             auto casted = typing_system().cast_value(value, element_type);
             evaluated[i] = llvm::dyn_cast<llvm::Constant>(casted.get());
             if (evaluated[i] == nullptr)
-                report_error("Array initializers can't be initialized with "
+                compiler->report_error("Array initializers can't be initialized with "
                 + values[i]->get_type()->to_string() + " type, which doesn't evaluate to a constant");
         }
 

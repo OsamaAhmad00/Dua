@@ -19,7 +19,7 @@ Value NotExpressionNode::eval()
 {
     auto value = expression->eval();
     if (value.type->llvm_type()->isFloatingPointTy())
-        report_error("The not operation is not applicable to float types");
+        compiler->report_error("The not operation is not applicable to float types");
     return compiler->create_value(
             builder().CreateNot(value.cast_as_bool().get(), "not_value"),
             compiler->create_type<I8Type>())
@@ -29,7 +29,7 @@ Value NotExpressionNode::eval()
 Value BitwiseComplementExpressionNode::eval()
 {
     if (dynamic_cast<const IntegerType*>(expression->get_type()) == nullptr)
-        report_error("Can't perform the bitwise complement operation on a non-integer ("
+        compiler->report_error("Can't perform the bitwise complement operation on a non-integer ("
             + expression->get_type()->to_string() + ") type");
     auto result = builder().CreateXor(
         expression->eval().get(),

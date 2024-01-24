@@ -40,10 +40,10 @@ Value MethodCallNode::eval()
 
     if (ptr_type == nullptr) {
         if (instance_node->as<LoadedLValueNode>() != nullptr) {
-            report_error("Can't use a dereferenced " + instance.type->to_string() +
+            compiler->report_error("Can't use a dereferenced " + instance.type->to_string() +
                          " in method calls. Are you using -> instead of . when calling the method " + name + "?");
         }
-        report_error(instance.type->to_string() +
+        compiler->report_error(instance.type->to_string() +
                      " is not an lvalue expression, and can't be used in the call to the method " + name);
     }
 
@@ -95,7 +95,7 @@ const Type* MethodCallNode::get_type()
     auto instance_type = instance_node->get_type();
     auto class_type = instance_type->as<ClassType>();
     if (class_type == nullptr)
-        report_error("Can't call a method " + name + " from the type " + instance_type->to_string() + ", which is not of a class type");
+        compiler->report_error("Can't call a method " + name + " from the type " + instance_type->to_string() + ", which is not of a class type");
 
     auto arg_types = get_arg_types();
     auto full_name = class_type->name + "." + name;
@@ -136,11 +136,11 @@ const ClassType *MethodCallNode::get_instance_type()
     else if (auto ref_type = instance_type->as<ReferenceType>(); ref_type != nullptr)
         element_type = ref_type->get_element_type();
     else
-        report_error(instance_type->to_string() + " is not an lvalue type, and has no method with the name " + name);
+        compiler->report_error(instance_type->to_string() + " is not an lvalue type, and has no method with the name " + name);
 
     auto class_type = element_type->get_contained_type()->as<ClassType>();
     if (class_type == nullptr)
-        report_error(element_type->to_string() + " is not of a class type, and has no method with the name " + name);
+        compiler->report_error(element_type->to_string() + " is not of a class type, and has no method with the name " + name);
 
     return class_type;
 }

@@ -10,7 +10,7 @@ const Type *ReferenceType::get_concrete_type() const {
 }
 
 dua::Value ReferenceType::default_value() const {
-    report_internal_error("Reference types must be initialized");
+    compiler->report_internal_error("Reference types must be initialized");
     return {};
 }
 
