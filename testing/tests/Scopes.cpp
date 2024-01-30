@@ -3,8 +3,8 @@
 namespace dua
 {
 
-    TEST(scopes, scopes) {
-        FileTestCasesRunner("scopes.dua").run();
-    }
+TEST(scopes, scopes) {
+    FileTestCasesRunner("scopes.dua").run();
+}
 
 }

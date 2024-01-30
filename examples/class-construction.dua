@@ -215,7 +215,7 @@ int main()
 
 
 // Case Nested destructor calls
-// Outputs "121123121"
+// Outputs "211321211"
 
 class X
 {

@@ -25,10 +25,11 @@ bool Type::is_castable(const Type *type) const {
 
 const Type* Type::get_contained_type() const
 {
-    // This is done in this sequence so that a reference of
-    //  an identifier type would get stripped from the reference,
-    //  then get the concrete type
+    // This is done in this sequence so that a reference is
+    //  stripped before getting the contained type
     auto result = this;
+    if (auto ref = dynamic_cast<const ReferenceType*>(result); ref != nullptr)
+        result = ref->get_element_type();
     if (auto t = dynamic_cast<const TypeOfType*>(result); t != nullptr)
         result = t->get_concrete_type();
     if (auto ref = dynamic_cast<const ReferenceType*>(result); ref != nullptr)

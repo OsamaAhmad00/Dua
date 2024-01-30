@@ -12,6 +12,7 @@
 #include "AST/SequentialEvalNode.hpp"
 #include "AST/DeferredActionNode.hpp"
 #include "AST/FreeNode.hpp"
+#include "AST/values/NullPointerNode.hpp"
 
 #include "AST/class/ClassDefinitionNode.hpp"
 #include "AST/class/DynamicCastNode.hpp"
@@ -95,6 +96,7 @@ struct DeferredFunctionDeclaration
 {
     FunctionDefinitionNode* node = nullptr;
     FunctionInfo info;
+    std::string owner;
 };
 
 struct DeferredTemplatedClassDefinition
@@ -319,6 +321,7 @@ public:
     void create_dynamic_name();
     void create_dynamic_cast();
     void create_address_of();
+    void create_null_ptr();
 
     template<typename T>
     void create_unary_expr() {

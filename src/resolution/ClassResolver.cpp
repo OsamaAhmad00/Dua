@@ -128,10 +128,15 @@ std::vector<NamedFunctionValue> ClassResolver::get_all_class_methods(const std::
 
     auto it = parent_classes.find(class_name);
     if (it == parent_classes.end()) {
+        // This is the object class only
         methods.resize(class_methods.size());
         for (size_t i = 0; i < methods.size(); i++) {
             methods[i] = class_methods[i];
-            methods[i].name_without_class_prefix = methods[i].name.substr(class_name.size() + 1);
+            auto self_param_position = methods[i].name.find(class_name + "&");  // This must not be npos
+            auto stripped_name = methods[i].name.substr(class_name.size() + 1, self_param_position - (class_name.size() + 1 + 1));
+            auto params_without_self = methods[i].name.substr(self_param_position + class_name.size() + 1);
+            methods[i].name_without_class_prefix = std::move(stripped_name);
+            methods[i].name_without_class_prefix += '(' + ((params_without_self != ")") ? params_without_self.substr(2) : ")");
         }
         return methods;
     }
@@ -154,7 +159,8 @@ std::vector<NamedFunctionValue> ClassResolver::get_all_class_methods(const std::
         parent_method_name += parent->name;
         parent_method_name += "&";
         parent_method_name += params_without_self;
-        method.name_without_class_prefix = method.name.substr(class_name.size() + 1);
+        method.name_without_class_prefix = std::move(stripped_name);
+        method.name_without_class_prefix += '(' + ((params_without_self != ")") ? params_without_self.substr(2) : ")");
         auto index = parent_vtable->method_indices.find(parent_method_name);
         if (index == parent_vtable->method_indices.end())
             methods.push_back(method);
@@ -170,7 +176,12 @@ std::vector<NamedFunctionValue> ClassResolver::get_all_class_methods(const std::
         }
         auto func = compiler->get_module()->getFunction(name);
         auto type = compiler->get_name_resolver().get_function_no_overloading(name).type;
-        methods[index - VTable::RESERVED_FIELDS_COUNT] = { name, func, type, name.substr(parent->name.size() + 1) };
+        auto self_param_position = name.find(parent->name + "&");  // This must not be npos
+        auto stripped_name = name.substr(parent->name.size() + 1, self_param_position - (parent->name.size() + 1 + 1));
+        auto params_without_self = name.substr(self_param_position + parent->name.size() + 1);
+        std::string name_without_class_prefix = std::move(stripped_name);
+        name_without_class_prefix += '(' + ((params_without_self != ")") ? params_without_self.substr(2) : ")");
+        methods[index - VTable::RESERVED_FIELDS_COUNT] = { name, func, type, std::move(name_without_class_prefix) };
     }
 
     return methods;
@@ -200,6 +211,18 @@ llvm::Value *VTable::get_ith_element(size_t i, llvm::Type* type, llvm::Value *in
     auto value = owner->compiler->get_builder()->CreateLoad(type, ptr);
 
     return value;
+}
+
+bool VTable::has_method(const std::string& name) const
+{
+    // Constructor methods are not included in the map
+    if (name == "constructor") return true;
+
+    auto key = name + '(';
+    auto begin = method_names_without_class_prefix.lower_bound(key);
+    key.back()++;
+    auto end = method_names_without_class_prefix.lower_bound(key);
+    return begin != end;
 }
 
 }

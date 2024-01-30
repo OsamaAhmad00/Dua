@@ -537,7 +537,7 @@ number
     | float
     | True  { assistant.push_node<I8ValueNode>(1); }
     | False { assistant.push_node<I8ValueNode>(0); }
-    | Null  { assistant.push_node<I8ValueNode>(0); }  // TODO you might make it a little more sophesticated.
+    | Null  { assistant.create_null_ptr(); }
     ;
 
 size

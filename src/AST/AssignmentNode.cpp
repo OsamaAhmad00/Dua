@@ -56,6 +56,20 @@ Value AssignmentExpressionNode::eval()
         compiler->report_error("There is no assignment operator defined for the types "
             + lhs_res.type->to_string() + " and " + rhs_res.type->to_string());
 
+    // Turn the rhs into an unallocated reference as well before
+    //  the comparison of the lhs type and the rhs type because
+    //  reference types don't take the allocation status into
+    //  consideration when comparing, and if they evaluate as same,
+    //  but one is allocated and the other is not, a necessary
+    //  load might not happen or a faulty load might happen
+    if (auto ref = rhs_res.type->as<ReferenceType>(); ref != nullptr) {
+        if (ref->is_allocated()) {
+            rhs_res.memory_location = rhs_res.get();
+            rhs_res.set(nullptr);
+            rhs_res.type = ref->get_unallocated();
+        }
+    }
+
     if (*lhs_res.type != *rhs_res.type) {
         auto target_type = lhs_res.type;
         if (lhs_ref != nullptr) {

@@ -19,6 +19,8 @@ Value ReturnNode::eval()
     // Destruct the objects before returning
     compiler->destruct_function_scope();
 
+    // The return statement has a void type. This is different from the type of
+    //  the returned value, which is the type of the function call expression.
     return compiler->create_value(builder().CreateRet(ptr), get_type());
 }
 

@@ -51,6 +51,8 @@ public:
 
     Value get_field(const Value& instance, size_t index) const;
 
+    Value get_method(const std::string& name, Value instance, const std::vector<const Type*>& arg_types, bool panic_on_error = true) const;
+
     int ancestor_distance(const ClassType* ancestor) const;
 };
 

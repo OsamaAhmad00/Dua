@@ -14,7 +14,7 @@ llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, const 
     llvm::BasicBlock* entry = &current_function()->getEntryBlock();
     temp_builder().SetInsertPoint(entry, entry->begin());
     llvm::AllocaInst* instance = temp_builder().CreateAlloca(type->llvm_type(), 0, name);
-    auto value = compiler->create_value(instance, type);
+    auto value = compiler->create_value(instance, type->get_concrete_type());
     name_resolver().symbol_table.insert(name, value);
     if (init)
     {

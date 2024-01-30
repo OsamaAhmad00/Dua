@@ -1,0 +1,71 @@
+import "../lib/string.dua"
+
+nomangle int printf(str message, ...);
+
+
+// Case Simple string
+// Outputs "Hello world"
+
+int main()
+{
+    String s("Hello world");
+    printf("%s", s.c_str());
+}
+
+
+// Case String concatenation with byte*
+// Outputs "Hello world"
+
+int main()
+{
+    String s("Hello");
+    var c = s + " world";
+    printf("%s", c.c_str());
+}
+
+
+// Case byte* concatenation with String
+// Outputs "Hello world"
+
+int main()
+{
+    String s("world");
+    var c = "Hello " + s;
+    printf("%s", c.c_str());
+}
+
+
+// Case String concatenation with String
+// Outputs "Hello world"
+
+int main()
+{
+    String s1("Hello ");
+    String s2("world");
+    var c = s1 + s2;
+    printf("%s", c.c_str());
+}
+
+
+// Case Concatenation using compound assignment
+// Outputs "Hello there you're welcome"
+
+int main()
+{
+    String s("Hello");
+    var c = s + " there";
+    c += " you're";
+    c += " welcome";
+    printf("%s", c.c_str());
+}
+
+
+// Case Substring
+// Outputs "Hello world"
+
+int main()
+{
+    String s("Hello Hello world world");
+    var substr = s.substring(6, 17);
+    printf("%s", substr.c_str());
+}

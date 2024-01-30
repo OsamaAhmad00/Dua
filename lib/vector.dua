@@ -8,7 +8,18 @@ class Vector<T>
     size_t _capacity;
     T* buffer;
 
-    constructor(size_t n) : _capacity(n), buffer(new[n] T) { }
+    constructor(size_t n) : _capacity(n), buffer(n > 0 ? new[n] T : null)
+    {
+        if (_size < 0) panic("The Vector class can't have negative size");
+    }
+
+    constructor(size_t n, T value)
+    {
+        constructor(n);
+        for (size_t i = 0; i < n; i++)
+            buffer[i] = value;
+        _size = n;
+    }
 
     constructor() { constructor(2); }
 
@@ -83,6 +94,18 @@ class Vector<T>
             return;
 
         alloc_new_buffer(amount);
+    }
+
+    void delete_buffer()
+    {
+        // FIXME remove this function and delete the buffer
+        //  in the destructor. This is needed to not be in
+        //  the destructor so that the vector can be passed
+        //  from one scope to the other without deleting the
+        //  buffer. Nevertheless, this will cause memory
+        //  leaks if the users didn't delete all allocated
+        //  buffers manually.
+        delete buffer;
     }
 }
 

@@ -61,10 +61,14 @@ struct VTable
 
     // A map of the method name to its index in the vtable
     std::unordered_map<std::string, size_t> method_indices;
+    // The name without the class prefix and without
+    //  the self parameter. This is for easier searching
+    //  for methods, without the concern of the owner class.
     std::map<std::string, std::string> method_names_without_class_prefix;
 
     llvm::Value* get_ith_element(size_t i, llvm::Type* type, llvm::Value* instance = nullptr);
     llvm::Value* get_method(const std::string& name, llvm::Type* type, llvm::Value* instance = nullptr);
+    bool has_method(const std::string& name) const;
 
 };
 

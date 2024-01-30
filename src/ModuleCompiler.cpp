@@ -282,6 +282,16 @@ void report_warning(const std::string& message, ModuleCompiler* compiler)
 
 std::string ModuleCompiler::get_current_status()
 {
+    // FIXME this information is misleading sometimes since
+    //  it reports the current scope the compiler is at, and
+    //  not where did the compiler encounter the error in the
+    //  code. This may give false information for example if
+    //  the compiler is in the global scope, scanning for
+    //  function headers, and encounter a non-defined type in
+    //  the signature. In this case, the message will report
+    //  that the error is in the global scope, where in fact,
+    //  the error is in one of the functions.
+
     std::string result;
 
     if (current_class != nullptr) {

@@ -1,6 +1,7 @@
 #include <AST/function/FunctionCallNode.hpp>
 #include "types/PointerType.hpp"
 #include "types/ReferenceType.hpp"
+#include "types/VoidType.hpp"
 #include <AST/function/FunctionDefinitionNode.hpp>
 
 
@@ -36,7 +37,24 @@ Value FunctionCallNode::eval()
     if (is_templated)
         return call_templated_function(std::move(evaluated_args));
 
-    if (name_resolver().has_function(name))
+    if (current_class() != nullptr)
+    {
+        // Try as method first
+        auto class_name = current_class()->getName().str();
+        auto class_type = name_resolver().get_class(class_name);
+        std::vector<const Type*> arg_types(evaluated_args.size() + 1);
+        for (int i = 0; i < evaluated_args.size(); i++)
+            arg_types[i + 1] = evaluated_args[i].type;
+        arg_types[0] = compiler->create_type<ReferenceType>(class_type, true);
+        auto instance = name_resolver().symbol_table.get("self");
+        auto method = class_type->get_method(name, instance, std::move(arg_types), false);
+        if (!method.is_null()) {
+            evaluated_args.insert(evaluated_args.begin(), instance);
+            return name_resolver().call_function(method, std::move(evaluated_args));
+        }
+    }
+
+    if (name_resolver().has_function(name, false))
         return name_resolver().call_function(name, std::move(evaluated_args));
 
     if (!name_resolver().symbol_table.contains(name))
@@ -61,6 +79,23 @@ const Type *FunctionCallNode::get_type()
         auto templated = get_templated_function(arg_types);
         if (!templated.is_null())
             return set_type(templated.type->as<FunctionType>()->return_type);
+    }
+
+    if (current_class() != nullptr)
+    {
+        // Try as method first
+
+        if (name == "constructor")
+            return set_type(compiler->create_type<VoidType>());
+
+        auto class_name = current_class()->getName().str();
+        auto vtable = name_resolver().get_vtable_instance(class_name);
+        auto method_name = name_resolver().get_function_full_name(name, arg_types);
+        auto full_name = vtable->method_names_without_class_prefix.find(method_name);
+        if (full_name != vtable->method_names_without_class_prefix.end()) {
+            auto info = name_resolver().get_function_no_overloading(full_name->second);
+            return set_type(info.type->return_type);
+        }
     }
 
     return set_type(name_resolver().get_function(name, arg_types).type->return_type);

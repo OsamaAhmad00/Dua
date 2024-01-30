@@ -7,6 +7,7 @@
 #include "types/ArrayType.hpp"
 #include "types/FloatTypes.hpp"
 #include "types/ReferenceType.hpp"
+#include "types/NullType.hpp"
 
 namespace dua
 {
@@ -269,6 +270,11 @@ int TypingSystem::similarity_score(const Type *t1, const Type *t2) const
 
     if (auto ptr1 = is<PointerType>(t1); ptr1 != nullptr) {
         if (auto ptr2 = is<PointerType>(t2); ptr2 != nullptr) {
+            auto null = compiler->create_type<NullType>();
+            if (ptr1->get_element_type() == null || ptr2->get_element_type() == null) {
+                // A null pointer can be of any type
+                return 1;
+            }
             auto score = similarity_score(ptr1->get_element_type(), ptr2->get_element_type());
             if (score == -1) return -1;
             return score;

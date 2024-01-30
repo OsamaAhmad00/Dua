@@ -21,6 +21,12 @@ public:                                                                         
     static Value perform(ModuleCompiler* compiler,                                    \
             const Value& lhs, const Value& rhs, const Type* type)                     \
     {                                                                                 \
+        /* Try calling infix operator first */                                        \
+        auto infix_call = compiler->get_name_resolver()                               \
+                .call_infix_operator(lhs, rhs, #NAME);                                \
+        if (!infix_call.is_null())                                                    \
+            return infix_call;                                                        \
+                                                                                      \
         auto l = lhs.cast_as(type, false);                                            \
         auto r = rhs.cast_as(type, false);                                            \
         if (l.is_null() || r.is_null())                                               \
@@ -50,12 +56,6 @@ public:                                                                         
     {                                                                                 \
         auto lhs_value = lhs->eval();                                                 \
         auto rhs_value = rhs->eval();                                                 \
-                                                                                      \
-        /* Try calling infix operator first */                                        \
-        auto infix_call = compiler->get_name_resolver()                               \
-                .call_infix_operator(lhs_value, rhs_value, #NAME);                    \
-        if (!infix_call.is_null())                                                    \
-            return infix_call;                                                        \
                                                                                       \
         return NAME##Node::perform(                                                   \
             compiler,                                                                 \

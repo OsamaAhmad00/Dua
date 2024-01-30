@@ -19,8 +19,9 @@ Value ClassType::default_value() const
 {
     std::vector<llvm::Constant*> initializers(fields().size());
 
+    auto& f = fields();
     for (int i = 0 ; i < initializers.size(); i++) {
-        initializers[i] = fields()[i].default_value;
+        initializers[i] = f[i].type->default_value().get_constant();
     }
 
     auto result = llvm::ConstantStruct::get(llvm_type(), std::move(initializers));
@@ -79,6 +80,27 @@ int ClassType::ancestor_distance(const ClassType *ancestor) const {
             return distance;
     }
     return -1;
+}
+
+Value ClassType::get_method(const std::string& name, Value instance, const std::vector<const Type*>& arg_types, bool panic_on_error) const
+{
+    // Load the symbol table. The symbol table may be of a child class.
+    // The type tho, will be considered of the current class
+    auto vtable = compiler->name_resolver.get_vtable_instance(this->name);
+    if (!vtable->has_method(name)) {
+        if (panic_on_error)
+            report_error("The class " + to_string() + " has no method with the name " + name);
+        return {};
+    }
+    auto vtable_ptr_ptr = get_field(instance, ".vtable_ptr");
+    auto vtable_type = compiler->name_resolver.get_vtable_type(this->name)->llvm_type();
+    auto vtable_ptr = compiler->builder.CreateLoad(vtable_type, vtable_ptr_ptr.get(), ".vtable");
+    auto full_name = compiler->name_resolver.get_winning_method(this, name, arg_types);
+    auto method_type = compiler->name_resolver.get_function(full_name, arg_types).type;
+    auto method_ptr = (name != "constructor") ? vtable->get_method(full_name, method_type->llvm_type()->getPointerTo(), vtable_ptr)
+                : compiler->module.getFunction(full_name);
+    auto method = compiler->create_value(method_ptr, method_type);
+    return method;
 }
 
 }

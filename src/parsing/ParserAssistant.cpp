@@ -59,9 +59,20 @@ void ParserAssistant::finish_parsing()
         }
     }
 
-    for (auto& [func, info] : function_definitions) {
+    for (auto& [func, info, owner_class] : function_definitions)
+    {
+        if (!owner_class.empty()) {
+            compiler->typing_system.push_scope();
+            auto& aliases = class_info[owner_class].node->aliases;
+            for (auto& alias : aliases)
+                alias->eval();
+        }
+
         func->set_full_name();
         compiler->name_resolver.register_function(func->name, std::move(info), true);
+
+        if (!owner_class.empty())
+            compiler->typing_system.pop_scope();
     }
 
     std::vector<llvm::Type*> body;
@@ -493,7 +504,7 @@ void ParserAssistant::create_function_declaration()
         // Templated functions will be registered upon instantiation
         compiler->name_resolver.add_templated_function(func, std::move(template_params), std::move(info), current_class, in_templated_class);
     } else {
-        function_definitions.push_back({func, std::move(info)});
+        function_definitions.push_back({ func, std::move(info), current_class });
     }
 }
 
@@ -762,12 +773,12 @@ void ParserAssistant::create_ternary_operator() {
     enter_conditional();
     inc_branches();
     set_has_else();
+    push_str("ternary");
     create_if_expression();
 }
 
 void ParserAssistant::create_for()
 {
-
     auto update = pop_node();
     auto body = pop_node();
     auto condition = pop_node();
@@ -1186,7 +1197,7 @@ void ParserAssistant::create_operator(const std::string& position_name)
         // Templated classes would add their own templated methods upon instantiation of concrete classes
         compiler->name_resolver.add_templated_class_method_info(current_class, func, std::move(info), {});
     } else {
-        function_definitions.push_back({func, std::move(info)});
+        function_definitions.push_back({ func, std::move(info), current_class });
     }
 }
 
@@ -1266,6 +1277,10 @@ void ParserAssistant::create_dynamic_cast() {
 
 void ParserAssistant::create_address_of() {
     push_node<AddressOfNode>(pop_node());
+}
+
+void ParserAssistant::create_null_ptr() {
+    push_node<NullPointerNode>();
 }
 
 

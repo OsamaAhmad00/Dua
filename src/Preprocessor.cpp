@@ -29,9 +29,10 @@ size_t find(const std::string& str, size_t start, const std::string& target, boo
         if (matches) {
             if (must_be_at_start) {
                 size_t _i = i;
-                while (_i > 0 && std::isspace(str[--_i]));
-                if (!(_i == 0 || str[_i-1] == '\n'))
-                    continue;
+                while (_i > 0 && std::isspace(str[--_i]) && str[_i] != '\n');
+                if (!(_i == 0 || str[_i-1] == '\n')) {
+                    report_error("The directive " + target + " should begin at the start of the line, but it's not");
+                }
             }
             return i;
         }
@@ -87,7 +88,7 @@ std::string Preprocessor::_process(const std::string &filename, const std::strin
 
         result += content.substr(i, keyword_start - i);
 
-        result += process(import_path, read_file(import_path));
+        result += _process(import_path, read_file(import_path));
 
         i = path_end + 1;
     }
