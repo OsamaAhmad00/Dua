@@ -50,12 +50,26 @@ void ParserAssistant::finish_parsing()
     if (!used_dynamic_casting)
         compiler->delete_dynamic_casting_function();
 
-    for (auto& [constructor, args, owner_class, in_templated_class] : constructors_field_args) {
-        if (in_templated_class) {
+    for (auto& [constructor, args, owner_class, in_templated_class] : constructors_field_args)
+    {
+        if (in_templated_class)
+        {
             compiler->name_resolver.templated_class_field_constructor_args[owner_class].push_back({ constructor, std::move(args) });
-        } else {
+        }
+        else
+        {
+            if (!owner_class.empty()) {
+                compiler->typing_system.push_scope();
+                auto& aliases = class_info[owner_class].node->aliases;
+                for (auto& alias : aliases)
+                    alias->eval();
+            }
+
             constructor->set_full_name();
             compiler->name_resolver.add_fields_constructor_args(constructor->name, std::move(args));
+
+            if (!owner_class.empty())
+                compiler->typing_system.pop_scope();
         }
     }
 

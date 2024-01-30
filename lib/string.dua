@@ -8,24 +8,32 @@ class String : Vector<i8>
 
     constructor(str string) : Super(strlen(string) + 1)
     {
-        for (size_t i = 0; i < capacity(); i++)
+        for (size_t i = 0; i < _capacity; i++)
             buffer[i] = string[i];
-        _size = capacity() - 1;
-        buffer[size()] = 0;
+        _size = _capacity;
+        buffer[_size] = 0;
+    }
+
+    constructor(size_t n, byte c) : Super(n + 1, c)
+    {
+        buffer[n] = 0;
+    }
+
+    constructor(str string, bool is_const, bool is_owned) : Super(string, strlen(string) + 1, is_const, is_owned)
+    {
+        // This assumes that the string is already null terminated
     }
 
     String substring(size_t from, size_t upto)
     {
         size_t n = upto - from;
 
-        var temp = new[n + 1] byte;
+        var buffer = new[n + 1] byte;
 
         for (size_t i = 0; i < n; i++)
-            temp[i] = self[from + i];
+            buffer[i] = self[from + i];
 
-        String result(temp);
-
-        delete temp;
+        String result(buffer, false, true);
 
         return result;
     }
@@ -42,20 +50,22 @@ class String : Vector<i8>
 
         size_t sum = self_size + other_size;
 
-        str temp = new[self_size + other_size + 1] byte;
+        str buffer = new[self_size + other_size + 1] byte;
 
         for (long i = 0; i < self_size; i++)
-            temp[i] = self[i];
+            buffer[i] = self[i];
         for (long i = 0; i < other_size; i++)
-            temp[self_size + i] = other[i];
-        temp[sum] = 0;
+            buffer[self_size + i] = other[i];
+        buffer[sum] = 0;
 
-        String result(temp);
-
-        delete temp;
+        String result(buffer, false, true);
 
         return result;
     }
+
+    // Excluding the null terminator
+    size_t size() { return _size - 1; }
+    size_t capacity() { return _capacity - 1; }
 
     str c_str() { return buffer; }
 }
@@ -66,17 +76,15 @@ String infix +(str other, String self)
     long other_size = strlen(other);
 
     long sum = self_size + other_size;
-    str temp = new[sum + 1] byte;
+    str buffer = new[sum + 1] byte;
 
     for (long i = 0; i < other_size; i++)
-        temp[i] = other[i];
+        buffer[i] = other[i];
     for (long i = 0; i < self_size; i++)
-        temp[i + other_size] = self[i];
-    temp[sum] = 0;
+        buffer[i + other_size] = self[i];
+    buffer[sum] = 0;
 
-    String result(temp);
-
-    delete temp;
+    String result(buffer, false, true);
 
     return result;
 }

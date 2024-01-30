@@ -7,10 +7,28 @@ class Vector<T>
     size_t _size = 0;
     size_t _capacity;
     T* buffer;
+    bool _is_const_initialized = false;
 
     constructor(size_t n) : _capacity(n), buffer(n > 0 ? new[n] T : null)
     {
         if (_size < 0) panic("The Vector class can't have negative size");
+    }
+
+    constructor(T* buffer, size_t size) : _size(size)
+    {
+        constructor(size);
+        for (size_t i = 0; i < size; i++)
+            self.buffer[i] = buffer[i];
+    }
+
+    constructor(T* buffer, size_t size, bool is_const, bool is_owned) : _is_const_initialized(is_const), _size(size)
+    {
+        if (is_const || is_owned) {
+            self.buffer = buffer;
+            _capacity = size;
+        } else {
+            constructor(buffer, size);
+        }
     }
 
     constructor(size_t n, T value)
@@ -27,28 +45,50 @@ class Vector<T>
 
     size_t capacity() { return _capacity; }
 
-    void push(T t) {
+    void push(T t)
+    {
         expand_if_needed();
         buffer[_size++] = t;
     }
 
-    T pop() {
+    T pop()
+    {
         if (_size == 0)
             panic("Can't pop an empty vector");
+
+        // If the buffer refers to a constant memory,
+        //  a new buffer must be allocated to modify it
+        if (_is_const_initialized)
+            alloc_new_buffer(_capacity);
+
+        // TODO call the destructor on the popped element
         return buffer[--_size];
     }
 
-    T& postfix [](size_t i) {
+    T& postfix [](size_t i)
+    {
         if (i < 0)
             panic("Can't have a negative index\n");
+
         if (i >= _size)
             panic("Can't have an index bigger than the size\n");
+
+        // FIXME this defeats the purpose of the use of the const buffer,
+        //  but as of now, there is no way to tell whether the returned
+        //  reference is going to be read from or written to, so this
+        //  step is needed. Nevertheless, this would be useful for example
+        //  in case of temporary string literals, which are just a temporary
+        //  objects that won't be modified. Instead of copying them, wrap
+        //  them with a String object without copying.
+        if (_is_const_initialized)
+            alloc_new_buffer(_capacity);
+
         return buffer[i];
     }
 
     void expand_if_needed()
     {
-        if (_size == _capacity)
+        if (_size == _capacity || _is_const_initialized)
             alloc_new_buffer(_size * 2);
     }
 
@@ -72,6 +112,8 @@ class Vector<T>
         buffer = temp;
 
         _capacity = new_capacity;
+
+        _is_const_initialized = false;
     }
 
     void resize(size_t new_size)
@@ -105,6 +147,12 @@ class Vector<T>
         //  buffer. Nevertheless, this will cause memory
         //  leaks if the users didn't delete all allocated
         //  buffers manually.
+
+        // Const pointers are in a read-only
+        //  memory, and shouldn't be deleted
+        if (_is_const_initialized)
+            return;
+
         delete buffer;
     }
 }
