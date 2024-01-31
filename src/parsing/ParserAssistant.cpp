@@ -1297,5 +1297,9 @@ void ParserAssistant::create_null_ptr() {
     push_node<NullPointerNode>();
 }
 
+void ParserAssistant::create_char_value() {
+    // The result is "'c'" where c is the target char
+    push_node<I8ValueNode>(escape_characters(pop_str())[1]);
+}
 
 }

@@ -44,6 +44,7 @@ std::string escape_characters(const std::string& str)
                 case 'r': result.push_back('\r');  break;
                 case 't': result.push_back('\t');  break;
                 case 'v': result.push_back('\v');  break;
+                case '0': result.push_back('\0');  break;
                 default: report_error(std::string("Undefined escape character: ") + str[i]);
             }
         } else result.push_back(str[i]);

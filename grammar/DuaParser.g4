@@ -293,6 +293,7 @@ statement
 
 expression
     : number
+    | Char   { assistant.push_str($Char.text)  ; assistant.create_char_value();   }
     | String { assistant.push_str($String.text); assistant.create_string_value(); }
     | type '{' arg_list '}' { assistant.create_array_literal(); }
     | block_expression

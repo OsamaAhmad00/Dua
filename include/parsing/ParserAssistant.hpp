@@ -322,6 +322,7 @@ public:
     void create_dynamic_cast();
     void create_address_of();
     void create_null_ptr();
+    void create_char_value();
 
     template<typename T>
     void create_unary_expr() {

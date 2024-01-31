@@ -11,12 +11,12 @@ class String : Vector<i8>
         for (size_t i = 0; i < _capacity; i++)
             buffer[i] = string[i];
         _size = _capacity;
-        buffer[_size] = 0;
+        buffer[_size] = '\0';
     }
 
     constructor(size_t n, byte c) : Super(n + 1, c)
     {
-        buffer[n] = 0;
+        buffer[n] = '\0';
     }
 
     constructor(str string, bool is_const, bool is_owned) : Super(string, strlen(string) + 1, is_const, is_owned)
@@ -56,7 +56,7 @@ class String : Vector<i8>
             buffer[i] = self[i];
         for (long i = 0; i < other_size; i++)
             buffer[self_size + i] = other[i];
-        buffer[sum] = 0;
+        buffer[sum] = '\0';
 
         String result(buffer, false, true);
 
@@ -82,7 +82,7 @@ String infix +(str other, String self)
         buffer[i] = other[i];
     for (long i = 0; i < self_size; i++)
         buffer[i + other_size] = self[i];
-    buffer[sum] = 0;
+    buffer[sum] = '\0';
 
     String result(buffer, false, true);
 
