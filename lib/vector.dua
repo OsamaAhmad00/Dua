@@ -155,5 +155,7 @@ class Vector<T>
 
         delete buffer;
     }
+
+    bool is_empty() { return size() == 0; }
 }
 

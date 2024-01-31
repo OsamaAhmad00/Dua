@@ -83,3 +83,39 @@ int main()
     s.delete_buffer();
     substr.delete_buffer();
 }
+
+
+// Case Pushing
+// Outputs "Hello world"
+
+int main()
+{
+    String s("Hello");
+    s.push(' ');
+    s.push('w');
+    s.push('o');
+    s.push('r');
+    s.push('l');
+    s.push('d');
+    printf("%s", s.c_str());
+}
+
+
+// Case Popping
+// Outputs "Hello world"
+
+int main()
+{
+    String s1("Hello");
+    String s2("dlrow ");
+    while (!s2.is_empty())
+        s1.push(s2.pop());
+
+    // An extra check
+    s1.push(s1.pop());
+    s1.push(s1.pop());
+    s1.push(s1.pop());
+    s1.push(s1.pop());
+
+    printf("%s%s", s1.c_str(), s2.c_str());
+}

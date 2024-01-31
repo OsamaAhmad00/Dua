@@ -19,9 +19,14 @@ class String : Vector<i8>
         buffer[n] = '\0';
     }
 
-    constructor(str string, bool is_const, bool is_owned) : Super(string, strlen(string) + 1, is_const, is_owned)
+    constructor(str string, size_t n, bool is_const, bool is_owned) : Super(string, n, is_const, is_owned)
     {
         // This assumes that the string is already null terminated
+    }
+
+    constructor(str string, bool is_const, bool is_owned)
+    {
+        constructor(string, strlen(string) + 1, is_const, is_owned);
     }
 
     String substring(size_t from, size_t upto)
@@ -59,6 +64,31 @@ class String : Vector<i8>
         buffer[sum] = '\0';
 
         String result(buffer, false, true);
+
+        return result;
+    }
+
+    void push(byte c)
+    {
+        expand_if_needed();
+        buffer[_size - 1] = c;
+        buffer[_size++] = '\0';
+    }
+
+    byte pop()
+    {
+        // Can't pop the null terminator
+        if (_size == 1)
+            panic("Can't pop an empty string");
+
+        // If the buffer refers to a constant memory,
+        //  a new buffer must be allocated to modify it
+        if (_is_const_initialized)
+            alloc_new_buffer(_capacity);
+
+        byte result = buffer[_size - 2];
+
+        buffer[--_size - 1] = '\0';
 
         return result;
     }
