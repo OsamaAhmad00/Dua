@@ -20,6 +20,16 @@ class String : Vector<i8>
         buffer[_size] = '\0';
     }
 
+    =constructor(String& string)
+    {
+        self = string;
+    }
+
+    =constructor(str string)
+    {
+        self = string;
+    }
+
     constructor(size_t n, byte c) : Super(n + 1, c)
     {
         buffer[n] = '\0';
@@ -97,6 +107,13 @@ class String : Vector<i8>
         buffer[--_size - 1] = '\0';
 
         return result;
+    }
+
+    String& infix =(str string)
+    {
+        String temp(string, true, true);
+        self = temp;
+        return self;
     }
 
     // Excluding the null terminator

@@ -3,12 +3,13 @@
 #include <AST/ASTNode.hpp>
 #include <utils/ErrorReporting.hpp>
 #include <types/FloatTypes.hpp>
+#include <AST/ScopeTeleportingNode.hpp>
 
 namespace dua
 {
 
 #define SAME_TYPE_BINARY_EXP_NODE(NAME, INT_OP, FLOAT_OP, LABEL, NO_FLOAT)            \
-class NAME##Node : public ASTNode                                                     \
+class NAME##Node : public ScopeTeleportingNode                                        \
 {                                                                                     \
     ASTNode* lhs;                                                                     \
     ASTNode* rhs;                                                                     \

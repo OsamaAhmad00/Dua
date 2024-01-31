@@ -1,11 +1,11 @@
 #pragma once
 
-#include <AST/ASTNode.hpp>
+#include <AST/ScopeTeleportingNode.hpp>
 
 namespace dua
 {
 
-class BlockNode : public ASTNode
+class BlockNode : public ScopeTeleportingNode
 {
     std::vector<ASTNode*> elements;
 

@@ -41,6 +41,11 @@ class Vector<T>
 
     constructor() { constructor(2); }
 
+    =constructor(Vector<T>& other)
+    {
+        self = other;
+    }
+
     size_t size() { return _size; }
 
     size_t capacity() { return _capacity; }
@@ -136,6 +141,31 @@ class Vector<T>
             return;
 
         alloc_new_buffer(amount);
+    }
+
+    Vector<T>& infix =(Vector<T>& other)
+    {
+        if (other._is_const_initialized)
+        {
+            delete_buffer();
+            buffer = other.buffer;
+            _size = other._size;
+            _capacity = other._capacity;
+        }
+        else
+        {
+            resize(other._size);
+
+            // Don't set _capacity. the resize method will set it as
+            // appropriate (it might remain bigger than other._capacity)
+            _size = other._size;
+
+            for (size_t i = 0; i < _size; i++)
+                buffer[i] = other.buffer[i];
+        }
+
+        _is_const_initialized = other._is_const_initialized;
+        return self;
     }
 
     void delete_buffer()

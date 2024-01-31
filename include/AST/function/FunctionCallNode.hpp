@@ -1,11 +1,11 @@
 #pragma once
 
-#include <AST/ASTNode.hpp>
+#include <AST/ScopeTeleportingNode.hpp>
 
 namespace dua
 {
 
-class FunctionCallNode : public ASTNode
+class FunctionCallNode : public ScopeTeleportingNode
 {
     friend class ParserAssistant;
 

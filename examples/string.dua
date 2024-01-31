@@ -129,3 +129,16 @@ int main()
     String s;
     s.pop();
 }
+
+
+// Case Assigning strings
+// Outputs "Hello world"
+
+int main()
+{
+    String world = "Hello";
+    String hello = world;
+    world = "world";
+
+    printf("%s %s", hello.c_str(), world.c_str());
+}

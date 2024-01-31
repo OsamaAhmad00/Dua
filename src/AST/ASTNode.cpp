@@ -9,7 +9,7 @@ llvm::BasicBlock* ASTNode::create_basic_block(const std::string& name, llvm::Fun
     return llvm::BasicBlock::Create(context(), name, function);
 }
 
-llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, const Type* type, Value* init, std::vector<Value> args)
+llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, const Type* type, Value* init, std::vector<Value> args, bool teleport_value)
 {
     llvm::BasicBlock* entry = &current_function()->getEntryBlock();
     temp_builder().SetInsertPoint(entry, entry->begin());
@@ -21,7 +21,11 @@ llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, const 
         if (!args.empty())
             compiler->report_error("Can't have an both an initializer and an initialization "
                          "list in the definition of a local variable (the variable " + name + ")");
-        name_resolver().call_copy_constructor(value, *init);
+        if (teleport_value) {
+            builder().CreateStore(init->get(), instance);
+        } else {
+            name_resolver().call_copy_constructor(value, *init);
+        }
     } else {
         name_resolver().call_constructor(value, std::move(args));
     }

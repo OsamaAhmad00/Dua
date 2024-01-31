@@ -3,6 +3,7 @@
 #include "AST/lvalue/LoadedLValueNode.hpp"
 #include "types/ReferenceType.hpp"
 #include "AST/IndexingNode.hpp"
+#include "AST/ScopeTeleportingNode.hpp"
 
 namespace dua
 {
@@ -47,7 +48,11 @@ Value LocalVariableDefinitionNode::eval()
 
     // TODO don't evaluate if not going to be used
     Value init_value;
-    if (initializer) init_value = initializer->eval();
+    bool teleport_value = false;
+    if (initializer) {
+        init_value = initializer->eval();
+        teleport_value = initializer->as<ScopeTeleportingNode>() != nullptr;
+    }
 
     if (current_function() != nullptr)
     {
@@ -55,7 +60,7 @@ Value LocalVariableDefinitionNode::eval()
         for (int i = 0; i < args.size(); i++)
             evaluated[i] = args[i]->eval();
         auto ptr = initializer ? &init_value : nullptr;
-        auto alloc = create_local_variable(name, type, ptr, std::move(evaluated));
+        auto alloc = create_local_variable(name, type, ptr, std::move(evaluated), teleport_value);
         return compiler->create_value(alloc, get_type());
     }
     else if (current_class() == nullptr)

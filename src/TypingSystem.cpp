@@ -164,7 +164,7 @@ Value TypingSystem::cast_value(const dua::Value &value, const Type* target_type,
 {
     if (!is_castable(value.type, target_type)) {
         if (panic_on_failure)
-            compiler->report_internal_error("Can't cast the type " + value.type->to_string() + " to " + target_type->to_string());
+            compiler->report_error("Can't cast the type " + value.type->to_string() + " to " + target_type->to_string());
         return {};
     }
 

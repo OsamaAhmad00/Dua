@@ -136,3 +136,57 @@ int main()
 }
 
 
+// Case Assigning a vector to another
+// Outputs "12312345"
+
+int main()
+{
+    Vector<int> v1;
+    v1.push(1);
+    v1.push(2);
+    v1.push(3);
+    v1.push(4);
+    v1.push(5);
+
+    Vector<int> v2 = v1;
+
+    v1.pop();
+    v1.pop();
+
+    for (int i = 0; i < v1.size(); i++)
+        printf("%d", v1[i]);
+    for (int i = 0; i < v2.size(); i++)
+        printf("%d", v2[i]);
+}
+
+
+// Case Chain assignment of vectors
+// Outputs "1121231234"
+
+int main()
+{
+    Vector<int> v1;
+    Vector<int> v2;
+    Vector<int> v3;
+    Vector<int> v4;
+
+    v1.push(1);
+    v4 = v3 = v2 = v1;
+
+    v2.push(2);
+    v4 = v3 = v2;
+
+    v3.push(3);
+    v4 = v3;
+
+    v4.push(4);
+
+    for (int i = 0; i < v1.size(); i++)
+        printf("%d", v1[i]);
+    for (int i = 0; i < v2.size(); i++)
+        printf("%d", v2[i]);
+    for (int i = 0; i < v3.size(); i++)
+        printf("%d", v3[i]);
+    for (int i = 0; i < v4.size(); i++)
+        printf("%d", v4[i]);
+}

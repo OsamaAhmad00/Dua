@@ -33,7 +33,7 @@ protected:
 
     llvm::BasicBlock* create_basic_block(const std::string& name, llvm::Function* function);
 
-    llvm::AllocaInst* create_local_variable(const std::string& name, const Type* type, Value* init, std::vector<Value> args = {});
+    llvm::AllocaInst* create_local_variable(const std::string& name, const Type* type, Value* init, std::vector<Value> args = {}, bool teleport_value = false);
 
     NoneValue none_value();
 
