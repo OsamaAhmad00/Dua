@@ -6,6 +6,12 @@ class String : Vector<i8>
 {
     typealias size_t = long;
 
+    constructor() : Super(2)
+    {
+        buffer[0] = '\0';
+        _size = 1;
+    }
+
     constructor(str string) : Super(strlen(string) + 1)
     {
         for (size_t i = 0; i < _capacity; i++)

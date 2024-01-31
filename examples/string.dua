@@ -119,3 +119,13 @@ int main()
 
     printf("%s%s", s1.c_str(), s2.c_str());
 }
+
+
+// Case Popping an empty string
+// Returns -1
+
+int main()
+{
+    String s;
+    s.pop();
+}
