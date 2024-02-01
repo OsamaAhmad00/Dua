@@ -1,3 +1,5 @@
+nomangle int printf(str message, ...);
+
 // CASE Basic function declaration
 // Returns 15
 
@@ -91,4 +93,36 @@ int func()
 int main()
 {
 
+}
+
+
+// Case Returning an object
+// Outputs "1 2 3 "
+
+class X
+{
+    int i;
+
+    constructor(int i) : i(i) { }
+
+    destructor {
+        printf("%d ", i);
+    }
+}
+
+X func()
+{
+    X x1(1);
+    X x2(2);
+    X x3(5);
+
+    // The destructor shouldn't get called
+    //  on x3 because it's being returned
+    return x3;
+}
+
+int main()
+{
+    X x = func();
+    x.i = 3;
 }
