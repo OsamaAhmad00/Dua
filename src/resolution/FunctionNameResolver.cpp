@@ -248,7 +248,7 @@ Value FunctionNameResolver::call_function(const Value& func, std::vector<Value> 
 {
     auto type = func.type->as<FunctionType>();
     if (type == nullptr)
-        compiler->report_internal_error("Calling a non-function type");
+        compiler->report_internal_error("Calling a non-function type (a " + func.type->to_string() + ")");
     cast_function_args(args, type);
     std::vector<llvm::Value*> llvm_args(args.size());
     for (size_t i = 0; i < args.size(); i++)

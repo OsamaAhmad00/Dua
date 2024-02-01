@@ -1,5 +1,6 @@
 #include <AST/class/DynamicCastNode.hpp>
 #include "types/PointerType.hpp"
+#include "types/NullType.hpp"
 
 namespace dua
 {
@@ -12,8 +13,11 @@ Value DynamicCastNode::eval()
     if (pointer_type != nullptr) {
         target_class = pointer_type->get_element_type()->as<ClassType>();
         if (target_class == nullptr) {
-            compiler->report_error("The type " + type->to_string() +
-                         " a pointer to a non-class type, and can't be used as the target of a dynamic casting operation");
+            // Not a class type. Return null immediately.
+            auto nullptr_value = llvm::ConstantPointerNull::get(builder().getInt1Ty()->getPointerTo());
+            auto nullptr_type = compiler->create_type<PointerType>(compiler->create_type<NullType>());
+            auto result = compiler->create_value(nullptr_value, nullptr_type);
+            return result;
         }
     } else {
         compiler->report_error("The type " + type->to_string() + " is not a pointer type, and can't be used as the target of a dynamic casting operation");
@@ -22,11 +26,14 @@ Value DynamicCastNode::eval()
     auto instance_ptr = instance->eval();
     const ClassType* source_class = nullptr;
     if (auto ptr = instance_ptr.type->as<PointerType>(); ptr != nullptr) {
-        if (auto cls = ptr->get_element_type()->get_concrete_type()->as<ClassType>(); cls != nullptr) {
+        if (auto cls = ptr->get_element_type()->get_contained_type()->as<ClassType>(); cls != nullptr) {
             source_class = cls;
         } else {
-            compiler->report_error("The type " + instance_ptr.type->to_string() +
-                         " is a pointer to a non-class type, and can't be used as the source of a dynamic casting operation");
+            // Not a class type. Return null immediately.
+            auto nullptr_value = llvm::ConstantPointerNull::get(builder().getInt1Ty()->getPointerTo());
+            auto nullptr_type = compiler->create_type<PointerType>(compiler->create_type<NullType>());
+            auto result = compiler->create_value(nullptr_value, nullptr_type);
+            return result;
         }
     } else {
         compiler->report_error("The type " + instance_ptr.type->to_string() +

@@ -124,26 +124,28 @@ int main()
 
 
 // Case Casting a non-class type
-// Panics
+// Outputs "0"
 
 class X { }
 
 int main()
 {
-    int i = 3;
-    var x = &i as X*;
+    int i;
+    X* x = &i as X*;
+    printf("%d", (int)x);
 }
 
 
 // Case Casting to a non-class type
-// Panics
+// Outputs "0"
 
 class X { }
 
 int main()
 {
     X x;
-    var i = &x as int*;
+    int* i = &x as int*;
+    printf("%d", (int)i);
 }
 
 

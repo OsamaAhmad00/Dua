@@ -303,8 +303,8 @@ expression
     | function_call
     | expression '(' arg_list ')' { assistant.create_expr_function_call();  }
     | expression '[' expression ']' { assistant.create_indexing(); }
-    | '(' type ')' expression { assistant.create_cast(); }
     | '(' '(' type ')' ')' expression { assistant.create_forced_cast(); }
+    | '(' type ')' expression { assistant.create_cast(); }
     | New optional_size identifier_type optional_constructor_args { assistant.create_malloc(); }
     | New optional_size type { assistant.push_counter(); assistant.create_malloc(); }
     | SizeOf '(' expr_or_type ')'   { assistant.create_size_of();   }

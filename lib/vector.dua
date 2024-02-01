@@ -113,7 +113,7 @@ class Vector<T>
         for (size_t i = 0; i < _size; i++)
             temp[i] = buffer[i];
 
-        delete buffer;
+        _destroy_buffer();
         buffer = temp;
 
         _capacity = new_capacity;
@@ -147,7 +147,7 @@ class Vector<T>
     {
         if (other._is_const_initialized)
         {
-            delete_buffer();
+            _destroy_buffer();
             buffer = other.buffer;
             _size = other._size;
             _capacity = other._capacity;
@@ -165,27 +165,38 @@ class Vector<T>
         }
 
         _is_const_initialized = other._is_const_initialized;
+
         return self;
     }
 
-    void delete_buffer()
-    {
-        // FIXME remove this function and delete the buffer
-        //  in the destructor. This is needed to not be in
-        //  the destructor so that the vector can be passed
-        //  from one scope to the other without deleting the
-        //  buffer. Nevertheless, this will cause memory
-        //  leaks if the users didn't delete all allocated
-        //  buffers manually.
+    bool is_empty() { return size() == 0; }
 
+    destructor
+    {
+        _destroy_buffer();
+    }
+
+    void _destroy_buffer()
+    {
         // Const pointers are in a read-only
         //  memory, and shouldn't be deleted
         if (_is_const_initialized)
             return;
 
-        delete buffer;
-    }
+        if ((&buffer[0] as Object*) != null) {
+            // Have to cast as Object* so that the typing
+            //  system doesn't complain if T is a primitive type
+            for (size_t i = 0; i < size(); i++) {
+                var obj = ((Object*))&buffer[i];
+                obj->destructor();
+            }
+        }
 
-    bool is_empty() { return size() == 0; }
+        // Calling free instead of delete to avoid calling
+        //  the destructor again on every position in the
+        //  buffer, even if it's not occupied
+        free(((i64*))buffer);
+    }
 }
 
+nomangle void free(i64* ptr);
