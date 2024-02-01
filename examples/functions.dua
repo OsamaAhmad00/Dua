@@ -78,3 +78,17 @@ int main()
 {
     return fib(5);
 }
+
+
+// Case Returning void from a non-void function
+// Panics
+
+int func()
+{
+    return;
+}
+
+int main()
+{
+
+}
