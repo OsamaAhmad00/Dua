@@ -237,8 +237,9 @@ Value FunctionNameResolver::call_function(const std::string &name, std::vector<V
 
     cast_function_args(args, info.type);
     std::vector<llvm::Value*> llvm_args(args.size());
-    for (size_t i = 0; i < args.size(); i++)
+    for (size_t i = 0; i < args.size(); i++) {
         llvm_args[i] = args[i].get();
+    }
 
     auto result = builder().CreateCall(function, std::move(llvm_args));
     return compiler->create_value(result, info.type->return_type);
@@ -388,8 +389,7 @@ std::string FunctionNameResolver::get_winning_function(const std::string &name, 
     if (begin == end) {
 
         if (non_mangled != functions.end()) {
-            // This is a non-mangled function name, which doesn't have
-            //  a '.' followed by the parameter types after its name
+            // This is a non-mangled function name
             return name;
         }
 

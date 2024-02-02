@@ -74,9 +74,15 @@ void ModuleCompiler::complete_dua_init_function()
         builder.CreateRetVoid();
 
         // Call from main.
-        auto& main_ip = module.getFunction("main")->getEntryBlock().front();
-        builder.SetInsertPoint(&main_ip);
-        builder.CreateCall(dua_init);
+        // TODO remove this and create an appending
+        //  global array variable with all initializing
+        //  methods to be called
+        auto main = module.getFunction("main");
+        if (main != nullptr) {
+            auto &main_ip = main->getEntryBlock().front();
+            builder.SetInsertPoint(&main_ip);
+            builder.CreateCall(dua_init);
+        }
     }
 }
 

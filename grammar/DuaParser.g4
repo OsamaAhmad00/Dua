@@ -275,6 +275,16 @@ statements
     | /* empty */
     ;
 
+scoped_statement
+    : block_statement
+    | { assistant.enter_scope(); } statement { assistant.create_block(); assistant.inc_statements(); }
+    ;
+
+scoped_expression
+    : block_expression
+    | { assistant.enter_scope(); } expression { assistant.inc_statements(); assistant.create_block(); }
+    ;
+
 statement
     : variable_decl_or_def
     | if_statement
@@ -418,16 +428,16 @@ expression_statement
     ;
 
 if_statement  @init { assistant.enter_conditional(); assistant.inc_branches(); }
-    : 'if' '(' expression ')' statement else_if_else_statement { assistant.create_if_statement(); }
+    : 'if' '(' expression ')' scoped_statement else_if_else_statement { assistant.create_if_statement(); }
     ;
 
 else_if_else_statement
-    : 'else' 'if' '(' expression ')' statement else_if_else_statement { assistant.inc_branches(); }
+    : 'else' 'if' '(' expression ')' scoped_statement else_if_else_statement { assistant.inc_branches(); }
     | else_statement
     ;
 
 else_statement
-    : 'else' statement { assistant.set_has_else();  }
+    : 'else' scoped_statement { assistant.set_has_else();  }
     | /* empty */
     ;
 
@@ -483,15 +493,15 @@ for @init { assistant.enter_scope(); }
       '(' comma_separated_multi_variable_decl_or_def_or_none
       ';' expression_or_none_loop
       ';' expression_or_none_loop
-      ')' statement { assistant.create_for(); }
+      ')' scoped_statement { assistant.create_for(); }
       ;
 
 while
-    : 'while' '(' expression_or_none_loop ')' statement { assistant.create_while(); }
+    : 'while' '(' expression_or_none_loop ')' scoped_statement { assistant.create_while(); }
     ;
 
 do_while
-    : 'do' statement 'while' '(' expression_or_none_loop ')' ';' { assistant.create_do_while(); }
+    : 'do' scoped_statement 'while' '(' expression_or_none_loop ')' ';' { assistant.create_do_while(); }
     ;
 
 arg_list @init { assistant.push_counter(); }

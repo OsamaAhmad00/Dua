@@ -121,6 +121,18 @@ static Value _cast_value(const Value& value, const Type* type, bool panic_on_fai
         return result;
     }
 
+    // Convert from String to i8*
+    if (type == compiler->create_type<PointerType>(compiler->create_type<I8Type>())) {
+        if (auto str = value.type->get_contained_type()->as<ClassType>(); str != nullptr && str->name == "String") {
+            auto instance = value;
+            instance.set(instance.memory_location);
+            auto buffer = str->get_field(instance, "buffer");
+            buffer.memory_location = buffer.get();
+            buffer.set(nullptr);
+            return buffer;
+        }
+    }
+
     if (source_type->isFloatingPointTy() && target_type->isFloatingPointTy()) {
         if (source_width > target_width) {
             // Truncate the value to fit the smaller type
@@ -151,11 +163,11 @@ static Value _cast_value(const Value& value, const Type* type, bool panic_on_fai
         return result;
     }
 
-    llvm::outs() << "Source type: ";
-    source_type->print(llvm::outs());
-    llvm::outs() << "\nTarget type: ";
-    target_type->print(llvm::outs());
-    llvm::outs() << "\n";
+    llvm::errs() << "\nSource type: ";
+    source_type->print(llvm::errs());
+    llvm::errs() << "\nTarget type: ";
+    target_type->print(llvm::errs());
+    llvm::errs() << "\n";
     compiler->report_internal_error("Casting couldn't be done");
     return result;  // Unreachable
 }
@@ -247,10 +259,17 @@ int TypingSystem::similarity_score(const Type *t1, const Type *t2) const
     // For types that must be the same, the above check is enough,
     //  but there are types that are castable to each other, in
     //  which some additional checks are necessary
-
-    if (auto c1 = is<ClassType>(t1); c1 != nullptr) {
-        if (auto c2 = is<ClassType>(t2); c2 != nullptr) {
-            return c1->ancestor_distance(c2);
+    if (auto c1 = is<ClassType>(t1); c1 != nullptr)
+    {
+        // Convert from String to i8*
+        if (t2 == compiler->create_type<PointerType>(compiler->create_type<I8Type>())) {
+            if (c1->name == "String") {
+                // 1 for i8* to i8*
+                // 2 for ancestors
+                return 3;
+            }
+        } else if (auto c2 = is<ClassType>(t2); c2 != nullptr) {
+                return c1->ancestor_distance(c2);
         }
     }
 
