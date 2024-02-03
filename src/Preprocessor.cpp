@@ -14,7 +14,10 @@ inline std::string get_full_path(const std::string& path) {
 }
 
 inline std::string get_parent_path(const std::string& path) {
-    return std::filesystem::path(path).parent_path().string();
+    auto p = absolute(std::filesystem::path(path));
+    auto parent = p.parent_path();
+    auto result = parent.string();
+    return result;
 }
 
 size_t find(const std::string& str, size_t start, const std::string& target, bool must_be_at_start=false)
