@@ -11,6 +11,9 @@ Value StringValueNode::eval()
 {
     auto name = ".StringLiteral" + std::to_string(counter++);
 
+    if (!compiler->include_libdua)
+        return compiler->create_string(name, value);
+
     // Constructor args
     // 1 - buffer
     Value buffer = compiler->create_string(name, value);
@@ -26,9 +29,13 @@ Value StringValueNode::eval()
     return compiler->create_value(type, result);
 }
 
-const Type *StringValueNode::get_type() {
-    if (type == nullptr)
-        return set_type(name_resolver().get_class("String"));
+const Type *StringValueNode::get_type()
+{
+    if (type == nullptr) {
+        if (compiler->include_libdua)
+            return set_type(name_resolver().get_class("String"));
+        return set_type(compiler->create_type<PointerType>(compiler->create_type<I8Type>()));
+    }
     return type;
 }
 

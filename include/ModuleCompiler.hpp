@@ -31,7 +31,7 @@ public:
     friend class ClassType;
     friend class ParserFacade;
 
-    ModuleCompiler(const std::string& module_name, std::string code, bool append_declarations = true);
+    ModuleCompiler(const std::string& module_name, std::string code, bool include_libdua = true);
 
     const std::string& get_result() { return result; }
 
@@ -168,6 +168,10 @@ public:
 
     // If true, nodes will clear their cache when getting their type
     bool clear_type_cache = false;
+
+    // If this is true, the dua standard library will be included, and some syntactic sugars
+    //  will be applied, such as creating a String class from string literals instead of i8*
+    const bool include_libdua = true;
 };
 
 }

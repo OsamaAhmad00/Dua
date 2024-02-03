@@ -40,16 +40,21 @@ int main(int argc, char* argv[])
         }
     }
 
+    bool include_dua_lib = true;
     std::vector<std::string> args;
     std::vector<std::string> source_files;
     for (int i = 1; i < argc; i++) {
         if (is_dua_file(argv[i]))
             source_files.emplace_back(argv[i]);
-        else
-            args.emplace_back(argv[i]);
+        else {
+            if (strcmp(argv[i], "-no_libdua") == 0)
+                include_dua_lib = false;
+            else
+                args.emplace_back(argv[i]);
+        }
     }
 
-    compile(source_files, args);
+    compile(source_files, args, include_dua_lib);
 
     return 0;
 }

@@ -26,6 +26,8 @@ std::string uuid()
 
 std::string get_clang_name()
 {
+    // FIXME make it detect the available versions of clang
+
 #ifdef _WIN32
     return "clang";
 #else
@@ -34,19 +36,19 @@ std::string get_clang_name()
 #endif
 }
 
-void generate_llvm_ir(const strings& filename, const strings& code, bool append_declarations)
+void generate_llvm_ir(const strings& filename, const strings& code, bool include_libdua)
 {
     assert(filename.size() == code.size());
     for (size_t i = 0; i < filename.size(); i++) {
         // TODO This is a great candidate for multithreading
-        dua::ModuleCompiler compiler(filename[i], code[i], append_declarations);
+        dua::ModuleCompiler compiler(filename[i], code[i], include_libdua);
         std::ofstream output(filename[i]);
         output << compiler.get_result();
         output.close();
     }
 }
 
-std::string get_dua_lib()
+std::string get_libdua()
 {
     std::string path = PROJECT_ROOT_DIR + "/bin";
     std::string file = path + "/dua.a";
@@ -83,7 +85,7 @@ std::string get_dua_lib()
                 auto code = read_file(name);
                 code = p.process(name, code);
                 generate_llvm_ir( { llvm_ir_name }, { code }, false);
-                system((get_clang_name() + " -c -x ir -Wno-override-module " + llvm_ir_name + " -o " + output_name).c_str());
+                system((get_clang_name() + " -c -Wno-override-module " + llvm_ir_name + " -o " + output_name).c_str());
                 fs::remove(llvm_ir_name);
                 obj_files.push_back(output_name);
             }
@@ -101,16 +103,16 @@ std::string get_dua_lib()
     return file;
 }
 
-int run_clang(const std::vector<std::string>& args)
+int run_clang(const std::vector<std::string>& args, bool include_libdua)
 {
-    // FIXME make it detect the available versions of clang
-
-     std::string concatenated = " -Wno-override-module " + boost::algorithm::join(args, " ") + " " + get_dua_lib();
+     std::string concatenated = " -Wno-override-module " + boost::algorithm::join(args, " ");
+     if (include_libdua)
+         concatenated += " " + get_libdua();
 
     return std::system((get_clang_name() + concatenated).c_str());
 }
 
-bool run_clang_on_llvm_ir(const strings& filename, const strings& code, const strings& args)
+bool run_clang_on_llvm_ir(const strings& filename, const strings& code, const strings& args, bool include_libdua)
 {
     auto directory = uuid();
     std::filesystem::create_directory(directory);
@@ -120,7 +122,8 @@ bool run_clang_on_llvm_ir(const strings& filename, const strings& code, const st
     auto names = (filename + ".ll");
 
     try {
-        generate_llvm_ir(names, code);
+        // If the library is not included, no declarations should be included
+        generate_llvm_ir(names, code, include_libdua);
     } catch (std::exception& e) {
         // This assumes that the compiler has already reported the error.
         std::filesystem::current_path(old_path);
@@ -130,14 +133,14 @@ bool run_clang_on_llvm_ir(const strings& filename, const strings& code, const st
 
     std::filesystem::current_path(old_path);
 
-    run_clang(("./" + directory + "/" + names) + args);
+    run_clang(("./" + directory + "/" + names) + args, include_libdua);
 
     std::filesystem::remove_all(directory);
 
     return true;
 }
 
-void compile(const strings& source_files, const strings& args)
+void compile(const strings& source_files, const strings& args, bool include_libdua)
 {
     size_t n = source_files.size();
 
@@ -154,7 +157,7 @@ void compile(const strings& source_files, const strings& args)
     try {
         for (int i = 0; i < n; i++)
             code[i] = preprocessor.process(source_files[i], read_file(source_files[i]));
-        run_clang_on_llvm_ir(stripped, code, args);
+        run_clang_on_llvm_ir(stripped, code, args, include_libdua);
     } catch (...) {
         exit(-1);
     }

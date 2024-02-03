@@ -12,15 +12,16 @@
 namespace dua
 {
 
-std::vector<std::string>& get_dua_lib_declarations();
+std::vector<std::string>& get_libdua_declarations();
 
-ModuleCompiler::ModuleCompiler(const std::string &module_name, std::string code, bool append_declarations) :
+ModuleCompiler::ModuleCompiler(const std::string &module_name, std::string code, bool include_libdua) :
     context(),
     module(module_name, context),
     builder(context),
     temp_builder(context),
     name_resolver(this),
-    typing_system(this)
+    typing_system(this),
+    include_libdua(include_libdua)
 {
     module.setTargetTriple(llvm::sys::getDefaultTargetTriple());
 
@@ -34,8 +35,8 @@ ModuleCompiler::ModuleCompiler(const std::string &module_name, std::string code,
 
     create_dua_init_function();
 
-    if (append_declarations) {
-        for (auto &declarations: get_dua_lib_declarations())
+    if (include_libdua) {
+        for (auto &declarations: get_libdua_declarations())
             code += declarations;
     }
 
@@ -260,7 +261,6 @@ void ModuleCompiler::create_dynamic_casting_function()
 
     builder.CreateRet(result);
 
-    // TODO delete this
     auto comdat = module.getOrInsertComdat(".is_vtable_reachable");
     comdat->setSelectionKind(llvm::Comdat::Any);
     function->setComdat(comdat);
@@ -340,7 +340,7 @@ std::string ModuleCompiler::get_current_status()
     return result;
 }
 
-std::vector<std::string> dua_lib_declarations {
+std::vector<std::string> libdua_declarations {
 
 // Templated classes have to have the whole definitions included,
 //  because the declaration alone doesn't instantiate a concrete class.
@@ -612,6 +612,6 @@ void panic(str message);
 )"
 };
 
-std::vector<std::string>& get_dua_lib_declarations() { return dua_lib_declarations; }
+std::vector<std::string>& get_libdua_declarations() { return libdua_declarations; }
 
 }
