@@ -1,5 +1,3 @@
-import "../lib/string.dua"
-
 nomangle int printf(str message, ...);
 
 
@@ -128,3 +126,4 @@ int main()
 
     printf("%s %s", hello.c_str(), world.c_str());
 }
+

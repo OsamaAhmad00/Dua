@@ -12,7 +12,9 @@
 namespace dua
 {
 
-ModuleCompiler::ModuleCompiler(const std::string &module_name, const std::string &code) :
+std::vector<std::string>& get_dua_lib_declarations();
+
+ModuleCompiler::ModuleCompiler(const std::string &module_name, std::string code, bool append_declarations) :
     context(),
     module(module_name, context),
     builder(context),
@@ -31,6 +33,11 @@ ModuleCompiler::ModuleCompiler(const std::string &module_name, const std::string
     create_dynamic_casting_function();
 
     create_dua_init_function();
+
+    if (append_declarations) {
+        for (auto &declarations: get_dua_lib_declarations())
+            code += declarations;
+    }
 
     // Parse
     TranslationUnitNode* ast = parser.parse(code);
@@ -56,6 +63,11 @@ void ModuleCompiler::create_dua_init_function()
 
     auto function = module.getFunction(".dua.init");
     llvm::BasicBlock::Create(context, "entry", function);
+
+    // TODO delete this
+    auto comdat = module.getOrInsertComdat(".dua.init");
+    comdat->setSelectionKind(llvm::Comdat::Any);
+    function->setComdat(comdat);
 }
 
 void ModuleCompiler::complete_dua_init_function()
@@ -247,6 +259,11 @@ void ModuleCompiler::create_dynamic_casting_function()
     auto result = builder.CreateZExt(phi, builder.getInt8Ty());
 
     builder.CreateRet(result);
+
+    // TODO delete this
+    auto comdat = module.getOrInsertComdat(".is_vtable_reachable");
+    comdat->setSelectionKind(llvm::Comdat::Any);
+    function->setComdat(comdat);
 }
 
 void ModuleCompiler::delete_dynamic_casting_function() {
@@ -322,5 +339,279 @@ std::string ModuleCompiler::get_current_status()
 
     return result;
 }
+
+std::vector<std::string> dua_lib_declarations {
+
+// Templated classes have to have the whole definitions included,
+//  because the declaration alone doesn't instantiate a concrete class.
+R"(
+
+class Vector<T>
+{
+    typealias size_t = long;
+
+    size_t _size = 0;
+    size_t _capacity;
+    T* buffer;
+    bool _is_const_initialized = false;
+
+    constructor(size_t n) : _capacity(n), buffer(n > 0 ? new[n] T : null)
+    {
+        if (_size < 0) panic("The Vector class can't have negative size");
+    }
+
+    constructor(T* buffer, size_t size) : _size(size)
+    {
+        constructor(size);
+        for (size_t i = 0; i < size; i++)
+            self.buffer[i] = buffer[i];
+    }
+
+    constructor(T* buffer, size_t size, bool is_const, bool is_owned) : _is_const_initialized(is_const), _size(size)
+    {
+        if (is_const || is_owned) {
+            self.buffer = buffer;
+            _capacity = size;
+        } else {
+            constructor(buffer, size);
+        }
+    }
+
+    constructor(size_t n, T value)
+    {
+        constructor(n);
+        for (size_t i = 0; i < n; i++)
+            buffer[i] = value;
+        _size = n;
+    }
+
+    constructor() { constructor(2); }
+
+    =constructor(Vector<T>& other)
+    {
+        self = other;
+    }
+
+    size_t size() { return _size; }
+
+    size_t capacity() { return _capacity; }
+
+    void push(T t)
+    {
+        expand_if_needed();
+        buffer[_size++] = t;
+    }
+
+    T pop()
+    {
+        if (_size == 0)
+            panic("Can't pop an empty vector");
+
+        // If the buffer refers to a constant memory,
+        //  a new buffer must be allocated to modify it
+        if (_is_const_initialized)
+            alloc_new_buffer(_capacity);
+
+        // TODO call the destructor on the popped element
+        return buffer[--_size];
+    }
+
+    T& postfix [](size_t i)
+    {
+        if (i < 0)
+            panic("Can't have a negative index\n");
+
+        if (i >= _size)
+            panic("Can't have an index bigger than the size\n");
+
+        // FIXME this defeats the purpose of the use of the const buffer,
+        //  but as of now, there is no way to tell whether the returned
+        //  reference is going to be read from or written to, so this
+        //  step is needed. Nevertheless, this would be useful for example
+        //  in case of temporary string literals, which are just a temporary
+        //  objects that won't be modified. Instead of copying them, wrap
+        //  them with a String object without copying.
+        if (_is_const_initialized)
+            alloc_new_buffer(_capacity);
+
+        return buffer[i];
+    }
+
+    void expand_if_needed()
+    {
+        if (_size == _capacity || _is_const_initialized)
+            alloc_new_buffer(_size * 2);
+    }
+
+    void trim_to_fit()
+    {
+        if (_size > 0)
+            alloc_new_buffer(_size);
+    }
+
+    void alloc_new_buffer(size_t new_capacity)
+    {
+        if (new_capacity <= 0)
+            panic("Cannot allocate a non-positive-sized buffer");
+
+        T* temp = new[new_capacity] T;
+
+        for (size_t i = 0; i < _size; i++)
+            temp[i] = buffer[i];
+
+        _destroy_buffer();
+        buffer = temp;
+
+        _capacity = new_capacity;
+
+        _is_const_initialized = false;
+    }
+
+    void resize(size_t new_size)
+    {
+        if (new_size <= 0)
+            panic("Cannot resize to a non-positive size");
+
+        if (new_size > _capacity)
+            alloc_new_buffer(new_size);
+
+        _size = new_size;
+    }
+
+    void reserve(size_t amount)
+    {
+        if (amount <= 0)
+            panic("Cannot reserve a non-positive amount");
+
+        if (amount <= _capacity)
+            return;
+
+        alloc_new_buffer(amount);
+    }
+
+    Vector<T>& infix =(Vector<T>& other)
+    {
+        if (other._is_const_initialized)
+        {
+            _destroy_buffer();
+            buffer = other.buffer;
+            _size = other._size;
+            _capacity = other._capacity;
+        }
+        else
+        {
+            resize(other._size);
+
+            // Don't set _capacity. the resize method will set it as
+            // appropriate (it might remain bigger than other._capacity)
+            _size = other._size;
+
+            for (size_t i = 0; i < _size; i++)
+                buffer[i] = other.buffer[i];
+        }
+
+        _is_const_initialized = other._is_const_initialized;
+
+        return self;
+    }
+
+    bool is_empty() { return size() == 0; }
+
+    destructor
+    {
+        _destroy_buffer();
+    }
+
+    void _destroy_buffer()
+    {
+        // Const pointers are in a read-only
+        //  memory, and shouldn't be deleted
+        if (_is_const_initialized)
+            return;
+
+        if ((&buffer[0] as Object*) != null) {
+            // Have to cast as Object* so that the typing
+            //  system doesn't complain if T is a primitive type
+            for (size_t i = 0; i < size(); i++) {
+                var obj = ((Object*))&buffer[i];
+                obj->destructor();
+            }
+        }
+
+        // Calling free instead of delete to avoid calling
+        //  the destructor again on every position in the
+        //  buffer, even if it's not occupied
+        free(((i64*))buffer);
+    }
+}
+
+void panic(str message);
+nomangle void free(i64* ptr);
+
+)"
+,
+R"(
+
+class String : Vector<i8>
+{
+    typealias size_t = long;
+
+    constructor();
+    constructor(str string);
+    constructor(size_t n, byte c);
+    constructor(str string, size_t n, bool is_const, bool is_owned);
+    constructor(str string, bool is_const, bool is_owned);
+
+    =constructor(String& string);
+    =constructor(str string);
+
+    Declaration void push(byte c);
+    Declaration byte pop();
+    Declaration String substring(size_t from, size_t upto);
+
+    Declaration size_t size();
+    Declaration size_t capacity();
+
+    Declaration str c_str();
+
+    String& infix =(str string);
+    String infix +(String other);
+    String infix +(str other);
+
+    destructor;
+}
+
+String infix +(str other, String self);
+
+)"
+,
+R"(
+
+// TODO Remove the "c_" prefix after solving the problem
+//  of the .dua.init function, and make them static
+int* c_stdin  = __get_stdin ();
+int* c_stdout = __get_stdout();
+int* c_stderr = __get_stderr();
+
+nomangle int* __get_stdin();
+
+nomangle int* __get_stdout();
+
+nomangle int* __get_stderr();
+
+nomangle void fprintf(int* stream, str message, ...);
+
+nomangle void exit(int exit_code);
+
+nomangle void getenv(str name);
+
+nomangle int system(str command);
+
+void panic(str message);
+
+)"
+};
+
+std::vector<std::string>& get_dua_lib_declarations() { return dua_lib_declarations; }
 
 }

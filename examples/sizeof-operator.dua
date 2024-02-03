@@ -5,7 +5,7 @@ void print(int num) { printf("%d", num); }
 
 
 // Case Size of primitive types
-// Outputs "884482118888"
+// Outputs "8844821188408"
 
 
 int main()
@@ -31,6 +31,7 @@ int main()
     print(sizeof(p * 53));
     print(sizeof(i64*));
 
+    // String literals create a string object, not i8*
     print(sizeof("hello"));
     print(sizeof(str));
 }

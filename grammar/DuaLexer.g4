@@ -76,6 +76,8 @@ Colon: ':';
 
 VarArg: '...';
 
+Declaration: 'Declaration';
+
 Infix: 'infix';
 Postfix: 'postfix';
 

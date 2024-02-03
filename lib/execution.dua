@@ -1,7 +1,8 @@
-// These need to be static to not interfere with the definitions of c
-static int* stdin  = __get_stdin ();
-static int* stdout = __get_stdout();
-static int* stderr = __get_stderr();
+// TODO Remove the "c_" prefix after solving the problem
+//  of the .dua.init function, and make them static
+int* c_stdin  = __get_stdin ();
+int* c_stdout = __get_stdout();
+int* c_stderr = __get_stderr();
 
 nomangle int* __get_stdin();
 
@@ -19,6 +20,6 @@ nomangle int system(str command);
 
 void panic(str message)
 {
-    fprintf(stderr, message);
+    fprintf(c_stderr, message);
     exit(-1);
 }

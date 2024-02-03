@@ -105,6 +105,9 @@ constructor
         '(' param_list ')' { assistant.push_var_arg(false); }
         { assistant.create_function_declaration(); } optional_fields_constructor_params
         { assistant.set_current_function(); } function_body { assistant.finish_constructor(); }
+    | { assistant.prepare_constructor(); } Constructor
+        no_template '(' param_list ')' ';' { assistant.push_var_arg(false); }
+        { assistant.create_function_declaration(); }
     ;
 
 copy_constructor
@@ -113,6 +116,9 @@ copy_constructor
         '(' param_list ')' { assistant.push_var_arg(false); }
         { assistant.create_function_declaration(); } optional_fields_constructor_params
         { assistant.set_current_function(); } function_body { assistant.finish_copy_constructor(); }
+    | { assistant.prepare_copy_constructor(); } '=' Constructor
+        no_template '(' param_list ')' ';' { assistant.push_var_arg(false); }
+        { assistant.create_function_declaration(); }
     ;
 
 optional_fields_constructor_params
@@ -134,6 +140,8 @@ destructor
     : { assistant.prepare_destructor(); } Destructor { assistant.push_var_arg(false); }
         no_template
         { assistant.push_counter(); assistant.create_function_declaration(); } { assistant.set_current_function(); } function_body
+    | { assistant.prepare_destructor(); } Destructor { assistant.push_var_arg(false); }
+        no_template ';' { assistant.push_counter(); assistant.create_function_declaration(); }
     ;
 
 variable_decl_or_def
@@ -198,8 +206,13 @@ postfix_op
     : '[]' { assistant.push_str("Indexing"); }
     ;
 
+optional_declaration_specifier
+    : Declaration
+    |
+    ;
+
 function_decl_no_simicolon
-    : function_decl_optionals type identifier template_params_or_none
+    : optional_declaration_specifier function_decl_optionals type identifier template_params_or_none
         '(' param_list var_arg_or_none ')' { assistant.create_function_declaration(); }
     | static_or_none type Infix infix_op '(' param_list ')' { assistant.create_infix_operator(); }
     | static_or_none type Postfix postfix_op '(' param_list ')' { assistant.create_postfix_operator(); }

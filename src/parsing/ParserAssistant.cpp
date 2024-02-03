@@ -231,8 +231,10 @@ void ParserAssistant::finish_parsing()
                 // Set the types of the fields to the corresponding concrete type
                 for (auto& field : templated_fields) {
                     concrete_fields.push_back(field);
-                    concrete_fields.back().type = concrete_fields.back().type->get_concrete_type();
                 }
+
+                for (auto& field : concrete_fields)
+                    field.type = field.type->get_concrete_type();
 
                 auto cls = compiler->name_resolver.get_class(full_name);
 
@@ -277,7 +279,7 @@ void ParserAssistant::finish_parsing()
                 // Ignore the vtable field
                 for (size_t i = 1; i < parent_fields.size(); i++)
                     for (auto &field : fields)
-                        if (parent_fields[i].name ==field.name)
+                        if (parent_fields[i].name == field.name)
                             compiler->report_error("The field " + parent_fields[i].name + " of the class " + node->name + " is already defined one of its parent classes");
 
                 std::vector<ClassField> all_fields;
@@ -293,6 +295,9 @@ void ParserAssistant::finish_parsing()
                     all_fields.push_back(field);
 
                 fields = std::move(all_fields);
+
+                for (auto& field : fields)
+                    field.type = field.type->get_concrete_type();
 
                 body.resize(fields.size());
                 for (size_t i = 0; i < body.size(); i++) {

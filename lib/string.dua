@@ -20,16 +20,6 @@ class String : Vector<i8>
         buffer[_size] = '\0';
     }
 
-    =constructor(String& string)
-    {
-        self = string;
-    }
-
-    =constructor(str string)
-    {
-        self = string;
-    }
-
     constructor(size_t n, byte c) : Super(n + 1, c)
     {
         buffer[n] = '\0';
@@ -45,43 +35,14 @@ class String : Vector<i8>
         constructor(string, strlen(string) + 1, is_const, is_owned);
     }
 
-    String substring(size_t from, size_t upto)
+    =constructor(String& string)
     {
-        size_t n = upto - from;
-
-        var buffer = new[n + 1] byte;
-
-        for (size_t i = 0; i < n; i++)
-            buffer[i] = self[from + i];
-
-        String result(buffer, false, true);
-
-        return result;
+        self = string;
     }
 
-    String infix +(String other)
+    =constructor(str string)
     {
-        return self + other.buffer;
-    }
-
-    String infix +(str other)
-    {
-        size_t self_size = size();
-        size_t other_size = strlen(other);
-
-        size_t sum = self_size + other_size;
-
-        str buffer = new[self_size + other_size + 1] byte;
-
-        for (long i = 0; i < self_size; i++)
-            buffer[i] = self[i];
-        for (long i = 0; i < other_size; i++)
-            buffer[self_size + i] = other[i];
-        buffer[sum] = '\0';
-
-        String result(buffer, false, true);
-
-        return result;
+        self = string;
     }
 
     void push(byte c)
@@ -109,6 +70,27 @@ class String : Vector<i8>
         return result;
     }
 
+    String substring(size_t from, size_t upto)
+    {
+        size_t n = upto - from;
+
+        var buffer = new[n + 1] byte;
+
+        for (size_t i = 0; i < n; i++)
+            buffer[i] = self[from + i];
+
+        String result(buffer, false, true);
+
+        return result;
+    }
+
+
+    // Excluding the null terminator
+    size_t size() { return _size - 1; }
+    size_t capacity() { return _capacity - 1; }
+
+    str c_str() { return buffer; }
+
     String& infix =(str string)
     {
         String temp(string, true, true);
@@ -116,11 +98,30 @@ class String : Vector<i8>
         return self;
     }
 
-    // Excluding the null terminator
-    size_t size() { return _size - 1; }
-    size_t capacity() { return _capacity - 1; }
+    String infix +(String other)
+    {
+        return self + other.buffer;
+    }
 
-    str c_str() { return buffer; }
+    String infix +(str other)
+    {
+        size_t self_size = size();
+        size_t other_size = strlen(other);
+
+        size_t sum = self_size + other_size;
+
+        str buffer = new[self_size + other_size + 1] byte;
+
+        for (long i = 0; i < self_size; i++)
+            buffer[i] = self[i];
+        for (long i = 0; i < other_size; i++)
+            buffer[self_size + i] = other[i];
+        buffer[sum] = '\0';
+
+        String result(buffer, false, true);
+
+        return result;
+    }
 }
 
 String infix +(str other, String self)

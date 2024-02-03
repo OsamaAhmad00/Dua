@@ -1,5 +1,3 @@
-import "../lib/vector.dua"
-
 nomangle int printf(str message, ...);
 
 // Case Pushing an element

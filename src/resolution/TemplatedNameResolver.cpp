@@ -501,8 +501,6 @@ const ClassType* TemplatedNameResolver::define_templated_class(const std::string
         }
     }
 
-    assert(constructors_count == constructors.size());
-
     for (size_t i = 0; i < methods.size(); i++)
     {
         auto& method = methods[i];
@@ -523,7 +521,10 @@ const ClassType* TemplatedNameResolver::define_templated_class(const std::string
 
         method->set_full_name();
 
-        if (i < constructors_count) {
+        // constructors.size() is used instead of constructors_count here
+        //  because the constructors might actually be empty if the constructors
+        //  are only declared, and not defined
+        if (i < constructors.size()) {
             // Add field constructor args of the concrete class
             // We do this after having the types (and the full names)
             //  of methods updated, and before evaluating the methods

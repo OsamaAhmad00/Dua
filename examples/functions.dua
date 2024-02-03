@@ -97,7 +97,7 @@ int main()
 
 
 // Case Returning an object
-// Outputs "1 2 3 "
+// Outputs "1 2 "
 
 class X
 {
@@ -113,16 +113,15 @@ class X
 X func()
 {
     X x1(1);
-    X x2(2);
-    X x3(5);
+    X x2(5);
 
     // The destructor shouldn't get called
-    //  on x3 because it's being returned
-    return x3;
+    //  on x2 because it's being returned
+    return x2;
 }
 
 int main()
 {
     X x = func();
-    x.i = 3;
+    x.i = 2;
 }

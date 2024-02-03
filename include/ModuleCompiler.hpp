@@ -31,7 +31,7 @@ public:
     friend class ClassType;
     friend class ParserFacade;
 
-    ModuleCompiler(const std::string& module_name, const std::string& code);
+    ModuleCompiler(const std::string& module_name, std::string code, bool append_declarations = true);
 
     const std::string& get_result() { return result; }
 
