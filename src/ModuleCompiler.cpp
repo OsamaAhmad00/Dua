@@ -2,6 +2,7 @@
 #include <parsing/ParserFacade.hpp>
 #include <AST/TranslationUnitNode.hpp>
 #include <llvm/Support/Host.h>
+#include <fstream>
 #include "AST/function/FunctionDefinitionNode.hpp"
 #include "AST/class/ClassDefinitionNode.hpp"
 #include "types/ReferenceType.hpp"
@@ -51,6 +52,12 @@ ModuleCompiler::ModuleCompiler(const std::string &module_name, std::string code,
     llvm::raw_string_ostream stream(result);
     module.print(stream, nullptr);
     result = stream.str();
+
+    std::ofstream outfile ("E:/test.txt");
+
+    outfile << result << std::endl;
+
+    outfile.close();
 }
 
 void ModuleCompiler::create_dua_init_function()

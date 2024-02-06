@@ -33,8 +33,6 @@ Value ClassDefinitionNode::eval()
         class_fields[i].default_value = parent_fields[i].default_value;
     }
 
-
-
     typing_system().push_scope();
 
     // First, evaluate the aliases

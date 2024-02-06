@@ -1,12 +1,12 @@
 #pragma once
 
-#include "LValueNode.hpp"
+#include "AST/ASTNode.hpp"
 #include "types/PointerType.hpp"
 
 namespace dua
 {
 
-class MallocNode : public LValueNode
+class MallocNode : public ASTNode
 {
 
     std::vector<ASTNode*> args;
@@ -19,8 +19,6 @@ public:
     Value eval() override;
 
     const Type* get_type() override;
-
-    const Type* get_element_type() override;
 };
 
 }

@@ -156,9 +156,9 @@ class Vector<T>
         {
             resize(other._size);
 
-            // Don't set _capacity. the resize method will set it as
-            // appropriate (it might remain bigger than other._capacity)
-            _size = other._size;
+            // Don't set _size and _capacity. the resize method will set
+            //  them as appropriate (_capacity might remain bigger than
+            //  other._capacity)
 
             for (size_t i = 0; i < _size; i++)
                 buffer[i] = other.buffer[i];

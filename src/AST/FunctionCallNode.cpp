@@ -25,8 +25,11 @@ std::vector<Value> FunctionCallNode::eval_args()
 {
     auto n = args.size();
     std::vector<Value> evaluated(n);
+    // nullptr args are placeholders that
+    //  will be substituted later
     for (size_t i = 0; i < n; i++)
-        evaluated[i] = args[i]->eval();
+        if (args[i] != nullptr)
+            evaluated[i] = args[i]->eval();
     return evaluated;
 }
 
@@ -47,6 +50,10 @@ Value FunctionCallNode::eval()
             arg_types[i + 1] = evaluated_args[i].type;
         arg_types[0] = compiler->create_type<ReferenceType>(class_type, true);
         auto instance = name_resolver().symbol_table.get("self");
+        // This is always an unallocated reference type, but since the symbol table stores addresses
+        //  in the loaded_value field, we need to move it back again to memory_location.
+        instance.memory_location = instance.get();
+        instance.set(nullptr);
         auto method = class_type->get_method(name, instance, std::move(arg_types), false);
         if (!method.is_null()) {
             evaluated_args.insert(evaluated_args.begin(), instance);
@@ -130,6 +137,8 @@ Value FunctionCallNode::call_templated_function(std::vector<Value> args)
     if (arg_types.size() == args.size() + 1) {
         // This is a method call
         auto self = name_resolver().symbol_table.get("self");
+        self.memory_location = self.get();
+        self.set(nullptr);
         args.insert(args.begin(), self);
     }
     return name_resolver().call_function(func, std::move(args));

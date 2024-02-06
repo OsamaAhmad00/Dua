@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ASTNode.hpp"
-#include "lvalue/LValueNode.hpp"
 
 namespace dua
 {
@@ -10,8 +9,6 @@ class IndexingNode : public ASTNode
 {
     ASTNode* lhs;
     ASTNode* rhs;
-
-    const Type* get_element_type(ASTNode* lhs, ASTNode* rhs);
 
 public:
 

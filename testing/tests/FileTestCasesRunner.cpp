@@ -70,20 +70,20 @@ void FileTestCasesRunner::run()
 
             std::vector<std::string> n = { encoded_name };
             std::vector<std::string> c = { code };
-            std::vector<std::string> a = { "-o", exe_name };
+            std::vector<std::string> a = { "-o", exe_name, PROJECT_ROOT_DIR + "/lib/common.c" };
 
             bool succeeded;
 
             if (should_panic) {
                 succeeded = true;
-                EXPECT_ANY_THROW(succeeded = !run_clang_on_llvm_ir(n, c, a));
+                EXPECT_ANY_THROW(succeeded = !run_clang_on_llvm_ir(n, c, a, false));
                 if (succeeded)
                     std::cerr << termcolor::green << "\t\tException thrown, Passed!" << termcolor::reset << '\n';
                 passed_cases += succeeded;
                 continue;
             } else {
                 succeeded = false;
-                EXPECT_NO_THROW(succeeded = run_clang_on_llvm_ir(n, c, a));
+                EXPECT_NO_THROW(succeeded = run_clang_on_llvm_ir(n, c, a, false));
             }
 
             long long time_limit = -1;

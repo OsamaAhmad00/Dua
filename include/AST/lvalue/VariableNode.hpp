@@ -1,11 +1,11 @@
 #pragma once
 
-#include "LValueNode.hpp"
+#include "AST/ASTNode.hpp"
 
 namespace dua
 {
 
-class VariableNode : public LValueNode
+class VariableNode : public ASTNode
 {
 
 public:
@@ -21,8 +21,6 @@ public:
     Value eval() override;
 
     const Type* get_type() override;
-
-    const Type* get_element_type() override;
 
     [[nodiscard]] virtual std::string get_name() const;
 

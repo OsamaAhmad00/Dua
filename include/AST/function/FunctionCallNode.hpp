@@ -13,7 +13,7 @@ protected:
 
     Value call_templated_function(std::vector<Value> args);
 
-    std::vector<Value> eval_args();
+    virtual std::vector<Value> eval_args();
 
     Value call_reference(const Value& reference, std::vector<Value> args);
 

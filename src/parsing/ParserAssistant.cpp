@@ -765,27 +765,19 @@ void ParserAssistant::create_dereference() {
 }
 
 void ParserAssistant::create_pre_inc() {
-    auto lvalue = pop_node_as<LValueNode>();
-    push_node<PrefixAdditionExpressionNode>(
-        lvalue,
-        1
-    );
+    push_node<PrefixAdditionExpressionNode>(pop_node(), 1);
 }
 
 void ParserAssistant::create_pre_dec() {
-    auto lvalue = pop_node_as<LValueNode>();
-    push_node<PrefixAdditionExpressionNode>(
-        lvalue,
-        -1
-    );
+    push_node<PrefixAdditionExpressionNode>(pop_node(), -1);
 }
 
 void ParserAssistant::create_post_inc() {
-    push_node<PostfixAdditionExpressionNode>(pop_node_as<LValueNode>(), 1);
+    push_node<PostfixAdditionExpressionNode>(pop_node(), 1);
 }
 
 void ParserAssistant::create_post_dec() {
-    push_node<PostfixAdditionExpressionNode>(pop_node_as<LValueNode>(), -1);
+    push_node<PostfixAdditionExpressionNode>(pop_node(), -1);
 }
 
 void ParserAssistant::create_ternary_operator() {
@@ -834,11 +826,6 @@ void ParserAssistant::create_do_while() {
     ASTNode* condition = pop_node();
     ASTNode* body = pop_node();
     push_node<DoWhileNode>(condition, body);
-}
-
-void ParserAssistant::create_loaded_lvalue() {
-    auto node = pop_node_as<LValueNode>();
-    push_node<LoadedLValueNode>(node);
 }
 
 void ParserAssistant::create_indexing() {
@@ -1241,7 +1228,7 @@ void ParserAssistant::create_type_alias() {
     }
 }
 
-void ParserAssistant::create_identifier_lvalue() {
+void ParserAssistant::create_identifier_value() {
     auto name = pop_str();
     auto template_args = pop_types();
     if (pop_is_templated()) {

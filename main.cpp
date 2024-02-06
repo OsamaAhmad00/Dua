@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
         if (is_dua_file(argv[i]))
             source_files.emplace_back(argv[i]);
         else {
-            if (strcmp(argv[i], "-no_libdua") == 0)
+            if (strcmp(argv[i], "-no-libdua") == 0)
                 include_dua_lib = false;
             else
                 args.emplace_back(argv[i]);

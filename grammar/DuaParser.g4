@@ -298,8 +298,20 @@ scoped_expression
     | { assistant.enter_scope(); } expression { assistant.inc_statements(); assistant.create_block(); }
     ;
 
+// There is a corner case. a & b shouldn't be parsed as defining b to be of type a&,
+//  but a & b = x should be parsed as a reference variable definition.
+// The normal assignment defintion shouldn't have a higher precedence than the fucntion
+//  reference definition, that's why we need to copy the function reference definition
+//  here as well, and put it above both, so that it has a higher precedence.
+statement_corner_case
+    : static_or_none type '(' types_list var_arg_or_none ')' '*' identifier '=' identifier template_args_or_none { assistant.create_func_ref(); }
+    | static_or_none type identifier '=' expression { assistant.push_counter(); assistant.create_variable_definition(); }
+    | expression '&' expression ';' { assistant.create_binary_expr<BitwiseAndNode>(); assistant.create_expression_statement(); }
+    ;
+
 statement
-    : variable_decl_or_def
+    : statement_corner_case
+    | variable_decl_or_def
     | if_statement
     | for
     | while
@@ -323,7 +335,9 @@ expression
     | if_expression
     | when_expression
     | '(' expression ')'
-    | function_call
+    | expression '.' function_name template_args_or_none '(' arg_list ')' { assistant.create_method_call(); }
+    | expression '->' { assistant.create_dereference(); } function_name template_args_or_none '(' arg_list ')' { assistant.create_method_call(); }
+    | full_function_identifier   template_args_or_none '(' arg_list ')' { assistant.create_function_call(); }
     | expression '(' arg_list ')' { assistant.create_expr_function_call();  }
     | expression '[' expression ']' { assistant.create_indexing(); }
     | '(' '(' type ')' ')' expression { assistant.create_forced_cast(); }
@@ -335,11 +349,14 @@ expression
     | DynamicName '(' expression ')' { assistant.push_null_type(); assistant.create_dynamic_name(); }
     | DynamicName '(' type ')' { assistant.push_null_node(); assistant.create_dynamic_name(); }
     | IsType '(' expr_or_type ',' expr_or_type ')' { assistant.create_is_type(); }
-    | loaded_lvalue
-    | lvalue '++' { assistant.create_post_inc(); }
-    | lvalue '--' { assistant.create_post_dec(); }
-    | '++' lvalue { assistant.create_pre_inc(); }
-    | '--' lvalue { assistant.create_pre_dec(); }
+    | expression '.' identifier template_args_or_none { assistant.create_field_access(); }
+    | expression { assistant.create_dereference(); } '->' identifier template_args_or_none { assistant.create_field_access(); }
+    | '*' expression { assistant.create_dereference(); }
+    | identifier template_args_or_none { assistant.create_identifier_value(); }
+    | expression '++' { assistant.create_post_inc(); }
+    | expression '--' { assistant.create_post_dec(); }
+    | '++' expression { assistant.create_pre_inc(); }
+    | '--' expression { assistant.create_pre_dec(); }
     | '+'  expression  // do nothing
     | '-'  expression { assistant.create_unary_expr<NegativeExpressionNode>();          }
     | '!'  expression { assistant.create_unary_expr<NotExpressionNode>();               }
@@ -367,17 +384,17 @@ expression
     | expression '||' expression { assistant.create_logical_or(); }
     | expression '?' expression ':' expression { assistant.create_ternary_operator(); }
     | <assoc=right> expression '=' expression { assistant.create_assignment(); }
-    | <assoc=right> lvalue '+='  expression  { assistant.create_compound_assignment<AdditionNode>(); }
-    | <assoc=right> lvalue '-='  expression  { assistant.create_compound_assignment<SubtractionNode>(); }
-    | <assoc=right> lvalue '*='  expression  { assistant.create_compound_assignment<MultiplicationNode>(); }
-    | <assoc=right> lvalue '/='  expression  { assistant.create_compound_assignment<DivisionNode>(); }
-    | <assoc=right> lvalue '%='  expression  { assistant.create_compound_assignment<ModNode>(); }
-    | <assoc=right> lvalue '<<=' expression  { assistant.create_compound_assignment<LeftShiftNode>(); }
-    | <assoc=right> lvalue '>>=' expression  { assistant.create_compound_assignment<RightShiftNode>(); }
-    | <assoc=right> lvalue '>>>=' expression { assistant.create_compound_assignment<ArithmeticRightShiftNode>(); }
-    | <assoc=right> lvalue '&='  expression  { assistant.create_compound_assignment<BitwiseAndNode>(); }
-    | <assoc=right> lvalue '^='  expression  { assistant.create_compound_assignment<XorNode>(); }
-    | <assoc=right> lvalue '|='  expression  { assistant.create_compound_assignment<BitwiseOrNode>(); }
+    | <assoc=right> expression '+='  expression  { assistant.create_compound_assignment<AdditionNode>(); }
+    | <assoc=right> expression '-='  expression  { assistant.create_compound_assignment<SubtractionNode>(); }
+    | <assoc=right> expression '*='  expression  { assistant.create_compound_assignment<MultiplicationNode>(); }
+    | <assoc=right> expression '/='  expression  { assistant.create_compound_assignment<DivisionNode>(); }
+    | <assoc=right> expression '%='  expression  { assistant.create_compound_assignment<ModNode>(); }
+    | <assoc=right> expression '<<=' expression  { assistant.create_compound_assignment<LeftShiftNode>(); }
+    | <assoc=right> expression '>>=' expression  { assistant.create_compound_assignment<RightShiftNode>(); }
+    | <assoc=right> expression '>>>=' expression { assistant.create_compound_assignment<ArithmeticRightShiftNode>(); }
+    | <assoc=right> expression '&='  expression  { assistant.create_compound_assignment<BitwiseAndNode>(); }
+    | <assoc=right> expression '^='  expression  { assistant.create_compound_assignment<XorNode>(); }
+    | <assoc=right> expression '|='  expression  { assistant.create_compound_assignment<BitwiseOrNode>(); }
     ;
 
 optional_size
@@ -390,11 +407,6 @@ expr_or_type
     | type
     ;
 
-function_call
-    : instance_access function_name template_args_or_none '(' arg_list ')' { assistant.create_method_call(); }
-    | full_function_identifier   template_args_or_none '(' arg_list ')' { assistant.create_function_call(); }
-    ;
-
 full_function_identifier
     : function_name
     | identifier_type '::' function_name { assistant.create_method_identifier(); }
@@ -404,11 +416,6 @@ function_name
     : identifier
     | Constructor { assistant.push_str("constructor"); }
     | Destructor  { assistant.push_str("destructor") ; }
-    ;
-
-instance_access
-    : lvalue '.'
-    | lvalue '->' { assistant.create_loaded_lvalue(); }
     ;
 
 template_args_or_none
@@ -536,19 +543,6 @@ expression_or_none_loop
 
 block_expression
     : scope_begin statements expression scope_end { assistant.inc_statements(); assistant.create_block(); }
-    ;
-
-loaded_lvalue
-    : lvalue { assistant.create_loaded_lvalue(); }
-    ;
-
-lvalue
-    : '(' lvalue ')'
-    | '*' loaded_lvalue { assistant.create_dereference(); }
-    | '*' '(' expression ')' { assistant.create_dereference(); }
-    | lvalue '.' identifier template_args_or_none { assistant.create_field_access(); }
-    | lvalue { assistant.create_loaded_lvalue(); } '->' identifier template_args_or_none { assistant.create_field_access(); }
-    | identifier template_args_or_none { assistant.create_identifier_lvalue(); }
     ;
 
 // A convinience production that pushes the identifier's text.

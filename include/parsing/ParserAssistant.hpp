@@ -55,12 +55,10 @@
 #include "AST/operators/DynamicNameNode.hpp"
 #include "AST/operators/AddressOfNode.hpp"
 
-#include "AST/lvalue/LValueNode.hpp"
 #include "AST/lvalue/VariableNode.hpp"
 #include "AST/IndexingNode.hpp"
 #include "AST/lvalue/DereferenceNode.hpp"
 #include "AST/lvalue/ClassFieldNode.hpp"
-#include "AST/lvalue/LoadedLValueNode.hpp"
 #include "AST/lvalue/MallocNode.hpp"
 
 #include "AST/types/TypeAliasNode.hpp"
@@ -287,7 +285,6 @@ public:
     void create_continue();
     void create_break();
     void create_do_while();
-    void create_loaded_lvalue();
     void create_indexing();
     void create_logical_and();
     void create_logical_or();
@@ -312,7 +309,7 @@ public:
     void set_current_function();
     void create_reference_type();
     void create_type_alias();
-    void create_identifier_lvalue();
+    void create_identifier_value();
     void create_is_type();
     void create_no_ref();
     void create_method_identifier();
@@ -339,7 +336,7 @@ public:
     template <typename T>
     void create_compound_assignment() {
         auto rhs = pop_node();
-        auto lhs = pop_node_as<LValueNode>();
+        auto lhs = pop_node();
         push_node<CompoundAssignmentExpressionNode<T>>(lhs, rhs);
     }
 

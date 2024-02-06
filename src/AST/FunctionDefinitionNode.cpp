@@ -95,6 +95,7 @@ Value FunctionDefinitionNode::define_function()
                 //  to get two dereferences instead of one
                 f.memory_location = f.get();
                 f.set(nullptr);
+                f.get();
                 f.type = ref->get_unallocated();
             }
             name_resolver().symbol_table.insert(fields[i].name, f);
@@ -110,10 +111,12 @@ Value FunctionDefinitionNode::define_function()
     if (is_method)
     {
         // The self variable doesn't need to be manipulated, thus,
-        //  it doesn't need to be pushed on the stack. Moreover, if
-        //  the self pointer is pushed to the stack, the variable
-        //  on the stack would have a type of class** instead of class*.
+        //  it doesn't need to be pushed on the stack.
         auto type = info.type->param_types[0];
+        auto ref = type->as<ReferenceType>();
+        assert(ref != nullptr);
+        // Reference parameters are always passed as allocated
+        type = ref->get_unallocated();
         auto self = function->args().begin();
         self->setName("self");
         name_resolver().symbol_table.insert("self", compiler->create_value(self, type));
@@ -142,6 +145,7 @@ Value FunctionDefinitionNode::define_function()
             // If it's a reference type, the llvm type of the parameter will be a pointer type,
             //  which will hold the address of the variable, just like the result of an alloca.
             // We turn the reference into an unallocated reference here
+            // Reference arguments are passed as allocated references
             auto value = compiler->create_value(arg, ref->get_unallocated());
             name_resolver().symbol_table.insert(info.param_names[i], value);
         } else {

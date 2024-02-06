@@ -262,6 +262,7 @@ int main()
 {
     int i = 2;
     long j = 3;
+    i & j;  // This should not be parsed as i& j (i reference)
     return i & j;
 }
 

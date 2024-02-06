@@ -1,6 +1,5 @@
 #include <AST/function/ExprFunctionCallNode.hpp>
 #include <AST/lvalue/ClassFieldNode.hpp>
-#include <AST/lvalue/LoadedLValueNode.hpp>
 #include <types/PointerType.hpp>
 
 namespace dua
@@ -28,8 +27,7 @@ Value ExprFunctionCallNode::eval()
 {
     size_t n = args.size();
 
-    auto loaded = dynamic_cast<LoadedLValueNode*>(func);
-    auto field = dynamic_cast<ClassFieldNode*>(loaded->lvalue);
+    auto field = dynamic_cast<ClassFieldNode*>(func);
     bool is_method = field != nullptr && field->is_function();
 
     n += is_method;

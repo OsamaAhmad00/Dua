@@ -1,33 +1,13 @@
 #include "AST/IndexingNode.hpp"
 #include "types/ArrayType.hpp"
-#include "AST/lvalue/LoadedLValueNode.hpp"
 #include "types/PointerType.hpp"
 #include "types/ReferenceType.hpp"
 #include "types/IntegerTypes.hpp"
 #include "AST/values/StringValueNode.hpp"
+#include "AST/lvalue/DereferenceNode.hpp"
 
 namespace dua
 {
-
-const Type* IndexingNode::get_element_type(ASTNode* lhs, ASTNode* rhs)
-{
-    const Type* result = nullptr;
-    auto loaded_lvalue = lhs->as<LoadedLValueNode>();
-    if (loaded_lvalue != nullptr)
-        result = loaded_lvalue->lvalue->get_element_type();
-    if (result == nullptr) {
-        if (auto i = lhs->as<IndexingNode>(); i != nullptr)
-            result = i->get_type();
-    }
-    if (result == nullptr) {
-        if (auto i = lhs->as<StringValueNode>(); i != nullptr)
-            result = lhs->get_type();
-    }
-    if (result == nullptr)
-        compiler->report_error("There is no indexing operator ([] operator) defined between for the types "
-            + lhs->get_type()->to_string() + " and " + rhs->get_type()->to_string());
-    return result;
-}
 
 Value IndexingNode::eval()
 {
@@ -42,15 +22,15 @@ Value IndexingNode::eval()
     if (index.is_null())
         compiler->report_error("Can't use a " + rhs_eval.type->to_string() + " as an index");
 
-    auto element_type = get_element_type(lhs, rhs);;
-    if (auto ptr = element_type->as<PointerType>(); ptr != nullptr) {
+    auto type = lhs->get_type();
+    if (auto ptr = type->as<PointerType>(); ptr != nullptr) {
         // Act as if this is an array
         lhs_eval.memory_location = lhs_eval.get();
-        element_type = compiler->create_type<ArrayType>(ptr->get_element_type(), LONG_LONG_MAX);
+        type = compiler->create_type<ArrayType>(ptr->get_element_type(), ULONG_LONG_MAX);
     }
 
     auto memory_location = builder().CreateGEP(
-        element_type->llvm_type(),
+        type->llvm_type(),
         lhs_eval.memory_location,
         { builder().getInt32(0), rhs_eval.get() }
     );
@@ -69,17 +49,17 @@ const Type *IndexingNode::get_type()
     if (t != nullptr)
         return set_type(t);
 
-    auto element_type = get_element_type(lhs, rhs);
+    auto lhs_type = lhs->get_type();
 
-    const Type* result = element_type;
+    const Type* result = lhs_type;
 
-    if (auto reference_type = element_type->as<ReferenceType>(); reference_type != nullptr) {
+    if (auto reference_type = lhs_type->as<ReferenceType>(); reference_type != nullptr) {
         result = reference_type->get_element_type();
     }
 
-    if (auto pointer_type = element_type->as<PointerType>(); pointer_type != nullptr) {
+    if (auto pointer_type = lhs_type->as<PointerType>(); pointer_type != nullptr) {
         result = pointer_type->get_element_type();
-    } else if (auto array_type = element_type->as<ArrayType>(); array_type != nullptr) {
+    } else if (auto array_type = lhs_type->as<ArrayType>(); array_type != nullptr) {
         result = array_type->get_element_type();
     }
 

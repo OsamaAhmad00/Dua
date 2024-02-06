@@ -1,6 +1,8 @@
 #include <types/ClassType.hpp>
 #include <llvm/IR/Constants.h>
 #include <ModuleCompiler.hpp>
+#include "types/PointerType.hpp"
+#include "types/ReferenceType.hpp"
 
 namespace dua
 {
@@ -92,6 +94,17 @@ Value ClassType::get_method(const std::string& name, Value instance, const std::
             report_error("The class " + to_string() + " has no method with the name " + name);
         return {};
     }
+
+    if (auto ref = instance.type->as<ReferenceType>(); ref != nullptr) {
+        if (!ref->is_allocated()) {
+            assert(instance.memory_location != nullptr);
+            instance.set(instance.memory_location);
+            instance.memory_location = nullptr;
+        }
+        // Turn into a pointer
+        instance.type = compiler->create_type<PointerType>(ref->get_element_type());
+    }
+
     auto vtable_ptr_ptr = get_field(instance, ".vtable_ptr");
     auto vtable_type = compiler->name_resolver.get_vtable_type(this->name)->llvm_type();
     auto vtable_ptr = compiler->builder.CreateLoad(vtable_type, vtable_ptr_ptr.get(), ".vtable");

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AST/lvalue/LValueNode.hpp>
+#include <AST/ASTNode.hpp>
 
 namespace dua
 {

@@ -220,7 +220,6 @@ int main()
 }
 
 
-
 // Case Calling a templated method without referencing self
 // Outputs "i32"
 

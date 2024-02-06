@@ -1,6 +1,5 @@
 #include "AST/variable/LocalVariableDefinitionNode.hpp"
 #include "types/PointerType.hpp"
-#include "AST/lvalue/LoadedLValueNode.hpp"
 #include "types/ReferenceType.hpp"
 #include "AST/IndexingNode.hpp"
 #include "AST/ScopeTeleportingNode.hpp"
@@ -16,24 +15,17 @@ Value LocalVariableDefinitionNode::eval()
         compiler->report_error("Can't have both an initializer and an initializer list (in " + full_name + ")");
 
     // If it's a reference, just add a record to the symbol table and return
-    if (auto ref = type->as<ReferenceType>(); ref != nullptr) {
-        Value result;
-        const Type* element_type;
-        if (auto loaded = initializer->as<LoadedLValueNode>(); loaded != nullptr) {
-            result = loaded->lvalue->eval();
-            // It must be a pointer
-            auto ptr_type = result.type->as<PointerType>();
-            element_type = ptr_type->get_element_type();
-        } else if (auto indexing = initializer->as<IndexingNode>(); indexing != nullptr) {
-            result = initializer->eval();
-            result.set(result.memory_location);
-            element_type = result.type;
-        } else {
+    if (auto ref = type->as<ReferenceType>(); ref != nullptr)
+    {
+        if (initializer == nullptr)
+            report_error("The reference variable " + name + " with type " + get_type()->to_string() + " must be assigned a variable to reference");
+        auto result = initializer->eval();
+        if (result.memory_location == nullptr)
             compiler->report_error("Can't have a reference type to a non-lvalue expression");
-        }
+        result.set(result.memory_location);
 
-        if (!typing_system().is_castable(element_type, type))
-            compiler->report_error("Can't have a reference of type " + type->to_string() + " to an instance of type " + element_type->to_string());
+        if (!typing_system().is_castable(result.type, type))
+            compiler->report_error("Can't have a reference of type " + type->to_string() + " to an instance of type " + result.type->to_string());
         // Here, we perform the optimization of turning allocated reference into an unallocated one
         // FIXME the symbol table holds addresses of variables in the loaded_value field,
         //  instead of in the memory_location field. This means that we need not put the

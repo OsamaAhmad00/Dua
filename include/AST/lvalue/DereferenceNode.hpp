@@ -1,13 +1,13 @@
 #pragma once
 
-#include <AST/lvalue/LValueNode.hpp>
+#include <AST/ASTNode.hpp>
 
 namespace dua
 {
 
 class PointerType;
 
-class DereferenceNode : public LValueNode
+class DereferenceNode : public ASTNode
 {
     ASTNode* address;
 
@@ -21,8 +21,6 @@ public:
     Value eval() override;
 
     const Type* get_type() override;
-
-    const Type* get_element_type() override;
 };
 
 }

@@ -72,8 +72,8 @@ public:                                                                         
                                                                                       \
         if (type != nullptr) return type;                                             \
                                                                                       \
-        auto ltype = lhs->get_type();                                                 \
-        auto rtype = rhs->get_type();                                                 \
+        auto ltype = lhs->get_type()->get_contained_type();                           \
+        auto rtype = rhs->get_type()->get_contained_type();                           \
                                                                                       \
         auto infix_type = name_resolver()                                             \
             .get_infix_operator_return_type(ltype, rtype, #NAME);                     \

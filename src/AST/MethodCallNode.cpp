@@ -2,7 +2,6 @@
 #include <types/ReferenceType.hpp>
 #include <AST/lvalue/VariableNode.hpp>
 #include "types/PointerType.hpp"
-#include "AST/lvalue/LoadedLValueNode.hpp"
 
 namespace dua
 {
@@ -22,8 +21,9 @@ void MethodCallNode::process()
         }
     }
 
+    // Reserve a location for the self parameter
     if (!is_callable_field)
-        args.insert(args.begin(), instance_node);
+        args.insert(args.begin(), nullptr);
 
     processed = true;
 }
@@ -32,28 +32,17 @@ Value MethodCallNode::eval()
 {
     process();
 
-    auto instance = instance_node->eval();
-    auto instance_type = instance.type->get_concrete_type();
-    const Type* ptr_type = instance_type->as<PointerType>();
-    if (ptr_type == nullptr)
-        ptr_type = instance_type->as<ReferenceType>();
-
-    if (ptr_type == nullptr) {
-        if (instance_node->as<LoadedLValueNode>() != nullptr) {
-            compiler->report_error("Can't use a dereferenced " + instance.type->to_string() +
-                         " in method calls. Are you using -> instead of . when calling the method " + name + "?");
-        }
-        compiler->report_error(instance.type->to_string() +
-                     " is not an lvalue expression, and can't be used in the call to the method " + name);
-    }
+    auto args = eval_args();
 
     auto class_type = get_instance_type();
 
-    if (is_callable_field)
-        return call_reference(class_type->get_field(instance, name), eval_args());
+    // This is an allocated reference, a change in the type
+    //  to pointer is sufficient to turn it into a pointer value.
+    Value instance_ptr = is_callable_field ? get_instance_ref() : args[0];
+    instance_ptr.type = compiler->create_type<PointerType>(class_type);
 
-    auto args = eval_args();
-    args[0].type = compiler->create_type<ReferenceType>(class_type, true);
+    if (is_callable_field)
+        return call_reference(class_type->get_field(instance_ptr, name), std::move(args));
 
     if (is_templated)
     {
@@ -70,7 +59,7 @@ Value MethodCallNode::eval()
     for (size_t i = 0; i < args.size(); i++)
         arg_types[i] = args[i].type;
 
-    auto method = class_type->get_method(name, instance, arg_types);
+    auto method = class_type->get_method(name, instance_ptr, arg_types);
 
     return name_resolver().call_function(method, std::move(args));
 }
@@ -103,13 +92,12 @@ std::vector<const Type*> MethodCallNode::get_arg_types()
     process();
 
     std::vector<const Type*> arg_types(args.size());
-    for (size_t i = 0; i < args.size(); i++)
-        arg_types[i] = args[i]->get_type();
 
-    if (arg_types[0]->as<ReferenceType>() == nullptr) {
-        auto ptr_type = arg_types[0]->as<PointerType>();
-        arg_types[0] = compiler->create_type<ReferenceType>(ptr_type->get_element_type(), true);
-    }
+    arg_types[0] = compiler->create_type<ReferenceType>(get_instance_type(), true);
+
+    for (size_t i = 1; i < args.size(); i++)
+        if (args[i] != nullptr)
+            arg_types[i] = args[i]->get_type();
 
     return arg_types;
 }
@@ -118,19 +106,47 @@ const ClassType *MethodCallNode::get_instance_type()
 {
     auto instance_type = instance_node->get_type();
 
-    const Type* element_type = nullptr;
-    if (auto ptr_type = instance_type->as<PointerType>(); ptr_type != nullptr)
-        element_type = ptr_type->get_element_type();
-    else if (auto ref_type = instance_type->as<ReferenceType>(); ref_type != nullptr)
-        element_type = ref_type->get_element_type();
-    else
-        compiler->report_error("Can't call a method " + name + " from the type " + instance_type->to_string() + ", which is not of a class type");
-
-    auto class_type = element_type->get_contained_type()->as<ClassType>();
+    auto class_type = instance_type->get_contained_type()->as<ClassType>();
     if (class_type == nullptr)
         compiler->report_error("Can't call a method " + name + " from the type " + instance_type->to_string() + ", which is not of a class type");
 
     return class_type;
+}
+
+Value MethodCallNode::get_instance_ref()
+{
+    // FIXME different methods expect different types. Some expect a reference
+    //  and some expect a pointer type. Also, different instance nodes return
+    //  different instance types. Make a uniform interface for all of them
+
+    auto instance = instance_node->eval();
+
+    Value as_ref;
+    if (auto ref = instance.type->as<ReferenceType>(); ref != nullptr) {
+        as_ref = instance;
+        if (!ref->is_allocated()) {
+            as_ref.set(as_ref.memory_location);
+            as_ref.type = ref->get_allocated();
+        }
+    } else {
+        assert(instance.memory_location != nullptr);
+        as_ref.set(instance.memory_location);
+        as_ref.type = compiler->create_type<ReferenceType>(instance.type, true);
+    }
+
+    return as_ref;
+}
+
+std::vector<Value> MethodCallNode::eval_args()
+{
+    auto args = FunctionCallNode::eval_args();
+
+    // Don't include the self parameter if it's a callable field
+    if (is_callable_field) return args;
+
+    args[0] = get_instance_ref();
+
+    return args;
 }
 
 }

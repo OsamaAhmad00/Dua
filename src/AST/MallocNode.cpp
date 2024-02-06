@@ -14,7 +14,10 @@ MallocNode::MallocNode(dua::ModuleCompiler *compiler, const Type *type, std::vec
 
 Value MallocNode::eval()
 {
-    auto alloc_type = get_element_type()->llvm_type();
+    // This must be a pointer type
+    auto ptr_type = get_type()->as<PointerType>();
+    auto element_type = ptr_type->get_element_type();
+    auto alloc_type = element_type->llvm_type();
 
     // TODO is setting the size to 1 is the best solution for non-sized struct types?
     size_t size = alloc_type->isSized() ? llvm::DataLayout(&module()).getTypeAllocSize(alloc_type) : 1;
@@ -22,7 +25,8 @@ Value MallocNode::eval()
     auto c = count->eval();
     auto as_i64 = c.cast_as(compiler->create_type<I64Type>(), false);
     if (as_i64.is_null())
-        compiler->report_error("The type " + c.type->to_string() + " can't be used as the count for the new operator. (While allocating " + get_element_type()->to_string() + ")");
+        compiler->report_error("The type " + c.type->to_string()
+            + " can't be used as the count for the new operator. (While allocating " + element_type->to_string() + ")");
 
     llvm::Value* bytes = builder().getInt64(size);
     bytes = builder().CreateMul(as_i64.get(), bytes);
@@ -54,13 +58,13 @@ Value MallocNode::eval()
     builder().CreateCondBr(cmp, end_bb, body_bb);
 
     builder().SetInsertPoint(body_bb);
-    auto array = compiler->create_type<ArrayType>(get_element_type(), LONG_LONG_MAX);
+    auto array = compiler->create_type<ArrayType>(element_type, LONG_LONG_MAX);
     auto instance = builder().CreateGEP(
         array->llvm_type(),
         pointer.get(),
         { builder().getInt32(0), counter_val }
     );
-    name_resolver().call_constructor(compiler->create_value(instance, get_element_type()), evaluated);
+    name_resolver().call_constructor(compiler->create_value(instance, element_type), evaluated);
     auto inc = builder().CreateAdd(counter_val, builder().getInt64(1));
     builder().CreateStore(inc, counter);
     builder().CreateBr(condition_bb);
@@ -72,10 +76,6 @@ Value MallocNode::eval()
 
 const Type *MallocNode::get_type() {
     return type;
-}
-
-const Type *MallocNode::get_element_type() {
-     return ((PointerType*)type)->get_element_type();
 }
 
 }

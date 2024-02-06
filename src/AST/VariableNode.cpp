@@ -38,17 +38,8 @@ Value VariableNode::eval()
         //  field, which is confusing. Store it in the memory_location
         //  field instead.
         auto result = name_resolver().symbol_table.get(name);
-        if (auto ref = result.type->as<ReferenceType>(); ref != nullptr) {
-            // If it's unallocated, then the address is stored in the loaded_value, and
-            //  we're fine. If it's allocated, then we need to load the allocated variable
-            //  first to get the desired address.
-            if (ref->is_allocated()) {
-                // This is an exception. LValue nodes should return assignable addresses.
-                result.memory_location = result.get();
-                result.memory_location = nullptr;
-            }
-        }
-        result.type = get_type();
+        result.memory_location = result.get();
+        result.set(nullptr);
         return result;
     }
 
@@ -87,26 +78,17 @@ const Type* VariableNode::get_type()
     } else if (name_resolver().has_function(name)) {
         auto full_name = name_resolver().get_function_full_name(name);
         t = name_resolver().get_function_no_overloading(full_name).type;
+        t = compiler->create_type<PointerType>(t);
     } else {
         compiler->report_error("The identifier " + name + " is not defined");
     }
 
     // References already point to some value. We just need to make
-    //  sure that the returned reference type is an allocated reference.
+    //  sure that the returned reference type is an unallocated reference.
     if (auto ref = t->as<ReferenceType>(); ref != nullptr)
-        t = ref->get_allocated();
-    else
-        t = compiler->create_type<PointerType>(t);
+        t = ref->get_unallocated();
 
     return set_type(t);
-}
-
-const Type *VariableNode::get_element_type()
-{
-    auto type = get_type();
-    if (auto ref = type->as<ReferenceType>(); ref != nullptr)
-        return ref->get_element_type();
-    return ((PointerType*)get_type())->get_element_type();
 }
 
 bool VariableNode::is_function() const {

@@ -2,7 +2,6 @@
 
 #include <AST/ASTNode.hpp>
 #include "FunctionCallNode.hpp"
-#include "AST/lvalue/LValueNode.hpp"
 
 namespace dua
 {
@@ -14,8 +13,14 @@ class MethodCallNode : public FunctionCallNode
     ASTNode* instance_node;
 
     void process();
+
     std::vector<const Type*> get_arg_types();
+
     const ClassType* get_instance_type();
+
+    Value get_instance_ref();
+
+    std::vector<Value> eval_args() override;
 
 public:
 

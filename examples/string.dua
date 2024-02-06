@@ -1,3 +1,5 @@
+import "../lib/string.dua"
+
 nomangle int printf(str message, ...);
 
 
