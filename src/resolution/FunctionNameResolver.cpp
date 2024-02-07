@@ -199,7 +199,7 @@ void FunctionNameResolver::cast_function_args(std::vector<Value> &args, const Fu
     }
 }
 
-Value FunctionNameResolver::call_function(const std::string &name, std::vector<Value> args)
+Value FunctionNameResolver::call_function(const std::string &name, std::vector<Value> args, Value* out_result)
 {
     auto types = get_types(args);
 
@@ -235,14 +235,13 @@ Value FunctionNameResolver::call_function(const std::string &name, std::vector<V
 
     auto& info = get_function_no_overloading(full_name);
 
-    cast_function_args(args, info.type);
-    std::vector<llvm::Value*> llvm_args(args.size());
-    for (size_t i = 0; i < args.size(); i++) {
-        llvm_args[i] = args[i].get();
+    auto result_func = compiler->create_value(function, info.type);
+
+    if (out_result != nullptr) {
+        *out_result = result_func;
     }
 
-    auto result = builder().CreateCall(function, std::move(llvm_args));
-    return compiler->create_value(result, info.type->return_type);
+    return call_function(result_func, std::move(args));
 }
 
 Value FunctionNameResolver::call_function(const Value& func, std::vector<Value> args)
@@ -250,11 +249,47 @@ Value FunctionNameResolver::call_function(const Value& func, std::vector<Value> 
     auto type = func.type->as<FunctionType>();
     if (type == nullptr)
         compiler->report_internal_error("Calling a non-function type (a " + func.type->to_string() + ")");
+
     cast_function_args(args, type);
+
     std::vector<llvm::Value*> llvm_args(args.size());
     for (size_t i = 0; i < args.size(); i++)
         llvm_args[i] = args[i].get();
+
+    // As of now, variadic functions take only primitive
+    //  values. There is no need to call the copy constructor
+    //  for variadic arguments
+    for (size_t i = 0; i < type->param_types.size(); i++)
+    {
+        // Only call the copy constructor for non-reference non-teleporting values
+
+        if (args[i].is_teleporting) continue;
+
+        auto param_type = type->param_types[i];
+        if (auto ref = param_type->as<ReferenceType>(); ref == nullptr)
+        {
+            // This variables won't be inserted in the symbol table, because they
+            //  are supposed to live in the scope of the function getting called.
+            // The function will put them in the name table, and will destroy them
+            //  as needed at its scope.
+            llvm::BasicBlock* entry = &compiler->current_function->getEntryBlock();
+            compiler->temp_builder.SetInsertPoint(entry, entry->begin());
+            llvm::AllocaInst *instance = compiler->temp_builder.CreateAlloca(param_type->llvm_type(), 0, "arg_" + std::to_string(i));
+            auto value = compiler->create_value(instance, param_type->get_concrete_type());
+            compiler->name_resolver.call_copy_constructor(value, args[i]);
+
+            // After creating the argument and calling the copy constructor, pass
+            //  it to the function.
+            // At the function definition side, all arguments will be teleported,
+            //  because their copy constructor is already called (if needed), and
+            //  it shouldn't get called again.
+            args[i].set(instance);
+            args[i].memory_location = nullptr;
+        }
+    }
+
     auto result = builder().CreateCall(type->llvm_type(), func.get(), std::move(llvm_args));
+
     return compiler->create_value(result, type->return_type);
 }
 

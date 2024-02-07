@@ -21,6 +21,8 @@ protected:
 
     Value get_templated_function(std::vector<const Type*>& args_types);
 
+    void set_teleporting_args(const std::vector<const Type*>& param_types, std::vector<Value>& evaluated_args);
+
     std::string name;
     std::vector<ASTNode*> args;
     std::vector<const Type*> template_args;

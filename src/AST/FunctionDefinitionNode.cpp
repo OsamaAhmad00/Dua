@@ -150,8 +150,9 @@ Value FunctionDefinitionNode::define_function()
             name_resolver().symbol_table.insert(info.param_names[i], value);
         } else {
             auto value = compiler->create_value(arg, type);
-            // Teleport local params for operators
-            create_local_variable(info.param_names[i], type, &value, {}, is_operator);
+            // All arguments will teleport, because their copy constructor is already
+            //  called (if needed).
+            create_local_variable(info.param_names[i], type, &value, {}, true);
         }
     }
 

@@ -61,6 +61,8 @@ Value MethodCallNode::eval()
 
     auto method = class_type->get_method(name, instance_ptr, arg_types);
 
+    set_teleporting_args(method.type->as<FunctionType>()->param_types, args);
+
     return name_resolver().call_function(method, std::move(args));
 }
 

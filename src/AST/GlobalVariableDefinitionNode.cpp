@@ -32,7 +32,8 @@ Value GlobalVariableDefinitionNode::eval()
     // We're in the global scope now, and the evaluation has to be done inside
     // some basic block. Will move temporarily to the beginning of the main function.
     auto old_position = builder().saveIP();
-    builder().SetInsertPoint(&module().getFunction(".dua.init")->getEntryBlock());
+    current_function() = module().getFunction(".dua.init");
+    builder().SetInsertPoint(&current_function()->getEntryBlock());
 
     llvm::Constant* constant = nullptr;
 
@@ -64,6 +65,7 @@ Value GlobalVariableDefinitionNode::eval()
 
     // Restore the old position back
     builder().restoreIP(old_position);
+    current_function() = nullptr;
 
     if (!is_extern)
     {

@@ -43,7 +43,7 @@ public:
     bool is_function_a_constructor(const std::string& name);
 
     [[nodiscard]] bool has_function(const std::string& name, bool try_as_method = true) const;
-    Value call_function(const std::string &name, std::vector<Value> args = {});
+    Value call_function(const std::string &name, std::vector<Value> args = {}, Value* out_result = nullptr);
     Value call_function(const Value& func, std::vector<Value> args = {});
 
     void call_constructor(const Value& value, std::vector<Value> args);

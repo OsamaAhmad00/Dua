@@ -12,7 +12,7 @@
 #include "AST/SequentialEvalNode.hpp"
 #include "AST/DeferredActionNode.hpp"
 #include "AST/FreeNode.hpp"
-#include "AST/values/NullPointerNode.hpp"
+#include "AST/TempVariableNode.hpp"
 
 #include "AST/class/ClassDefinitionNode.hpp"
 #include "AST/class/DynamicCastNode.hpp"
@@ -48,6 +48,7 @@
 #include "AST/values/FloatValueNodes.hpp"
 #include "AST/values/IntegerValueNodes.hpp"
 #include "AST/values/StringValueNode.hpp"
+#include "AST/values/NullPointerNode.hpp"
 
 #include "AST/operators/TypeNameNode.hpp"
 #include "AST/operators/SizeOfNode.hpp"
@@ -320,6 +321,7 @@ public:
     void create_address_of();
     void create_null_ptr();
     void create_char_value();
+    void create_temp_variable();
 
     template<typename T>
     void create_unary_expr() {

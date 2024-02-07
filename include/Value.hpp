@@ -20,6 +20,9 @@ public:
     const Type* type = nullptr;
     llvm::Value* memory_location = nullptr;
 
+    // Just an indicator, can be ignored if wanted
+    bool is_teleporting = false;
+
     Value(TypingSystem* typing_system, llvm::Value* value, const Type* type, llvm::Value* memory_location);
     Value(TypingSystem* typing_system, const Type* type, llvm::Value* memory_location);
     Value();

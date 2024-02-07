@@ -304,8 +304,8 @@ scoped_expression
 //  reference definition, that's why we need to copy the function reference definition
 //  here as well, and put it above both, so that it has a higher precedence.
 statement_corner_case
-    : static_or_none type '(' types_list var_arg_or_none ')' '*' identifier '=' identifier template_args_or_none { assistant.create_func_ref(); }
-    | static_or_none type identifier '=' expression { assistant.push_counter(); assistant.create_variable_definition(); }
+    : static_or_none type '(' types_list var_arg_or_none ')' '*' identifier '=' identifier template_args_or_none ';' { assistant.create_func_ref(); }
+    | static_or_none type identifier '=' expression ';' { assistant.push_counter(); assistant.create_variable_definition(); }
     | expression '&' expression ';' { assistant.create_binary_expr<BitwiseAndNode>(); assistant.create_expression_statement(); }
     ;
 
@@ -335,6 +335,7 @@ expression
     | if_expression
     | when_expression
     | '(' expression ')'
+    | '(' arg_list ')' type { assistant.create_temp_variable(); }
     | expression '.' function_name template_args_or_none '(' arg_list ')' { assistant.create_method_call(); }
     | expression '->' { assistant.create_dereference(); } function_name template_args_or_none '(' arg_list ')' { assistant.create_method_call(); }
     | full_function_identifier   template_args_or_none '(' arg_list ')' { assistant.create_function_call(); }

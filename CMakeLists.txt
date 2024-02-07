@@ -111,7 +111,7 @@ set(DUA_SOURCES
     src/AST/FunctionDefinitionNode.cpp
     src/AST/GlobalVariableDefinitionNode.cpp
     src/AST/IfNode.cpp
-        src/AST/LocalVariableDefinitionNode.cpp
+    src/AST/LocalVariableDefinitionNode.cpp
     src/AST/MallocNode.cpp
     src/AST/NumericalUnaryExpressionNodes.cpp
     src/AST/PostfixAdditionExpressionNode.cpp
@@ -124,6 +124,7 @@ set(DUA_SOURCES
     src/AST/MethodCallNode.cpp
     src/AST/DynamicNameNode.cpp
     src/AST/DynamicCastNode.cpp
+    src/AST/TempVariableNode.cpp
 
     src/types/Type.cpp
     src/types/ArrayType.cpp

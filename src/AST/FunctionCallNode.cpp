@@ -27,9 +27,11 @@ std::vector<Value> FunctionCallNode::eval_args()
     std::vector<Value> evaluated(n);
     // nullptr args are placeholders that
     //  will be substituted later
-    for (size_t i = 0; i < n; i++)
-        if (args[i] != nullptr)
+    for (size_t i = 0; i < n; i++) {
+        if (args[i] != nullptr) {
             evaluated[i] = args[i]->eval();
+        }
+    }
     return evaluated;
 }
 
@@ -57,12 +59,23 @@ Value FunctionCallNode::eval()
         auto method = class_type->get_method(name, instance, std::move(arg_types), false);
         if (!method.is_null()) {
             evaluated_args.insert(evaluated_args.begin(), instance);
+            set_teleporting_args(method.type->as<FunctionType>()->param_types, evaluated_args);
             return name_resolver().call_function(method, std::move(evaluated_args));
         }
     }
 
     if (name_resolver().has_function(name, false))
-        return name_resolver().call_function(name, std::move(evaluated_args));
+    {
+        std::vector<const Type*> arg_types(evaluated_args.size());
+        for (size_t i = 0; i < arg_types.size(); i++)
+            arg_types[i] = evaluated_args[i].type;
+        auto full_name = name_resolver().get_winning_function(name, arg_types);
+        auto info = name_resolver().get_function_no_overloading(full_name);
+        auto func = module().getFunction(full_name);
+        set_teleporting_args(info.type->param_types, evaluated_args);
+        auto func_value = compiler->create_value(func, info.type);
+        return name_resolver().call_function(func_value, std::move(evaluated_args));
+    }
 
     if (!name_resolver().symbol_table.contains(name))
         compiler->report_error("The identifier " + name + " doesn't refer to either a function or a function reference");
@@ -141,6 +154,9 @@ Value FunctionCallNode::call_templated_function(std::vector<Value> args)
         self.set(nullptr);
         args.insert(args.begin(), self);
     }
+
+    set_teleporting_args(func.type->as<FunctionType>()->param_types, args);
+
     return name_resolver().call_function(func, std::move(args));
 }
 
@@ -155,6 +171,8 @@ Value FunctionCallNode::call_reference(const Value &reference, std::vector<Value
     auto function_type = pointer_type ? dynamic_cast<const FunctionType*>(pointer_type->get_element_type()) : nullptr;
     if (function_type == nullptr)
         compiler->report_error("The variable " + name + " is of type " + reference.type->to_string() + ", which is not callable");
+    else
+        set_teleporting_args(function_type->param_types, args);
 
     auto ptr = builder().CreateLoad(reference.type->llvm_type(), reference.get());
     auto value = compiler->create_value(ptr, function_type);
@@ -170,6 +188,20 @@ Value FunctionCallNode::get_templated_function(std::vector<const Type*>& arg_typ
         return method;
 
     return compiler->get_name_resolver().get_templated_function(name, template_args, std::move(arg_types));
+}
+
+void FunctionCallNode::set_teleporting_args(const std::vector<const Type*>& param_types, std::vector<Value>& evaluated_args)
+{
+    for (size_t i = 0; i < args.size(); i++) {
+        if (args[i] != nullptr) {
+            if (auto teleport = args[i]->as<ScopeTeleportingNode>(); teleport != nullptr) {
+                if (i >= param_types.size() || param_types[i]->as<ReferenceType>() == nullptr) {
+                    teleport->set_teleported();
+                    evaluated_args[i].is_teleporting = true;
+                }
+            }
+        }
+    }
 }
 
 }

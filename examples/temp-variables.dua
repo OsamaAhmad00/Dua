@@ -1,0 +1,126 @@
+nomangle int printf(str message, ...);
+
+
+class X
+{
+    int i;
+
+    constructor(int i) : i(i) { printf("C%d", i); }
+
+    =constructor(X& x) { i = x.i; printf("CC%d", i); }
+
+    void func() { printf("F%d", i); }
+
+    destructor { printf("D%d", i); }
+}
+
+
+// Case Temp int
+// Outputs "3"
+
+int main()
+{
+    printf("%d", (3)int);
+}
+
+
+// Case Temp int reference
+// Outputs "3"
+
+int main()
+{
+    int i = 3;
+    printf("%d", (i)int&);
+}
+
+
+// Case Temp object expression statement
+// Outputs "C3D3"
+
+int main()
+{
+    (3)X;
+}
+
+
+// Case calling a method from a temp object
+// Outputs "C5F5D5"
+
+int main()
+{
+    (5)X.func();
+}
+
+
+// Case Passing a temp object by value to a function
+// Outputs "Before Call\nC5F5D5\nAfter Call\n"
+
+void func(X x)
+{
+    x.func();
+}
+
+int main()
+{
+    printf("Before Call\n");
+    // The temp variable gets created here, teleports to
+    //  the function scope, and gets destroyed there.
+    func((5)X);
+    printf("\nAfter Call\n");
+}
+
+
+// Case Passing a temp object by reference to a function
+// Outputs "Before Call\nC5F5\nAfter Call\nD5"
+
+void func(X& x)
+{
+    x.func();
+}
+
+int main()
+{
+    printf("Before Call\n");
+    // The temp variable gets created here, doesn't teleport
+    //  because the function takes a reference, so the variable
+    //  gets destroyed here.
+    func((5)X);
+    printf("\nAfter Call\n");
+}
+
+
+// Case Variable definition init by temp value
+// Outputs "3"
+
+int main()
+{
+    int i = (3)int;
+    printf("%d", i);
+}
+
+
+// Case Variable definition init by temp object
+// Outputs "C6D6"
+
+int main()
+{
+    X x = (6)X;
+}
+
+
+// Case Unbound temp variable destruction
+// Outputs "Scope begin\nC5\nAfter\nD5\nScope end"
+
+int main()
+{
+    printf("Scope begin\n");
+    {
+        // This temp object is unbound to a variable
+        //  (a local variable or a parameter). It'll
+        //  be destructed by the end of the current
+        //  scope.
+        (5)X;
+        printf("\nAfter\n");
+    }
+    printf("\nScope end");
+}

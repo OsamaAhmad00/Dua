@@ -22,6 +22,8 @@ llvm::AllocaInst* ASTNode::create_local_variable(const std::string& name, const 
             compiler->report_error("Can't have an both an initializer and an initialization "
                          "list in the definition of a local variable (the variable " + name + ")");
         if (teleport_value) {
+            // If the value is teleporting (being moved from one scope to another without
+            //  getting destructed), its copy constructor shouldn't be called as well.
             builder().CreateStore(init->get(), instance);
         } else {
             name_resolver().call_copy_constructor(value, *init);

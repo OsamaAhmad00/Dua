@@ -162,6 +162,19 @@ struct SymbolTable
         scopes.front() = std::move(global_scope);
         switch_stack.pop_back();
     }
+
+    void remove_last_occurrence_of(const std::string& name, bool panic_if_not_found = true)
+    {
+        for (size_t i = size() - 1; i != size_t(-1); i--) {
+            if (scopes[i].contains(name)) {
+                scopes[i].map.erase(name);
+                return;
+            }
+        }
+
+        if (panic_if_not_found)
+            report_internal_error("The symbol " + name + " is not present in the symbol table");
+    }
 };
 
 }

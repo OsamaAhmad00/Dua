@@ -43,7 +43,11 @@ Value LocalVariableDefinitionNode::eval()
     bool teleport_value = false;
     if (initializer) {
         init_value = initializer->eval();
-        teleport_value = initializer->as<ScopeTeleportingNode>() != nullptr;
+        auto teleport_node = initializer->as<ScopeTeleportingNode>();
+        if (teleport_node != nullptr) {
+            teleport_value = true;
+            teleport_node->set_teleported();
+        }
     }
 
     if (current_function() != nullptr)
