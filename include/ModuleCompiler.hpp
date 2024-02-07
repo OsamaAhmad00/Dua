@@ -90,6 +90,7 @@ public:
     //  deferred nodes get executed.
     void create_dua_init_function();
     void complete_dua_init_function();
+    llvm::Function* get_dua_init_function();
 
     // A function used when performing dynamic casting
     void create_dynamic_casting_function();
@@ -125,8 +126,8 @@ private:
     //  of the entry point, in the order of insertions. This is useful
     //  for calling constructors of global objects for example, or for
     //  assigning them a non-constant value. All the deferred nodes will
-    //  be evaluated inside a function called ".dua.init", which is called
-    //  at the beginning of the main function.
+    //  be evaluated inside a function called ".dua.init" (plus a .uuid
+    //  postfix), which is called at the beginning of the main function.
     std::vector<ASTNode*> deferred_nodes;
 
     // Used to avoid unnecessary allocations for same strings
@@ -155,6 +156,13 @@ private:
     // Used to keep track of the number of scopes used within a function, in
     //  order to determine how many scopes to destruct upon a return instruction
     std::vector<size_t> function_scope_count;
+
+    // Each file will contain its own .dua.init function, and all .dua.init functions
+    //  will be called at program startup. To differentiate between each function in
+    //  each file, each .dua.init function gets appended with a uuid postfix. For this
+    //  reason, the name of the .dua.init function should be stored to be able to
+    //  retrieve it later.
+    std::string dua_init_name;
 
     // A cache of the resulting LLVM IR, used to
     //  avoid performing the same computations

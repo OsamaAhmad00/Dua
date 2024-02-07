@@ -1,14 +1,18 @@
 #include <ModuleCompiler.hpp>
-#include <parsing/ParserFacade.hpp>
 #include <AST/TranslationUnitNode.hpp>
-#include <llvm/Support/Host.h>
-#include <fstream>
 #include "AST/function/FunctionDefinitionNode.hpp"
 #include "AST/class/ClassDefinitionNode.hpp"
-#include "types/ReferenceType.hpp"
 #include "AST/variable/ClassFieldDefinitionNode.hpp"
 #include "types/PointerType.hpp"
 #include "types/IntegerTypes.hpp"
+#include "types/ReferenceType.hpp"
+#include <parsing/ParserFacade.hpp>
+#include "utils/CodeGeneration.hpp"
+
+#include <fstream>
+
+#include <llvm/Support/Host.h>
+#include <llvm/Transforms/Utils/ModuleUtils.h>
 
 namespace dua
 {
@@ -62,25 +66,22 @@ ModuleCompiler::ModuleCompiler(const std::string &module_name, std::string code,
 
 void ModuleCompiler::create_dua_init_function()
 {
+    dua_init_name = ".dua.init." + uuid();
+
     auto info = FunctionInfo {
         create_type<FunctionType>(create_type<VoidType>()),
         {}
     };
 
-    name_resolver.register_function(".dua.init", std::move(info), true);
+    name_resolver.register_function(dua_init_name, std::move(info), true);
 
-    auto function = module.getFunction(".dua.init");
+    auto function = module.getFunction(dua_init_name);
     llvm::BasicBlock::Create(context, "entry", function);
-
-    // TODO delete this
-    auto comdat = module.getOrInsertComdat(".dua.init");
-    comdat->setSelectionKind(llvm::Comdat::Any);
-    function->setComdat(comdat);
 }
 
 void ModuleCompiler::complete_dua_init_function()
 {
-    auto dua_init = module.getFunction(".dua.init");
+    auto dua_init = module.getFunction(dua_init_name);
     auto& init_ip = dua_init->getEntryBlock();
     builder.SetInsertPoint(&init_ip);
     for (auto node : deferred_nodes)
@@ -92,17 +93,9 @@ void ModuleCompiler::complete_dua_init_function()
     } else {
         // Return
         builder.CreateRetVoid();
-
-        // Call from main.
-        // TODO remove this and create an appending
-        //  global array variable with all initializing
-        //  methods to be called
-        auto main = module.getFunction("main");
-        if (main != nullptr) {
-            auto &main_ip = main->getEntryBlock().front();
-            builder.SetInsertPoint(&main_ip);
-            builder.CreateCall(dua_init);
-        }
+        // TODO vary the priority as needed
+        int priority = 0;
+        llvm::appendToGlobalCtors(module, dua_init, priority);
     }
 }
 
@@ -345,6 +338,10 @@ std::string ModuleCompiler::get_current_status()
     result += ":\n";
 
     return result;
+}
+
+llvm::Function *ModuleCompiler::get_dua_init_function() {
+    return module.getFunction(dua_init_name);
 }
 
 std::vector<std::string> libdua_declarations {
