@@ -1,6 +1,6 @@
 #include <AST/variable/GlobalVariableDefinitionNode.hpp>
-#include "AST/values/RawValueNode.hpp"
 #include <utils/ErrorReporting.hpp>
+#include <types/ReferenceType.hpp>
 
 namespace dua
 {
@@ -30,8 +30,13 @@ Value GlobalVariableDefinitionNode::eval()
     }
 
     // We're in the global scope now, and the evaluation has to be done inside
-    // some basic block. Will move temporarily to the beginning of the main function.
+    //  some basic block. Will move temporarily to the beginning of the .dua.init
+    //  function for calling the constructor, and .dua.cleanup function for calling
+    //  the destructor.
+
     auto old_position = builder().saveIP();
+    auto old_function = current_function();
+
     current_function() = compiler->get_dua_init_function();
     builder().SetInsertPoint(&current_function()->getEntryBlock());
 
@@ -65,7 +70,7 @@ Value GlobalVariableDefinitionNode::eval()
 
     // Restore the old position back
     builder().restoreIP(old_position);
-    current_function() = nullptr;
+    current_function() = old_function;
 
     if (!is_extern)
     {
@@ -82,5 +87,6 @@ Value GlobalVariableDefinitionNode::eval()
 
     return result = compiler->create_value(variable, get_type());
 }
+
 
 }

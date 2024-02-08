@@ -268,6 +268,8 @@ Value FunctionNameResolver::call_function(const Value& func, std::vector<Value> 
         auto param_type = type->param_types[i];
         if (auto ref = param_type->as<ReferenceType>(); ref == nullptr)
         {
+            if (param_type->as<ClassType>() == nullptr) continue;
+
             // This variables won't be inserted in the symbol table, because they
             //  are supposed to live in the scope of the function getting called.
             // The function will put them in the name table, and will destroy them

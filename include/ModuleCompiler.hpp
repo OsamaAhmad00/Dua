@@ -81,16 +81,21 @@ public:
     //  and will assume that it has handled the destruction.
     void destruct_last_scope();
     void destruct_function_scope();  // Used mainly in return statements
+    void destruct_global_scope();
 
     void push_scope_counter();
     void pop_scope_counter();
 
-    // .dua.init function is a function that gets called before the entry point
-    //  (at the beginning of the entry point), in which initializations and
-    //  deferred nodes get executed.
+    // .dua.init function is a function that gets called at the startup before
+    //  the entry point, in which initializations and deferred nodes get executed.
     void create_dua_init_function();
     void complete_dua_init_function();
     llvm::Function* get_dua_init_function();
+
+    // Just like .dua.init, but at the end of the program
+    void create_dua_cleanup_function();
+    void complete_dua_cleanup_function();
+    llvm::Function* get_dua_cleanup_function();
 
     // A function used when performing dynamic casting
     void create_dynamic_casting_function();
@@ -163,6 +168,9 @@ private:
     //  reason, the name of the .dua.init function should be stored to be able to
     //  retrieve it later.
     std::string dua_init_name;
+
+    // Just like dua_init_name, but for the .dua.cleanup function
+    std::string dua_cleanup_name;
 
     // A cache of the resulting LLVM IR, used to
     //  avoid performing the same computations

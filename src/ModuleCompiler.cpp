@@ -40,6 +40,8 @@ ModuleCompiler::ModuleCompiler(const std::string &module_name, std::string code,
 
     create_dua_init_function();
 
+    create_dua_cleanup_function();
+
     if (include_libdua) {
         for (auto &declarations: get_libdua_declarations())
             code += declarations;
@@ -51,7 +53,11 @@ ModuleCompiler::ModuleCompiler(const std::string &module_name, std::string code,
     // Generate LLVM IR
     ast->eval();
 
+    destruct_global_scope();
+
     complete_dua_init_function();
+
+    complete_dua_cleanup_function();
 
     llvm::raw_string_ostream stream(result);
     module.print(stream, nullptr);
@@ -342,6 +348,62 @@ std::string ModuleCompiler::get_current_status()
 
 llvm::Function *ModuleCompiler::get_dua_init_function() {
     return module.getFunction(dua_init_name);
+}
+
+void ModuleCompiler::create_dua_cleanup_function()
+{
+    dua_cleanup_name = ".dua.cleanup." + uuid();
+
+    auto info = FunctionInfo {
+        create_type<FunctionType>(create_type<VoidType>()),
+        {}
+    };
+
+    name_resolver.register_function(dua_cleanup_name, std::move(info), true);
+
+    auto function = module.getFunction(dua_cleanup_name);
+    llvm::BasicBlock::Create(context, "entry", function);
+}
+
+void ModuleCompiler::complete_dua_cleanup_function()
+{
+    auto dua_cleanup = module.getFunction(dua_cleanup_name);
+    auto& cleanup_ip = dua_cleanup->getEntryBlock();
+    builder.SetInsertPoint(&cleanup_ip);
+    if (dua_cleanup->begin()->begin() == dua_cleanup->begin()->end()) {
+        // The function is empty. Delete it for clarity.
+        dua_cleanup->removeFromParent();
+    } else {
+        // Return
+        builder.CreateRetVoid();
+        // TODO vary the priority as needed
+        int priority = 0;
+        llvm::appendToGlobalDtors(module, dua_cleanup, priority);
+    }
+}
+
+llvm::Function *ModuleCompiler::get_dua_cleanup_function() {
+    return module.getFunction(dua_cleanup_name);
+}
+
+void ModuleCompiler::destruct_global_scope()
+{
+    // Destruct global variables in the .dua.cleanup function
+    builder.SetInsertPoint(&get_dua_cleanup_function()->getEntryBlock());
+
+    auto global_scope = name_resolver.symbol_table.scopes[0].map;
+    for (auto& [name, value] : global_scope)
+    {
+        auto type = value.type->get_concrete_type();
+        // Type::as discards references.
+        auto as_class = dynamic_cast<const ClassType*>(type);
+        if (as_class == nullptr) continue;
+
+        // Call the destructor directly, without loading it from the vtable
+        auto destructor_name = name_resolver.get_function_full_name(as_class->name + ".destructor");
+        auto destructor = module.getFunction(destructor_name);
+        builder.CreateCall(destructor, { value.get() });
+    }
 }
 
 std::vector<std::string> libdua_declarations {
