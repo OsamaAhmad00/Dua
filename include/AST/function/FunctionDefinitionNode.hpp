@@ -17,6 +17,8 @@ class FunctionDefinitionNode : public ASTNode
 
     void construct_fields(const ClassType* class_type);
 
+    void destruct_fields(const ClassType* class_type);
+
 public:
 
     static constexpr int NOT_TEMPLATED = -1;

@@ -98,7 +98,7 @@ class String : Vector<i8>
         return self;
     }
 
-    String infix +(String other)
+    String infix +(String& other)
     {
         return self + other.buffer;
     }
@@ -124,7 +124,7 @@ class String : Vector<i8>
     }
 }
 
-String infix +(str other, String self)
+String infix +(str other, String& self)
 {
     long self_size = self.size();
     long other_size = strlen(other);

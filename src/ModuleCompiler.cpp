@@ -641,13 +641,13 @@ class String : Vector<i8>
     Declaration str c_str();
 
     String& infix =(str string);
-    String infix +(String other);
+    String infix +(String& other);
     String infix +(str other);
 
     destructor;
 }
 
-String infix +(str other, String self);
+String infix +(str other, String& self);
 
 )"
 ,

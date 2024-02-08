@@ -366,19 +366,19 @@ int main()
 
 
 // Case Calling the right destructor
-// Outputs "Child"
+// Outputs "Child\nParent\n"
 
 class G
 {
     destructor {
-        printf("Parent");
+        printf("Parent\n");
     }
 }
 
 class H : G
 {
     destructor {
-        printf("Child");
+        printf("Child\n");
     }
 }
 

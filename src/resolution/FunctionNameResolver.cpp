@@ -371,9 +371,6 @@ void FunctionNameResolver::call_copy_constructor(const Value &value, const Value
 
 void FunctionNameResolver::call_destructor(const Value& value)
 {
-    // TODO destruct the members of the class inside the destructor.
-    //  As of now, the calls to the destructors of the members happen
-    //  at the location at which the object is getting destroyed.
     auto is_ref = value.type->as<ReferenceType>();
     if (is_ref != nullptr)
         return;
@@ -395,17 +392,6 @@ void FunctionNameResolver::call_destructor(const Value& value)
     auto destructor_ptr = class_vtable->get_method(full_name, destructor_type->llvm_type()->getPointerTo(), vtable_instance);
     auto destructor = compiler->create_value(destructor_ptr, destructor_type);
     call_function(destructor, { instance });
-
-    // Call the destructors of fields after calling the destructor of the class
-    // Fields are destructed in the reverse order of definition.
-    std::for_each(class_type->fields().rbegin(), class_type->fields().rend(), [&](auto& field) {
-        // TODO don't search for the field twice, once for the type and once for the ptr
-        auto is_object = field.type->get_contained_type()->template as<ClassType>() != nullptr;
-        if (field.name == ".vtable_ptr" || field.name.empty() || !is_object)
-            return;
-        auto f = class_type->get_field(value, field.name);
-        call_destructor(f);
-    });
 }
 
 llvm::IRBuilder<>& FunctionNameResolver::builder() const

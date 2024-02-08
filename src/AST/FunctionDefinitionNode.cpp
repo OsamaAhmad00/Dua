@@ -172,6 +172,15 @@ Value FunctionDefinitionNode::define_function()
 
     body->eval();
 
+    pos = name.find(".destructor(");
+    if (pos != std::string::npos)
+    {
+        // This is a destructor call.
+        auto class_name = name.substr(0, pos);
+        auto class_type = name_resolver().get_class(class_name);
+        destruct_fields(class_type);
+    }
+
     // Implicit return values
     size_t created_default_values = 0;
     bool is_void = info.type->return_type->as<VoidType>() != nullptr;
@@ -382,6 +391,45 @@ void FunctionDefinitionNode::set_full_name()
 
 FunctionDefinitionNode *FunctionDefinitionNode::clone() const {
     return compiler->create_node<FunctionDefinitionNode>(name, body, function_type, nomangle, template_param_count);
+}
+
+void FunctionDefinitionNode::destruct_fields(const ClassType* class_type)
+{
+    // Self is a reference. Turn it into a pointer
+    auto self = name_resolver().symbol_table.get("self");
+    self.type = compiler->create_type<PointerType>(self.type->as<ReferenceType>()->get_element_type());
+
+    auto& fields = class_type->fields();
+    size_t new_fields_count = compiler->get_name_resolver().owned_fields_count[class_type->name];
+    size_t parent_fields_count = fields.size() - new_fields_count;
+
+    // fields.size() will never be 0 since every object contains the vtable.
+    for (size_t i = fields.size() - 1; i >= parent_fields_count; i--)
+    {
+        // Call the destructors of fields after calling the destructor of the class
+        // Fields are destructed in the reverse order of definition.
+        auto field = class_type->get_field(self, i);
+        auto is_obj = dynamic_cast<const ClassType*>(field.type) != nullptr;
+        if (!is_obj) continue;
+        name_resolver().call_destructor(field);
+    }
+
+    if (class_type->name != "Object")
+    {
+        // Here, we don't call the call_destructor method, instead, we call
+        //  the destructor of the parent manually. This is because call_destructor
+        //  loads the destructor from the vtable to choose the correct destructor
+        //  for the instance dynamically. This is not the behaviour we want. Instead,
+        //  we need to call the parent destructor statically with no dynamic dispatch.
+        auto parent = compiler->get_name_resolver().parent_classes[class_type->name];
+        auto parent_ptr = compiler->create_type<PointerType>(parent);
+        auto self_as_parent = self.cast_as(parent_ptr);
+        auto parent_ref = compiler->create_type<ReferenceType>(parent, false);
+        self_as_parent.type = parent_ref;
+        self_as_parent.memory_location = self.get();
+        self_as_parent.set(nullptr);
+        name_resolver().call_function(parent->name + ".destructor", { self_as_parent });
+    }
 }
 
 }

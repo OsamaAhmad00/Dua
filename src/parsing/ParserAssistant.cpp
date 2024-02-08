@@ -202,7 +202,7 @@ void ParserAssistant::finish_parsing()
                 // Ignore the vtable field
                 for (size_t i = 1; i < parent_fields.size(); i++)
                     for (auto &field : templated_fields)
-                        if (parent_fields[i].name ==field.name)
+                        if (parent_fields[i].name == field.name)
                             compiler->report_error("The field " + parent_fields[i].name + " of the class " + full_name + " is already defined one of its parent classes");
 
                 // We need to add the vtable before method evaluation, and after method

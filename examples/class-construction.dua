@@ -381,3 +381,73 @@ int main()
 {
     X x;
 }
+
+
+// Case Construction order with inheritance
+// Outputs "X1X1X2X1X1X2X3"
+
+class X1
+{
+    constructor() { printf("X1"); }
+}
+
+class X2 : X1
+{
+    X1 x1;
+    constructor() { printf("X2"); }
+}
+
+class X3 : X2
+{
+    // x1 is inherited
+    X2 x2;
+    constructor() { printf("X3"); }
+}
+
+int main()
+{
+    // Order:
+    //  1 - Constructor of the deepest ancestor of X3 (X1)
+    //  2 - Constructor of the field X2::x1 (X1)
+    //  3 - Constructor of parent of X3 (X2)
+    //  4 - Constructor of the field x1 of the X3::x2 field (X1)
+    //  5 - Constructor of the parent of X3::x2 field (X1)
+    //  6 - Constructor of the field x2 in X3 (X2)
+    //  7 - Constructor of X3 (X3)
+    X3 x;
+}
+
+
+// Case Destruction order with inheritance
+// Outputs "X3X2X1X1X2X1X1"
+
+class X1
+{
+    destructor { printf("X1"); }
+}
+
+class X2 : X1
+{
+    X1 x1;
+    destructor { printf("X2"); }
+}
+
+class X3 : X2
+{
+    // x1 is inherited
+    X2 x2;
+    destructor { printf("X3"); }
+}
+
+int main()
+{
+    // Order:
+    //  1 - Destructor of X3 (X3)
+    //  2 - Destructor of the field x2 in X3 (X2)
+    //  3 - Destructor of the field x1 of the X3::x2 field (X1)
+    //  4 - Destructor of the parent of X3::x2 field (X1)
+    //  5 - Destructor of parent of X3 (X2)
+    //  6 - Destructor of the field X2::x1 (X1)
+    //  7 - Destructor of the deepest ancestor of X3 (X1)
+    X3 x;
+}
