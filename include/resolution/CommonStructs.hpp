@@ -10,12 +10,14 @@ class ASTNode;
 class FunctionDefinitionNode;
 class ClassDefinitionNode;
 class IdentifierType;
+class ClassType;
 
 struct FunctionInfo
 {
     const FunctionType* type;
     std::vector<std::string> param_names;
     bool is_templated = false;
+    const ClassType* owner_class;
 };
 
 struct FieldConstructorArgs

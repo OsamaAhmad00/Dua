@@ -38,6 +38,7 @@ public:
     const ClassType* get_class(const std::string& name);
     bool has_class(const std::string& name);
     void add_fields_constructor_args(std::string constructor_name, std::vector<FieldConstructorArgs> args);
+    void construct_class_fields(const std::string &name, ClassDefinitionNode* node);
     std::vector<FieldConstructorArgs>& get_fields_args(const std::string& constructor_name);
     void create_vtable(const std::string& class_name);
     VTable* get_vtable_instance(const std::string& class_name);

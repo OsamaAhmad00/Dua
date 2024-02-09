@@ -76,7 +76,9 @@ void ModuleCompiler::create_dua_init_function()
 
     auto info = FunctionInfo {
         create_type<FunctionType>(create_type<VoidType>()),
-        {}
+        {},
+        false,
+        nullptr
     };
 
     name_resolver.register_function(dua_init_name, std::move(info), true);
@@ -152,10 +154,14 @@ void ModuleCompiler::pop_scope_counter() {
 
 void ModuleCompiler::create_the_object_class()
 {
-    std::vector<const Type*> params = { create_type<ReferenceType>(create_type<ClassType>("Object"), true) };
+    auto type = create_type<ClassType>("Object");
+
+    std::vector<const Type*> params = { create_type<ReferenceType>(type, true) };
     auto info = FunctionInfo {
-            create_type<FunctionType>(create_type<VoidType>(), params),
-            {}
+        create_type<FunctionType>(create_type<VoidType>(), params),
+        {},
+        false,
+        type
     };
 
     // The destructor name should be mangled so that it's compliant with the rest
@@ -172,7 +178,6 @@ void ModuleCompiler::create_the_object_class()
     comdat->setSelectionKind(llvm::Comdat::Any);
     destructor->setComdat(comdat);
 
-    auto type = create_type<ClassType>("Object");
     typing_system.insert_type("Object", type);
     name_resolver.classes["Object"] = type;
     name_resolver.create_vtable("Object");
@@ -197,7 +202,9 @@ void ModuleCompiler::create_dynamic_casting_function()
                          create_type<PointerType>(create_type<ClassType>("Object")) };
     auto info = FunctionInfo {
         create_type<FunctionType>(create_type<I8Type>(), param_types),
-        {"init_vtable", "target_vtable"}
+        {"init_vtable", "target_vtable"},
+        false,
+        nullptr
     };
 
     name_resolver.register_function(".is_vtable_reachable", std::move(info), true);
@@ -356,7 +363,9 @@ void ModuleCompiler::create_dua_cleanup_function()
 
     auto info = FunctionInfo {
         create_type<FunctionType>(create_type<VoidType>()),
-        {}
+        {},
+        false,
+        nullptr
     };
 
     name_resolver.register_function(dua_cleanup_name, std::move(info), true);

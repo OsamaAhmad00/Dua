@@ -300,8 +300,7 @@ const ClassType* TemplatedNameResolver::get_templated_class(const std::string &n
     auto full_name = get_templated_class_full_name(name, concrete_args);
 
     if (!compiler->name_resolver.has_class(full_name)) {
-        register_templated_class(name, concrete_args);
-        // define_templated_class(name, concrete_args);
+        construct_templated_class(name, concrete_args);
     }
 
     auto cls = compiler->name_resolver.get_class(full_name);
@@ -395,6 +394,7 @@ void TemplatedNameResolver::register_templated_class(const std::string &name, co
 
         auto [info, template_params] = get_templated_class_method_info(key, method->name, method->function_type, method->template_param_count);
         info.type = concrete_type;
+        info.owner_class = cls;
 
         if (method->template_param_count != FunctionDefinitionNode::NOT_TEMPLATED) {
             // Cloning the method node here because we're going to restore its function type later
@@ -437,6 +437,8 @@ const ClassType* TemplatedNameResolver::define_templated_class(const std::string
         alias->eval();
 
     auto full_name = get_templated_class_full_name(name, template_args);
+
+    defined_templated_classes.insert(full_name);
 
     // Class is not defined yet.
     // Instantiate the class with the provided arguments
@@ -575,8 +577,7 @@ const ClassType *TemplatedNameResolver::get_parent_class(const IdentifierType* p
             //  and maybe for some other classes that are not defined yet.
             //  This means that we can just both register it and define
             //  it here with no problem.
-            register_templated_class(parent->name, template_args);
-            // define_templated_class(parent->name, template_args);
+            construct_templated_class(parent->name, template_args);
 
             // FIXME The classes are tightly coupled. Find another way to register this information
             // This is the only place in which all information are present. This is a quick dirty
@@ -599,6 +600,100 @@ const ClassType *TemplatedNameResolver::get_parent_class(const IdentifierType* p
             compiler->report_error("The parent class " + parent->name + " is not defined");
         return concrete_class;
     }
+}
+
+void TemplatedNameResolver::construct_templated_class_fields(const std::string& name, const std::vector<const Type*>& template_args)
+{
+    auto concrete_template_args = template_args;
+    for (auto& type : concrete_template_args)
+        type = type->get_concrete_type();
+
+    auto key = compiler->name_resolver.get_templated_class_key(name, concrete_template_args.size());
+    auto full_name = compiler->name_resolver.get_templated_class_full_name(name, concrete_template_args);
+    compiler->name_resolver.create_vtable(full_name);
+
+    auto parent = compiler->name_resolver.parent_classes[full_name];
+    bool is_packed;
+    if (parent->name == "Object") {
+        is_packed = compiler->name_resolver.templated_classes[key].node->is_packed;
+    }  else {
+        auto parent_llvm = llvm::StructType::getTypeByName(compiler->context, parent->name);
+        is_packed = parent_llvm->isPacked();
+    }
+
+    auto& parent_fields = compiler->name_resolver.class_fields[parent->name];
+
+    // Copying the fields from the templated class to the concrete class
+    auto& templated_fields = compiler->name_resolver.class_fields[key];
+    auto& concrete_fields = compiler->name_resolver.class_fields[full_name];
+    assert(concrete_fields.empty());
+
+    compiler->name_resolver.owned_fields_count[full_name] = templated_fields.size();
+
+    // Ignore the vtable field
+    for (size_t i = 1; i < parent_fields.size(); i++)
+        for (auto &field : templated_fields)
+            if (parent_fields[i].name == field.name)
+                compiler->report_error("The field " + parent_fields[i].name + " of the class " + full_name + " is already defined one of its parent classes");
+
+    // We need to add the vtable before method evaluation, and after method
+    // registration so that the offsets of the fields in methods are correct
+    // Non-const direct access
+    concrete_fields.push_back(compiler->name_resolver.get_vtable_field(full_name));
+
+    // We need to exclude the vtable field of the parent
+    concrete_fields.reserve(1 + templated_fields.size() + parent_fields.size() - 1);
+
+    for (size_t i = 1; i < parent_fields.size(); i++)
+        concrete_fields.push_back(parent_fields[i]);
+
+    compiler->typing_system.identifier_types.keep_only_last_n_scopes(0, true);
+
+    compiler->typing_system.push_scope();
+    auto& templated_class = compiler->name_resolver.templated_classes[key];
+    auto& template_params = templated_class.template_params;
+    for (size_t i = 0; i < concrete_template_args.size(); i++)
+        compiler->typing_system.insert_type(template_params[i], concrete_template_args[i]);
+
+    compiler->typing_system.push_scope();
+    for (auto alias : templated_class.node->aliases)
+        alias->eval();
+
+    // Set the types of the fields to the corresponding concrete type
+    for (auto& field : templated_fields) {
+        concrete_fields.push_back(field);
+    }
+
+    for (auto& field : concrete_fields)
+        field.type = field.type->get_concrete_type();
+
+    auto cls = compiler->name_resolver.get_class(full_name);
+
+    auto class_type = cls->llvm_type();
+
+    std::vector<llvm::Type*> body(concrete_fields.size());
+    for (size_t i = 0; i < body.size(); i++) {
+        body[i] = concrete_fields[i].type->llvm_type();
+    }
+
+    class_type->setBody(std::move(body), is_packed);
+
+    compiler->typing_system.identifier_types.restore_prev_state();
+}
+
+const ClassType *TemplatedNameResolver::construct_templated_class(const std::string &name,
+                                                                  const std::vector<const Type *> &template_args)
+{
+    register_templated_class(name, template_args);
+    construct_templated_class_fields(name, template_args);
+    return define_templated_class(name, template_args);
+}
+
+bool TemplatedNameResolver::is_templated_class_defined(const std::string &name,
+                                                       const std::vector<const Type *> &template_args)
+{
+    auto full_name = get_templated_class_full_name(name, template_args);
+    return defined_templated_classes.find(full_name) != defined_templated_classes.end();
 }
 
 }

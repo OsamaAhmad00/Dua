@@ -13,6 +13,7 @@ class ClassDefinitionNode : public ASTNode
 {
     friend class ParserAssistant;
     friend class TemplatedNameResolver;
+    friend class ClassResolver;
 
     std::string name;
     std::vector<ClassFieldDefinitionNode*> fields;

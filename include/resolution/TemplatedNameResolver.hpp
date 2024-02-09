@@ -4,6 +4,7 @@
 #include <resolution/CommonStructs.hpp>
 #include <Value.hpp>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace dua
@@ -29,6 +30,8 @@ class TemplatedNameResolver
     std::unordered_map<std::string, TemplateBindings> templated_class_bindings;
     std::unordered_map<std::string, std::vector<TemplatedClassFieldConstructorArgs>> templated_class_field_constructor_args;
 
+    std::unordered_set<std::string> defined_templated_classes;
+
     void check_template_params(const std::vector<std::string>& template_params, const std::string& description = "");
 
 public:
@@ -52,7 +55,10 @@ public:
     const ClassType* get_templated_class(const std::string& name, const std::vector<const Type*>& template_args);
     void register_templated_class(const std::string& name, const std::vector<const Type*>& template_args);
     const ClassType* define_templated_class(const std::string& name, const std::vector<const Type*>& template_args);
+    void construct_templated_class_fields(const std::string& name, const std::vector<const Type*>& template_args);
+    const ClassType* construct_templated_class(const std::string& name, const std::vector<const Type*>& template_args);
     const ClassType* get_parent_class(const IdentifierType* parent);
+    bool is_templated_class_defined(const std::string& name, const std::vector<const Type*>& template_args);
     bool has_templated_class(const std::string& name);
 };
 

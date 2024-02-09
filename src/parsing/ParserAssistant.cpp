@@ -148,8 +148,6 @@ void ParserAssistant::finish_parsing()
     for (auto node : global_variable_nodes)
         node->eval();
 
-    auto object_class = compiler->get_name_resolver().get_class("Object");
-
     for (auto alias : global_aliases)
         alias->eval();
 
@@ -161,152 +159,23 @@ void ParserAssistant::finish_parsing()
         std::queue<ClassInfo*> queue;
         queue.push(&class_info[root]);
 
-        while (!queue.empty())
-        {
+        while (!queue.empty()) {
             auto node = queue.front();
             queue.pop();
 
-            for (auto& child : node->children)
+            for (auto &child: node->children)
                 queue.push(&class_info[child]);
 
-            if (node->is_templated)
-            {
-                // node = nullptr here
-
-                auto concrete_template_args = node->template_args;
-                for (auto& type : concrete_template_args)
-                    type = type->get_concrete_type();
-
-                auto key = compiler->name_resolver.get_templated_class_key(node->name, concrete_template_args.size());
-                auto full_name = compiler->name_resolver.get_templated_class_full_name(node->name, concrete_template_args);
-                compiler->name_resolver.create_vtable(full_name);
-
-                auto parent = compiler->name_resolver.parent_classes[full_name];
-                bool is_packed;
-                if (parent == object_class) {
-                    is_packed = compiler->name_resolver.templated_classes[key].node->is_packed;
-                }  else {
-                    auto parent_llvm = llvm::StructType::getTypeByName(compiler->context, parent->name);
-                    is_packed = parent_llvm->isPacked();
-                }
-
-                auto& parent_fields = compiler->name_resolver.class_fields[parent->name];
-
-                // Copying the fields from the templated class to the concrete class
-                auto& templated_fields = compiler->name_resolver.class_fields[key];
-                auto& concrete_fields = compiler->name_resolver.class_fields[full_name];
-                assert(concrete_fields.empty());
-
-                compiler->name_resolver.owned_fields_count[full_name] = templated_fields.size();
-
-                // Ignore the vtable field
-                for (size_t i = 1; i < parent_fields.size(); i++)
-                    for (auto &field : templated_fields)
-                        if (parent_fields[i].name == field.name)
-                            compiler->report_error("The field " + parent_fields[i].name + " of the class " + full_name + " is already defined one of its parent classes");
-
-                // We need to add the vtable before method evaluation, and after method
-                // registration so that the offsets of the fields in methods are correct
-                // Non-const direct access
-                concrete_fields.push_back(compiler->name_resolver.get_vtable_field(full_name));
-
-                // We need to exclude the vtable field of the parent
-                concrete_fields.reserve(1 + templated_fields.size() + parent_fields.size() - 1);
-
-                for (size_t i = 1; i < parent_fields.size(); i++)
-                    concrete_fields.push_back(parent_fields[i]);
-
-                compiler->typing_system.identifier_types.keep_only_last_n_scopes(0, true);
-
-                compiler->typing_system.push_scope();
-                auto& templated_class = compiler->name_resolver.templated_classes[key];
-                auto& template_params = templated_class.template_params;
-                for (size_t i = 0; i < concrete_template_args.size(); i++)
-                    compiler->typing_system.insert_type(template_params[i], concrete_template_args[i]);
-
-                compiler->typing_system.push_scope();
-                for (auto alias : templated_class.node->aliases)
-                    alias->eval();
-
-                // Set the types of the fields to the corresponding concrete type
-                for (auto& field : templated_fields) {
-                    concrete_fields.push_back(field);
-                }
-
-                for (auto& field : concrete_fields)
-                    field.type = field.type->get_concrete_type();
-
-                auto cls = compiler->name_resolver.get_class(full_name);
-
-                auto class_type = cls->llvm_type();
-
-                body.resize(concrete_fields.size());
-                for (size_t i = 0; i < body.size(); i++) {
-                    body[i] = concrete_fields[i].type->llvm_type();
-                }
-
-                class_type->setBody(std::move(body), is_packed);
-
-                compiler->typing_system.identifier_types.restore_prev_state();
-            }
-            else
-            {
-                auto class_type = compiler->name_resolver.get_class(node->name)->llvm_type();
-
-                auto parent = compiler->name_resolver.parent_classes[node->name];
-                bool is_packed;
-                if (parent == object_class) {
-                    is_packed = node->node->is_packed;
-                }  else {
-                    auto parent_llvm = llvm::StructType::getTypeByName(compiler->context, parent->name);
-                    is_packed = parent_llvm->isPacked();
-                }
-
-                compiler->typing_system.identifier_types.keep_only_last_n_scopes(0, true);
-
-                compiler->typing_system.push_scope();
-                for (auto alias : node->node->aliases)
-                    alias->eval();
-
-                compiler->name_resolver.create_vtable(node->name);
-
-                auto& fields = compiler->name_resolver.class_fields[node->name];
-
-                compiler->name_resolver.owned_fields_count[node->name] = fields.size();
-
-                auto& parent_fields = compiler->name_resolver.class_fields[parent->name];
-
-                // Ignore the vtable field
-                for (size_t i = 1; i < parent_fields.size(); i++)
-                    for (auto &field : fields)
-                        if (parent_fields[i].name == field.name)
-                            compiler->report_error("The field " + parent_fields[i].name + " of the class " + node->name + " is already defined one of its parent classes");
-
-                std::vector<ClassField> all_fields;
-                // We need to exclude the vtable field of the parent
-                all_fields.reserve(1 + fields.size() + parent_fields.size() - 1);
-
-                all_fields.push_back(compiler->name_resolver.get_vtable_field(node->name));
-
-                for (size_t i = 1; i < parent_fields.size(); i++)
-                    all_fields.push_back(parent_fields[i]);
-
-                for (auto& field : fields)
-                    all_fields.push_back(field);
-
-                fields = std::move(all_fields);
-
-                for (auto& field : fields)
-                    field.type = field.type->get_concrete_type();
-
-                body.resize(fields.size());
-                for (size_t i = 0; i < body.size(); i++) {
-                    body[i] = fields[i].type->llvm_type();
-                }
-
-                class_type->setBody(std::move(body), is_packed);
-
-                compiler->typing_system.identifier_types.restore_prev_state();
+            // The class might be defined earlier in the
+            //  definition of one of the templated classes.
+            //  If it's already defined, don't construct
+            //  its fields again
+            if (node->is_templated) {
+                auto full_name = compiler->name_resolver.get_templated_class_full_name(node->name, node->template_args);
+                if (compiler->name_resolver.class_fields[full_name].empty())
+                    compiler->name_resolver.construct_templated_class_fields(node->name, node->template_args);
+            } else {
+                compiler->name_resolver.construct_class_fields(node->name, node->node);
             }
         }
     }
@@ -328,10 +197,9 @@ void ParserAssistant::finish_parsing()
                 queue.push(&class_info[child]);
 
             if (node->is_templated) {
-                auto cls = compiler->name_resolver.get_templated_class(node->name, node->template_args);
-                compiler->name_resolver.define_templated_class(node->name, node->template_args);
-            }
-            else {
+                if (!compiler->name_resolver.is_templated_class_defined(node->name, node->template_args))
+                    compiler->name_resolver.define_templated_class(node->name, node->template_args);
+            } else {
                 node->node->eval();
             }
         }
@@ -367,7 +235,9 @@ void ParserAssistant::create_empty_method_if_doesnt_exist(const ClassType* cls, 
 
     auto signature = FunctionInfo {
         type,
-        { "self" }
+        { "self" },
+        false,
+        cls
     };
 
     name = compiler->name_resolver.get_function_full_name(name, type->param_types);
@@ -505,7 +375,8 @@ void ParserAssistant::create_function_declaration()
     FunctionInfo info {
         function_type,
         std::move(param_names),
-        is_templated
+        is_templated,
+        in_templated_class ? nullptr : compiler->create_type<ClassType>(current_class)
     };
 
     size_t template_param_count = FunctionDefinitionNode::NOT_TEMPLATED;
@@ -1192,7 +1063,9 @@ void ParserAssistant::create_operator(const std::string& position_name)
     auto function_type = compiler->create_type<FunctionType>(return_type, std::move(param_types), false);
     FunctionInfo info {
         function_type,
-        std::move(param_names)
+        std::move(param_names),
+        false,
+        in_templated_class ? nullptr : compiler->create_type<ClassType>(current_class)
     };
 
     push_node<FunctionDefinitionNode>(std::move(name), nullptr, function_type, false, -1, true, is_static);

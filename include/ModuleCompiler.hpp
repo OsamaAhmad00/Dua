@@ -24,6 +24,7 @@ public:
     friend class ParserAssistant;
     friend class NameResolver;
     friend class FunctionNameResolver;
+    friend class ClassResolver;
     friend class TemplatedNameResolver;
     friend class TypingSystem;
     friend class Value;

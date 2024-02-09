@@ -6,6 +6,8 @@
 #include "types/PointerType.hpp"
 #include "types/IntegerTypes.hpp"
 #include "AST/values/StringValueNode.hpp"
+#include <AST/class/ClassDefinitionNode.hpp>
+#include <AST/types/TypeAliasNode.hpp>
 
 namespace dua
 {
@@ -113,6 +115,66 @@ void ClassResolver::create_vtable(const std::string &class_name)
     vtables[class_name] = instance;
 }
 
+void ClassResolver::construct_class_fields(const std::string &name, ClassDefinitionNode* node)
+{
+    auto class_type = compiler->name_resolver.get_class(name)->llvm_type();
+
+    auto parent = compiler->name_resolver.parent_classes[name];
+    bool is_packed;
+    if (parent->name == "Object") {
+        is_packed = node->is_packed;
+    }  else {
+        auto parent_llvm = llvm::StructType::getTypeByName(compiler->context, parent->name);
+        is_packed = parent_llvm->isPacked();
+    }
+
+    compiler->typing_system.identifier_types.keep_only_last_n_scopes(0, true);
+
+    compiler->typing_system.push_scope();
+    for (auto alias : node->aliases)
+        alias->eval();
+
+    compiler->name_resolver.create_vtable(name);
+
+    auto& fields = compiler->name_resolver.class_fields[name];
+
+    compiler->name_resolver.owned_fields_count[name] = fields.size();
+
+    auto& parent_fields = compiler->name_resolver.class_fields[parent->name];
+
+    // Ignore the vtable field
+    for (size_t i = 1; i < parent_fields.size(); i++)
+        for (auto &field : fields)
+            if (parent_fields[i].name == field.name)
+                compiler->report_error("The field " + parent_fields[i].name + " of the class " + name + " is already defined one of its parent classes");
+
+    std::vector<ClassField> all_fields;
+    // We need to exclude the vtable field of the parent
+    all_fields.reserve(1 + fields.size() + parent_fields.size() - 1);
+
+    all_fields.push_back(compiler->name_resolver.get_vtable_field(name));
+
+    for (size_t i = 1; i < parent_fields.size(); i++)
+        all_fields.push_back(parent_fields[i]);
+
+    for (auto& field : fields)
+        all_fields.push_back(field);
+
+    fields = std::move(all_fields);
+
+    for (auto& field : fields)
+        field.type = field.type->get_concrete_type();
+
+    std::vector<llvm::Type*> body(fields.size());
+    for (size_t i = 0; i < body.size(); i++) {
+        body[i] = fields[i].type->llvm_type();
+    }
+
+    class_type->setBody(std::move(body), is_packed);
+
+    compiler->typing_system.identifier_types.restore_prev_state();
+}
+
 const Type *ClassResolver::get_vtable_type(const std::string &class_name) {
     auto vtable_name = class_name + ".vtable";
     auto vtable_type = compiler->create_type<ClassType>(vtable_name);
@@ -129,6 +191,7 @@ std::vector<NamedFunctionValue> ClassResolver::get_all_class_methods(const std::
     auto it = parent_classes.find(class_name);
     if (it == parent_classes.end()) {
         // This is the object class only
+        assert(class_name == "Object");
         methods.resize(class_methods.size());
         for (size_t i = 0; i < methods.size(); i++) {
             methods[i] = class_methods[i];
@@ -162,6 +225,13 @@ std::vector<NamedFunctionValue> ClassResolver::get_all_class_methods(const std::
         method.name_without_class_prefix = std::move(stripped_name);
         method.name_without_class_prefix += '(' + ((params_without_self != ")") ? params_without_self.substr(2) : ")");
         auto index = parent_vtable->method_indices.find(parent_method_name);
+        // If this method is not in the parent vtable,
+        //  then it's a method that got introduced in
+        //  this class, and will need to have an extra
+        //  slot in the vtable. Otherwise, this is a
+        //  method that is overriding the parent method,
+        //  and will need to overwrite the parent slot
+        //  in the vtable.
         if (index == parent_vtable->method_indices.end())
             methods.push_back(method);
         else
@@ -169,16 +239,21 @@ std::vector<NamedFunctionValue> ClassResolver::get_all_class_methods(const std::
     }
 
     // The indices here are the indices in the vtable, which include the class name pointer and the parent pointer.
-    for (auto& [name, index] : parent_vtable->method_indices) {
+    for (auto& [name, index] : parent_vtable->method_indices)
+    {
         if (!methods[index - VTable::RESERVED_FIELDS_COUNT].name.empty()) {
             // This method is overwritten by the current class implementation
             continue;
         }
+
+        // Only set the methods that aren't overridden by the current class. Substitute the parent methods.
+        auto info = compiler->get_name_resolver().get_function_no_overloading(name);
         auto func = compiler->get_module()->getFunction(name);
-        auto type = compiler->get_name_resolver().get_function_no_overloading(name).type;
-        auto self_param_position = name.find(parent->name + "&");  // This must not be npos
-        auto stripped_name = name.substr(parent->name.size() + 1, self_param_position - (parent->name.size() + 1 + 1));
-        auto params_without_self = name.substr(self_param_position + parent->name.size() + 1);
+        auto type = info.type;
+        auto owner = info.owner_class;
+        auto self_param_position = name.find(owner->name + "&");  // This must not be npos
+        auto stripped_name = name.substr(owner->name.size() + 1, self_param_position - (owner->name.size() + 1 + 1));
+        auto params_without_self = name.substr(self_param_position + owner->name.size() + 1);
         std::string name_without_class_prefix = std::move(stripped_name);
         name_without_class_prefix += '(' + ((params_without_self != ")") ? params_without_self.substr(2) : ")");
         methods[index - VTable::RESERVED_FIELDS_COUNT] = { name, func, type, std::move(name_without_class_prefix) };

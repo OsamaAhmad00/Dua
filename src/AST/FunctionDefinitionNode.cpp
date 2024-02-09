@@ -166,6 +166,7 @@ Value FunctionDefinitionNode::define_function()
     {
         // This is a constructor call.
         auto class_name = name.substr(0, pos);
+        assert(name_resolver().has_class(class_name));
         auto class_type = name_resolver().get_class(class_name);
         construct_fields(class_type);
     }
@@ -177,6 +178,7 @@ Value FunctionDefinitionNode::define_function()
     {
         // This is a destructor call.
         auto class_name = name.substr(0, pos);
+        assert(name_resolver().has_class(class_name));
         auto class_type = name_resolver().get_class(class_name);
         destruct_fields(class_type);
     }

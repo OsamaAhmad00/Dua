@@ -577,3 +577,74 @@ int main()
     h.print();
 }
 
+
+// Case Inheriting from the template parameter
+// Outputs "H"
+
+class G<T> : T
+{
+}
+
+class H
+{
+    void print() { printf("H\n"); }
+}
+
+int main()
+{
+    G<H> g;
+    g.print();
+}
+
+
+// Case Dynamic dispatch with templated parent
+// Outputs "H\n"
+
+class G<T>
+{
+    void print() { printf("G\n"); }
+}
+
+class H : G<int>
+{
+    void print() { printf("H\n"); }
+}
+
+int main()
+{
+    G<int>* g = new H;
+    g->print();
+    delete g;
+}
+
+
+// Case Constructor call chain with templated parent
+// Outputs "H\nG\nL\n3"
+
+class G<T> : T
+{
+    constructor(int i) : Super(i) {
+        printf("G\n");
+    }
+}
+
+class H
+{
+    int i;
+    constructor(int i) : i(i) {
+        printf("H\n");
+    }
+}
+
+class L : G<H>
+{
+    constructor(int i) : Super(i) {
+        printf("L\n");
+    }
+}
+
+int main()
+{
+    L l(3);
+    printf("%d", l.i);
+}
