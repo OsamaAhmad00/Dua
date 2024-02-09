@@ -65,8 +65,13 @@ FunctionInfo& FunctionNameResolver::get_function_no_overloading(const std::strin
     return it->second;
 }
 
-std::string FunctionNameResolver::get_function_full_name(std::string name)
+std::string FunctionNameResolver::get_function_full_name(std::string name, bool try_as_method, bool panic_on_error)
 {
+    if (try_as_method && compiler->current_class != nullptr) {
+        auto class_name = compiler->current_class->getName().str();
+        auto result = get_function_full_name(class_name + "." + name, false, false);
+        if (!result.empty()) return result;
+    }
     name += '(';
     auto begin = functions.lower_bound(name);
     name.back()++;
@@ -76,15 +81,21 @@ std::string FunctionNameResolver::get_function_full_name(std::string name)
     auto non_mangled = functions.find(name);
 
     if (begin == end) {
-        if (non_mangled == functions.end())
-            report_function_not_defined(name);
+        if (non_mangled == functions.end()) {
+            if (panic_on_error)
+                report_function_not_defined(name);
+            return "";
+        }
         return name;
     }
 
     // There exists more than one overload
-    if (non_mangled != functions.end() || --end != begin)
-        compiler->report_error("Can't infer the overloaded function '" + name +
-        "' just from the name. Specifying the function type might help resolve this conflict");
+    if (non_mangled != functions.end() || --end != begin) {
+        if (panic_on_error)
+            compiler->report_error("Can't infer the overloaded function '" + name +
+               "' just from the name. Specifying the function type might help resolve this conflict");
+        return "";
+    }
 
     return begin->first;
 }
@@ -384,7 +395,7 @@ void FunctionNameResolver::call_destructor(const Value& value)
         compiler->report_internal_error("A destructor is not defined for the class " + class_type->name);
 
     auto instance = compiler->create_value(value.get(), compiler->create_type<ReferenceType>(value.type, true));
-    auto full_name = get_function_full_name(name, { instance.type });
+    auto full_name = get_function_full_name(name, std::vector<const Type*>{ instance.type });
     auto vtable_ptr = class_type->get_field(instance, ".vtable_ptr");
     auto vtable_instance = compiler->builder.CreateLoad(compiler->name_resolver.get_vtable_type(class_type->name)->llvm_type(), vtable_ptr.get());
     auto class_vtable = compiler->name_resolver.get_vtable_instance(class_type->name);

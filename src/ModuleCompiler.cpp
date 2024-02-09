@@ -409,7 +409,7 @@ void ModuleCompiler::destruct_global_scope()
         if (as_class == nullptr) continue;
 
         // Call the destructor directly, without loading it from the vtable
-        auto destructor_name = name_resolver.get_function_full_name(as_class->name + ".destructor");
+        auto destructor_name = name_resolver.get_function_full_name(as_class->name + ".destructor", false);
         auto destructor = module.getFunction(destructor_name);
         builder.CreateCall(destructor, { value.get() });
     }

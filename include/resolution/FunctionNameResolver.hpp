@@ -58,7 +58,7 @@ public:
     const Type* get_postfix_operator_return_type(const Type* t1, const Type* t2, const std::string& name);
 
     [[nodiscard]] static std::string get_function_full_name(std::string name, const std::vector<const Type*>& param_types);
-    [[nodiscard]] std::string get_function_full_name(std::string name);
+    [[nodiscard]] std::string get_function_full_name(std::string name, bool try_as_method = true, bool panic_on_error = false);
 
 };
 
