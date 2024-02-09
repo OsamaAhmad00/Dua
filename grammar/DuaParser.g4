@@ -309,6 +309,16 @@ statement_corner_case
     | expression '&' expression ';' { assistant.create_binary_expr<BitwiseAndNode>(); assistant.create_expression_statement(); }
     ;
 
+raw_or_none
+    : Raw          { assistant.is_raw = false; }
+    | /* empty */  { assistant.is_raw = true;  }
+    ;
+
+delete_brackets_or_none
+    : '[]'        { assistant.is_array = true;  }
+    | /* empty */ { assistant.is_array = false; }
+    ;
+
 statement
     : statement_corner_case
     | variable_decl_or_def
@@ -319,7 +329,7 @@ statement
     | block_statement
     | type_alias
     | return_statement
-    | Delete expression ';' { assistant.create_free(); }
+    | raw_or_none Delete delete_brackets_or_none expression ';' { assistant.create_free(); }
     | Continue { assistant.create_continue(); }
     | Break { assistant.create_break(); }
     | expression_statement
@@ -343,8 +353,8 @@ expression
     | expression '[' expression ']' { assistant.create_indexing(); }
     | '(' '(' type ')' ')' expression { assistant.create_forced_cast(); }
     | '(' type ')' expression { assistant.create_cast(); }
-    | New optional_size identifier_type optional_constructor_args { assistant.create_malloc(); }
-    | New optional_size type { assistant.push_counter(); assistant.create_malloc(); }
+    | raw_or_none New optional_new_size identifier_type optional_constructor_args { assistant.create_malloc(); }
+    | raw_or_none New optional_new_size type { assistant.push_counter(); assistant.create_malloc(); }
     | SizeOf '(' expr_or_type ')'   { assistant.create_size_of();   }
     | TypeName '(' expr_or_type ')' { assistant.create_type_name(); }
     | DynamicName '(' expression ')' { assistant.push_null_type(); assistant.create_dynamic_name(); }
@@ -398,9 +408,9 @@ expression
     | <assoc=right> expression '|='  expression  { assistant.create_compound_assignment<BitwiseOrNode>(); }
     ;
 
-optional_size
-    : '[' expression ']'
-    | /* empty */ { assistant.push_node<I64ValueNode>(1); }
+optional_new_size
+    : '[' expression ']' { assistant.is_array = true; }
+    | /* empty */ { assistant.push_node<I64ValueNode>(1); assistant.is_array = false; }
     ;
 
 expr_or_type

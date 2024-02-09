@@ -181,9 +181,9 @@ class ParserAssistant
     std::vector<TypeAliasNode*> global_aliases;
 
     // Flags
-    bool declared_malloc = false;
-    bool declared_free = false;
-    bool used_dynamic_casting = false;
+    bool declared_malloc = false;  // Used to remove the function if not used
+    bool declared_free = false;  // Used to remove the function if not used
+    bool used_dynamic_casting = false;  // Used to remove the function if not used
 
     std::string pop_str() {
         auto result = std::move(strings.back());
@@ -222,12 +222,18 @@ public:
 
     // Public flags
     bool is_packed = false;
+
     // Don't mangle the name of the function. If this is true,
     //  function overloading won't be applicable for the function.
     bool nomangle = false;
+
     bool is_in_function = false;
+
     bool is_extern = false;
     bool is_static = false;
+
+    bool is_array = false;  // Used to differentiate between new and new[], and delete and delete[]
+    bool is_raw = true;  // Used with new[] and delete[] to control calling constructors and destructors or not
 
     std::vector<bool> is_templated_stack;
 

@@ -122,6 +122,7 @@ Destructor: 'destructor';
 
 New: 'new';
 Delete: 'delete';
+Raw: '_RAW_';
 
 Null: 'null';
 True: 'true';

@@ -613,15 +613,14 @@ class Vector<T>
             }
         }
 
-        // Calling free instead of delete to avoid calling
-        //  the destructor again on every position in the
-        //  buffer, even if it's not occupied
-        free(((i64*))buffer);
+        // Deleting with _RAW_ instead of delete to avoid
+        //  calling the destructor on every position
+        //  in the buffer, even if it's not occupied
+        _RAW_ delete[] buffer;
     }
 }
 
 void panic(str message);
-nomangle void free(i64* ptr);
 
 )"
 ,

@@ -113,6 +113,7 @@ set(DUA_SOURCES
     src/AST/IfNode.cpp
     src/AST/LocalVariableDefinitionNode.cpp
     src/AST/MallocNode.cpp
+    src/AST/FreeNode.cpp
     src/AST/NumericalUnaryExpressionNodes.cpp
     src/AST/PostfixAdditionExpressionNode.cpp
     src/AST/PrefixAdditionExpressionNode.cpp

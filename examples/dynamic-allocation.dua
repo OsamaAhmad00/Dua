@@ -68,6 +68,7 @@ int main()
     var arr = new[5] int;
     for (int i = 0; i < 5; i++)
         print(arr[i]);
+    delete[] arr;
 }
 
 
@@ -82,6 +83,7 @@ class X
 int main()
 {
     var arr = new[3] X;
+    delete[] arr;
 }
 
 
@@ -90,10 +92,86 @@ int main()
 
 class X
 {
-    constructor(int i) { print(i); }
+    int i;
+    constructor(int i) : i(i) { }
 }
 
 int main()
 {
     var arr = new[5] X(5);
+
+    for (int i = 0; i < 5; i++)
+        print(arr[i].i);
+
+    delete[] arr;
+}
+
+
+// Case Destructor calls with delete[]
+// Outputs "12345"
+
+int c = 1;
+
+class G
+{
+    int i;
+
+    constructor() : i(c++) { }
+
+    destructor { printf("%d", i); }
+}
+
+int main()
+{
+    var arr = new[5] G;
+    delete[] arr;
+}
+
+
+// Case Allocating objects array without calling constructors
+// Outputs ""
+
+class X
+{
+    constructor() { printf("X"); }
+}
+
+int main()
+{
+    var arr = _RAW_ new[10] X;
+    // The objects are not initialized, and
+    //  the vtable is not correctly set. We
+    //  need to not call the destructors
+    _RAW_ delete[] arr;
+}
+
+
+// Case Deleting objects array without calling destructors
+// Outputs ""
+
+class X
+{
+    destructor { printf("X"); }
+}
+
+int main()
+{
+    var arr = new[10] X;
+    _RAW_ delete[] arr;
+}
+
+
+// Case Passing null to delete
+
+int main()
+{
+    delete null;
+}
+
+
+// Case Passing null to delete[]
+
+int main()
+{
+    delete[] null;
 }
