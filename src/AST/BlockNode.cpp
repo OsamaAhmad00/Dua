@@ -39,7 +39,7 @@ Value BlockNode::eval()
         // The get_field method expects a pointer and not the object itself
         auto instance = compiler->create_value(result.memory_location, result.type);
         vtable_ptr = class_type->get_field(instance, ".vtable_ptr");
-        old_vtable = compiler->swap_vtables(vtable_ptr.get());
+        old_vtable = compiler->swap_vtables(vtable_ptr.get(), class_type);
     }
 
     compiler->destruct_last_scope();

@@ -415,7 +415,7 @@ void ModuleCompiler::destruct_global_scope()
     }
 }
 
-llvm::Value *ModuleCompiler::swap_vtables(llvm::Value *ptr)
+llvm::Value *ModuleCompiler::swap_vtables(llvm::Value *ptr, const ClassType* class_type)
 {
     // Store the vtable of the Object class in the old object,
     //  so that its destructor doesn't get called on scope destruction
@@ -424,9 +424,9 @@ llvm::Value *ModuleCompiler::swap_vtables(llvm::Value *ptr)
     //  and will lead to incorrect behaviour if that object is used later.
     //  That's why the vtable value has to be restored after the destruction
     //  of the scope
-    auto object_vtable = name_resolver.get_vtable_instance("Object");
-    auto old_vtable = builder.CreateLoad(object_vtable->llvm_type->getPointerTo(), ptr);
-    builder.CreateStore(object_vtable->instance, ptr);
+    auto new_vtable = name_resolver.get_vtable_instance(class_type->name + ".no_destructor");
+    auto old_vtable = builder.CreateLoad(new_vtable->llvm_type->getPointerTo(), ptr);
+    builder.CreateStore(new_vtable->instance, ptr);
 
     return old_vtable;
 }

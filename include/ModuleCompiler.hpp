@@ -84,21 +84,17 @@ public:
     void destruct_function_scope();  // Used mainly in return statements
     void destruct_global_scope();
 
-    // FIXME this will introduce bugs in case the target object
-    //  is used in the destructors of other objects in the scope.
-    //  the correct way to do it is to have another instance of
-    //  the same vtable, with only the destructor entry being set
-    //  to the destructor of the Object class. Even in doing so,
-    //  the manual calling of the destructors will remain broken.
-    // These two methods are used to store the vtable of the Object class
-    //  in place of the vtable of the given pointer. The primary purpose
-    //  of this is to prevent calling the destructor on the value being
-    //  returned from one scope. The swap_vtables method takes the pointer
-    //  to the target object, swaps its vtable instance with the Object
-    //  vtable instance, and returns its original vtable instance. The
+    // These two methods are used to store a copy of the vtable with the
+    //  destructor slot pointing to the destructor of the Object class
+    //  (which has no effect) in place of the vtable of the given pointer.
+    //  The primary purpose of this is to prevent calling the destructor
+    //  on the value being returned from one scope. The swap_vtables method
+    //  takes the pointer to the target object, and the type of the object
+    //  (to get the appropriate vtable), swaps its vtable instance with the
+    //  edited vtable instance, and returns its original vtable instance. The
     //  restore_vtable takes the pointer, and the original vtable instance,
     //  and stores it back again.
-    llvm::Value* swap_vtables(llvm::Value* ptr);
+    llvm::Value* swap_vtables(llvm::Value* ptr, const ClassType* class_type);
     void restore_vtable(llvm::Value* ptr, llvm::Value* vtable);
 
     void push_scope_counter();

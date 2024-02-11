@@ -536,3 +536,33 @@ int main()
     printf("X");
 }
 
+
+// Case Using the returned object in the destructor of a local object
+// Outputs "Hello"
+
+class X
+{
+    X* x;
+
+    void print() { printf("Hello"); }
+
+    destructor {
+        if (x != null)
+            x->print();
+    }
+}
+
+X func()
+{
+    X x1;
+    X x2;
+
+    x1.x = &x2;
+
+    return x2;
+}
+
+int main()
+{
+    func();
+}
