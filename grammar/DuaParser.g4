@@ -194,12 +194,24 @@ optional_constructor_args
     ;
 
 infix_op
-    : '+' { assistant.push_str("Addition"); }
-    | '-' { assistant.push_str("Subtraction"); }
-    | '/' { assistant.push_str("Division"); }
-    | '*' { assistant.push_str("Multiplication"); }
-    | '%' { assistant.push_str("Mod"); }
-    | '=' { assistant.push_str("Assignment"); }
+    : '+'   { assistant.push_str("Addition"); }
+    | '-'   { assistant.push_str("Subtraction"); }
+    | '/'   { assistant.push_str("Division"); }
+    | '*'   { assistant.push_str("Multiplication"); }
+    | '%'   { assistant.push_str("Mod"); }
+    | '='   { assistant.push_str("Assignment"); }
+    | '&'   { assistant.push_str("BitwiseAnd"); }
+    | '^'   { assistant.push_str("Xor"); }
+    | '|'   { assistant.push_str("BitwiseOr"); }
+    | '<<'  { assistant.push_str("LeftShift"); }
+    | '>>'  { assistant.push_str("RightShift"); }
+    | '>>>' { assistant.push_str("ArithmeticRightShift"); }
+    | '<'   { assistant.push_str("LT"); }
+    | '>'   { assistant.push_str("GT"); }
+    | '<='  { assistant.push_str("LTE"); }
+    | '>='  { assistant.push_str("GTE"); }
+    | '=='  { assistant.push_str("EQ"); }
+    | '!='  { assistant.push_str("NE"); }
     ;
 
 postfix_op
@@ -291,11 +303,6 @@ statements
 scoped_statement
     : block_statement
     | { assistant.enter_scope(); } statement { assistant.create_block(); assistant.inc_statements(); }
-    ;
-
-scoped_expression
-    : block_expression
-    | { assistant.enter_scope(); } expression { assistant.inc_statements(); assistant.create_block(); }
     ;
 
 // There is a corner case. a & b shouldn't be parsed as defining b to be of type a&,

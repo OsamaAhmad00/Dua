@@ -19,6 +19,19 @@ public:                                                                         
     static Value perform(ModuleCompiler* compiler,                                    \
             const Value& lhs, const Value& rhs, const Type* type)                     \
     {                                                                                 \
+        /* Try calling infix operator first */                                        \
+        auto infix_call = compiler->get_name_resolver()                               \
+                .call_infix_operator(lhs, rhs, #NAME);                                \
+        if (!infix_call.is_null())                                                    \
+            return infix_call;                                                        \
+                                                                                      \
+        if (type == nullptr) {                                                        \
+            type = compiler->get_typing_system().get_winning_type(                    \
+                lhs.type->get_contained_type(),                                       \
+                rhs.type->get_contained_type()                                        \
+            );                                                                        \
+        }                                                                             \
+                                                                                      \
         auto l = lhs.cast_as(type, false);                                            \
         auto r = rhs.cast_as(type, false);                                            \
         if (l.is_null() || r.is_null())                                               \
@@ -45,15 +58,11 @@ public:                                                                         
     {                                                                                 \
         auto lhs_value = lhs->eval();                                                 \
         auto rhs_value = rhs->eval();                                                 \
-        auto type = typing_system().get_winning_type(                                 \
-            lhs_value.type->get_contained_type(),                                     \
-            rhs_value.type->get_contained_type()                                      \
-        );                                                                            \
         return NAME##Node::perform(                                                   \
             compiler,                                                                 \
             lhs_value,                                                                \
             rhs_value,                                                                \
-            type                                                                      \
+            nullptr                                                                   \
         );                                                                            \
     }                                                                                 \
                                                                                       \
@@ -62,6 +71,14 @@ public:                                                                         
         if (compiler->clear_type_cache) type = nullptr;                               \
                                                                                       \
         if (type != nullptr) return type;                                             \
+                                                                                      \
+        auto ltype = lhs->get_type()->get_contained_type();                           \
+        auto rtype = rhs->get_type()->get_contained_type();                           \
+                                                                                      \
+        auto infix_type = name_resolver()                                             \
+            .get_infix_operator_return_type(ltype, rtype, #NAME);                     \
+                                                                                      \
+        if (infix_type != nullptr) return set_type(infix_type);                       \
                                                                                       \
         return set_type(compiler->create_type<I8Type>());                             \
     }                                                                                 \
