@@ -31,7 +31,7 @@ public:
     {
         auto lhs_eval = lhs->eval();
         if (lhs_eval.memory_location == nullptr)
-            report_error("Can't perform a compound addition to a non-lvalue expression");
+            compiler->report_error("Can't perform a compound addition to a non-lvalue expression");
         lhs_eval.type = get_element_type(lhs_eval.type);
         auto rhs_value = rhs->eval();
         auto value = OpNode::perform(

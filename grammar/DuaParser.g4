@@ -339,6 +339,7 @@ statement
     | raw_or_none Delete delete_brackets_or_none expression ';' { assistant.create_free(); }
     | Continue { assistant.create_continue(); }
     | Break { assistant.create_break(); }
+    | Move '(' identifier ')' ';' { assistant.call_destructor = true; assistant.create_move(); assistant.inc_statements(); }
     | expression_statement
     | ';'  { assistant.create_empty_statement(); }
     ;
@@ -352,6 +353,7 @@ expression
     | if_expression
     | when_expression
     | '(' expression ')'
+    | Move '(' identifier ')' { assistant.call_destructor = false; assistant.create_move(); }
     | '(' arg_list ')' type { assistant.create_temp_variable(); }
     | expression '.' function_name template_args_or_none '(' arg_list ')' { assistant.create_method_call(); }
     | expression '->' { assistant.create_dereference(); } function_name template_args_or_none '(' arg_list ')' { assistant.create_method_call(); }

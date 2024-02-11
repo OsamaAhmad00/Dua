@@ -52,13 +52,15 @@ Value VariableNode::eval()
     if (pointer_type != nullptr)
         func_type = pointer_type->get_element_type()->as<FunctionType>();
 
+    auto type = get_type();
+
     std::string full_name;
     if (func_type != nullptr)
         full_name = name_resolver().get_function_name_with_exact_type(name, func_type);
     else
         full_name = name_resolver().get_function_full_name(name);
 
-    return compiler->create_value(module().getFunction(full_name), get_type());
+    return compiler->create_value(module().getFunction(full_name), type);
 }
 
 const Type* VariableNode::get_type()
@@ -83,6 +85,8 @@ const Type* VariableNode::get_type()
         auto full_name = name_resolver().get_function_full_name(name);
         t = name_resolver().get_function_no_overloading(full_name).type;
         t = compiler->create_type<PointerType>(t);
+    } else if (name_resolver().symbol_table.is_move_erased(name)) {
+        compiler->report_error("The variable " + name + " is moved and is not accessible anymore");
     } else {
         compiler->report_error("The identifier " + name + " is not defined");
     }

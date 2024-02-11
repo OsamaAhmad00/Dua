@@ -1179,4 +1179,8 @@ void ParserAssistant::create_temp_variable() {
     push_node<TempVariableNode>(pop_type(), pop_args());
 }
 
+void ParserAssistant::create_move() {
+    push_node<MoveNode>(pop_str(), call_destructor);
+}
+
 }

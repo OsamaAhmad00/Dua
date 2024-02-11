@@ -1,0 +1,109 @@
+nomangle int printf(str message, ...);
+
+class X
+{
+    int i = 5;
+    int j = 2;
+
+    =constructor(X& x) { printf("=constructor"); }
+
+    destructor { printf("destructor"); }
+}
+
+
+// Case Accessing a moved variable
+// Panics
+
+int main()
+{
+    X x;
+    X y = move(x);
+    printf("%d", x.i);
+}
+
+
+// Case Moving an object with assignment
+// Outputs "12destructor"
+
+int main()
+{
+    X x;
+    printf("1");
+    X y = move(x);
+    printf("2");
+}
+
+
+// Case Moving an object without assignment
+// Outputs "1destructor2"
+
+int main()
+{
+    X x;
+    printf("1");
+    // You can use move without assignment
+    //  to destruct the variable in-place,
+    //  and remove it from the symbol table
+    move(x);
+    printf("2");
+}
+
+
+// Case Redefining the a variable after moving it
+// Outputs "3"
+
+int main()
+{
+    int x = 5;
+    move(x);
+    int x = 3;
+    printf("%d", x);
+}
+
+
+// Case Passing a parameter by moving
+// Outputs "3"
+
+int main()
+{
+    int x = 3;
+    printf("%d", move(x));
+    // x is not visible here and can be redefined again
+}
+
+
+// Case Teleporting a variable to function
+// Outputs "5destructorY"
+
+void func(X x) {
+    printf("%d", x.i);
+}
+
+int main()
+{
+    X x;
+    func(move(x));
+    printf("Y");
+}
+
+
+// Case Teleporting a variable as a reference parameter
+// Panics
+
+void func(X& x) { }
+
+int main()
+{
+    X x;
+    func(move(x));
+}
+
+
+// Case Assigning a moved value to a reference variable
+// Panics
+
+int main()
+{
+    int x = 3;
+    int& y = move(x);
+}

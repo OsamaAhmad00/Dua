@@ -18,7 +18,7 @@ Value LocalVariableDefinitionNode::eval()
     if (auto ref = type->as<ReferenceType>(); ref != nullptr)
     {
         if (initializer == nullptr)
-            report_error("The reference variable " + name + " with type " + get_type()->to_string() + " must be assigned a variable to reference");
+            compiler->report_error("The reference variable " + name + " with type " + get_type()->to_string() + " must be assigned a variable to reference");
         auto result = initializer->eval();
         if (result.memory_location == nullptr)
             compiler->report_error("Can't have a reference type to a non-lvalue expression");
@@ -43,6 +43,7 @@ Value LocalVariableDefinitionNode::eval()
     bool teleport_value = false;
     if (initializer) {
         init_value = initializer->eval();
+        teleport_value = init_value.is_teleporting;
         auto teleport_node = initializer->as<ScopeTeleportingNode>();
         if (teleport_node != nullptr) {
             teleport_value = true;
