@@ -451,3 +451,88 @@ int main()
     //  7 - Destructor of the deepest ancestor of X3 (X1)
     X3 x;
 }
+
+
+// Case Teleportation of the result of a block expression
+// Outputs "12X3"
+
+class X
+{
+    int i;
+
+    constructor(int i) : i(i) { }
+
+    destructor { printf("%d", i); }
+}
+
+int main()
+{
+    var x = {
+        X x1(1);
+        X x2(2);
+        X x3(3);
+        x3
+    };
+
+    printf("X");
+}
+
+
+// Case Teleportation of the result of an if expression
+// Outputs "12X3"
+
+class X
+{
+    int i;
+
+    constructor(int i) : i(i) { }
+
+    destructor { printf("%d", i); }
+}
+
+int main()
+{
+    var x = if (true) {
+        X x1(1);
+        X x2(2);
+        X x3(3);
+        x3
+    } else {
+        X x2(2);
+        x2
+    };
+
+    printf("X");
+}
+
+
+// Case Teleportation of the result of a when expression
+// Outputs "12X3"
+
+class X
+{
+    int i;
+
+    constructor(int i) : i(i) { }
+
+    destructor { printf("%d", i); }
+}
+
+int main()
+{
+    var x = when {
+        true -> {
+            X x1(1);
+            X x2(2);
+            X x3(3);
+            x3
+        },
+        else -> {
+            X x2(2);
+            x2
+        }
+    };
+
+    printf("X");
+}
+

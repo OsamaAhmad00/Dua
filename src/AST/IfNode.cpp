@@ -79,12 +79,12 @@ Value IfNode::eval()
     for (size_t i = 0; i < body_blocks.size(); i++) {
         builder().SetInsertPoint(body_blocks[i]);
         auto value = branches[i]->eval();
-        if (builder().GetInsertBlock()->empty() || !builder().GetInsertBlock()->back().isTerminator())
-            builder().CreateBr(end_block);
         if (is_expression) {
             values.push_back(compiler->create_value(value.get(), branches[i]->get_type()));
             phi_blocks.push_back(builder().GetInsertBlock());
         }
+        if (builder().GetInsertBlock()->empty() || !builder().GetInsertBlock()->back().isTerminator())
+            builder().CreateBr(end_block);
     }
 
     builder().SetInsertPoint(end_block);

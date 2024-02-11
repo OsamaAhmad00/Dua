@@ -24,6 +24,8 @@ public:
     Value eval() override = 0;
 
     [[nodiscard]] const std::string& get_name() const { return name; }
+
+    [[nodiscard]] const Type* get_definition_type() const { return type; }
 };
 
 }

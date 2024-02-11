@@ -23,22 +23,12 @@ Value ReturnNode::eval()
 
     Value vtable_ptr;
     llvm::Value* old_vtable;
-
     if (is_lvalue_object)
     {
-        // Store the vtable of the Object class in the old object,
-        //  so that its destructor doesn't get called on scope destruction
-        // This might be useless in case the returned object is outside the
-        //  scope of this function. Not only is it useless, it'll be harmful
-        //  and will lead to incorrect behaviour if that object is used later.
-        //  That's why the vtable value has to be restored after the destruction
-        //  of the scope
         // The get_field method expects a pointer and not the object itself
-        auto object_vtable = name_resolver().get_vtable_instance("Object");
         auto instance = compiler->create_value(result.memory_location, result.type);
         vtable_ptr = class_type->get_field(instance, ".vtable_ptr");
-        old_vtable = builder().CreateLoad(object_vtable->llvm_type->getPointerTo(), vtable_ptr.get());
-        builder().CreateStore(object_vtable->instance, vtable_ptr.get());
+        old_vtable = compiler->swap_vtables(vtable_ptr.get());
     }
 
     // Destruct the objects before returning
@@ -46,7 +36,7 @@ Value ReturnNode::eval()
 
     // Restore the old vtable
     if (is_lvalue_object)
-        builder().CreateStore(old_vtable, vtable_ptr.get());
+        compiler->restore_vtable(vtable_ptr.get(), old_vtable);
 
     // This is to force the loading of the returned value before
     //  returning it, to avoid returning stale versions.
