@@ -454,7 +454,7 @@ int main()
 
 
 // Case Teleportation of the result of a block expression
-// Outputs "12X3"
+// Outputs "21X3"
 
 class X
 {
@@ -479,7 +479,7 @@ int main()
 
 
 // Case Teleportation of the result of an if expression
-// Outputs "12X3"
+// Outputs "21X3"
 
 class X
 {
@@ -507,7 +507,7 @@ int main()
 
 
 // Case Teleportation of the result of a when expression
-// Outputs "12X3"
+// Outputs "21X3"
 
 class X
 {

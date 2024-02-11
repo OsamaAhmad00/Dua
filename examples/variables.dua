@@ -207,3 +207,25 @@ int main()
 {
 
 }
+
+
+// Case Order of destruction
+// Outputs "54321"
+
+class X
+{
+    int i;
+
+    constructor(int i) : i(i) { }
+
+    destructor { print(i); }
+}
+
+int main()
+{
+    X x1(1);
+    X x2(2);
+    X x3(3);
+    X x4(4);
+    X x5(5);
+}

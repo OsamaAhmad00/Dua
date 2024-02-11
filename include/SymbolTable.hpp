@@ -10,8 +10,25 @@ namespace dua
 {
 
 template<typename T>
+struct ScopeEntry
+{
+    std::string key;
+    T value;
+};
+
+template<typename T>
 struct Scope
 {
+    ModuleCompiler* compiler;
+    // A vector is used here because the number
+    //  of elements is usually small to an extent
+    //  that the overhead of an std::map is bigger
+    //  than just performing a linear search.
+    // Also, to not store additional information to
+    //  retain the orders of insertion, which will
+    //  be needed for example when destructing a scope.
+    std::vector<ScopeEntry<T>> map;
+
     Scope(ModuleCompiler* compiler) : compiler(compiler) {}
 
     Scope(const Scope& scope) : compiler(scope.compiler), map(scope.map) {}
@@ -34,26 +51,38 @@ struct Scope
         return *this;
     }
 
-    ModuleCompiler* compiler;
-    std::unordered_map<std::string, T> map;
+    size_t insertion_order(const std::string& key) const
+    {
+        for (size_t i = 0; i < map.size(); i++)
+            if (map[i].key == key)
+                return i;
+        return -1;
+    }
+
+    const T& get(const std::string& key) const {
+        size_t index = insertion_order(key);
+        if (index == (size_t)-1)
+            report_error("The symbol " + key + " is not defined", compiler);
+        return map[index].value;
+    }
 
     Scope& insert(const std::string& name, const T& t) {
         if (contains(name)) {
             report_error("The symbol " + name + " is already defined", compiler);
         }
-        map[name] = t;
+        map.push_back({name, t});
         return *this;
     }
 
-    const T& get(const std::string& name) {
-        if (!contains(name)) {
-            report_error("The symbol " + name + " is not defined", compiler);
-        }
-        return map[name];
+    void erase(const std::string& key) {
+        size_t index = insertion_order(key);
+        if (index == (size_t)-1)
+            report_error("The symbol " + key + " is not defined", compiler);
+        map.erase(map.begin() + index);
     }
 
-    bool contains(const std::string& name) const {
-        return map.find(name) != map.end();
+    bool contains(const std::string& key) const {
+        return insertion_order(key) != (size_t)-1;
     }
 };
 
@@ -167,7 +196,7 @@ struct SymbolTable
     {
         for (size_t i = size() - 1; i != size_t(-1); i--) {
             if (scopes[i].contains(name)) {
-                scopes[i].map.erase(name);
+                scopes[i].erase(name);
                 return;
             }
         }

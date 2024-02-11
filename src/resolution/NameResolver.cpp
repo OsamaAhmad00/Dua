@@ -9,9 +9,10 @@ NameResolver::NameResolver(ModuleCompiler *compiler) : compiler(compiler), Funct
 
 void NameResolver::destruct_all_variables(const Scope<Value> &scope)
 {
-    // TODO enforce an order on the destruction
-    for (auto& variable : scope.map)
-        call_destructor(variable.second);
+    size_t size = scope.map.size();
+    if (size == 0) return;
+    for (size_t i = size - 1; i != (size_t)-1; i--)
+        call_destructor(scope.map[i].value);
 }
 
 void NameResolver::push_scope()
