@@ -142,10 +142,7 @@ Value TemplatedNameResolver::get_templated_function(const std::string& name, std
     // Temporarily set the current class to the owner
     // class so that method definitions are correct
     auto old_class = compiler->current_class;
-    // Templated classes will set the current class
-    //  before proceeding
-    if (!templated.in_templated_class)
-        compiler->current_class = templated.owner_class;
+    compiler->current_class = templated.owner_class;
 
     compiler->name_resolver.register_function(full_name, templated.info, true);
 

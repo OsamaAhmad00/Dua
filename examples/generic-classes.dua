@@ -446,7 +446,7 @@ class G<T>
 {
     T i = 5;
 
-    void print<L>() { printf("%d", self.i); }
+    void print<L>() { printf("%d", i); }
 }
 
 int main()
