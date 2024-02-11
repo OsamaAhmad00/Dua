@@ -348,7 +348,7 @@ expression
     | '(' arg_list ')' type { assistant.create_temp_variable(); }
     | expression '.' function_name template_args_or_none '(' arg_list ')' { assistant.create_method_call(); }
     | expression '->' { assistant.create_dereference(); } function_name template_args_or_none '(' arg_list ')' { assistant.create_method_call(); }
-    | full_function_identifier   template_args_or_none '(' arg_list ')' { assistant.create_function_call(); }
+    | full_function_identifier template_args_or_none '(' arg_list ')' { assistant.create_function_call(); }
     | expression '(' arg_list ')' { assistant.create_expr_function_call();  }
     | expression '[' expression ']' { assistant.create_indexing(); }
     | '(' '(' type ')' ')' expression { assistant.create_forced_cast(); }
@@ -363,7 +363,7 @@ expression
     | expression '.' identifier template_args_or_none { assistant.create_field_access(); }
     | expression { assistant.create_dereference(); } '->' identifier template_args_or_none { assistant.create_field_access(); }
     | '*' expression { assistant.create_dereference(); }
-    | identifier template_args_or_none { assistant.create_identifier_value(); }
+    | variable_identifier template_args_or_none { assistant.create_identifier_value(); }
     | expression '++' { assistant.create_post_inc(); }
     | expression '--' { assistant.create_post_dec(); }
     | '++' expression { assistant.create_pre_inc(); }
@@ -421,6 +421,11 @@ expr_or_type
 full_function_identifier
     : function_name
     | identifier_type '::' function_name { assistant.create_method_identifier(); }
+    ;
+
+variable_identifier
+    : identifier
+    | full_function_identifier
     ;
 
 function_name

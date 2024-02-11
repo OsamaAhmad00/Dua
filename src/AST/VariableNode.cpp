@@ -5,15 +5,15 @@
 namespace dua
 {
 
-VariableNode::VariableNode(ModuleCompiler *compiler, std::string name, const Type *type)
-        : name(std::move(name)), template_args({}), is_templated(false)
+VariableNode::VariableNode(ModuleCompiler *compiler, ResolutionString* name, const Type *type)
+        : unresolved_name(name), template_args({}), is_templated(false)
 {
     this->compiler = compiler;
     this->type = type;
 }
 
-VariableNode::VariableNode(ModuleCompiler *compiler, std::string name, std::vector<const Type *> template_args, const Type *type)
-        : name(std::move(name)), template_args(template_args), is_templated(true)
+VariableNode::VariableNode(ModuleCompiler *compiler, ResolutionString* name, std::vector<const Type *> template_args, const Type *type)
+        : unresolved_name(name), template_args(std::move(template_args)), is_templated(true)
 {
     this->compiler = compiler;
     this->type = type;
@@ -21,6 +21,8 @@ VariableNode::VariableNode(ModuleCompiler *compiler, std::string name, std::vect
 
 Value VariableNode::eval()
 {
+    auto name = unresolved_name->resolve();
+
     if (is_templated) {
         // This is a templated function reference for sure since no identifier
         // is allowed to be templated, except for types and function reference.
@@ -61,6 +63,8 @@ Value VariableNode::eval()
 
 const Type* VariableNode::get_type()
 {
+    auto name = unresolved_name->resolve();
+
     if (compiler->clear_type_cache) type = nullptr;
 
     if (type != nullptr) return type;
@@ -92,11 +96,12 @@ const Type* VariableNode::get_type()
 }
 
 bool VariableNode::is_function() const {
+    auto name = unresolved_name->resolve();
     return name_resolver().has_function(name);
 }
 
 std::string VariableNode::get_name() const {
-    return name;
+    return unresolved_name->resolve();
 }
 
 }

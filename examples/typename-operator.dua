@@ -33,3 +33,26 @@ int main()
     print(typename(x));
     print(typename(X));
 }
+
+
+// Case Function type name
+// Outputs "i32(i8*, ...)*"
+
+int main()
+{
+    printf("%s", typename(printf));
+}
+
+
+// Case Method type name
+// Outputs "i32(X&, i64)*"
+
+class X
+{
+    int func(long num) { return 5; }
+}
+
+int main()
+{
+    printf("%s", typename(X::func));
+}

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AST/ASTNode.hpp"
+#include "resolution/ResolutionString.hpp"
 
 namespace dua
 {
@@ -10,13 +11,13 @@ class VariableNode : public ASTNode
 
 public:
 
-    std::string name;
+    ResolutionString* unresolved_name;
     std::vector<const Type*> template_args;
     bool is_templated;
 
-    VariableNode(ModuleCompiler* compiler, std::string name, const Type* type = nullptr);
+    VariableNode(ModuleCompiler* compiler, ResolutionString* name, const Type* type = nullptr);
 
-    VariableNode(ModuleCompiler* compiler, std::string name, std::vector<const Type*> template_args, const Type* type = nullptr);
+    VariableNode(ModuleCompiler* compiler, ResolutionString* name, std::vector<const Type*> template_args, const Type* type = nullptr);
 
     Value eval() override;
 

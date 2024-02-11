@@ -25,13 +25,13 @@ class MethodCallNode : public FunctionCallNode
 public:
 
     MethodCallNode(ModuleCompiler* compiler, ASTNode* instance_node,
-                   std::string func_name, std::vector<ASTNode*> args, std::vector<const Type*> template_args)
-            : FunctionCallNode(compiler, std::move(func_name), std::move(args), std::move(template_args)),
+                   ResolutionString* func_name, std::vector<ASTNode*> args, std::vector<const Type*> template_args)
+            : FunctionCallNode(compiler, func_name, std::move(args), std::move(template_args)),
               instance_node(instance_node) {}
 
     MethodCallNode(ModuleCompiler* compiler, ASTNode* instance_node,
-                   std::string func_name, std::vector<ASTNode*> args = {})
-            : FunctionCallNode(compiler, std::move(func_name), std::move(args)),
+                   ResolutionString* func_name, std::vector<ASTNode*> args = {})
+            : FunctionCallNode(compiler, func_name, std::move(args)),
                 instance_node(instance_node) {}
 
     Value eval() override;

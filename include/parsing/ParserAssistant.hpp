@@ -75,6 +75,9 @@
 #include "types/TypeOfType.hpp"
 #include "types/NoRefType.hpp"
 
+#include "resolution/IdentityResolutionString.hpp"
+#include "resolution/MethodNameResolutionString.hpp"
+
 #include "utils/TextManipulation.hpp"
 #include "utils/ErrorReporting.hpp"
 
@@ -121,6 +124,23 @@ struct ClassInfo
     const IdentifierType* parent;
 };
 
+struct ParserStringNode
+{
+    bool is_resolution_string = false;
+    ResolutionString* resolution_str;
+    std::string str;
+
+    std::string& as_str()
+    {
+        if (is_resolution_string) {
+            if (auto identity = dynamic_cast<IdentityResolutionString*>(resolution_str); identity != nullptr)
+                return identity->str;
+            report_internal_error("Can't pop a non-identity resolution string as a string literal");
+        }
+        return str;
+    }
+};
+
 //  This class is used to make the semantic-actions in the parser grammar file
 //  as minimal as possible, making the grammar clearer, and also the code more
 //  isolated from the grammar, thus, more readable.
@@ -141,7 +161,7 @@ class ParserAssistant
     // At the end, this stack will contain the elements of the
     //  translation unit. In other words, we're mimicking a stack
     //  machine, but with each datatype in a separate stack.
-    std::vector<std::string> strings;
+    std::vector<ParserStringNode> strings;
     std::vector<uint64_t> numbers;
     std::vector<ASTNode*> nodes;
     std::vector<const Type*> types;
@@ -185,10 +205,19 @@ class ParserAssistant
     bool declared_free = false;  // Used to remove the function if not used
     bool used_dynamic_casting = false;  // Used to remove the function if not used
 
-    std::string pop_str() {
-        auto result = std::move(strings.back());
+    ResolutionString* pop_resolution_string()
+    {
+        auto result = strings.back();
         strings.pop_back();
-        return result;
+        if (result.is_resolution_string) return result.resolution_str;
+        return compiler->name_resolver.create_resolution_string<IdentityResolutionString>(std::move(result.str));
+    }
+
+    std::string pop_str()
+    {
+        auto result = strings.back();
+        strings.pop_back();
+        return std::move(result.as_str());
     }
 
     uint64_t pop_num() {
@@ -237,8 +266,22 @@ public:
 
     std::vector<bool> is_templated_stack;
 
+    template <typename T, typename ...Args>
+    void push_resolution_string(Args... args)
+    {
+        strings.push_back({
+            true,
+            compiler->name_resolver.create_resolution_string<T>(args...),
+            ""
+        });
+    }
+
     void push_str(std::string str) {
-        strings.push_back(std::move(str));
+        strings.push_back({
+            false,
+            nullptr,
+            std::move(str)
+        });
     }
 
     void push_num(uint64_t num) { numbers.push_back(num); }

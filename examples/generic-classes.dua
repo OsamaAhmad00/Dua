@@ -1,45 +1,5 @@
 nomangle int printf(str message, ...);
 
-// Case Basic generic class
-// Outputs "i64 i32 X "
-
-class X {}
-
-class G<T>
-{
-    void func() {
-        printf("%s ", typename(T));
-    }
-}
-
-int main()
-{
-    G<i64> g1;
-    G<i32> g2;
-    G<X> g3;
-
-    g1.func();
-    g2.func();
-    g3.func();
-}
-
-
-// Case Templated class with multiple template parameters
-// Outputs "i64 i32 i16"
-
-class X<T, U, K>
-{
-    void print() {
-        printf("%s %s %s", typename(T), typename(U), typename(K));
-    }
-}
-
-int main()
-{
-    X<i64, i32, i16> x;
-    x.print();
-}
-
 
 // Case Templated class with templated method
 // Outputs "i32: 1, i64: 2"
@@ -459,6 +419,65 @@ int main()
     X<long> x;
     x.func<int>(1);
     x.func(1);
+}
+
+
+// Case Calling a method of the templated class indirectly
+// Outputs "5"
+
+class G<T>
+{
+    T i = 5;
+
+    void print() { printf("%d", i); }
+}
+
+int main()
+{
+    G<int> g;
+    G<int>::print(g);
+}
+
+
+// Case Calling a method of the templated class indirectly
+// Outputs "5"
+
+class G<T>
+{
+    T i = 5;
+
+    void print<L>() { printf("%d", self.i); }
+}
+
+int main()
+{
+    G<int> g;
+    G<int>::print<long>(g);
+}
+
+
+// Case Accessing method of a template indirectly
+// Outputs "5"
+
+class L
+{
+    int i = 5;
+
+    void print() { printf("%d", i); }
+}
+
+class G<T>
+{
+    void func(T t) {
+        T::print(t);
+    }
+}
+
+int main()
+{
+    L l;
+    G<L> g;
+    g.func(l);
 }
 
 

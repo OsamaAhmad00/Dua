@@ -1,6 +1,7 @@
 #include "AST/lvalue/ClassFieldNode.hpp"
 #include "types/PointerType.hpp"
 #include "types/ReferenceType.hpp"
+#include <resolution/IdentityResolutionString.hpp>
 
 namespace dua
 {
@@ -15,6 +16,8 @@ const ClassType* ClassFieldNode::get_class(const Type* type) const
 
 Value ClassFieldNode::eval()
 {
+    auto name = unresolved_name->resolve();
+
     auto full_name = get_name();
 
     if (is_templated) {
@@ -84,6 +87,7 @@ const Type* ClassFieldNode::get_type()
         t = compiler->create_type<PointerType>(t);
     } else {
         auto class_type = get_class(instance->get_type());
+        auto name = unresolved_name->resolve();
         t = class_type->get_field(name).type;
         t = compiler->create_type<ReferenceType>(t, true);
     }
@@ -99,12 +103,17 @@ Value ClassFieldNode::eval_instance() const
 
 std::string ClassFieldNode::get_name() const
 {
+    auto name = unresolved_name->resolve();
     auto class_type = get_class(instance->get_type());
     return class_type->name + "." + name;
 }
 
 bool ClassFieldNode::is_function() const {
     return name_resolver().has_function(get_name());
+}
+
+ResolutionString *ClassFieldNode::get_resolution_name(ModuleCompiler *compiler, std::string name) {
+    return compiler->get_name_resolver().create_resolution_string<IdentityResolutionString>(std::move(name));
 }
 
 }

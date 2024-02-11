@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AST/ScopeTeleportingNode.hpp>
+#include <resolution/ResolutionString.hpp>
 
 namespace dua
 {
@@ -23,16 +24,18 @@ protected:
 
     void set_teleporting_args(const std::vector<const Type*>& param_types, std::vector<Value>& evaluated_args);
 
-    std::string name;
+    std::string _current_name;
+
+    ResolutionString* unresolved_name;
     std::vector<ASTNode*> args;
     std::vector<const Type*> template_args;
     bool is_templated;
 
 public:
 
-    FunctionCallNode(ModuleCompiler* compiler, std::string name,
+    FunctionCallNode(ModuleCompiler* compiler, ResolutionString* name,
                      std::vector<ASTNode*> args = {});
-    FunctionCallNode(ModuleCompiler* compiler, std::string name,
+    FunctionCallNode(ModuleCompiler* compiler, ResolutionString* name,
                      std::vector<ASTNode*> args, std::vector<const Type*> template_args);
 
     Value eval() override;

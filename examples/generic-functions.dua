@@ -294,6 +294,19 @@ int main()
 }
 
 
+// Case Returning the template type
+// Outputs "5"
+
+T func<T>(T val)
+{
+    return val;
+}
+
+int main()
+{
+    printf("%d", func<int>(5));
+}
+
 // Case Referencing an unreachable variable 2
 // Panics
 

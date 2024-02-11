@@ -85,6 +85,7 @@ set(DUA_SOURCES
     src/resolution/FunctionNameResolver.cpp
     src/resolution/ClassResolver.cpp
     src/resolution/TemplatedNameResolver.cpp
+    src/resolution/MethodNameResolutionString.cpp
 
     src/parsing/ParserAssistant.cpp
     src/parsing/ParserFacade.cpp

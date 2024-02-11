@@ -24,4 +24,9 @@ Scope<Value> NameResolver::pop_scope()
     return symbol_table.pop_scope();
 }
 
+NameResolver::~NameResolver() {
+    for (auto str : resolution_strings)
+        delete str;
+}
+
 }

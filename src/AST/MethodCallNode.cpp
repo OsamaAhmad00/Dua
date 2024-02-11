@@ -15,7 +15,7 @@ void MethodCallNode::process()
 
     is_callable_field = false;
     for (auto& field : class_type->fields()) {
-        if (field.name == name) {
+        if (field.name == _current_name) {
             is_callable_field = true;
             break;
         }
@@ -30,6 +30,8 @@ void MethodCallNode::process()
 
 Value MethodCallNode::eval()
 {
+    _current_name = unresolved_name->resolve();
+
     process();
 
     auto args = eval_args();
@@ -42,16 +44,14 @@ Value MethodCallNode::eval()
     instance_ptr.type = compiler->create_type<PointerType>(class_type);
 
     if (is_callable_field)
-        return call_reference(class_type->get_field(instance_ptr, name), std::move(args));
+        return call_reference(class_type->get_field(instance_ptr, _current_name), std::move(args));
 
     if (is_templated)
     {
         // Templated virtual methods are not supported. If the method is
         //  templated, call the method without dynamic dispatch.
-        auto old_name = name;
-        name = class_type->name + "." + name;
+        _current_name = class_type->name + "." + _current_name;
         auto result = call_templated_function(std::move(args));
-        name = old_name;
         return result;
     }
 
@@ -59,7 +59,7 @@ Value MethodCallNode::eval()
     for (size_t i = 0; i < args.size(); i++)
         arg_types[i] = args[i].type;
 
-    auto method = class_type->get_method(name, instance_ptr, arg_types);
+    auto method = class_type->get_method(_current_name, instance_ptr, arg_types);
 
     set_teleporting_args(method.type->as<FunctionType>()->param_types, args);
 
@@ -76,12 +76,11 @@ const Type* MethodCallNode::get_type()
 
     auto class_type = get_instance_type();
     auto arg_types = get_arg_types();
-    auto full_name = name_resolver().get_winning_method(class_type, name, arg_types);
+    auto full_name = name_resolver().get_winning_method(class_type, _current_name, arg_types);
 
     if (is_templated) {
-        std::swap(name, full_name);
+        _current_name = std::move(full_name);
         auto method_type = get_templated_function(arg_types);
-        std::swap(name, full_name);
         return set_type(method_type.type->as<FunctionType>()->return_type);
     }
 
@@ -91,8 +90,6 @@ const Type* MethodCallNode::get_type()
 
 std::vector<const Type*> MethodCallNode::get_arg_types()
 {
-    process();
-
     std::vector<const Type*> arg_types(args.size());
 
     arg_types[0] = compiler->create_type<ReferenceType>(get_instance_type(), true);
@@ -109,8 +106,11 @@ const ClassType *MethodCallNode::get_instance_type()
     auto instance_type = instance_node->get_type();
 
     auto class_type = instance_type->get_contained_type()->as<ClassType>();
-    if (class_type == nullptr)
-        compiler->report_error("Can't call a method " + name + " from the type " + instance_type->to_string() + ", which is not of a class type");
+    if (class_type == nullptr) {
+        auto name = unresolved_name->resolve();
+        compiler->report_error("Can't call a method " + name + " from the type " + instance_type->to_string() +
+                               ", which is not of a class type");
+    }
 
     return class_type;
 }

@@ -13,13 +13,15 @@ class ClassFieldNode : public VariableNode
 
     const ClassType* get_class(const Type* type) const;
 
+    ResolutionString* get_resolution_name(ModuleCompiler* compiler, std::string name);
+
 public:
 
     ClassFieldNode(ModuleCompiler* compiler, ASTNode* instance, std::string field_name)
-            : VariableNode(compiler, std::move(field_name)), instance(instance) { }
+            : VariableNode(compiler, get_resolution_name(compiler, std::move(field_name))), instance(instance) { }
 
     ClassFieldNode(ModuleCompiler* compiler, ASTNode* instance, std::string field_name, const std::vector<const Type*>& template_args)
-            : VariableNode(compiler, std::move(field_name), template_args), instance(instance) { }
+            : VariableNode(compiler, get_resolution_name(compiler, std::move(field_name)), template_args), instance(instance) { }
 
     Value eval() override;
 

@@ -8,15 +8,15 @@
 namespace dua
 {
 
-FunctionCallNode::FunctionCallNode(ModuleCompiler *compiler, std::string name, std::vector<ASTNode *> args,
+FunctionCallNode::FunctionCallNode(ModuleCompiler *compiler, ResolutionString* name, std::vector<ASTNode *> args,
                                    std::vector<const Type*> template_args)
-        : name(std::move(name)), args(std::move(args)), template_args(std::move(template_args)), is_templated(true)
+   : unresolved_name(name), args(std::move(args)), template_args(std::move(template_args)), is_templated(true)
 {
     this->compiler = compiler;
 }
 
-FunctionCallNode::FunctionCallNode(ModuleCompiler *compiler, std::string name, std::vector<ASTNode *> args)
-    : name(std::move(name)), args(std::move(args)), template_args({}), is_templated(false)
+FunctionCallNode::FunctionCallNode(ModuleCompiler *compiler, ResolutionString* name, std::vector<ASTNode *> args)
+    : unresolved_name(name), args(std::move(args)), template_args({}), is_templated(false)
 {
     this->compiler = compiler;
 }
@@ -37,6 +37,8 @@ std::vector<Value> FunctionCallNode::eval_args()
 
 Value FunctionCallNode::eval()
 {
+    _current_name = unresolved_name->resolve();
+
     auto evaluated_args = eval_args();
 
     if (is_templated)
@@ -56,7 +58,7 @@ Value FunctionCallNode::eval()
         //  in the loaded_value field, we need to move it back again to memory_location.
         instance.memory_location = instance.get();
         instance.set(nullptr);
-        auto method = class_type->get_method(name, instance, std::move(arg_types), false);
+        auto method = class_type->get_method(_current_name, instance, std::move(arg_types), false);
         if (!method.is_null()) {
             evaluated_args.insert(evaluated_args.begin(), instance);
             set_teleporting_args(method.type->as<FunctionType>()->param_types, evaluated_args);
@@ -64,12 +66,12 @@ Value FunctionCallNode::eval()
         }
     }
 
-    if (name_resolver().has_function(name, false))
+    if (name_resolver().has_function(_current_name, false))
     {
         std::vector<const Type*> arg_types(evaluated_args.size());
         for (size_t i = 0; i < arg_types.size(); i++)
             arg_types[i] = evaluated_args[i].type;
-        auto full_name = name_resolver().get_winning_function(name, arg_types);
+        auto full_name = name_resolver().get_winning_function(_current_name, arg_types);
         auto info = name_resolver().get_function_no_overloading(full_name);
         auto func = module().getFunction(full_name);
         set_teleporting_args(info.type->param_types, evaluated_args);
@@ -77,10 +79,10 @@ Value FunctionCallNode::eval()
         return name_resolver().call_function(func_value, std::move(evaluated_args));
     }
 
-    if (!name_resolver().symbol_table.contains(name))
-        compiler->report_error("The identifier " + name + " doesn't refer to either a function or a function reference");
+    if (!name_resolver().symbol_table.contains(_current_name))
+        compiler->report_error("The identifier " + _current_name + " doesn't refer to either a function or a function reference");
 
-    auto reference = name_resolver().symbol_table.get(name);
+    auto reference = name_resolver().symbol_table.get(_current_name);
 
     return call_reference(reference, std::move(evaluated_args));
 }
@@ -90,6 +92,8 @@ const Type *FunctionCallNode::get_type()
     if (compiler->clear_type_cache) type = nullptr;
 
     if (type != nullptr) return type;
+
+    _current_name = unresolved_name->resolve();
 
     std::vector<const Type*> arg_types(args.size());
     for (size_t i = 0; i < args.size(); i++)
@@ -105,12 +109,12 @@ const Type *FunctionCallNode::get_type()
     {
         // Try as method first
 
-        if (name == "constructor")
+        if (_current_name == "constructor")
             return set_type(compiler->create_type<VoidType>());
 
         auto class_name = current_class()->getName().str();
         auto vtable = name_resolver().get_vtable_instance(class_name);
-        auto method_name = name_resolver().get_function_full_name(name, arg_types);
+        auto method_name = name_resolver().get_function_full_name(_current_name, arg_types);
         auto full_name = vtable->method_names_without_class_prefix.find(method_name);
         if (full_name != vtable->method_names_without_class_prefix.end()) {
             auto info = name_resolver().get_function_no_overloading(full_name->second);
@@ -118,7 +122,7 @@ const Type *FunctionCallNode::get_type()
         }
     }
 
-    return set_type(name_resolver().get_function(name, arg_types).type->return_type);
+    return set_type(name_resolver().get_function(_current_name, arg_types).type->return_type);
 }
 
 Value FunctionCallNode::get_method(std::vector<const Type*>& arg_types)
@@ -130,7 +134,7 @@ Value FunctionCallNode::get_method(std::vector<const Type*>& arg_types)
     auto class_type = name_resolver().get_class(class_name);
     auto reference_type = compiler->create_type<ReferenceType>(class_type, true);
     arg_types.insert(arg_types.begin(), reference_type);
-    auto method = name_resolver().get_templated_function(class_name + "." + name, template_args, arg_types, true, false);
+    auto method = name_resolver().get_templated_function(class_name + "." + _current_name, template_args, arg_types, true, false);
     if (!method.is_null()) {
         return method;
     } else {
@@ -160,8 +164,8 @@ Value FunctionCallNode::call_templated_function(std::vector<Value> args)
     return name_resolver().call_function(func, std::move(args));
 }
 
-Value FunctionCallNode::call_reference(const Value &reference, std::vector<Value> args) {
-
+Value FunctionCallNode::call_reference(const Value &reference, std::vector<Value> args)
+{
     auto pointer_type = dynamic_cast<const PointerType*>(reference.type);
     if (!pointer_type) {
         if (auto c = reference.type->get_contained_type(); c != nullptr)
@@ -170,7 +174,7 @@ Value FunctionCallNode::call_reference(const Value &reference, std::vector<Value
 
     auto function_type = pointer_type ? dynamic_cast<const FunctionType*>(pointer_type->get_element_type()) : nullptr;
     if (function_type == nullptr)
-        compiler->report_error("The variable " + name + " is of type " + reference.type->to_string() + ", which is not callable");
+        compiler->report_error("The variable " + _current_name + " is of type " + reference.type->to_string() + ", which is not callable");
     else
         set_teleporting_args(function_type->param_types, args);
 
@@ -187,7 +191,7 @@ Value FunctionCallNode::get_templated_function(std::vector<const Type*>& arg_typ
     if (!method.is_null())
         return method;
 
-    return compiler->get_name_resolver().get_templated_function(name, template_args, std::move(arg_types));
+    return compiler->get_name_resolver().get_templated_function(_current_name, template_args, std::move(arg_types));
 }
 
 void FunctionCallNode::set_teleporting_args(const std::vector<const Type*>& param_types, std::vector<Value>& evaluated_args)

@@ -296,9 +296,10 @@ void ParserAssistant::create_variable_declaration()
     else
     {
         if (is_extern) {
+            auto identifier = type->as<IdentifierType>();
             compiler->report_error("The extern keyword can only be used with global variable "
                          "declarations (in the declaration of the variable " + name + " with type " +
-                         type->to_string() + ")");
+                               (identifier != nullptr ? identifier->name : type->to_string()) + ")");
         }
 
         if (is_in_function) {
@@ -582,23 +583,23 @@ void ParserAssistant::create_function_call()
 {
     auto args = pop_args();
     auto template_args = pop_types();
-    auto func_name = pop_str();
+    auto func_name = pop_resolution_string();
     if (pop_is_templated())
-        push_node<FunctionCallNode>(std::move(func_name), std::move(args), std::move(template_args));
+        push_node<FunctionCallNode>(func_name, std::move(args), std::move(template_args));
     else
-        push_node<FunctionCallNode>(std::move(func_name), std::move(args));
+        push_node<FunctionCallNode>(func_name, std::move(args));
 }
 
 void ParserAssistant::create_method_call()
 {
     auto args = pop_args();
     auto template_args = pop_types();
-    auto func_name = pop_str();
+    auto func_name = pop_resolution_string();
     auto instance = pop_node();
     if (pop_is_templated())
-        push_node<MethodCallNode>(instance, std::move(func_name), std::move(args), std::move(template_args));
+        push_node<MethodCallNode>(instance, func_name, std::move(args), std::move(template_args));
     else
-        push_node<MethodCallNode>(instance, std::move(func_name), std::move(args));
+        push_node<MethodCallNode>(instance, func_name, std::move(args));
 }
 
 void ParserAssistant::create_expr_function_call()
@@ -756,7 +757,7 @@ void ParserAssistant::register_class()
     if (is_templated_stack.back())
         return;
 
-    auto& name = strings.back();
+    auto& name = strings.back().as_str();
 
     if (compiler->name_resolver.classes.find(name) != compiler->name_resolver.classes.end()) {
         // No need to register it again
@@ -790,10 +791,10 @@ void ParserAssistant::start_class_definition()
 
     if (in_templated_class) {
         auto template_param_count = general_counters.back();
-        auto& name = strings[strings.size() - 1 - template_param_count];
+        auto& name = strings[strings.size() - 1 - template_param_count].as_str();
         current_class = compiler->name_resolver.get_templated_class_key(name, template_param_count);
     } else {
-        current_class = strings.back();
+        current_class = strings.back().as_str();
     }
 }
 
@@ -933,7 +934,7 @@ void ParserAssistant::create_free()
             std::vector<const Type*>{ compiler->create_type<PointerType>(compiler->create_type<I64Type>()) }
         );
 
-        compiler->name_resolver.register_function("free", {std::move(type), { "size" }}, true);
+        compiler->name_resolver.register_function("free", { type, { "size" } }, true);
 
         declared_free = true;
     }
@@ -989,7 +990,7 @@ void ParserAssistant::create_func_ref()
     auto template_args = pop_types();
     auto param_types = pop_types();
     auto ret_type = pop_type();
-    auto target_func = pop_str();
+    auto target_func = pop_resolution_string();
     auto is_var_arg = pop_var_arg();
     auto func_type = compiler->create_type<FunctionType>(ret_type, param_types, is_var_arg);
     push_type<PointerType>(func_type);
@@ -1101,14 +1102,17 @@ void ParserAssistant::create_type_alias() {
     }
 }
 
-void ParserAssistant::create_identifier_value() {
-    auto name = pop_str();
+void ParserAssistant::create_identifier_value()
+{
+    auto name = pop_resolution_string();
     auto template_args = pop_types();
     if (pop_is_templated()) {
-        templated_class_definitions.insert({ name, template_args });
-        push_node<VariableNode>(std::move(name), std::move(template_args));
+        auto identity = dynamic_cast<IdentityResolutionString*>(name);
+        assert(identity != nullptr);
+        templated_class_definitions.insert({ identity->str, template_args });
+        push_node<VariableNode>(name, std::move(template_args));
     } else {
-        push_node<VariableNode>(std::move(name));
+        push_node<VariableNode>(name);
     }
 }
 
@@ -1138,11 +1142,15 @@ void ParserAssistant::create_postfix_operator() {
     create_operator("postfix");
 }
 
-void ParserAssistant::create_method_identifier() {
-    auto cls_type = pop_type();
+void ParserAssistant::create_method_identifier()
+{
+    auto class_type = pop_type();
     auto method = pop_str();
-    // Is the to_string method sufficient?
-    push_str(cls_type->to_string() + "." + method);
+    // Identifier types may name types that are not yet defined. This
+    //  prevents us from calling the to_string method on them because
+    //  this may cause an undefined type error. Rather, we note that
+    //  the name needs to be resolved further in the future.
+    push_resolution_string<MethodNameResolutionString>(class_type, std::move(method));
 }
 
 void ParserAssistant::create_dynamic_name() {
