@@ -83,6 +83,8 @@ Postfix: 'postfix';
 
 Move: 'move';
 
+OffsetOf: 'offsetof';
+
 I64: ('i64' | 'long' );
 I32: ('i32' | 'int'  );
 I16: ('i16' | 'short');

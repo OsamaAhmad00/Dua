@@ -1,0 +1,96 @@
+nomangle int printf(str message, ...);
+
+class X
+{
+    int i;
+    byte b;
+    int j;
+    long l;
+
+    void func() { }
+}
+
+class Y packed
+{
+    int i;
+    int j;
+    long l;
+    byte b;
+
+    void func() { }
+}
+
+
+// Case Using a type and a field name in an unpacked class
+// Outputs "16"
+
+int main()
+{
+    printf("%lld", offsetof(X, j));
+}
+
+
+// Case Using an expression and a field name in an unpacked class
+// Outputs "16"
+
+int main()
+{
+    X x;
+    printf("%lld", offsetof(x, j));
+}
+
+
+// Case Using a type and a field name in a packed class
+// Outputs "12"
+
+int main()
+{
+    printf("%lld", offsetof(Y, j));
+}
+
+
+// Case Using an expression and a field name in a packed class
+// Outputs "12"
+
+int main()
+{
+    Y y;
+    printf("%lld", offsetof(y, j));
+}
+
+
+// Case Offset in a reference type
+// Outputs "16"
+
+int main()
+{
+    // References are ignored
+    printf("%lld", offsetof(X&, j));
+}
+
+
+// Case Offset of a method
+// Panics
+
+int main()
+{
+    offsetof(X, func);
+}
+
+
+// Case Offset of non-existent field
+// Panics
+
+int main()
+{
+    offsetof(X, a);
+}
+
+
+// Case Offset of a field in a non-existent class
+// Panics
+
+int main()
+{
+    offsetof(Z, x);
+}

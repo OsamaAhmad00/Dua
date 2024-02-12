@@ -1183,4 +1183,8 @@ void ParserAssistant::create_move() {
     push_node<MoveNode>(pop_str(), call_destructor);
 }
 
+void ParserAssistant::create_offset_of() {
+    push_node<OffsetOfNode>(pop_type(), pop_str());
+}
+
 }

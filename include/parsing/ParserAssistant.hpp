@@ -56,6 +56,7 @@
 #include "AST/operators/DynamicNameNode.hpp"
 #include "AST/operators/AddressOfNode.hpp"
 #include "AST/operators/MoveNode.hpp"
+#include "AST/operators/OffsetOfNode.hpp"
 
 #include "AST/lvalue/VariableNode.hpp"
 #include "AST/IndexingNode.hpp"
@@ -375,6 +376,7 @@ public:
     void create_char_value();
     void create_temp_variable();
     void create_move();
+    void create_offset_of();
 
     template<typename T>
     void create_unary_expr() {

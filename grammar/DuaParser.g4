@@ -354,6 +354,7 @@ expression
     | when_expression
     | '(' expression ')'
     | Move '(' identifier ')' { assistant.call_destructor = false; assistant.create_move(); }
+    | OffsetOf '(' expr_or_type ',' identifier ')' { assistant.create_offset_of(); }
     | '(' arg_list ')' type { assistant.create_temp_variable(); }
     | expression '.' function_name template_args_or_none '(' arg_list ')' { assistant.create_method_call(); }
     | expression '->' { assistant.create_dereference(); } function_name template_args_or_none '(' arg_list ')' { assistant.create_method_call(); }
