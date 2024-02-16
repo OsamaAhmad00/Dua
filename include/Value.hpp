@@ -4,6 +4,8 @@
 #include <llvm/IR/Type.h>
 #include "utils/ErrorReporting.hpp"
 
+#define VALUE_DEFAULT_ID -1
+
 namespace dua
 {
 
@@ -19,9 +21,16 @@ public:
     TypingSystem* typing_system = nullptr;
     const Type* type = nullptr;
     llvm::Value* memory_location = nullptr;
-
-    // Just an indicator, can be ignored if wanted
     bool is_teleporting = false;
+
+    // Used when the value needs to be tracked.
+    //  For example, when tracking an expression
+    //  that creates an object, such as a function
+    //  call that returns an object. In this case,
+    //  we need to track the object value to determine
+    //  whether the object is bound or not, and
+    //  call the destructor accordingly.
+    int64_t id = VALUE_DEFAULT_ID;
 
     Value(TypingSystem* typing_system, llvm::Value* value, const Type* type, llvm::Value* memory_location);
     Value(TypingSystem* typing_system, const Type* type, llvm::Value* memory_location);

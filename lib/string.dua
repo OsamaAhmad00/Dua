@@ -79,9 +79,7 @@ class String : Vector<i8>
         for (size_t i = 0; i < n; i++)
             buffer[i] = self[from + i];
 
-        String result(buffer, false, true);
-
-        return result;
+        return (buffer, false, true)String;
     }
 
 
@@ -118,9 +116,7 @@ class String : Vector<i8>
             buffer[self_size + i] = other[i];
         buffer[sum] = '\0';
 
-        String result(buffer, false, true);
-
-        return result;
+        return (buffer, false, true)String;
     }
 }
 
@@ -138,7 +134,5 @@ String infix +(str other, String& self)
         buffer[i + other_size] = self[i];
     buffer[sum] = '\0';
 
-    String result(buffer, false, true);
-
-    return result;
+    return (buffer, false, true)String;
 }

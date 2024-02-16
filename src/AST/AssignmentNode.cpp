@@ -14,6 +14,8 @@ Value AssignmentExpressionNode::eval()
     if (auto infix = name_resolver().call_infix_operator(lhs_res, rhs_res, "Assignment"); !infix.is_null())
         return infix;
 
+    compiler->remove_temp_expr(rhs_res.id);
+
     if (auto ref = lhs_res.type->as<ReferenceType>(); ref != nullptr) {
         if (ref->is_allocated()) {
             lhs_res.memory_location = lhs_res.get();
@@ -42,8 +44,30 @@ Value AssignmentExpressionNode::eval()
         rhs_res = alternative;
     }
 
-    auto store = builder().CreateStore(rhs_res.get(), lhs_res.memory_location);
-    compiler->create_value(store, lhs_res.type);
+    // If lhs is an object, call its destructor before copying
+    if (auto cls = lhs_res.type->as<ClassType>(); cls != nullptr)
+    {
+        // Check for self-assignment first
+        auto ne = builder().CreateICmpNE(lhs_res.memory_location, rhs_res.memory_location);
+        auto call_destructor = create_basic_block("self_assignment_check_fail", current_function());
+        auto end = create_basic_block("self_assignment_check_end", current_function());
+
+        builder().CreateCondBr(ne, call_destructor, end);
+
+        builder().SetInsertPoint(call_destructor);
+        auto instance = compiler->create_value(lhs_res.memory_location, lhs_res.type);
+        name_resolver().call_destructor(instance);
+        builder().CreateBr(end);
+
+        builder().SetInsertPoint(end);
+    }
+
+    builder().CreateStore(rhs_res.get(), lhs_res.memory_location);
+
+    // The assignment expression a = b = c from the point of
+    //  view of a (where b = c is the assignment expression)
+    //  is equivalent to a = b, in which b is not teleporting.
+    rhs_res.is_teleporting = false;
 
     return rhs_res;
 }

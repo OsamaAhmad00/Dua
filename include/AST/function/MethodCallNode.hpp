@@ -20,7 +20,7 @@ class MethodCallNode : public FunctionCallNode
 
     Value get_instance_ref();
 
-    std::vector<Value> eval_args() override;
+    std::vector<Value> eval_args();
 
 public:
 

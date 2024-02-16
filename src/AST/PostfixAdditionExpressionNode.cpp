@@ -21,7 +21,7 @@ Value PostfixAdditionExpressionNode::eval()
         compiler->report_error("Can't perform postfix increment/decrement on non-integer (" + type->to_string() + ") types.");
     auto lhs_eval = lhs->eval();
     if (lhs_eval.memory_location == nullptr)
-        report_error("Can't perform a prefix increment/decrement to a non-lvalue expression");
+        compiler->report_error("Can't perform a prefix increment/decrement to a non-lvalue expression");
     auto value = builder().CreateLoad(type->llvm_type(), lhs_eval.memory_location);
     auto rhs = builder().CreateIntCast(builder().getInt32(amount), value->getType(), true);
     auto sum = builder().CreateAdd(value, rhs);

@@ -20,6 +20,10 @@ class X
 
 int main()
 {
+    // Primitive types can be created the same
+    //  way temporary objects are created, but
+    //  this is useless since it's equivalent
+    //  to the expression "3".
     printf("%d", (3)int);
 }
 
@@ -43,7 +47,7 @@ int main()
 }
 
 
-// Case calling a method from a temp object
+// Case Calling a method from a temp object
 // Outputs "C5F5D5"
 
 int main()
@@ -71,7 +75,7 @@ int main()
 
 
 // Case Passing a temp object by reference to a function
-// Outputs "Before Call\nC5F5\nAfter Call\nD5"
+// Outputs "Before Call\nC5F5D5\nAfter Call\n"
 
 void func(X& x)
 {
@@ -109,18 +113,15 @@ int main()
 
 
 // Case Unbound temp variable destruction
-// Outputs "Scope begin\nC5\nAfter\nD5\nScope end"
+// Outputs "Before\nC5D5\nAfter\n"
 
 int main()
 {
-    printf("Scope begin\n");
-    {
-        // This temp object is unbound to a variable
-        //  (a local variable or a parameter). It'll
-        //  be destructed by the end of the current
-        //  scope.
-        (5)X;
-        printf("\nAfter\n");
-    }
-    printf("\nScope end");
+    printf("Before\n");
+    // This temp object is unbound to a variable
+    //  (a local variable or a parameter). It'll
+    //  be destructed by the end of the current
+    //  statement.
+    (5)X;
+    printf("\nAfter\n");
 }

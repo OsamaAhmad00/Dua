@@ -2,7 +2,6 @@
 #include "types/PointerType.hpp"
 #include "types/ReferenceType.hpp"
 #include "AST/IndexingNode.hpp"
-#include "AST/ScopeTeleportingNode.hpp"
 
 namespace dua
 {
@@ -11,17 +10,36 @@ Value LocalVariableDefinitionNode::eval()
 {
     auto full_name = (current_class() ? current_class()->getName().str() + "::" : "") + name;
 
+    if (current_function() == nullptr)
+    {
+        if (current_class() == nullptr)
+            compiler->report_internal_error("Local variable definition in a non-local scope (the variable " + full_name + ")");
+        else
+            compiler->report_internal_error("Local variable definition in place of a field definition");
+    }
+
     if (initializer != nullptr && !args.empty())
         compiler->report_error("Can't have both an initializer and an initializer list (in " + full_name + ")");
 
+    auto ref = type->as<ReferenceType>();
+
     // If it's a reference, just add a record to the symbol table and return
-    if (auto ref = type->as<ReferenceType>(); ref != nullptr)
+    if (ref != nullptr)
     {
         if (initializer == nullptr)
             compiler->report_error("The reference variable " + name + " with type " + get_type()->to_string() + " must be assigned a variable to reference");
+
         auto result = initializer->eval();
+
+        if (result.is_teleporting) {
+            report_error("The reference variable " + name + " of type " + type->to_string() +
+                         " can't be bound to a temporary variable of type " + result.type->to_string() +
+                         " which will be stale by the next statement");
+        }
+
         if (result.memory_location == nullptr)
             compiler->report_error("Can't have a reference type to a non-lvalue expression");
+
         result.set(result.memory_location);
 
         if (!typing_system().is_castable(result.type, type))
@@ -38,38 +56,16 @@ Value LocalVariableDefinitionNode::eval()
         return result;
     }
 
-    // TODO don't evaluate if not going to be used
     Value init_value;
-    bool teleport_value = false;
     if (initializer) {
         init_value = initializer->eval();
-        teleport_value = init_value.is_teleporting;
-        auto teleport_node = initializer->as<ScopeTeleportingNode>();
-        if (teleport_node != nullptr) {
-            teleport_value = true;
-            teleport_node->set_teleported();
-        }
     }
 
-    if (current_function() != nullptr)
-    {
-        std::vector<Value> evaluated(args.size());
-        for (int i = 0; i < args.size(); i++)
-            evaluated[i] = args[i]->eval();
-        auto ptr = initializer ? &init_value : nullptr;
-        auto alloc = create_local_variable(name, type, ptr, std::move(evaluated), teleport_value);
-        return compiler->create_value(alloc, get_type());
-    }
-    else if (current_class() == nullptr)
-    {
-        compiler->report_internal_error("Local variable definition in a non-local scope (the variable " + full_name + ")");
-        return none_value();
-    }
-    else
-    {
-        compiler->report_internal_error("Local variable definition in place of a field definition");
-        return none_value();
-    }
+    auto ptr = initializer ? &init_value : nullptr;
+
+    create_local_variable(name, type, ptr, eval_args(args));
+
+    return none_value();
 }
 
 }

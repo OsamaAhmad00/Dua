@@ -26,7 +26,8 @@ ModuleCompiler::ModuleCompiler(const std::string &module_name, std::string code,
     temp_builder(context),
     name_resolver(this),
     typing_system(this),
-    include_libdua(include_libdua)
+    include_libdua(include_libdua),
+    temp_expressions(this)
 {
     module.setTargetTriple(llvm::sys::getDefaultTargetTriple());
 
@@ -415,24 +416,78 @@ void ModuleCompiler::destruct_global_scope()
     }
 }
 
-llvm::Value *ModuleCompiler::swap_vtables(llvm::Value *ptr, const ClassType* class_type)
+int64_t ModuleCompiler::get_temp_expr_map_unused_id()
 {
-    // Store the vtable of the Object class in the old object,
-    //  so that its destructor doesn't get called on scope destruction
-    // This might be useless in case the returned object is outside the
-    //  scope of this function. Not only is it useless, it'll be harmful
-    //  and will lead to incorrect behaviour if that object is used later.
-    //  That's why the vtable value has to be restored after the destruction
-    //  of the scope
-    auto new_vtable = name_resolver.get_vtable_instance(class_type->name + ".no_destructor");
-    auto old_vtable = builder.CreateLoad(new_vtable->llvm_type->getPointerTo(), ptr);
-    builder.CreateStore(new_vtable->instance, ptr);
-
-    return old_vtable;
+    return next_temp_expr_id++;
 }
 
-void ModuleCompiler::restore_vtable(llvm::Value *ptr, llvm::Value *vtable) {
-    builder.CreateStore(vtable, ptr);
+void ModuleCompiler::insert_temp_expr(const Value& value)
+{
+    if (temp_expressions.scopes.back().contains(value.id))
+        report_internal_error("Collision in the temp expression map with id = " + std::to_string(value.id));
+    temp_expressions.insert(value.id, value);
+}
+
+void ModuleCompiler::remove_temp_expr(int64_t id, bool panic_if_not_found)
+{
+    if (!temp_expressions.scopes.back().contains(id)) {
+        if (panic_if_not_found)
+            report_internal_error("There is no value with the id " + std::to_string(id) + " in the temp expression map");
+    } else {
+        temp_expressions.scopes.back().erase(id);
+    }
+}
+
+void ModuleCompiler::push_temp_expr_scope() {
+    temp_expressions.push_scope();
+}
+
+void ModuleCompiler::destruct_temp_expr_scope()
+{
+    for (auto& [id, value] : temp_expressions.scopes.back().map) {
+        // Creating a value with the pointer. This is what call_destructor accepts
+        auto ptr = create_value(value.memory_location, value.type);
+        name_resolver.call_destructor(ptr);
+    }
+    temp_expressions.pop_scope();
+}
+
+Value ModuleCompiler::get_bound_value(Value value, const Type *bound_type)
+{
+    // If bound_type = nullptr, then this value is passed as a
+    //  variadic argument. Substitute the type of the value instead
+
+    // Only remove it if it bounds to a non-reference type
+    // This handles the case where bound_type = nullptr as well.
+    if (dynamic_cast<const ReferenceType*>(bound_type) == nullptr) {
+        remove_temp_expr(value.id);
+    }
+
+    // Strip the reference if exists since
+    // variadic args can't be of a reference type
+    if (bound_type == nullptr)
+        bound_type = value.type->get_contained_type();
+
+    if (!value.is_teleporting)
+    {
+        auto class_type = bound_type->get_concrete_type()->is<ClassType>();
+        if (class_type != nullptr)
+        {
+            // This variables won't be inserted in the symbol table, because they
+            //  are supposed to live in the scope of the function getting called.
+            // The function will put them in the symbol table, and will destroy them
+            //  as needed at its scope.
+            llvm::BasicBlock* entry = &current_function->getEntryBlock();
+            temp_builder.SetInsertPoint(entry, entry->begin());
+            auto ptr = temp_builder.CreateAlloca(class_type->llvm_type());
+            auto ptr_value = create_value(ptr, class_type);
+            name_resolver.copy_construct(ptr_value, value);
+            value.memory_location = ptr;
+            value.set(nullptr);
+        }
+    }
+
+    return value;
 }
 
 std::vector<std::string> libdua_declarations {

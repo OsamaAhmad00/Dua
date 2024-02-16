@@ -12,7 +12,7 @@
 #include "AST/SequentialEvalNode.hpp"
 #include "AST/DeferredActionNode.hpp"
 #include "AST/FreeNode.hpp"
-#include "AST/TempVariableNode.hpp"
+#include "AST/TempObjectNode.hpp"
 
 #include "AST/class/ClassDefinitionNode.hpp"
 #include "AST/class/DynamicCastNode.hpp"
@@ -266,8 +266,6 @@ public:
     bool is_array = false;  // Used to differentiate between new and new[], and delete and delete[]
     bool is_raw = true;  // Used with new[] and delete[] to control calling constructors and destructors or not
 
-    bool call_destructor = false;  // Used with the move operator
-
     std::vector<bool> is_templated_stack;
 
     template <typename T, typename ...Args>
@@ -374,7 +372,7 @@ public:
     void create_address_of();
     void create_null_ptr();
     void create_char_value();
-    void create_temp_variable();
+    void create_temp_object();
     void create_move();
     void create_offset_of();
 

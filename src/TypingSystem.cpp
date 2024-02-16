@@ -22,6 +22,7 @@ static Value _cast_value(const Value& value, const Type* type, bool panic_on_fai
     llvm::Type* source_type = value.get()->getType();
     llvm::Type* target_type = type->llvm_type();
 
+    // Result is copied to reserve other properties of the value (such as is_teleporting)
     Value result = value;
     result.type = type;
 
@@ -230,9 +231,13 @@ const Type* TypingSystem::get_winning_type(const Type* lhs, const Type* rhs, boo
     return nullptr;
 }
 
-Value TypingSystem::forced_cast_value(const Value& value, const Type *target_type) const {
-    auto result = builder().CreateBitOrPointerCast(value.get(), target_type->llvm_type(), "forced_cast");
-    return compiler->create_value(result, target_type);
+Value TypingSystem::forced_cast_value(const Value& value, const Type *target_type) const
+{
+    auto casted = builder().CreateBitOrPointerCast(value.get(), target_type->llvm_type(), "forced_cast");
+    auto result = value;
+    result.set(casted);
+    result.type = target_type;
+    return result;
 }
 
 Value TypingSystem::cast_as_bool(const Value& value, bool panic_on_failure) const {

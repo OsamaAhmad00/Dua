@@ -145,6 +145,8 @@ class Vector<T>
 
     Vector<T>& infix =(Vector<T>& other)
     {
+        if (&other == &self) return self;
+
         if (other._is_const_initialized)
         {
             _destroy_buffer();
@@ -152,7 +154,7 @@ class Vector<T>
             _size = other._size;
             _capacity = other._capacity;
         }
-        else
+        else if (other._size != 0)
         {
             resize(other._size);
 

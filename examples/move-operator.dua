@@ -88,22 +88,28 @@ int main()
 
 
 // Case Teleporting a variable as a reference parameter
-// Panics
+// Outputs "AFdestructorB"
 
-void func(X& x) { }
+void func(X& x) {
+    printf("F");
+}
 
 int main()
 {
     X x;
+    printf("A");
     func(move(x));
+    printf("B");
 }
 
 
-// Case Assigning a moved value to a reference variable
+// Case Initializing a reference variable with a moved object
 // Panics
 
 int main()
 {
-    int x = 3;
-    int& y = move(x);
+    X x1;
+    // If this were allowed, x2 will
+    // now reference a destructed object
+    X& x2 = move(x1);
 }

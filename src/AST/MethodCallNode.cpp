@@ -61,8 +61,6 @@ Value MethodCallNode::eval()
 
     auto method = class_type->get_method(_current_name, instance_ptr, arg_types);
 
-    set_teleporting_args(method.type->as<FunctionType>()->param_types, args);
-
     return name_resolver().call_function(method, std::move(args));
 }
 
@@ -141,14 +139,14 @@ Value MethodCallNode::get_instance_ref()
 
 std::vector<Value> MethodCallNode::eval_args()
 {
-    auto args = FunctionCallNode::eval_args();
+    auto evaluated = ASTNode::eval_args(args);
 
     // Don't include the self parameter if it's a callable field
-    if (is_callable_field) return args;
+    if (is_callable_field) return evaluated;
 
-    args[0] = get_instance_ref();
+    evaluated[0] = get_instance_ref();
 
-    return args;
+    return evaluated;
 }
 
 }

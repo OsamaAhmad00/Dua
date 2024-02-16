@@ -91,7 +91,7 @@ Value ClassType::get_method(const std::string& name, Value instance, const std::
     auto vtable = compiler->name_resolver.get_vtable_instance(this->name);
     if (!vtable->has_method(name)) {
         if (panic_on_error)
-            report_error("The class " + to_string() + " has no method with the name " + name);
+            compiler->report_error("The class " + to_string() + " has no method with the name " + name);
         return {};
     }
 

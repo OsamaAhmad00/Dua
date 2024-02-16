@@ -1,11 +1,11 @@
 #pragma once
 
-#include <AST/ASTNode.hpp>
+#include <AST/function/FunctionCallBase.hpp>
 
 namespace dua
 {
 
-class ExprFunctionCallNode : public ASTNode
+class ExprFunctionCallNode : public FunctionCallBase
 {
     friend class ParserAssistant;
 
@@ -14,12 +14,10 @@ class ExprFunctionCallNode : public ASTNode
 protected:
 
     ASTNode* func;
-    std::vector<ASTNode*> args;
-
 public:
 
     ExprFunctionCallNode(ModuleCompiler* compiler, ASTNode* func, std::vector<ASTNode*> args = {})
-        : func(func), args(std::move(args)) { this->compiler = compiler; }
+        : func(func), FunctionCallBase(compiler, std::move(args)) { }
 
     Value eval() override;
 

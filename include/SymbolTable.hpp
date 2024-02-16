@@ -10,13 +10,23 @@ namespace dua
 {
 
 template<typename T>
+static std::string to_string(const T& t) {
+    return std::to_string(t);
+}
+
+template<>
+std::string to_string<std::string>(const std::string& str) {
+    return str;
+}
+
+template<typename T, typename Key = std::string>
 struct ScopeEntry
 {
-    std::string symbol;
+    Key symbol;
     T value;
 };
 
-template<typename T>
+template<typename T, typename Key = std::string>
 struct Scope
 {
     ModuleCompiler* compiler;
@@ -27,8 +37,8 @@ struct Scope
     // Also, to not store additional information to
     //  retain the orders of insertion, which will
     //  be needed for example when destructing a scope.
-    std::vector<ScopeEntry<T>> map;
-    std::vector<ScopeEntry<T>> moved_symbols;
+    std::vector<ScopeEntry<T, Key>> map;
+    std::vector<ScopeEntry<T, Key>> moved_symbols;
 
     Scope(ModuleCompiler* compiler) : compiler(compiler) {}
 
@@ -52,7 +62,7 @@ struct Scope
         return *this;
     }
 
-    size_t insertion_order(const std::string& symbol) const
+    size_t insertion_order(const Key& symbol) const
     {
         for (size_t i = 0; i < map.size(); i++)
             if (map[i].symbol == symbol)
@@ -60,14 +70,14 @@ struct Scope
         return -1;
     }
 
-    const T& get(const std::string& symbol) const {
+    const T& get(const Key& symbol) const {
         return map[get_valid_index(symbol)].value;
     }
 
-    Scope& insert(const std::string& symbol, const T& t)
+    Scope& insert(const Key& symbol, const T& t)
     {
         if (contains(symbol)) {
-            report_error("The symbol " + symbol + " is already defined", compiler);
+            report_error("The symbol " + to_string(symbol) + " is already defined", compiler);
         }
         for (size_t i = 0; i < moved_symbols.size(); i++) {
             if (moved_symbols[i].symbol == symbol) {
@@ -79,11 +89,11 @@ struct Scope
         return *this;
     }
 
-    void erase(const std::string& symbol) {
+    void erase(const Key& symbol) {
         map.erase(map.begin() + get_valid_index(symbol));
     }
 
-    void move_erase(const std::string& symbol)
+    void move_erase(const Key& symbol)
     {
         auto index = get_valid_index(symbol);
         auto entry = std::move(map[index]);
@@ -97,11 +107,11 @@ struct Scope
         moved_symbols.push_back(std::move(entry));
     }
 
-    bool contains(const std::string& symbol) const {
+    bool contains(const Key& symbol) const {
         return insertion_order(symbol) != (size_t)-1;
     }
 
-    bool is_move_erased(const std::string& symbol) const
+    bool is_move_erased(const Key& symbol) const
     {
         for (size_t i = 0; i < moved_symbols.size(); i++) {
             if (moved_symbols[i].symbol == symbol) {
@@ -113,29 +123,29 @@ struct Scope
 
 private:
 
-    size_t get_valid_index(const std::string& symbol) const {
+    size_t get_valid_index(const Key& symbol) const {
         size_t index = insertion_order(symbol);
         if (index == (size_t)-1)
-            report_error("The symbol " + symbol + " is not defined", compiler);
+            report_error("The symbol " + to_string(symbol) + " is not defined", compiler);
         return index;
     }
 
 };
 
-template<typename T>
+template<typename T, typename Key = std::string>
 struct SymbolTable
 {
     ModuleCompiler* compiler;
-    std::vector<Scope<T>> scopes;
+    std::vector<Scope<T, Key>> scopes;
     // Used when switching to a temporary state in which
     //  all scopes but the global one are discarded.
-    std::vector<std::vector<Scope<T>>> switch_stack;
+    std::vector<std::vector<Scope<T, Key>>> switch_stack;
 
     SymbolTable(ModuleCompiler* compiler) : compiler(compiler) { push_scope(); }
 
     size_t size() const { return scopes.size(); }
 
-    SymbolTable& insert(const std::string& name, const T& t, int scope_num = 1)
+    SymbolTable& insert(const Key& name, const T& t, int scope_num = 1)
     {
         if (scopes.empty()) {
             report_internal_error("There is no scope", compiler);
@@ -145,12 +155,12 @@ struct SymbolTable
         return *this;
     }
 
-    SymbolTable& insert_global(const std::string& name, const T& t) {
+    SymbolTable& insert_global(const Key& name, const T& t) {
         insert(name, t, size());
         return *this;
     }
 
-    const T& get(const std::string& name, bool include_global = true, int scope_num = 1)
+    const T& get(const Key& name, bool include_global = true, int scope_num = 1)
     {
         if (scopes.empty()) {
             report_internal_error("There is no scope", compiler);
@@ -163,8 +173,8 @@ struct SymbolTable
             if (scopes[i].contains(name))
             {
                 if (is_moved_in_higher_scope) {
-                    report_warning("The variable " + name +
-                       " is moved in earlier scope, and the symbol " + name +
+                    report_warning("The variable " + to_string(name) +
+                       " is moved in earlier scope, and the symbol " + to_string(name) +
                        " has been resolved to a variable with the same name but in an outer scope",
                        compiler
                     );
@@ -175,17 +185,17 @@ struct SymbolTable
             is_moved_in_higher_scope |= scopes[i].is_move_erased(name);
         }
 
-        if (!scopes[!include_global].contains(name))
-            report_error("The variable " + name + " is moved and can't be referenced unless it's redefined again", compiler);
+        if (!scopes[!include_global].contains(name) && is_moved_in_higher_scope)
+            report_error("The variable " + to_string(name) + " is moved and can't be referenced unless it's redefined again", compiler);
 
         return scopes[!include_global].get(name);
     }
 
-    const T& get_global(const std::string& name) {
+    const T& get_global(const Key& name) {
         return get(name, true, size());
     }
 
-    bool contains(const std::string& name, bool include_global = true, int scope_num = 1)
+    bool contains(const Key& name, bool include_global = true, int scope_num = 1)
     {
         if (scopes.empty()) {
             report_internal_error("There is no scope", compiler);
@@ -200,7 +210,7 @@ struct SymbolTable
         return false;
     }
 
-    bool is_move_erased(const std::string& name)
+    bool is_move_erased(const Key& name)
     {
         for (size_t i = size() - 1; i != (size_t)-1; i--)
             if (scopes[i].is_move_erased(name))
@@ -208,22 +218,22 @@ struct SymbolTable
         return false;
     }
 
-    bool contains_global(const std::string& name) {
+    bool contains_global(const Key& name) {
         return contains(name, true, size());
     }
 
-    SymbolTable& push_scope(Scope<T> scope) {
+    SymbolTable& push_scope(Scope<T, Key> scope) {
         scopes.push_back(std::move(scope));
         return *this;
     }
 
     SymbolTable& push_scope() {
-        push_scope(Scope<T>(compiler));
+        push_scope(Scope<T, Key>(compiler));
         return *this;
     }
 
-    Scope<T> pop_scope() {
-        Scope<T> top = std::move(scopes.back());
+    Scope<T, Key> pop_scope() {
+        Scope<T, Key> top = std::move(scopes.back());
         scopes.pop_back();
         return top;
     }
@@ -235,7 +245,7 @@ struct SymbolTable
 
         switch_stack.push_back(std::move(scopes));
 
-        scopes.resize(n + include_global_scope, Scope<T>(compiler));
+        scopes.resize(n + include_global_scope, Scope<T, Key>(compiler));
 
         if (include_global_scope)
             scopes[0] = switch_stack.back()[0];
@@ -254,7 +264,7 @@ struct SymbolTable
         switch_stack.pop_back();
     }
 
-    void remove_last_occurrence_of(const std::string& name, bool panic_if_not_found = true)
+    void remove_last_occurrence_of(const Key& name, bool panic_if_not_found = true)
     {
         for (size_t i = size() - 1; i != size_t(-1); i--) {
             if (scopes[i].contains(name)) {
@@ -264,10 +274,10 @@ struct SymbolTable
         }
 
         if (panic_if_not_found)
-            report_internal_error("The symbol " + name + " is not present in the symbol table");
+            report_internal_error("The symbol " + to_string(name) + " is not present in the symbol table");
     }
 
-    void move_last_occurrence_of(const std::string& name, bool panic_if_not_found = true)
+    void move_last_occurrence_of(const Key& name, bool panic_if_not_found = true)
     {
         for (size_t i = size() - 1; i != size_t(-1); i--) {
             if (scopes[i].contains(name)) {
@@ -277,7 +287,7 @@ struct SymbolTable
         }
 
         if (panic_if_not_found)
-            report_internal_error("The symbol " + name + " is not present in the symbol table");
+            report_internal_error("The symbol " + to_string(name) + " is not present in the symbol table");
     }
 };
 

@@ -263,47 +263,34 @@ Value FunctionNameResolver::call_function(const Value& func, std::vector<Value> 
 
     cast_function_args(args, type);
 
-    std::vector<llvm::Value*> llvm_args(args.size());
-    for (size_t i = 0; i < args.size(); i++)
-        llvm_args[i] = args[i].get();
-
     // As of now, variadic functions take only primitive
     //  values. There is no need to call the copy constructor
     //  for variadic arguments
     for (size_t i = 0; i < type->param_types.size(); i++)
     {
-        // Only call the copy constructor for non-reference non-teleporting values
-
-        if (args[i].is_teleporting) continue;
-
-        auto param_type = type->param_types[i];
-        if (auto ref = param_type->as<ReferenceType>(); ref == nullptr)
-        {
-            if (param_type->as<ClassType>() == nullptr) continue;
-
-            // This variables won't be inserted in the symbol table, because they
-            //  are supposed to live in the scope of the function getting called.
-            // The function will put them in the name table, and will destroy them
-            //  as needed at its scope.
-            llvm::BasicBlock* entry = &compiler->current_function->getEntryBlock();
-            compiler->temp_builder.SetInsertPoint(entry, entry->begin());
-            llvm::AllocaInst *instance = compiler->temp_builder.CreateAlloca(param_type->llvm_type(), 0, "arg_" + std::to_string(i));
-            auto value = compiler->create_value(instance, param_type->get_concrete_type());
-            compiler->name_resolver.call_copy_constructor(value, args[i]);
-
-            // After creating the argument and calling the copy constructor, pass
-            //  it to the function.
-            // At the function definition side, all arguments will be teleported,
-            //  because their copy constructor is already called (if needed), and
-            //  it shouldn't get called again.
-            args[i].set(instance);
-            args[i].memory_location = nullptr;
-        }
+        // After creating the argument and calling the copy constructor, pass
+        //  it to the function.
+        // At the function definition side, all arguments will be teleported,
+        //  because their copy constructor is already called (if needed), and
+        //  it shouldn't get called again.
+        args[i] = compiler->get_bound_value(args[i], type->param_types[i]);
     }
 
-    auto result = builder().CreateCall(type->llvm_type(), func.get(), std::move(llvm_args));
+    std::vector<llvm::Value*> llvm_args(args.size());
+    for (size_t i = 0; i < args.size(); i++)
+        llvm_args[i] = args[i].get();
 
-    return compiler->create_value(result, type->return_type);
+    auto return_value = builder().CreateCall(type->llvm_type(), func.get(), std::move(llvm_args));
+
+    auto result = compiler->create_value(return_value, type->return_type);
+
+    // The result of a function call is always
+    //  teleporting. If a copy constructor is
+    //  needed, it's called at the function
+    //  before returning the result.
+    result.is_teleporting = true;
+
+    return result;
 }
 
 void FunctionNameResolver::call_constructor(const Value &value, std::vector<Value> args)
@@ -338,24 +325,39 @@ void FunctionNameResolver::call_constructor(const Value &value, std::vector<Valu
     //  These calls will happen at the top of the constructor,
     //  thus, initializing the fields first.
 
-    std::string name = class_type->name + ".constructor";
-    if (!has_function(name))
-        compiler->report_internal_error("A constructor is not defined for class " + class_type->name);
-
     auto instance = compiler->create_value(value.get(), compiler->create_type<ReferenceType>(value.type, true));
     args.insert(args.begin(), instance);
+
+    std::vector<const Type*> arg_types(args.size());
+    for (size_t i = 0; i < args.size(); i++)
+        arg_types[i] = args[i].type;
+
+    auto name = compiler->name_resolver.get_winning_function(class_type->name + ".constructor", arg_types, false);
+
+    if (name.empty() && args.size() == 2) {
+        // Try again as a copy constructor
+        name = compiler->name_resolver.get_winning_function(class_type->name + ".=constructor", arg_types, false);
+    }
+
+    if (name.empty()) {
+        compiler->report_internal_error("Neither a constructor nor a copy constructor for the class type " + class_type->name + " are applicable with the provided arguments");
+    }
 
     call_function(name, std::move(args));
 }
 
-void FunctionNameResolver::call_copy_constructor(const Value &value, const Value& arg)
+void FunctionNameResolver::copy_construct(const Value &instance, const Value& arg)
 {
-    if (!value.get()->getType()->isPointerTy())
+    // Either calls the copy constructor, or performs a bitwise copy
+
+    if (!instance.get()->getType()->isPointerTy())
         compiler->report_internal_error("Trying to initialize a non-lvalue item");
 
-    auto class_type = value.type->as<ClassType>();
+    auto class_type = instance.type->is<ClassType>();
 
-    if (class_type != nullptr)
+    // If the instance is teleporting (being moved from one scope to another without
+    //  getting destructed), its copy constructor shouldn't be called as well.
+    if (class_type != nullptr && !arg.is_teleporting)
     {
         // Initializing an object
 
@@ -369,15 +371,15 @@ void FunctionNameResolver::call_copy_constructor(const Value &value, const Value
 
         std::string name = class_type->name + ".=constructor";
         if (has_function(name)) {
-            auto instance = compiler->create_value(value.get(), compiler->create_type<ReferenceType>(value.type, true));
-            call_function(name, { instance, arg });
+            auto ref = compiler->create_value(instance.get(), compiler->create_type<ReferenceType>(instance.type, true));
+            call_function(name, { ref, arg });
             return;
         }
     }
 
     // Initializing a primitive type, or an object with no copy constructor.
-    auto casted = compiler->typing_system.cast_value(arg, value.type);
-    builder().CreateStore(casted.get(), value.get());
+    auto casted = compiler->typing_system.cast_value(arg, instance.type);
+    builder().CreateStore(casted.get(), instance.get());
 }
 
 void FunctionNameResolver::call_destructor(const Value& value)
@@ -537,7 +539,8 @@ std::string FunctionNameResolver::get_function_name_with_exact_type(const std::s
     return "";  // Unreachable
 }
 
-Value FunctionNameResolver::call_operator(const std::string& position_name, const Value& lhs, const Value& rhs, const std::string& name) {
+Value FunctionNameResolver::call_operator(const std::string& position_name, const Value& lhs, const Value& rhs, const std::string& name)
+{
     auto full_name = get_winning_function(position_name + "." + name, { lhs.type, rhs.type }, false);
     if (full_name.empty())
         return {};

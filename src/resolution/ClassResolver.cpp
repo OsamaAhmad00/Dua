@@ -93,15 +93,6 @@ void ClassResolver::create_vtable(const std::string &class_name)
     }
     auto value = llvm::ConstantStruct::get(vtable_type, content);
 
-    for (size_t i = 0; i < methods.size(); i++) {
-        if (methods[i].name_without_class_prefix == "destructor()") {
-            content[i + VTable::RESERVED_FIELDS_COUNT] = compiler->module.getFunction("Object.destructor(Object&)");
-            assert(content[i + VTable::RESERVED_FIELDS_COUNT] != nullptr);
-            break;
-        }
-    }
-    auto copy_value = llvm::ConstantStruct::get(vtable_type, content);
-
     auto instance_name = vtable_name + ".instance";
     compiler->get_module()->getOrInsertGlobal(instance_name, vtable_type);
     auto instance_ptr = compiler->get_module()->getGlobalVariable(instance_name);
@@ -110,15 +101,6 @@ void ClassResolver::create_vtable(const std::string &class_name)
     auto comdat = compiler->get_module()->getOrInsertComdat(instance_name);
     comdat->setSelectionKind(llvm::Comdat::Any);
     instance_ptr->setComdat(comdat);
-
-    auto copy_instance_name = instance_name + ".no_destructor";
-    compiler->get_module()->getOrInsertGlobal(copy_instance_name, vtable_type);
-    auto copy_instance_ptr = compiler->get_module()->getGlobalVariable(copy_instance_name);
-    copy_instance_ptr->setInitializer(copy_value);
-
-    auto copy_comdat = compiler->get_module()->getOrInsertComdat(copy_instance_name);
-    copy_comdat->setSelectionKind(llvm::Comdat::Any);
-    copy_instance_ptr->setComdat(copy_comdat);
 
     auto class_type = compiler->get_name_resolver().get_class(class_name);
 
@@ -131,9 +113,6 @@ void ClassResolver::create_vtable(const std::string &class_name)
         instance->method_names_without_class_prefix[method.name_without_class_prefix] = method.name;
 
     vtables[class_name] = instance;
-
-    auto copy_instance = new VTable { class_type, copy_instance_ptr, vtable_type };
-    vtables[class_name + ".no_destructor"] = copy_instance;
 }
 
 void ClassResolver::construct_class_fields(const std::string &name, ClassDefinitionNode* node)

@@ -14,7 +14,13 @@ public:
     ExpressionStatementNode(ModuleCompiler* compiler, ASTNode* expression)
             : expression(expression) { this->compiler = compiler; };
 
-    NoneValue eval() override { expression->eval(); return none_value(); };
+    NoneValue eval() override
+    {
+        compiler->push_temp_expr_scope();
+        expression->eval();
+        compiler->destruct_temp_expr_scope();
+        return none_value();
+    };
 };
 
 }

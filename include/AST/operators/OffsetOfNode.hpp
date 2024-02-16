@@ -23,7 +23,7 @@ public:
     {
         auto class_type = unresolved_class_type->get_concrete_type()->as<ClassType>();
         if (class_type == nullptr) {
-            report_error(
+            compiler->report_error(
                 "The offsetof operator takes only a class type"
                 " or an expression that evaluates to a class type. Got "
                 + unresolved_class_type->to_string() + " instead."
@@ -41,7 +41,7 @@ public:
         }
 
         if (index == 0)
-            report_error("The class " + class_type->name + " has no field with the name " + field_name);
+            compiler->report_error("The class " + class_type->name + " has no field with the name " + field_name);
 
         auto type = class_type->llvm_type();
         auto null = builder().CreateIntToPtr(builder().getInt64(0), type->getPointerTo());

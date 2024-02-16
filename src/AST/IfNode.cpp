@@ -79,6 +79,12 @@ Value IfNode::eval()
     for (size_t i = 0; i < body_blocks.size(); i++) {
         builder().SetInsertPoint(body_blocks[i]);
         auto value = branches[i]->eval();
+        // An if expression can contain multiple branches.
+        //  Only one of them should be destructed (if needed).
+        //  To simplify the destruction process, if expressions
+        //  remove every branch result, and inserts the final
+        //  result instead.
+        compiler->remove_temp_expr(value.id);
         if (is_expression) {
             values.push_back(compiler->create_value(value.get(), branches[i]->get_type()));
             phi_blocks.push_back(builder().GetInsertBlock());
@@ -110,7 +116,12 @@ Value IfNode::eval()
         phi->addIncoming(values[i].get(), phi_blocks[i]);
     }
 
-    return compiler->create_value(phi, get_type());
+    auto result = compiler->create_value(phi, get_type());
+    result.is_teleporting = true;
+    result.id = compiler->get_temp_expr_map_unused_id();
+    compiler->insert_temp_expr(result);
+
+    return result;
 }
 
 const Type *IfNode::get_type()

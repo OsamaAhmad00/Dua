@@ -10,36 +10,18 @@ namespace dua
 
 FunctionCallNode::FunctionCallNode(ModuleCompiler *compiler, ResolutionString* name, std::vector<ASTNode *> args,
                                    std::vector<const Type*> template_args)
-   : unresolved_name(name), args(std::move(args)), template_args(std::move(template_args)), is_templated(true)
-{
-    this->compiler = compiler;
-}
+   : FunctionCallBase(compiler, std::move(args)), unresolved_name(name), template_args(std::move(template_args)), is_templated(true)
+{ }
 
-FunctionCallNode::FunctionCallNode(ModuleCompiler *compiler, ResolutionString* name, std::vector<ASTNode *> args)
-    : unresolved_name(name), args(std::move(args)), template_args({}), is_templated(false)
-{
-    this->compiler = compiler;
-}
-
-std::vector<Value> FunctionCallNode::eval_args()
-{
-    auto n = args.size();
-    std::vector<Value> evaluated(n);
-    // nullptr args are placeholders that
-    //  will be substituted later
-    for (size_t i = 0; i < n; i++) {
-        if (args[i] != nullptr) {
-            evaluated[i] = args[i]->eval();
-        }
-    }
-    return evaluated;
-}
+FunctionCallNode::FunctionCallNode(ModuleCompiler *compiler, ResolutionString* name, std::vector<ASTNode*> args)
+    : FunctionCallBase(compiler, std::move(args)), unresolved_name(name), template_args({}), is_templated(false)
+{ }
 
 Value FunctionCallNode::eval()
 {
     _current_name = unresolved_name->resolve();
 
-    auto evaluated_args = eval_args();
+    auto evaluated_args = eval_args(args);
 
     if (is_templated)
         return call_templated_function(std::move(evaluated_args));
@@ -61,7 +43,6 @@ Value FunctionCallNode::eval()
         auto method = class_type->get_method(_current_name, instance, std::move(arg_types), false);
         if (!method.is_null()) {
             evaluated_args.insert(evaluated_args.begin(), instance);
-            set_teleporting_args(method.type->as<FunctionType>()->param_types, evaluated_args);
             return name_resolver().call_function(method, std::move(evaluated_args));
         }
     }
@@ -74,7 +55,6 @@ Value FunctionCallNode::eval()
         auto full_name = name_resolver().get_winning_function(_current_name, arg_types);
         auto info = name_resolver().get_function_no_overloading(full_name);
         auto func = module().getFunction(full_name);
-        set_teleporting_args(info.type->param_types, evaluated_args);
         auto func_value = compiler->create_value(func, info.type);
         return name_resolver().call_function(func_value, std::move(evaluated_args));
     }
@@ -159,8 +139,6 @@ Value FunctionCallNode::call_templated_function(std::vector<Value> args)
         args.insert(args.begin(), self);
     }
 
-    set_teleporting_args(func.type->as<FunctionType>()->param_types, args);
-
     return name_resolver().call_function(func, std::move(args));
 }
 
@@ -175,8 +153,6 @@ Value FunctionCallNode::call_reference(const Value &reference, std::vector<Value
     auto function_type = pointer_type ? dynamic_cast<const FunctionType*>(pointer_type->get_element_type()) : nullptr;
     if (function_type == nullptr)
         compiler->report_error("The variable " + _current_name + " is of type " + reference.type->to_string() + ", which is not callable");
-    else
-        set_teleporting_args(function_type->param_types, args);
 
     auto ptr = builder().CreateLoad(reference.type->llvm_type(), reference.get());
     auto value = compiler->create_value(ptr, function_type);
@@ -192,20 +168,6 @@ Value FunctionCallNode::get_templated_function(std::vector<const Type*>& arg_typ
         return method;
 
     return compiler->get_name_resolver().get_templated_function(_current_name, template_args, std::move(arg_types));
-}
-
-void FunctionCallNode::set_teleporting_args(const std::vector<const Type*>& param_types, std::vector<Value>& evaluated_args)
-{
-    for (size_t i = 0; i < args.size(); i++) {
-        if (args[i] != nullptr) {
-            if (auto teleport = args[i]->as<ScopeTeleportingNode>(); teleport != nullptr) {
-                if (i >= param_types.size() || param_types[i]->as<ReferenceType>() == nullptr) {
-                    teleport->set_teleported();
-                    evaluated_args[i].is_teleporting = true;
-                }
-            }
-        }
-    }
 }
 
 }

@@ -42,6 +42,10 @@ struct Type
         return res;
     }
 
+    template <typename T>
+    const T* is() const {
+        return dynamic_cast<const T*>(this);
+    }
 };
 
 template <>

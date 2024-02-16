@@ -97,6 +97,35 @@ int main()
 
 
 // Case Returning an object
+// Outputs "_5 5 1 2 "
+
+class X
+{
+    int i;
+
+    constructor(int i) : i(i) { }
+
+    =constructor(X& other) { printf("_%d ", other.i); }
+
+    destructor { printf("%d ", i); }
+}
+
+X func()
+{
+    X x1(1);
+    X x2(5);
+
+    return x2;
+}
+
+int main()
+{
+    X x = func();
+    x.i = 2;
+}
+
+
+// Case Returning a moved object
 // Outputs "1 2 "
 
 class X
@@ -105,9 +134,9 @@ class X
 
     constructor(int i) : i(i) { }
 
-    destructor {
-        printf("%d ", i);
-    }
+    =constructor(X& other) { printf("_%d", other.i); }
+
+    destructor { printf("%d ", i); }
 }
 
 X func()
@@ -115,9 +144,9 @@ X func()
     X x1(1);
     X x2(5);
 
-    // The destructor shouldn't get called
-    //  on x2 because it's being returned
-    return x2;
+    // Neither the copy constructor nor the destructor
+    // should get called on x2 here because it's being moved
+    return move(x2);
 }
 
 int main()

@@ -1175,12 +1175,12 @@ void ParserAssistant::create_char_value() {
     push_node<I8ValueNode>(escape_characters(pop_str())[1]);
 }
 
-void ParserAssistant::create_temp_variable() {
-    push_node<TempVariableNode>(pop_type(), pop_args());
+void ParserAssistant::create_temp_object() {
+    push_node<TempObjectNode>(pop_type(), pop_args());
 }
 
 void ParserAssistant::create_move() {
-    push_node<MoveNode>(pop_str(), call_destructor);
+    push_node<MoveNode>(pop_str());
 }
 
 void ParserAssistant::create_offset_of() {

@@ -152,7 +152,8 @@ Value FunctionDefinitionNode::define_function()
             auto value = compiler->create_value(arg, type);
             // All arguments will teleport, because their copy constructor is already
             //  called (if needed).
-            create_local_variable(info.param_names[i], type, &value, {}, true);
+            value.is_teleporting = true;
+            create_local_variable(info.param_names[i], type, &value, {});
         }
     }
 
@@ -228,7 +229,7 @@ Value FunctionDefinitionNode::define_function()
     builder().SetInsertPoint(old_block);
     current_function() = old_function;
 
-    return compiler->create_value(function, get_type());
+    return none_value();
 }
 
 void FunctionDefinitionNode::construct_fields(const ClassType *class_type)
@@ -376,7 +377,7 @@ void FunctionDefinitionNode::construct_fields(const ClassType *class_type)
         if (field.default_value != nullptr && args.empty()) {
             // If the argument list is empty, and there are no default args, just copy the default value
             auto arg = compiler->create_value(field.default_value, field.type);
-            name_resolver().call_copy_constructor(instance, arg);
+            name_resolver().copy_construct(instance, arg);
         } else {
             name_resolver().call_constructor(instance, std::move(args));
         }

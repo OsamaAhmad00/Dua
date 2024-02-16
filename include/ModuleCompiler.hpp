@@ -84,21 +84,19 @@ public:
     void destruct_function_scope();  // Used mainly in return statements
     void destruct_global_scope();
 
-    // These two methods are used to store a copy of the vtable with the
-    //  destructor slot pointing to the destructor of the Object class
-    //  (which has no effect) in place of the vtable of the given pointer.
-    //  The primary purpose of this is to prevent calling the destructor
-    //  on the value being returned from one scope. The swap_vtables method
-    //  takes the pointer to the target object, and the type of the object
-    //  (to get the appropriate vtable), swaps its vtable instance with the
-    //  edited vtable instance, and returns its original vtable instance. The
-    //  restore_vtable takes the pointer, and the original vtable instance,
-    //  and stores it back again.
-    llvm::Value* swap_vtables(llvm::Value* ptr, const ClassType* class_type);
-    void restore_vtable(llvm::Value* ptr, llvm::Value* vtable);
+    int64_t get_temp_expr_map_unused_id();
+    void insert_temp_expr(const Value& value);
+    void remove_temp_expr(int64_t id, bool panic_if_not_found = false);
+    void push_temp_expr_scope();
+    void destruct_temp_expr_scope();
 
     void push_scope_counter();
     void pop_scope_counter();
+
+    // Creates the result of binding one expression to a variable,
+    //  through variable definition, assignment, passing an
+    //  argument, field constructor arg, field default value...
+    Value get_bound_value(Value value, const Type* bound_type);
 
     // .dua.init function is a function that gets called at the startup before
     //  the entry point, in which initializations and deferred nodes get executed.
@@ -189,6 +187,13 @@ private:
     // A cache of the resulting LLVM IR, used to
     //  avoid performing the same computations
     std::string result;
+
+    // Used to call the destructor of the unbound objects, such as a temp variable
+    //  or a call to a function that returns an object that is not to a variable.
+    // The values are looked for by an ID. It's the responsibility of other components
+    //  to make sure that the IDs are not colliding.
+    SymbolTable<Value, int64_t> temp_expressions;
+    int64_t next_temp_expr_id = 0;
 
 public:
 

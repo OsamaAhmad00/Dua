@@ -47,7 +47,7 @@ public:
     Value call_function(const Value& func, std::vector<Value> args = {});
 
     void call_constructor(const Value& value, std::vector<Value> args);
-    void call_copy_constructor(const Value& value, const Value& arg);
+    void copy_construct(const Value& value, const Value& arg);
     void call_destructor(const Value& value);
 
     Value call_operator(const std::string& position_name, const Value& lhs, const Value& rhs, const std::string& name);

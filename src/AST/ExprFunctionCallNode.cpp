@@ -1,7 +1,6 @@
 #include <AST/function/ExprFunctionCallNode.hpp>
 #include <AST/lvalue/ClassFieldNode.hpp>
 #include <types/PointerType.hpp>
-#include "AST/ScopeTeleportingNode.hpp"
 
 namespace dua
 {
@@ -35,18 +34,9 @@ Value ExprFunctionCallNode::eval()
 
     std::vector<Value> evaluated(n);
 
-    auto func_type = get_function_type(func);
-    auto& param_types = func_type->param_types;
-
     for (size_t i = n - 1; i != ((size_t)-1 + is_method); i--) {
         auto arg = args[i - is_method];
         evaluated[i] = arg->eval();
-        if (auto teleport = arg->as<ScopeTeleportingNode>(); teleport != nullptr) {
-            if (i >= param_types.size() || param_types[i]->as<ReferenceType>() == nullptr) {
-                teleport->set_teleported();
-                evaluated[i].is_teleporting = true;
-            }
-        }
     }
 
     if (is_method)

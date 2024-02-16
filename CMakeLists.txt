@@ -126,7 +126,7 @@ set(DUA_SOURCES
     src/AST/MethodCallNode.cpp
     src/AST/DynamicNameNode.cpp
     src/AST/DynamicCastNode.cpp
-    src/AST/TempVariableNode.cpp
+    src/AST/TempObjectNode.cpp
 
     src/types/Type.cpp
     src/types/ArrayType.cpp

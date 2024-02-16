@@ -1,11 +1,11 @@
 #pragma once
 
-#include <AST/ScopeTeleportingNode.hpp>
+#include <AST/ASTNode.hpp>
 
 namespace dua
 {
 
-class IfNode : public ScopeTeleportingNode
+class IfNode : public ASTNode
 {
     // If a counter is not used, LLVM will assign numbers incrementally (for example then1, else2, condition3)
     //  which can be confusing, especially in nested expressions.
