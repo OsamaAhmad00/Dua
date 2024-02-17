@@ -1,6 +1,5 @@
 #include <AST/IfNode.hpp>
 #include <types/VoidType.hpp>
-#include <utils/ErrorReporting.hpp>
 
 namespace dua
 {

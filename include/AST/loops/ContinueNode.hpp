@@ -1,7 +1,6 @@
 #pragma once
 
 #include "AST/ASTNode.hpp"
-#include <utils/ErrorReporting.hpp>
 
 namespace dua
 {

@@ -10,7 +10,7 @@
 #include "AST/BlockNode.hpp"
 #include "AST/IfNode.hpp"
 #include "AST/SequentialEvalNode.hpp"
-#include "AST/DeferredActionNode.hpp"
+#include "AST/StaticValueNode.hpp"
 #include "AST/FreeNode.hpp"
 #include "AST/TempObjectNode.hpp"
 
@@ -81,7 +81,6 @@
 #include "resolution/MethodNameResolutionString.hpp"
 
 #include "utils/TextManipulation.hpp"
-#include "utils/ErrorReporting.hpp"
 
 #include <set>
 

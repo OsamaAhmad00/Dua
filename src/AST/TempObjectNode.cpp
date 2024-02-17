@@ -6,6 +6,9 @@ namespace dua
 
 Value TempObjectNode::eval()
 {
+    if (current_function() == nullptr)
+        report_internal_error("Creation of a temp object in a non-local scope");
+
     auto evaluated = eval_args(args);
 
     auto ptr = create_local_variable("", type, nullptr, std::move(evaluated));

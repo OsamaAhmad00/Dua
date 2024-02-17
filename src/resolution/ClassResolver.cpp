@@ -1,13 +1,12 @@
 #include <resolution/ClassResolver.hpp>
-#include <utils/ErrorReporting.hpp>
 #include <types/ClassType.hpp>
 #include <Value.hpp>
 #include <ModuleCompiler.hpp>
 #include "types/PointerType.hpp"
 #include "types/IntegerTypes.hpp"
-#include "AST/values/StringValueNode.hpp"
 #include <AST/class/ClassDefinitionNode.hpp>
 #include <AST/types/TypeAliasNode.hpp>
+#include <AST/StaticValueNode.hpp>
 
 namespace dua
 {
@@ -52,7 +51,9 @@ ClassResolver::~ClassResolver() {
 
 ClassField ClassResolver::get_vtable_field(const std::string &class_name) {
     auto instance = get_vtable_instance(class_name);
-    return { ".vtable_ptr", get_vtable_type(class_name), instance->instance, {} };
+    auto type = get_vtable_type(class_name);
+    auto initializer = compiler->create_node<StaticValueNode>(compiler->create_value(instance->instance, type));
+    return { ".vtable_ptr", type, initializer, {} };
 }
 
 void ClassResolver::create_vtable(const std::string &class_name)

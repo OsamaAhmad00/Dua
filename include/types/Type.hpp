@@ -44,7 +44,7 @@ struct Type
 
     template <typename T>
     const T* is() const {
-        return dynamic_cast<const T*>(this);
+        return dynamic_cast<const T*>(get_concrete_type());
     }
 };
 

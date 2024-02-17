@@ -1,7 +1,6 @@
 #pragma once
 
 #include <AST/ASTNode.hpp>
-#include <utils/ErrorReporting.hpp>
 #include <types/FloatTypes.hpp>
 
 namespace dua

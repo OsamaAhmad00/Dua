@@ -1,5 +1,4 @@
 #include <types/ReferenceType.hpp>
-#include <utils/ErrorReporting.hpp>
 #include <ModuleCompiler.hpp>
 
 namespace dua

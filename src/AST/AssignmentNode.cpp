@@ -1,5 +1,4 @@
 #include <AST/AssignmentExpressionNode.hpp>
-#include <utils/ErrorReporting.hpp>
 #include "types/PointerType.hpp"
 #include "types/ReferenceType.hpp"
 

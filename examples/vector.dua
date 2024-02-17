@@ -190,3 +190,20 @@ int main()
     for (int i = 0; i < v4.size(); i++)
         printf("%d", v4[i]);
 }
+
+
+// Case Self-assignment
+// Outputs "1 2 3 4 5 "
+
+int main()
+{
+    Vector<int> v;
+    v.push(1);
+    v.push(2);
+    v.push(3);
+    v.push(4);
+    v.push(5);
+    v = v;
+    for (int i = 0; i < v.size(); i++)
+        printf("%d ", v[i]);
+}

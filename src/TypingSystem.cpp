@@ -1,6 +1,5 @@
 #include <TypingSystem.hpp>
 #include <ModuleCompiler.hpp>
-#include <utils/ErrorReporting.hpp>
 #include <llvm/IR/Type.h>
 #include <types/IntegerTypes.hpp>
 #include "types/PointerType.hpp"
@@ -84,6 +83,11 @@ static Value _cast_value(const Value& value, const Type* type, bool panic_on_fai
     unsigned int target_width = dl.getTypeSizeInBits(target_type);
 
     llvm::Value* v = value.get();
+
+    if (auto arr = value.type->as<ArrayType>(); arr != nullptr) {
+        source_type = arr->get_element_type()->llvm_type()->getPointerTo();
+        v = builder.CreateBitOrPointerCast(v, source_type);
+    }
 
     // If the types are both integer types, use the Trunc or ZExt or SExt instructions
     if (source_type->isIntegerTy() && target_type->isIntegerTy())
@@ -278,7 +282,8 @@ int TypingSystem::similarity_score(const Type *t1, const Type *t2) const
         }
     }
 
-    if (is<IntegerType>(t1)) {
+    if (is<IntegerType>(t1))
+    {
         if (is<IntegerType>(t2)) return 1;
         if (is<FloatType>(t2))   return 2;
         if (is<PointerType>(t2)) return 3;
@@ -286,14 +291,17 @@ int TypingSystem::similarity_score(const Type *t1, const Type *t2) const
         return -1;
     }
 
-    if (is<FloatType>(t1)) {
+    if (is<FloatType>(t1))
+    {
         if (is<FloatType>(t2))   return 1;
         if (is<IntegerType>(t2)) return 2;
         return -1;
     }
 
-    if (auto ptr1 = is<PointerType>(t1); ptr1 != nullptr) {
-        if (auto ptr2 = is<PointerType>(t2); ptr2 != nullptr) {
+    if (auto ptr1 = is<PointerType>(t1); ptr1 != nullptr)
+    {
+        if (auto ptr2 = is<PointerType>(t2); ptr2 != nullptr)
+        {
             auto null = compiler->create_type<NullType>();
             if (ptr1->get_element_type() == null || ptr2->get_element_type() == null) {
                 // A null pointer can be of any type
@@ -303,7 +311,8 @@ int TypingSystem::similarity_score(const Type *t1, const Type *t2) const
             if (score == -1) return -1;
             return score;
         }
-        if (auto arr = is<ArrayType>(t2); arr != nullptr) {
+        if (auto arr = is<ArrayType>(t2); arr != nullptr)
+        {
             auto score = similarity_score(ptr1->get_element_type(), arr->get_element_type());
             if (score == -1) return -1;
             return score + 1;
@@ -312,17 +321,24 @@ int TypingSystem::similarity_score(const Type *t1, const Type *t2) const
         return -1;
     }
 
-    if (auto arr = is<ArrayType>(t1); arr != nullptr) {
-        if (auto ptr = is<PointerType>(t2); ptr != nullptr) {
+    if (auto arr = is<ArrayType>(t1); arr != nullptr)
+    {
+        if (auto arr2 = is<ArrayType>(t2); arr2 != nullptr)
+            return similarity_score(arr->get_element_type(), arr2->get_element_type());
+        if (auto ptr = is<PointerType>(t2); ptr != nullptr)
+        {
             auto score = similarity_score(ptr->get_element_type(), arr->get_element_type());
             if (score == -1) return -1;
             return score + 1;
         }
+        if (is<IntegerType>(t2)) return 3;  // Just like the score from int to pointer
         return -1;
     }
 
-    if (auto f1 = is<FunctionType>(t1); f1 != nullptr) {
-        if (auto f2 = is<FunctionType>(t2); f2 != nullptr) {
+    if (auto f1 = is<FunctionType>(t1); f1 != nullptr)
+    {
+        if (auto f2 = is<FunctionType>(t2); f2 != nullptr)
+        {
             if (f1->is_var_arg != f2->is_var_arg) return -1;
             int ret_score = similarity_score(f1->return_type, f2->return_type);
             if (ret_score == -1) return -1;

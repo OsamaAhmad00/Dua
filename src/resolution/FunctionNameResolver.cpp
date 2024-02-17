@@ -298,16 +298,31 @@ void FunctionNameResolver::call_constructor(const Value &value, std::vector<Valu
     if (!value.get()->getType()->isPointerTy())
         compiler->report_internal_error("Trying to initialize a non-lvalue item");
 
-    auto class_type = value.type->as<ClassType>();
+    auto class_type = value.type->is<ClassType>();
 
     if (class_type == nullptr)
     {
-        // Initializing a primitive type.
+        // Initializing a primitive or a reference type.
 
-        if (args.empty())
-            args.push_back(compiler->create_value(value.type->default_value().get(), value.type));
-        else if (args.size() != 1)
-            compiler->report_error("Cannot initialize a primitive type with more than one value");
+        if (auto ref = value.type->is<ReferenceType>(); ref != nullptr) {
+            // Usually, a reference is just put into the symbol table directly as an alias
+            //  for the referenced expression, but sometimes (as in a reference field), you
+            //  can't perform this optimization. In this case, you have to store its address
+            // TODO report the field name as well
+            if (args.empty())
+                compiler->report_error("Reference fields must be initialized");
+            if (args.size() > 1)
+                compiler->report_error("Reference fields expects exactly one referenced argument");
+            if (args.front().is_teleporting)
+                compiler->report_error("Reference fields can't be bound to a temporary expression, which will be stale by the next statement");
+            if (args.front().memory_location == nullptr)
+                compiler->report_error("Reference fields can't be assigned a non-lvalue argument");
+        } else {
+            if (args.empty())
+                args.push_back(compiler->create_value(value.type->default_value().get(), value.type));
+            else if (args.size() != 1)
+                compiler->report_error("Cannot initialize a primitive type with more than one initializer value");
+        }
 
         auto casted = compiler->typing_system.cast_value(args[0], value.type);
         builder().CreateStore(casted.get(), value.get());
@@ -339,8 +354,15 @@ void FunctionNameResolver::call_constructor(const Value &value, std::vector<Valu
         name = compiler->name_resolver.get_winning_function(class_type->name + ".=constructor", arg_types, false);
     }
 
-    if (name.empty()) {
-        compiler->report_internal_error("Neither a constructor nor a copy constructor for the class type " + class_type->name + " are applicable with the provided arguments");
+    if (name.empty())
+    {
+        auto message = "Neither a constructor nor a copy constructor for the class type "
+                + class_type->name + " are applicable with the provided arguments:";
+
+        for (auto& type : arg_types)
+            message += "\n" + type->to_string();
+
+        compiler->report_internal_error(message);
     }
 
     call_function(name, std::move(args));

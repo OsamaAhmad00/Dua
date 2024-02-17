@@ -1,7 +1,6 @@
 #pragma once
 
 #include <types/Type.hpp>
-#include <utils/ErrorReporting.hpp>
 
 namespace dua
 {

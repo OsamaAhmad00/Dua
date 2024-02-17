@@ -129,3 +129,14 @@ int main()
     printf("%s %s", hello.c_str(), world.c_str());
 }
 
+
+// Case Self-assignment
+// Outputs "Hello"
+
+int main()
+{
+    String s = "Hel";
+    s += "lo";
+    s = s;
+    printf("%s", s.c_str());
+}

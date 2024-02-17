@@ -1,5 +1,4 @@
 #include <AST/variable/GlobalVariableDefinitionNode.hpp>
-#include <utils/ErrorReporting.hpp>
 #include <types/ReferenceType.hpp>
 
 namespace dua

@@ -2,7 +2,6 @@
 
 #include <llvm/IR/Value.h>
 #include <llvm/IR/Type.h>
-#include "utils/ErrorReporting.hpp"
 
 #define VALUE_DEFAULT_ID -1
 

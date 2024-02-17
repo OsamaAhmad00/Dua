@@ -1,5 +1,4 @@
 #include "AST/loops/WhileNode.hpp"
-#include <utils/ErrorReporting.hpp>
 
 namespace dua
 {

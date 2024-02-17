@@ -8,12 +8,20 @@ namespace dua
 
 class Value;
 
+class ASTNode;
+
 struct ClassField
 {
     std::string name;
     const Type* type;
-    llvm::Constant* default_value;
-    std::vector<Value> default_args;
+    // Only one of the following can be present
+    // X y = z -> z is the initializer
+    // X x(y, z) -> y and z are the init args
+    // An ASTNode is used here instead of a constant
+    //  value to allow for binding of non-constant
+    //  expressions to the class field
+    ASTNode* initializer;
+    std::vector<ASTNode*> init_args;
 };
 
 class ClassType : public Type

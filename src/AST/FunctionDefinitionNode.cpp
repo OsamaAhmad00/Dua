@@ -283,7 +283,7 @@ void FunctionDefinitionNode::construct_fields(const ClassType *class_type)
         auto self_as_parent = self;
         self_as_parent.type = compiler->create_type<PointerType>(class_type);
         self_as_parent = self_as_parent.cast_as(parent_ptr);
-        self_as_parent.type = compiler->create_type<ReferenceType>(parent, true);
+        self_as_parent.type = parent;
 
         for (auto& field_args : class_fields_args)
         {
@@ -332,52 +332,44 @@ void FunctionDefinitionNode::construct_fields(const ClassType *class_type)
             // Parent fields should only be set in case there is a constructor argument,
             //  otherwise, the parent constructor takes care of them.
             // There is an exception for the vtable, which is at index 0
-            if (found)
+            if (found) {
                 name_resolver().call_constructor(instance, std::move(args));
+            }
             continue;
         }
 
-        // If not, check if there is a default initializer list
-        if (!found) {
-            args.insert(args.end(), field.default_args.begin(), field.default_args.end());
-        }
-
-        if (field.type->as<ReferenceType>() != nullptr)
-        {
-            // TODO move this into the constructor call function
-            if (field.default_value != nullptr) {
-                // If there is a default value, then there are no args for sure (both together would result in a parsing error)
-                // Store the address of the referenced variable (field.default_value) into the field
-                builder().CreateStore(field.default_value, instance.get());
-                return;
-            }
-
-            // For reference types, no constructor is called
-            if (args.size() != 1)
-                compiler->report_error("The reference field " + class_type->name + "::" + field.name + " expects exactly one referenced argument");
-
-            auto& arg = args.front();
-            if (arg.memory_location == nullptr)
-                compiler->report_error("The reference field " + class_type->name + "::" + field.name + " is assigned a non-lvalue argument");
-
-            // Store the address of the referenced variable (arg.memory_location) into the field
-            builder().CreateStore(arg.memory_location, instance.get());
-            return;
-        }
-
         // For a field with a name x:
-        //  Constructor initializer list -> constructor() : x(a, b, c)
-        //  Default initializer list -> X x(1, 2, 3)
-        //  Default value -> X x = 3
+        //  Constructor initializer args -> constructor() : x(a, b, c)
+        //  initializer args -> X x(1, 2, 3)
+        //  initializer -> X x = 3
         //  Type default value -> for most types, just a zero-initialization
-        // If no constructor initializer list, no default initializer list,
-        //  initialize it with the default value if exists, or with the type
-        //  default value.
-        // If it's not assigned a value, then it has an empty arg list
-        if (field.default_value != nullptr && args.empty()) {
-            // If the argument list is empty, and there are no default args, just copy the default value
-            auto arg = compiler->create_value(field.default_value, field.type);
-            name_resolver().copy_construct(instance, arg);
+
+        // For a field initialization, there are 4 cases:
+        //  1 - It's a parent field. In this case, it won't have neither
+        //   an initializer, nor an initializer arguments, but might have
+        //   a constructor initializer arguments
+        //  2 - It's a field of this class, with no initializers
+        //  3 - It's a field of this class, with an initializer. In this case,
+        //   it can't have an initializer args, because this will result in a
+        //   parsing error
+        //  4 - It's a field of this class, with an initializer args, and for
+        //   the same reason as the above argument, it doesn't have an initializer
+        // This means that if this is not a parent field, and there are no constructor
+        //  initializer arguments, we can put both the initializer and the initializer
+        //  arguments in one vector, and pass it to the constructor of the field
+
+        if (args.empty())
+        {
+            if (field.initializer != nullptr)
+                args.push_back(field.initializer->eval());
+            for (auto& arg : field.init_args)
+                args.push_back(arg->eval());
+        }
+
+        auto same_type = args.size() == 1 && args.front().type->get_concrete_type() == instance.type->get_concrete_type();
+        if (same_type && args.front().is_teleporting) {
+            // This is a special case
+            builder().CreateStore(args.front().get(), instance.get());
         } else {
             name_resolver().call_constructor(instance, std::move(args));
         }

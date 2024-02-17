@@ -23,16 +23,6 @@ Value ClassDefinitionNode::eval()
     auto old_function = current_function();
     current_function() = nullptr;
 
-    // This makes use of the fact that class definitions happen in a topological order
-    auto parent = compiler->get_name_resolver().parent_classes[name];
-    auto& parent_fields = compiler->get_name_resolver().class_fields[parent->name];
-    auto& class_fields = compiler->get_name_resolver().class_fields[name];
-    // Ignore the vtable field
-    for (size_t i = 1; i < parent_fields.size(); i++) {
-        // Copy the default values of the fields inherited from the parent
-        class_fields[i].default_value = parent_fields[i].default_value;
-    }
-
     typing_system().push_scope();
 
     // First, evaluate the aliases

@@ -32,7 +32,7 @@ Value LocalVariableDefinitionNode::eval()
         auto result = initializer->eval();
 
         if (result.is_teleporting) {
-            report_error("The reference variable " + name + " of type " + type->to_string() +
+            compiler->report_error("The reference variable " + name + " of type " + type->to_string() +
                          " can't be bound to a temporary variable of type " + result.type->to_string() +
                          " which will be stale by the next statement");
         }

@@ -125,3 +125,19 @@ int main()
     (5)X;
     printf("\nAfter\n");
 }
+
+
+// Case Assigning temp object to a class field
+// Outputs "C1C212D2D1"
+
+class Y
+{
+    X x1 = (1)X;
+    X x2((2)X);
+}
+
+int main()
+{
+    Y y;
+    printf("%d%d", y.x1.i, y.x2.i);
+}

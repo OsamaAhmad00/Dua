@@ -1,7 +1,6 @@
 #include <AST/ASTNode.hpp>
 #include "types/ReferenceType.hpp"
 #include "types/VoidType.hpp"
-#include <utils/ErrorReporting.hpp>
 
 namespace dua
 {
