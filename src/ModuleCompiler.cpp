@@ -490,6 +490,35 @@ Value ModuleCompiler::get_bound_value(Value value, const Type *bound_type)
     return value;
 }
 
+llvm::AllocaInst* ModuleCompiler::create_local_variable(const std::string& name, const Type* type, Value* init, std::vector<Value> args)
+{
+    llvm::BasicBlock* entry = &current_function->getEntryBlock();
+    temp_builder.SetInsertPoint(entry, entry->begin());
+    llvm::AllocaInst* instance = temp_builder.CreateAlloca(type->llvm_type(), 0, name);
+    auto value = create_value(instance, type->get_concrete_type());
+
+    if (!name.empty())
+        name_resolver.symbol_table.insert(name, value);
+
+    if (init)
+    {
+        if (!args.empty()) {
+            report_error("Can't have an both an initializer and an initialization "
+                                 "list in the definition of a local variable (the variable " + name + ")");
+        }
+        name_resolver.copy_construct(value, *init);
+    } else {
+        name_resolver.call_constructor(value, std::move(args));
+    }
+
+    return instance;
+}
+
+llvm::BasicBlock* ModuleCompiler::create_basic_block(const std::string& name, llvm::Function* function) {
+    if (function == nullptr) function = current_function;
+    return llvm::BasicBlock::Create(context, name, function);
+}
+
 std::vector<std::string> libdua_declarations {
 
 // Templated classes have to have the whole definitions included,
@@ -641,6 +670,8 @@ class Vector<T>
 
     Vector<T>& infix =(Vector<T>& other)
     {
+        if (&other == &self) return self;
+
         if (other._is_const_initialized)
         {
             _destroy_buffer();
@@ -648,13 +679,13 @@ class Vector<T>
             _size = other._size;
             _capacity = other._capacity;
         }
-        else
+        else if (other._size != 0)
         {
             resize(other._size);
 
-            // Don't set _capacity. the resize method will set it as
-            // appropriate (it might remain bigger than other._capacity)
-            _size = other._size;
+            // Don't set _size and _capacity. the resize method will set
+            //  them as appropriate (_capacity might remain bigger than
+            //  other._capacity)
 
             for (size_t i = 0; i < _size; i++)
                 buffer[i] = other.buffer[i];

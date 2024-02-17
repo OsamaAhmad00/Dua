@@ -4,6 +4,7 @@
 #include "types/FloatTypes.hpp"
 #include "types/PointerType.hpp"
 #include "types/ReferenceType.hpp"
+#include "types/VoidType.hpp"
 
 namespace dua
 {
@@ -289,6 +290,15 @@ Value FunctionNameResolver::call_function(const Value& func, std::vector<Value> 
     //  needed, it's called at the function
     //  before returning the result.
     result.is_teleporting = true;
+
+    if (type->return_type->as<VoidType>() == nullptr) {
+        // This relies on result.is_teleporting being true
+        auto ptr = compiler->create_local_variable("", type->return_type, &result, {});
+        result.set(nullptr);
+        result.memory_location = ptr;
+        result.id = compiler->get_temp_expr_map_unused_id();
+        compiler->insert_temp_expr(result);
+    }
 
     return result;
 }

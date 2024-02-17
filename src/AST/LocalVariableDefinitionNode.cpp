@@ -63,7 +63,7 @@ Value LocalVariableDefinitionNode::eval()
 
     auto ptr = initializer ? &init_value : nullptr;
 
-    create_local_variable(name, type, ptr, eval_args(args));
+    compiler->create_local_variable(name, type, ptr, eval_args(args));
 
     return none_value();
 }

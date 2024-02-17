@@ -65,11 +65,11 @@ Value MallocNode::eval()
 
         // Call the constructor for each element in a loop
 
-        auto condition_bb = create_basic_block("malloc_init_condition", current_function());
-        auto body_bb = create_basic_block("malloc_init_loop", current_function());
-        auto end_bb = create_basic_block("malloc_init_end", current_function());
+        auto condition_bb = compiler->create_basic_block("malloc_init_condition");
+        auto body_bb = compiler->create_basic_block("malloc_init_loop");
+        auto end_bb = compiler->create_basic_block("malloc_init_end");
 
-        auto counter = create_local_variable(".malloc_counter", compiler->create_type<I64Type>(), nullptr);
+        auto counter = compiler->create_local_variable(".malloc_counter", compiler->create_type<I64Type>(), nullptr);
         builder().CreateBr(condition_bb);
 
         builder().SetInsertPoint(condition_bb);

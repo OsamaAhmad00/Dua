@@ -11,7 +11,7 @@ Value TempObjectNode::eval()
 
     auto evaluated = eval_args(args);
 
-    auto ptr = create_local_variable("", type, nullptr, std::move(evaluated));
+    auto ptr = compiler->create_local_variable("", type, nullptr, std::move(evaluated));
     auto result = compiler->create_value(type, ptr);
 
     // Inserting into the temp expressions map before setting memory_location to nullptr

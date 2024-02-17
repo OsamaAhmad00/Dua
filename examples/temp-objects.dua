@@ -141,3 +141,143 @@ int main()
     Y y;
     printf("%d%d", y.x1.i, y.x2.i);
 }
+
+
+// Case Ignored object-returning function call
+// Outputs "C5CC5D5D5Y"
+
+X func()
+{
+    X x(5);
+    // The return value is not moved. This will be copied,
+    //  and the local x will be destructed. Then, the copy
+    //  at the caller scope will be destructed as well.
+    return x;
+}
+
+int main()
+{
+    func();
+    printf("Y");
+}
+
+
+// Case Ignored object-returning block expression
+// Outputs "C5CC5D5D5Y"
+
+int main()
+{
+    {
+        X x(5);
+        // The return value is not moved. This will be copied,
+        //  and the local x will be destructed. Then, the copy
+        //  at the outer scope will be destructed as well.
+        x
+    };
+    printf("Y");
+}
+
+
+// Case Ignored object-returning if expression
+// Outputs "C5CC5D5D5Y"
+
+int main()
+{
+    if (true) {
+        X x(5);
+        // The return value is not moved. This will be copied,
+        //  and the local x will be destructed. Then, the copy
+        //  at the outer scope will be destructed as well.
+        x
+    } else {
+        X x(3);
+        x
+    };
+    printf("Y");
+}
+
+
+// Case Ignored object-returning when expression
+// Outputs "C5CC5D5D5Y"
+
+int main()
+{
+    when {
+        true -> {
+            X x(5);
+            // The return value is not moved. This will be copied,
+            //  and the local x will be destructed. Then, the copy
+            //  at the outer scope will be destructed as well.
+            x
+        },
+        else -> {
+            X x(3);
+            x
+        }
+    };
+    printf("Y");
+}
+
+
+// Case Ignored moved object-returning function call
+// Outputs "C5D5Y"
+
+X func()
+{
+    X x(5);
+    return move(x);
+}
+
+int main()
+{
+    func();
+    printf("Y");
+}
+
+
+// Case Ignored moved object-returning block expression
+// Outputs "C5D5Y"
+
+int main()
+{
+    {
+        X x(5);
+        move(x)
+    };
+    printf("Y");
+}
+
+
+// Case Ignored moved object-returning if expression
+// Outputs "C5D5Y"
+
+int main()
+{
+    if (true) {
+        X x(5);
+        move(x)
+    } else {
+        X x(3);
+        x
+    };
+    printf("Y");
+}
+
+
+// Case Ignored moved object-returning when expression
+// Outputs "C5D5Y"
+
+int main()
+{
+    when {
+        true -> {
+            X x(5);
+            move(x)
+        },
+        else -> {
+            X x(3);
+            x
+        }
+    };
+    printf("Y");
+}

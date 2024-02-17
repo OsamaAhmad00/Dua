@@ -31,10 +31,6 @@ public:
 
 protected:
 
-    llvm::BasicBlock* create_basic_block(const std::string& name, llvm::Function* function);
-
-    llvm::AllocaInst* create_local_variable(const std::string& name, const Type* type, Value* init, std::vector<Value> args = {});
-
     std::vector<Value> eval_args(const std::vector<ASTNode*>& args);
 
     NoneValue none_value();

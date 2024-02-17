@@ -20,14 +20,12 @@ Value IfNode::eval()
 
     for (size_t i = 0; i < conditions.size(); i++)
     {
-        llvm::BasicBlock* condition_block = create_basic_block(
-                operation_name + std::to_string(counter) + "_condition" + std::to_string(i),
-                current_function()
+        llvm::BasicBlock* condition_block = compiler->create_basic_block(
+                operation_name + std::to_string(counter) + "_condition" + std::to_string(i)
         );
 
-        llvm::BasicBlock* branch_block = create_basic_block(
-                operation_name + std::to_string(counter) + "_branch" + std::to_string(i),
-                current_function()
+        llvm::BasicBlock* branch_block = compiler->create_basic_block(
+                operation_name + std::to_string(counter) + "_branch" + std::to_string(i)
         );
 
         jump_to_blocks.push_back(condition_block);
@@ -38,9 +36,8 @@ Value IfNode::eval()
 
     if (has_else())
     {
-         else_block = create_basic_block(
-                operation_name + std::to_string(counter) + "_branch_else",
-                current_function()
+         else_block = compiler->create_basic_block(
+                operation_name + std::to_string(counter) + "_branch_else"
         );
 
         jump_to_blocks.push_back(else_block);
@@ -49,9 +46,8 @@ Value IfNode::eval()
     builder().SetInsertPoint(old_block);
     builder().CreateBr(jump_to_blocks.front());
 
-    llvm::BasicBlock* end_block  = create_basic_block(
-            operation_name + std::to_string(counter) + "_end",
-            current_function()
+    llvm::BasicBlock* end_block = compiler->create_basic_block(
+            operation_name + std::to_string(counter) + "_end"
     );
     jump_to_blocks.push_back(end_block);
 
@@ -73,9 +69,14 @@ Value IfNode::eval()
     std::vector<llvm::BasicBlock*> phi_blocks;
     std::vector<Value> values;
 
+    auto type = get_type();
+
+    bool storing_address = false;
+
     // A quick hack to include the else block in the loop
     if (else_block) body_blocks.push_back(else_block);
-    for (size_t i = 0; i < body_blocks.size(); i++) {
+    for (size_t i = 0; i < body_blocks.size(); i++)
+    {
         builder().SetInsertPoint(body_blocks[i]);
         auto value = branches[i]->eval();
         // An if expression can contain multiple branches.
@@ -83,9 +84,28 @@ Value IfNode::eval()
         //  To simplify the destruction process, if expressions
         //  remove every branch result, and inserts the final
         //  result instead.
-        compiler->remove_temp_expr(value.id);
-        if (is_expression) {
-            values.push_back(compiler->create_value(value.get(), branches[i]->get_type()));
+        // If an expression returns an object, which might be
+        //  copied or destructed, we'll need the address of the
+        //  returned object as well. For this, we make the branches
+        //  return the addresses, then make a load of the final result
+        if (is_expression)
+        {
+            assert(!value.is_null());
+            value = value.cast_as(type, false);
+            if (value.is_null())
+                report_error("Type mismatch between " + operation_name + " branches");
+            bool _storing_address = value.type->as<ClassType>() && value.memory_location != nullptr;
+            if (i != 0 && storing_address != _storing_address) {
+                // Making sure that all branches are the same
+                report_error("Branches of " + operation_name + " expression with different types or storage classes");
+            }
+            storing_address = _storing_address;
+            compiler->remove_temp_expr(value.id);
+            if (storing_address) {
+                value.set(value.memory_location);
+                value.memory_location = nullptr;
+            }
+            values.push_back(value);
             phi_blocks.push_back(builder().GetInsertBlock());
         }
         if (builder().GetInsertBlock()->empty() || !builder().GetInsertBlock()->back().isTerminator())
@@ -97,14 +117,9 @@ Value IfNode::eval()
     if (!is_expression)
         return none_value();
 
-    auto type = get_type();
-    for (auto& value : values) {
-        auto casted = typing_system().cast_value(value, type);
-        if (casted.is_null()) {
-            compiler->report_error("Mismatch in the types of the branches");
-        }
-    }
-
+    // We're using llvm::Value::getType here instead because the
+    // dua::Type might be different if the expression is returning
+    // the addresses instead of the actual value
     llvm::PHINode* phi = builder().CreatePHI(
         values.front().get()->getType(),
         values.size(),
@@ -115,7 +130,11 @@ Value IfNode::eval()
         phi->addIncoming(values[i].get(), phi_blocks[i]);
     }
 
-    auto result = compiler->create_value(phi, get_type());
+    Value result;
+    if (storing_address)
+        result = compiler->create_value(type, phi);
+    else
+        result = compiler->create_value(phi, type);
     result.is_teleporting = true;
     result.id = compiler->get_temp_expr_map_unused_id();
     compiler->insert_temp_expr(result);

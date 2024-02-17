@@ -17,6 +17,8 @@ public:
 
     Value eval() override;
 
+    static Value perform_assignment(Value lhs, Value rhs, ModuleCompiler* compiler);
+
     const Type* get_type() override;
 };
 

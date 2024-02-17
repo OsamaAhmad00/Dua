@@ -24,7 +24,7 @@ Value StringValueNode::eval()
 
     auto type = get_type();
 
-    auto result = create_local_variable(name, type, nullptr, { buffer, size, true_value, true_value });
+    auto result = compiler->create_local_variable(name, type, nullptr, { buffer, size, true_value, true_value });
 
     return compiler->create_value(type, result);
 }

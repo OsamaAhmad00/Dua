@@ -22,10 +22,9 @@ Value FreeNode::eval()
         compiler->report_error("The delete operator only accepts a pointer type, not a "
                                + expr->get_type()->to_string());
 
-    auto null_condition_bb = create_basic_block("delete_is_null_condition", current_function());
-    auto null_body_bb = create_basic_block("delete_not_null_body", current_function());
-
-    auto end_bb = create_basic_block("delete_end", current_function());
+    auto null_condition_bb = compiler->create_basic_block("delete_is_null_condition");
+    auto null_body_bb = compiler->create_basic_block("delete_not_null_body");
+    auto end_bb = compiler->create_basic_block("delete_end");
 
     builder().CreateBr(null_condition_bb);
     builder().SetInsertPoint(null_condition_bb);
@@ -46,11 +45,11 @@ Value FreeNode::eval()
 
     if (call_destructors)
     {
-        auto condition_bb = create_basic_block("delete_destruct_condition", current_function());
-        auto body_bb = create_basic_block("delete_destruct_loop", current_function());
-        auto destruct_end_bb = create_basic_block("delete_destruct_end", current_function());
+        auto condition_bb = compiler->create_basic_block("delete_destruct_condition");
+        auto body_bb = compiler->create_basic_block("delete_destruct_loop");
+        auto destruct_end_bb = compiler->create_basic_block("delete_destruct_end");
 
-        auto counter = create_local_variable(".delete_counter", compiler->create_type<I64Type>(), nullptr);
+        auto counter = compiler->create_local_variable(".delete_counter", compiler->create_type<I64Type>(), nullptr);
         builder().CreateBr(condition_bb);
 
         builder().SetInsertPoint(condition_bb);

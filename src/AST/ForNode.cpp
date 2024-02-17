@@ -14,10 +14,10 @@ NoneValue ForNode::eval()
 
     int counter = _counter++;  // storing a local copy
     // You might delay the attachment of the blocks to the functions to reorder the blocks in a more readable way.
-    llvm::BasicBlock* update_block = create_basic_block("for_update" + std::to_string(counter), current_function());
-    llvm::BasicBlock* cond_block = create_basic_block("for_cond" + std::to_string(counter), current_function());
-    llvm::BasicBlock* body_block = create_basic_block("for_body" + std::to_string(counter), current_function());
-    llvm::BasicBlock* end_block = create_basic_block("for_end" + std::to_string(counter), current_function());
+    llvm::BasicBlock* update_block = compiler->create_basic_block("for_update" + std::to_string(counter));
+    llvm::BasicBlock* cond_block = compiler->create_basic_block("for_cond" + std::to_string(counter));
+    llvm::BasicBlock* body_block = compiler->create_basic_block("for_body" + std::to_string(counter));
+    llvm::BasicBlock* end_block = compiler->create_basic_block("for_end" + std::to_string(counter));
 
     continue_stack().push_back(update_block);
     break_stack().push_back(end_block);

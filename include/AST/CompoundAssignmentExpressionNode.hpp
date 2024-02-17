@@ -40,8 +40,8 @@ public:
             compiler->create_value(rhs_value.get(), rhs->get_type()),
             lhs_eval.type
         );
-        builder().CreateStore(value.get(), lhs_eval.memory_location);
-        return value;
+
+        return AssignmentExpressionNode::perform_assignment(lhs_eval, value, compiler);
     }
 
     const Type* get_type() override
@@ -51,7 +51,10 @@ public:
 
         if (type != nullptr) return type;
 
-        return set_type(get_element_type(lhs->get_type()));
+        auto op_node = OpNode(compiler, lhs, rhs);
+        auto assignment = AssignmentExpressionNode(compiler, lhs, &op_node);
+
+        return set_type(assignment.get_type());
     }
 };
 

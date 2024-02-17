@@ -52,7 +52,7 @@ Value FunctionDefinitionNode::define_function()
 
     llvm::Function* old_function = current_function();
     llvm::BasicBlock* old_block = builder().GetInsertBlock();
-    llvm::BasicBlock* current_block = create_basic_block("entry", function);
+    llvm::BasicBlock* current_block = compiler->create_basic_block("entry", function);
     builder().SetInsertPoint(current_block);
     current_function() = function;
 
@@ -153,7 +153,7 @@ Value FunctionDefinitionNode::define_function()
             // All arguments will teleport, because their copy constructor is already
             //  called (if needed).
             value.is_teleporting = true;
-            create_local_variable(info.param_names[i], type, &value, {});
+            compiler->create_local_variable(info.param_names[i], type, &value, {});
         }
     }
 
