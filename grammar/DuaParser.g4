@@ -194,24 +194,35 @@ optional_constructor_args
     ;
 
 infix_op
-    : '+'   { assistant.push_str("Addition"); }
-    | '-'   { assistant.push_str("Subtraction"); }
-    | '/'   { assistant.push_str("Division"); }
-    | '*'   { assistant.push_str("Multiplication"); }
-    | '%'   { assistant.push_str("Mod"); }
-    | '='   { assistant.push_str("Assignment"); }
-    | '&'   { assistant.push_str("BitwiseAnd"); }
-    | '^'   { assistant.push_str("Xor"); }
-    | '|'   { assistant.push_str("BitwiseOr"); }
-    | '<<'  { assistant.push_str("LeftShift"); }
-    | '>>'  { assistant.push_str("RightShift"); }
-    | '>>>' { assistant.push_str("ArithmeticRightShift"); }
-    | '<'   { assistant.push_str("LT"); }
-    | '>'   { assistant.push_str("GT"); }
-    | '<='  { assistant.push_str("LTE"); }
-    | '>='  { assistant.push_str("GTE"); }
-    | '=='  { assistant.push_str("EQ"); }
-    | '!='  { assistant.push_str("NE"); }
+    : '+'    { assistant.push_str("Addition"); }
+    | '-'    { assistant.push_str("Subtraction"); }
+    | '/'    { assistant.push_str("Division"); }
+    | '*'    { assistant.push_str("Multiplication"); }
+    | '%'    { assistant.push_str("Mod"); }
+    | '='    { assistant.push_str("Assignment"); }
+    | '&'    { assistant.push_str("BitwiseAnd"); }
+    | '^'    { assistant.push_str("Xor"); }
+    | '|'    { assistant.push_str("BitwiseOr"); }
+    | '<<'   { assistant.push_str("LeftShift"); }
+    | '>>'   { assistant.push_str("RightShift"); }
+    | '>>>'  { assistant.push_str("ArithmeticRightShift"); }
+    | '<'    { assistant.push_str("LT"); }
+    | '>'    { assistant.push_str("GT"); }
+    | '<='   { assistant.push_str("LTE"); }
+    | '>='   { assistant.push_str("GTE"); }
+    | '=='   { assistant.push_str("EQ"); }
+    | '!='   { assistant.push_str("NE"); }
+    | '+='   { assistant.push_str("CompoundAddition"); }
+    | '-='   { assistant.push_str("CompoundSubtraction"); }
+    | '/='   { assistant.push_str("CompoundDivision"); }
+    | '*='   { assistant.push_str("CompoundMultiplication"); }
+    | '%='   { assistant.push_str("CompoundMod"); }
+    | '&='   { assistant.push_str("CompoundBitwiseAnd"); }
+    | '^='   { assistant.push_str("CompoundXor"); }
+    | '|='   { assistant.push_str("CompoundBitwiseOr"); }
+    | '<<='  { assistant.push_str("CompoundLeftShift"); }
+    | '>>='  { assistant.push_str("CompoundRightShift"); }
+    | '>>>=' { assistant.push_str("CompoundArithmeticRightShift"); }
     ;
 
 postfix_op

@@ -82,6 +82,8 @@ public:                                                                         
             "There is no " #NAME " operator defined for the types " +                 \
             ltype->to_string() + " and " + rtype->to_string()));                      \
     }                                                                                 \
+                                                                                      \
+    static std::string operation_name() { return #NAME; }                             \
 };
 
 }

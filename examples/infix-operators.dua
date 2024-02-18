@@ -511,6 +511,237 @@ int main()
 }
 
 
+// Case Infix +=
+// Outputs "5"
+
+class X
+{
+    int i = 3;
+
+    int infix += (X& x) {
+        return self.i + x.i;
+    }
+}
+
+int main()
+{
+    X x1;
+    X x2;
+    x2.i = 2;
+    print(x1 += x2);
+}
+
+
+// Case Infix -=
+// Outputs "5"
+
+class X
+{
+    int i = 3;
+
+    int infix -= (X& x) {
+        return self.i + x.i;
+    }
+}
+
+int main()
+{
+    X x1;
+    X x2;
+    x2.i = 2;
+    print(x1 -= x2);
+}
+
+
+// Case Infix *=
+// Outputs "5"
+
+class X
+{
+    int i = 3;
+
+    int infix *= (X& x) {
+        return self.i + x.i;
+    }
+}
+
+int main()
+{
+    X x1;
+    X x2;
+    x2.i = 2;
+    print(x1 *= x2);
+}
+
+
+// Case Infix /=
+// Outputs "5"
+
+class X
+{
+    int i = 3;
+
+    int infix /= (X& x) {
+        return self.i + x.i;
+    }
+}
+
+int main()
+{
+    X x1;
+    X x2;
+    x2.i = 2;
+    print(x1 /= x2);
+}
+
+
+// Case Infix %=
+// Outputs "5"
+
+class X
+{
+    int i = 3;
+
+    int infix %= (X& x) {
+        return self.i + x.i;
+    }
+}
+
+int main()
+{
+    X x1;
+    X x2;
+    x2.i = 2;
+    print(x1 %= x2);
+}
+
+
+// Case Infix &=
+// Outputs "5"
+
+class X
+{
+    int i = 3;
+
+    int infix &= (X& x) {
+        return self.i + x.i;
+    }
+}
+
+int main()
+{
+    X x1;
+    X x2;
+    x2.i = 2;
+    print(x1 &= x2);
+}
+
+
+// Case Infix ^=
+// Outputs "5"
+
+class X
+{
+    int i = 3;
+
+    int infix ^= (X& x) {
+        return self.i + x.i;
+    }
+}
+
+int main()
+{
+    X x1;
+    X x2;
+    x2.i = 2;
+    print(x1 ^= x2);
+}
+
+
+// Case Infix |=
+// Outputs "5"
+
+class X
+{
+    int i = 3;
+
+    int infix |= (X& x) {
+        return self.i + x.i;
+    }
+}
+
+int main()
+{
+    X x1;
+    X x2;
+    x2.i = 2;
+    print(x1 |= x2);
+}
+
+
+// Case Infix <<=
+// Outputs "5"
+
+class X
+{
+    int i = 3;
+
+    int infix <<= (X& x) {
+        return self.i + x.i;
+    }
+}
+
+int main()
+{
+    X x1;
+    X x2;
+    x2.i = 2;
+    print(x1 <<= x2);
+}
+
+
+// Case Infix >>=
+// Outputs "5"
+
+class X
+{
+    int i = 3;
+
+    int infix >>= (X& x) {
+        return self.i + x.i;
+    }
+}
+
+int main()
+{
+    X x1;
+    X x2;
+    x2.i = 2;
+    print(x1 >>= x2);
+}
+
+
+// Case Infix >>>=
+// Outputs "5"
+
+class X
+{
+    int i = 3;
+
+    int infix >>>= (X& x) {
+        return self.i + x.i;
+    }
+}
+
+int main()
+{
+    X x1;
+    X x2;
+    x2.i = 2;
+    print(x1 >>>= x2);
+}
+
+
 // Case Global infix operator with no parameters
 // Panics
 
