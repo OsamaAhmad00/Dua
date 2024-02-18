@@ -19,15 +19,17 @@ namespace dua
 
 std::vector<std::string>& get_libdua_declarations();
 
-ModuleCompiler::ModuleCompiler(const std::string &module_name, std::string code, bool include_libdua) :
+ModuleCompiler::ModuleCompiler(std::string module_name, std::string code, bool include_libdua) :
     context(),
     module(module_name, context),
     builder(context),
     temp_builder(context),
+    module_name(std::move(module_name)),
     name_resolver(this),
     typing_system(this),
     include_libdua(include_libdua),
-    temp_expressions(this)
+    temp_expressions(this),
+    code(std::move(code))
 {
     module.setTargetTriple(llvm::sys::getDefaultTargetTriple());
 
@@ -45,11 +47,11 @@ ModuleCompiler::ModuleCompiler(const std::string &module_name, std::string code,
 
     if (include_libdua) {
         for (auto &declarations: get_libdua_declarations())
-            code += declarations;
+            this->code += declarations;
     }
 
     // Parse
-    TranslationUnitNode* ast = parser.parse(code);
+    TranslationUnitNode* ast = parser.parse(this->code);
 
     // Generate LLVM IR
     ast->eval();
@@ -329,25 +331,24 @@ std::string ModuleCompiler::get_current_status()
     //  that the error is in the global scope, where in fact,
     //  the error is in one of the functions.
 
-    std::string result;
+    std::string result = "In file " + module_name;
+    result.pop_back();
+    result.pop_back();
+    result += "dua";
 
     if (current_class != nullptr) {
         auto class_name = current_class->getName().str();
-        result += "in class " + class_name;
+        result += ", in class " + class_name;
     }
 
     if (current_function != nullptr) {
         auto func_name = current_function->getName().str();
-        if (!result.empty())
-            result += ", ";
-        result += "in function " + func_name;
+        result += ", in function " + func_name;
     }
 
-    if (result.empty()) {
-        result = "In global scope";
+    if (current_class == nullptr && current_function == nullptr) {
+        result += ", in global scope";
     }
-
-    result[0] = toupper(result[0]);
 
     result += ":\n";
 
@@ -757,9 +758,19 @@ class String : Vector<i8>
     String& infix =(str string);
     String infix +(String& other);
     String infix +(str other);
+    String infix +=(str other);
+    String infix +=(String& other);
 
     destructor;
 }
+
+class InputStream;
+
+class OutputStream;
+
+InputStream& infix >>(InputStream& stream, String& string);
+
+OutputStream& infix <<(OutputStream& stream, String& string);
 
 String infix +(str other, String& self);
 
@@ -767,19 +778,58 @@ String infix +(str other, String& self);
 ,
 R"(
 
-// TODO Remove the "c_" prefix after solving the problem
-//  of the .dua.init function, and make them static
-int* c_stdin  = __get_stdin ();
-int* c_stdout = __get_stdout();
-int* c_stderr = __get_stderr();
+class InputStream
+{
+    int* stream;
+    str buffer;
+    bool end_of_file_error = false;
+    bool input_failure_error = false;
+    bool range_error = false;  // Underflow or Overflow
+    bool invalid_input_error = false;
 
-nomangle int* __get_stdin();
+    constructor(int* stream);
 
-nomangle int* __get_stdout();
+    constructor();
 
-nomangle int* __get_stderr();
+    Declaration void reset_flags();
 
-nomangle void fprintf(int* stream, str message, ...);
+    InputStream& infix >>(char& c);
+
+    InputStream& infix >>(i16& num);
+
+    InputStream& infix >>(i32& num);
+
+    InputStream& infix >>(i64& num);
+
+    InputStream& infix >>(f32& num);
+
+    InputStream& infix >>(f64& num);
+
+    Declaration int scan_buffer(byte* buffer, long size);
+}
+
+class OutputStream
+{
+    int* stream;
+    bool error = false;
+    int error_code = 0;
+
+    constructor(int* stream);
+
+    constructor();
+
+    OutputStream& infix <<(char c);
+
+    OutputStream& infix <<(i64 num);
+
+    OutputStream& infix <<(double num);
+
+    OutputStream& infix <<(str string);
+}
+
+)"
+,
+R"(
 
 nomangle void exit(int exit_code);
 
@@ -790,6 +840,22 @@ nomangle int system(str command);
 void panic(str message);
 
 )"
+,
+R"(
+
+nomangle int* c_stdin ();
+nomangle int* c_stdout();
+nomangle int* c_stderr();
+
+nomangle int c_errno();
+
+nomangle int c_EOF();
+nomangle int c_ERANGE();
+
+nomangle int c_scan_str(int* stream, str buffer, int* read_count);
+
+)"
+
 };
 
 std::vector<std::string>& get_libdua_declarations() { return libdua_declarations; }

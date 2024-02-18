@@ -1,5 +1,7 @@
 import "vector.dua"
 
+import "io.dua"
+
 nomangle long strlen(str string);
 
 class String : Vector<i8>
@@ -82,17 +84,25 @@ class String : Vector<i8>
         return (buffer, false, true)String;
     }
 
-
     // Excluding the null terminator
     size_t size() { return _size - 1; }
     size_t capacity() { return _capacity - 1; }
 
     str c_str() { return buffer; }
 
+    void resize(size_t new_size)
+    {
+        // Accounting for the null terminator
+        Vector<byte>::resize(self, new_size + 1);
+        self[new_size] = '\0';
+    }
+
     String& infix =(str string)
     {
-        String temp(string, true, true);
-        self = temp;
+        size_t len = strlen(string);
+        resize(len);
+        for (size_t i = 0; i < len; i++)
+            self[i] = string[i];
         return self;
     }
 
@@ -127,7 +137,7 @@ class String : Vector<i8>
     String& infix +=(str other)
     {
         size_t self_size = size();
-        size_t other_size = strlen(other) + 1;  // Account for the null terminator
+        size_t other_size = strlen(other);
 
         size_t sum = self_size + other_size;
         resize(sum);
@@ -137,6 +147,22 @@ class String : Vector<i8>
 
         return self;
     }
+}
+
+InputStream& infix >>(InputStream& stream, String& string)
+{
+    stream.scan_buffer(stream.buffer, __INPUT_STREAM_BUFFER_LEN);
+
+    // This is to not be limited by
+    //  the buffer size of the string.
+    string = stream.buffer;
+
+    return stream;
+}
+
+OutputStream& infix <<(OutputStream& stream, String& string)
+{
+    return stream << string.buffer;
 }
 
 String infix +(str other, String& self)

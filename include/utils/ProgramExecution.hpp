@@ -9,6 +9,7 @@ namespace dua
 struct ProgramExecution
 {
     std::string std_out;
+    std::string std_err;
     int exit_code;
 };
 

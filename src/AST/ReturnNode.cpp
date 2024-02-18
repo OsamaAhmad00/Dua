@@ -9,7 +9,7 @@ Value ReturnNode::eval()
     auto func = current_function()->getName().str();
     auto return_type = name_resolver().get_function_no_overloading(func).type->return_type;
 
-    if (expression == nullptr) {
+    if (expression == nullptr || return_type->as<VoidType>()) {
         auto void_type = compiler->create_type<VoidType>();
         if (return_type != void_type)
             compiler->report_error("Can't return void from the function " + func + " which returns a " + return_type->to_string());

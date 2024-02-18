@@ -6,7 +6,7 @@ nomangle int printf(str message, ...);
 int main()
 {
     // 64-bit integer
-    i64 i_64 = 9'223'372'036'854'775'807;
+    i64 i_64 = 9'223'372'036'854'775'807L;
     long i_64_alias = i_64;
 
     // 32-bit integer

@@ -32,8 +32,8 @@ void print(long num) {
 
 int main()
 {
-    print(1I);
-    print(2);
+    print(1);
+    print(2L);
 }
 
 

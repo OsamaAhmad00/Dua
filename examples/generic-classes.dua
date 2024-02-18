@@ -176,8 +176,8 @@ class X<T>
 int main()
 {
     X<byte> x;
-    x.func(1I);
-    x.func(2);
+    x.func(1);
+    x.func(2L);
 }
 
 

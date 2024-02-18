@@ -28,17 +28,19 @@ std::string capture_output(bp::ipstream& is, bool& within_limit)
 
 ProgramExecution execute_program(const std::string& program, const std::vector<std::string>& args, long long time_limit)
 {
-    ProgramExecution result { "THE PROGRAM DIDN'T EXECUTE!!", -989898989};
+    ProgramExecution result { "THE PROGRAM DIDN'T EXECUTE!!", "", -989898989 };
 
-    bp::ipstream is; //reading pipe-stream
+    bp::ipstream out; //reading pipe-stream
+    bp::ipstream err; //reading pipe-stream
     // This captures stdout only, ignoring stderr.
-    bp::child c(program, args, bp::std_out > is, bp::std_err > bp::null);
+    bp::child c(program, args, bp::std_out > out, bp::std_err > err);
 
     std::string line;
     result.std_out.clear();
 
     bool within_limit = true;
-    auto output = std::async(&capture_output, std::ref(is), std::ref(within_limit));
+    auto output = std::async(&capture_output, std::ref(out), std::ref(within_limit));
+    auto error = std::async(&capture_output, std::ref(err), std::ref(within_limit));
     auto start = std::chrono::steady_clock::now();
 
     output.wait_for(std::chrono::milliseconds(time_limit));
@@ -52,6 +54,7 @@ ProgramExecution execute_program(const std::string& program, const std::vector<s
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
     result.std_out = output.get();
+    result.std_err = error.get();
     result.exit_code = c.exit_code();
 
     if (!within_limit)

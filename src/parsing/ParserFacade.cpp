@@ -8,8 +8,15 @@ namespace dua
 class ThrowExceptionErrorStrategy : public antlr4::DefaultErrorStrategy
 {
     void reportError(antlr4::Parser *recognizer, const antlr4::RecognitionException &e) override {
-        DefaultErrorStrategy::reportError(recognizer, e);
-        compiler->report_error("Parsing error");
+        auto token = e.getOffendingToken();
+        auto message = "Parsing error at line " + std::to_string(token->getLine()) + " at:\n";
+        auto& code = compiler->get_code();
+        auto start = token->getStartIndex();
+        auto end = std::min(start + 100, code.size());
+        message += code.substr(start, end - start);
+        if (end != code.size())
+            message += "...";
+        compiler->report_error(message);
     }
 
 public:

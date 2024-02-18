@@ -32,7 +32,7 @@ public:
     friend class ClassType;
     friend class ParserFacade;
 
-    ModuleCompiler(const std::string& module_name, std::string code, bool include_libdua = true);
+    ModuleCompiler(std::string module_name, std::string code, bool include_libdua = true);
 
     const std::string& get_result() { return result; }
 
@@ -124,6 +124,8 @@ public:
     void report_internal_error(const std::string& message);
     void report_warning(const std::string& message);
 
+    const std::string& get_code() const { return code; }
+
     ~ModuleCompiler();
 
 private:
@@ -132,6 +134,10 @@ private:
     llvm::LLVMContext context;
     llvm::Module module;
     llvm::IRBuilder<> builder;
+
+    std::string module_name;
+
+    std::string code;
 
     ParserAssistant* parser_assistant;
 

@@ -179,8 +179,8 @@ void func<T>(long l) {
 
 int main()
 {
-    func<byte>(1I);
     func<byte>(1);
+    func<byte>(1L);
 }
 
 

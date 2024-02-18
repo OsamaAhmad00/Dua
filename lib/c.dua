@@ -1,0 +1,10 @@
+nomangle int* c_stdin ();
+nomangle int* c_stdout();
+nomangle int* c_stderr();
+
+nomangle int c_errno();
+
+nomangle int c_EOF();
+nomangle int c_ERANGE();
+
+nomangle int c_scan_str(int* stream, str buffer, int* read_count);

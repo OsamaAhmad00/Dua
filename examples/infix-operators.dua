@@ -62,8 +62,8 @@ int infix + (int x, int y) {
 
 int main()
 {
-    print(2I + 3I);
-    print(2 + 3);  // long
+    print(2 + 3);
+    print(2L + 3L);  // long
 }
 
 
@@ -80,8 +80,8 @@ int infix + (long x, long y) {
 
 int main()
 {
-    print(2I + 3I);
-    print(2 + 3);  // long
+    print(2 + 3);
+    print(2L + 3L);  // long
 }
 
 

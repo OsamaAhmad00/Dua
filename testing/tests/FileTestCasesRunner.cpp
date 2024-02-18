@@ -132,8 +132,10 @@ void FileTestCasesRunner::run()
                 std::cerr << "Invalid expected return code: '" + expected_exit_code_str << "'\n";
                 FAIL();
             }
+            while (!execution.std_err.empty() && execution.std_err.back() == '\n') execution.std_err.pop_back();
             EXPECT_EQ((expected_exit_code % 256 + 256) % 256, (execution.exit_code % 256 + 256) % 256)
-                                << "Actual exit code is " << execution.exit_code << '\n';
+                                << termcolor::red << "stderr: " << execution.std_err << '\n' << termcolor::reset
+                                << "Actual exit code is " << execution.exit_code;
             if (((expected_exit_code % 256 + 256) % 256) != ((execution.exit_code % 256 + 256) % 256))
                 succeeded = false;
 

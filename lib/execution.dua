@@ -1,16 +1,4 @@
-// TODO Remove the "c_" prefix after solving the problem
-//  of the .dua.init function, and make them static
-int* c_stdin  = __get_stdin ();
-int* c_stdout = __get_stdout();
-int* c_stderr = __get_stderr();
-
-nomangle int* __get_stdin();
-
-nomangle int* __get_stdout();
-
-nomangle int* __get_stderr();
-
-nomangle void fprintf(int* stream, str message, ...);
+import "c.dua"
 
 nomangle void exit(int exit_code);
 
@@ -20,6 +8,9 @@ nomangle int system(str command);
 
 void panic(str message)
 {
-    fprintf(c_stderr, message);
+    fprintf(c_stderr(), message);
     exit(-1);
 }
+
+
+nomangle int fprintf(int* stream, str message, ...);

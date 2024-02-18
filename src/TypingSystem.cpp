@@ -282,12 +282,27 @@ int TypingSystem::similarity_score(const Type *t1, const Type *t2) const
         }
     }
 
-    if (is<IntegerType>(t1))
+    if (auto i1 = is<IntegerType>(t1))
     {
-        if (is<IntegerType>(t2)) return 1;
-        if (is<FloatType>(t2))   return 2;
-        if (is<PointerType>(t2)) return 3;
-        if (is<ArrayType>(t2))   return 4;
+        if (auto i2 = is<IntegerType>(t2)) {
+            // i2 is the target. If the target is bigger, it's ok
+            //  because the target can hold the smaller size. But
+            //  if the target is smaller, the target might not be
+            //  able to hold the whole number. Here, if the types
+            //  are not the same, a bigger type is favorable. A float
+            //  type is more favorable than a smaller integer type.
+
+            int o1 = i1->size_order();
+            int o2 = i2->size_order();
+            if (o2 > o1) {
+                return o2 - o1;  // Max diff = 4 - 1 = 3
+            } else {
+                return 4 + o1 - o2; // Max = 4 + 4 - 1 = 7
+            }
+        }
+        if (is<FloatType>(t2))   return 4;
+        if (is<PointerType>(t2)) return 8;
+        if (is<ArrayType>(t2))   return 9;
         return -1;
     }
 

@@ -18,7 +18,7 @@ int main()
 
     print(typename(i64));
 
-    print(typename(55I));
+    print(typename(55));
 }
 
 

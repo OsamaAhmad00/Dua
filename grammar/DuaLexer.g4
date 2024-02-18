@@ -88,7 +88,7 @@ OffsetOf: 'offsetof';
 I64: ('i64' | 'long' );
 I32: ('i32' | 'int'  );
 I16: ('i16' | 'short');
-I8 : ('i8'  | 'bool' | 'byte');
+I8 : ('i8'  | 'bool' | 'byte' | 'char');
 
 F64: ('f64' | 'double');
 F32: ('f32' | 'float');
@@ -137,8 +137,8 @@ False: 'false';
 // make sure that the code is preprocessed first
 Import: 'import';
 
-I64Val: Integer;
-I32Val: Integer 'I';
+I64Val: Integer 'L';
+I32Val: Integer;
 I16Val: Integer 'S';
 I8Val:  Integer 'T';
 F64Val: Float;
@@ -153,7 +153,7 @@ fragment DecimalInteger: DecimalNonZeroDigit (DecimalDigit | '\'')*;
 fragment OctalInteger: '0' (OctalDigit | '\'')*;  // Quick hack: 0 is counted as octal
 fragment BinaryInteger: '0b' (BinaryDigit | '\'')+;
 
-fragment Float: DecimalInteger '.' DecimalDigit*;
+fragment Float: DecimalDigit* '.' DecimalDigit*;
 
 fragment HexDigit: [0-9a-fA-F];
 

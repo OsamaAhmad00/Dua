@@ -470,8 +470,7 @@ std::string FunctionNameResolver::get_winning_function(const std::string &name, 
     std::map<int, std::vector<std::pair<std::string, const FunctionType*>>> scores;
 
     if (non_mangled != functions.end()) {
-        auto score = compiler->typing_system.type_list_similarity_score(
-                non_mangled->second.type->param_types, arg_types);
+        auto score = compiler->typing_system.type_list_similarity_score(arg_types, non_mangled->second.type->param_types);
         if (score != -1)
             scores[score].emplace_back(name, non_mangled->second.type);
     }
@@ -483,7 +482,7 @@ std::string FunctionNameResolver::get_winning_function(const std::string &name, 
         auto& info = current->second;
         current++;
         auto score = compiler->typing_system.type_list_similarity_score(
-            arg_types,
+                arg_types,
             info.type->param_types,
             info.type->is_var_arg
         );

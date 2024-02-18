@@ -1,0 +1,173 @@
+import "c.dua"
+
+int __INPUT_STREAM_BUFFER_LEN = 4096;
+
+class InputStream
+{
+    int* stream;
+    str buffer;
+    bool end_of_file_error = false;
+    bool input_failure_error = false;
+    bool range_error = false;  // Underflow or Overflow
+    bool invalid_input_error = false;
+
+    constructor(int* stream) : stream(stream), buffer(new[__INPUT_STREAM_BUFFER_LEN] byte) { }
+
+    constructor() { constructor(c_stdin()); }
+
+    void reset_flags()
+    {
+        end_of_file_error = false;
+        input_failure_error = false;
+        range_error = false;
+        invalid_input_error = false;
+    }
+
+    InputStream& infix >>(char& c)
+    {
+        int read_count = scan_buffer(buffer, __INPUT_STREAM_BUFFER_LEN);
+        if (read_count > 2) {
+            // c = '\0';
+            invalid_input_error = true;
+        } else {
+            c = buffer[0];
+        }
+        return self;
+    }
+
+    InputStream& infix >>(i16& num)
+    {
+        scan_buffer(buffer, __INPUT_STREAM_BUFFER_LEN);
+
+        num = atoi(buffer);
+
+        if (c_errno() == c_ERANGE()) {
+            range_error = true;
+        } else if (num == 0 && buffer[0] != '0') {
+            invalid_input_error = true;
+        }
+
+        return self;
+    }
+
+    InputStream& infix >>(i32& num)
+    {
+        scan_buffer(buffer, __INPUT_STREAM_BUFFER_LEN);
+
+        num = atoi(buffer);
+
+        if (c_errno() == c_ERANGE()) {
+            range_error = true;
+        } else if (num == 0 && buffer[0] != '0') {
+            invalid_input_error = true;
+        }
+
+        return self;
+    }
+
+    InputStream& infix >>(i64& num)
+    {
+        scan_buffer(buffer, __INPUT_STREAM_BUFFER_LEN);
+
+        num = atoll(buffer);
+
+        if (c_errno() == c_ERANGE()) {
+            range_error = true;
+        } else if (num == 0 && buffer[0] != '0') {
+            invalid_input_error = true;
+        }
+
+        return self;
+    }
+
+    InputStream& infix >>(f32& num)
+    {
+        scan_buffer(buffer, __INPUT_STREAM_BUFFER_LEN);
+
+        num = atof(buffer);
+
+        if (c_errno() == c_ERANGE()) {
+            range_error = true;
+        } else if (num == 0.0 && buffer[0] != '0') {
+            invalid_input_error = true;
+        }
+
+        return self;
+    }
+
+    InputStream& infix >>(f64& num)
+    {
+        scan_buffer(buffer, __INPUT_STREAM_BUFFER_LEN);
+
+        num = atof(buffer);
+
+        if (c_errno() == c_ERANGE()) {
+            range_error = true;
+        } else if (num == 0.0 && buffer[0] != '0') {
+            invalid_input_error = true;
+        }
+
+        return self;
+    }
+
+    int scan_buffer(byte* buffer, long size)
+    {
+        reset_flags();
+
+        int read_chars;
+
+        int err = c_scan_str(stream, buffer, &read_chars);
+
+        if (err == c_EOF()) {
+            end_of_file_error = true;
+        } else if (err == 0) {
+            input_failure_error = true;
+        }
+
+        return read_chars;
+    }
+}
+
+class OutputStream
+{
+    int* stream;
+    bool error = false;
+    int error_code = 0;
+
+    constructor(int* stream) : stream(stream) { }
+
+    constructor() { constructor(c_stdout()); }
+
+    OutputStream& infix <<(char c)
+    {
+        error_code = fprintf(stream, "%c", c);
+        error = error_code != 0;
+        return self;
+    }
+
+    OutputStream& infix <<(i64 num)
+    {
+        error_code = fprintf(stream, "%lld", num);
+        error = error_code != 0;
+        return self;
+    }
+
+    OutputStream& infix <<(double num)
+    {
+        error_code = fprintf(stream, "%lf", num);
+        error = error_code != 0;
+        return self;
+    }
+
+    OutputStream& infix <<(str string)
+    {
+        error_code = fprintf(stream, "%s", string);
+        error = error_code != 0;
+        return self;
+    }
+}
+
+nomangle i32 atoi (str num);
+nomangle i64 atoll(str num);
+nomangle f64 atof (str num);
+nomangle int fprintf(int* stream, str format, ...);

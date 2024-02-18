@@ -11,10 +11,10 @@ class Z { }
 
 int main()
 {
-    typeof(3) x;
+    typeof(3L) x;
     print(sizeof(x));
 
-    typeof(5I) y;
+    typeof(5) y;
     print(sizeof(y));
 
     Z z;
