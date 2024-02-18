@@ -128,7 +128,7 @@ set(DUA_SOURCES
     src/AST/DynamicCastNode.cpp
     src/AST/TempObjectNode.cpp
 
-        src/types/Type.cpp
+    src/types/Type.cpp
     src/types/ArrayType.cpp
     src/types/PointerType.cpp
     src/types/ClassType.cpp
