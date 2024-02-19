@@ -154,3 +154,33 @@ int main()
     X x = func();
     x.i = 2;
 }
+
+
+// Case Passing a reference to type with bigger size
+// Panics
+
+void func(int& i)
+{
+
+}
+
+int main()
+{
+    long l;
+    func(l);
+}
+
+
+// Case Passing a reference to type with smaller size
+// Panics
+
+void func(long& i)
+{
+
+}
+
+int main()
+{
+    int i;
+    func(i);
+}

@@ -12,8 +12,7 @@ class PointerType : public Type
 
 public:
 
-    PointerType(ModuleCompiler* compiler, const Type* element_type)
-            : element_type(element_type) { this->compiler = compiler; }
+    PointerType(ModuleCompiler* compiler, const Type* element_type);
 
     Value default_value() const override;
 

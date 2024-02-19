@@ -8,10 +8,10 @@ void print(double d) { printf("%.2lf", d); }
 
 int main()
 {
-    int* i = 2324;
-    float* f = 2324;
+    int* i = ((int*))2324;
+    float* f = ((float*))2324;
 
-    int b1 = i == f;
+    int b1 = i == ((int*))f;
 
     printf("%d%d%d", b1, b1, b1);
 }

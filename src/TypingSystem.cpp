@@ -255,43 +255,61 @@ static const T* is(const Type* t) { return dynamic_cast<const T*>(t); }
 
 int TypingSystem::similarity_score(const Type *t1, const Type *t2) const
 {
-    // Strip any wrappers, including references
-    t1 = t1->get_contained_type();
-    t2 = t2->get_contained_type();
-
     // This function relies on the fact that there is only one instance
     //  of each type. It compares pointers to determine whether the types
     //  are equal or not.
 
-    if (t1 == t2) return 0;
+    // This function is not bidirectional. For example, an i32& can be
+    //  bound to an i64 or an i16. But an i32 can't be bound to neither
+    //  an i64& nor an i16&. This is because a reference to a larger size
+    //  would result in writes exceeding the amount of memory of the original
+    //  variable. Same for binding to smaller types, which will write only
+    //  to a portion of the variable memory, and leave the rest as it is,
+    //  resulting in a garbage value.
+
+    // Yes, this is correct. Only strip the reference
+    //  from the source type, but not the target type.
+    t1 = t1->get_concrete_type()->get_contained_type();
+    t2 = t2->get_concrete_type();
+
+    // Reference and non-reference types with the same element type are interchangeable
+    if (t1 == t2 || t1 == t2->get_contained_type()) return 0;
 
     // For types that must be the same, the above check is enough,
     //  but there are types that are castable to each other, in
     //  which some additional checks are necessary
+
+    if (auto r2 = is<ReferenceType>(t2); r2 != nullptr) {
+        if (auto c2 = is<ClassType>(r2->get_element_type()); c2 != nullptr) {
+            if (auto c1 = is<ClassType>(t1); c1 != nullptr) {
+                return c1->ancestor_distance(c2);
+            }
+        }
+        return -1;
+    }
+
     if (auto c1 = is<ClassType>(t1); c1 != nullptr)
     {
         // Convert from String to i8*
-        if (t2 == compiler->create_type<PointerType>(compiler->create_type<I8Type>())) {
-            if (c1->name == "String") {
+        if (c1->name == "String") {
+            if (t2 == compiler->create_type<PointerType>(compiler->create_type<I8Type>())) {
                 // 1 for i8* to i8*
                 // 2 for ancestors
                 return 3;
             }
-        } else if (auto c2 = is<ClassType>(t2); c2 != nullptr) {
-                return c1->ancestor_distance(c2);
         }
+        return -1;
     }
 
-    if (auto i1 = is<IntegerType>(t1))
+    if (auto i2 = is<IntegerType>(t2))
     {
-        if (auto i2 = is<IntegerType>(t2)) {
+        if (auto i1 = is<IntegerType>(t1)) {
             // i2 is the target. If the target is bigger, it's ok
             //  because the target can hold the smaller size. But
             //  if the target is smaller, the target might not be
             //  able to hold the whole number. Here, if the types
             //  are not the same, a bigger type is favorable. A float
             //  type is more favorable than a smaller integer type.
-
             int o1 = i1->size_order();
             int o2 = i2->size_order();
             if (o2 > o1) {
@@ -300,67 +318,54 @@ int TypingSystem::similarity_score(const Type *t1, const Type *t2) const
                 return 4 + o1 - o2; // Max = 4 + 4 - 1 = 7
             }
         }
-        if (is<FloatType>(t2))   return 4;
-        if (is<PointerType>(t2)) return 8;
-        if (is<ArrayType>(t2))   return 9;
+        if (is<FloatType>(t1))   return 4;
+        if (is<PointerType>(t1)) return 8;
+        if (is<ArrayType>(t1))   return 9;
         return -1;
     }
 
-    if (is<FloatType>(t1))
+    if (is<FloatType>(t2))
     {
-        if (is<FloatType>(t2))   return 1;
-        if (is<IntegerType>(t2)) return 2;
+        if (is<FloatType>(t1))   return 1;
+        if (is<IntegerType>(t1)) return 2;
         return -1;
     }
 
-    if (auto ptr1 = is<PointerType>(t1); ptr1 != nullptr)
+    if (auto ptr2 = is<PointerType>(t2); ptr2 != nullptr)
     {
-        if (auto ptr2 = is<PointerType>(t2); ptr2 != nullptr)
+        if (auto ptr1 = is<PointerType>(t1); ptr1 != nullptr)
         {
+            auto e1 = ptr1->get_element_type();
+            auto e2 = ptr2->get_element_type();
+
             auto null = compiler->create_type<NullType>();
-            if (ptr1->get_element_type() == null || ptr2->get_element_type() == null) {
+            if (e1 == null || e2 == null) {
                 // A null pointer can be of any type
                 return 1;
             }
-            auto score = similarity_score(ptr1->get_element_type(), ptr2->get_element_type());
-            if (score == -1) return -1;
-            return score;
+
+            auto c1 = e1->as<ClassType>();
+            auto c2 = e2->as<ClassType>();
+            if (c1 != nullptr && c2 != nullptr)
+                return c1->ancestor_distance(c2);
+
+            return -1;
         }
-        if (auto arr = is<ArrayType>(t2); arr != nullptr)
+
+        if (auto arr = is<ArrayType>(t1); arr != nullptr)
         {
-            auto score = similarity_score(ptr1->get_element_type(), arr->get_element_type());
-            if (score == -1) return -1;
-            return score + 1;
+            if (arr->get_element_type() == ptr2->get_element_type()) return 1;
+            return -1;
         }
-        if (is<IntegerType>(t2)) return 3;  // Just like the score from int to pointer
+
         return -1;
     }
 
-    if (auto arr = is<ArrayType>(t1); arr != nullptr)
+    if (auto arr = is<ArrayType>(t2); arr != nullptr)
     {
-        if (auto arr2 = is<ArrayType>(t2); arr2 != nullptr)
-            return similarity_score(arr->get_element_type(), arr2->get_element_type());
-        if (auto ptr = is<PointerType>(t2); ptr != nullptr)
-        {
-            auto score = similarity_score(ptr->get_element_type(), arr->get_element_type());
-            if (score == -1) return -1;
-            return score + 1;
-        }
-        if (is<IntegerType>(t2)) return 3;  // Just like the score from int to pointer
-        return -1;
-    }
-
-    if (auto f1 = is<FunctionType>(t1); f1 != nullptr)
-    {
-        if (auto f2 = is<FunctionType>(t2); f2 != nullptr)
-        {
-            if (f1->is_var_arg != f2->is_var_arg) return -1;
-            int ret_score = similarity_score(f1->return_type, f2->return_type);
-            if (ret_score == -1) return -1;
-            int param_score = type_list_similarity_score(f1->param_types, f2->param_types);
-            if (param_score == -1) return -1;
-            return ret_score + param_score;
-        }
+        if (auto ptr = is<PointerType>(t1); ptr != nullptr)
+            if (arr->get_element_type() == ptr->get_element_type())
+                return 1;
         return -1;
     }
 

@@ -27,7 +27,7 @@ int main()
     print(sizeof(t * 50T));
     print(sizeof(i8));
 
-    i64* p = 43;
+    i64* p = ((i64*))43;
     print(sizeof(p * 53));
     print(sizeof(i64*));
 
