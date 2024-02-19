@@ -20,29 +20,6 @@ inline std::string get_parent_path(const std::string& path) {
     return result;
 }
 
-size_t find(const std::string& str, size_t start, const std::string& target, bool must_be_at_start=false)
-{
-    // TODO improve the matching algorithm
-    for (size_t i = start; i < str.size(); i++)
-    {
-        bool matches = true;
-        for (size_t j = 0; matches && j < target.size() && (i + j) < str.size(); j++)
-            if (str[i + j] != target[j])
-                matches = false;
-        if (matches) {
-            if (must_be_at_start) {
-                size_t _i = i;
-                while (_i > 0 && std::isspace(str[--_i]) && str[_i] != '\n');
-                if (!(_i == 0 || str[_i] == '\n')) {
-                    report_error("The directive " + target + " should begin at the start of the line, but it's not");
-                }
-            }
-            return i;
-        }
-    }
-    return str.size();
-}
-
 std::string Preprocessor::process(const std::string &filename, const std::string &content)
 {
     contents.clear();
@@ -67,9 +44,11 @@ std::string Preprocessor::_process(const std::string &filename, const std::strin
     size_t i = 0;
     while (true)
     {
-        size_t keyword_start = find(content, i, keyword, true);
+        size_t keyword_start = i;
+        while (keyword_start < content.size() &&
+            (isspace(content[keyword_start]) || content[keyword_start] == '\n')) keyword_start++;
 
-        if (keyword_start == content.size())
+        if (keyword_start == content.size() || !starts_with(content, keyword, keyword_start))
             break;
 
         size_t keyword_end = keyword_start + keyword.size();
@@ -81,7 +60,8 @@ std::string Preprocessor::_process(const std::string &filename, const std::strin
             report_error("Preprocessor: Imports must be specified between two \"\"");
 
         auto path_start = keyword_end + 1;
-        size_t path_end = find(content, path_start, "\"");  // including the "
+        size_t path_end = path_start + 1;
+        while (path_end < content.size() && !(content[path_end] == '"' && content[path_end - 1] != '\\')) path_end++;
 
         if (path_end == content.size())
             report_error("Preprocessor: Imports must be specified between two \"\"");

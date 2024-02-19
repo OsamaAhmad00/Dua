@@ -46,7 +46,18 @@ void FileTestCasesRunner::run()
             std::string code = tests.common + '\n' + body;
             std::string preprocessed;
 
-            EXPECT_NO_THROW(preprocessed = preprocessor.process(path, code)) << "Panicked at the preprocessing stage\n";
+            if (should_panic) {
+                try {
+                    preprocessed = preprocessor.process(path, code);
+                } catch (...) {
+                    EXPECT_NO_THROW(true);
+                    std::cerr << "Panicked at the preprocessing stage. Passed!\n";
+                    passed_cases++;
+                    continue;
+                }
+            } else {
+                EXPECT_NO_THROW(preprocessed = preprocessor.process(path, code)) << "Panicked at the preprocessing stage\n";
+            }
 
             if (preprocessed.empty()) {
                 // The preprocessor threw an exception

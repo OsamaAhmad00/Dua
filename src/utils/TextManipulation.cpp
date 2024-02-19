@@ -111,10 +111,16 @@ bool header_has_flag(const std::string& str, const std::string& flag)
     return boost::regex_search(str, match, name_regex);
 }
 
-bool ends_with(std::string const & value, std::string const & ending)
+bool starts_with(std::string const & value, std::string const& start, size_t offset)
 {
-    if (ending.size() > value.size()) return false;
-    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+    if (start.size() > value.size()) return false;
+    return std::equal(start.begin(), start.end(), value.begin() + offset);
+}
+
+bool ends_with(std::string const & value, std::string const& end, size_t offset)
+{
+    if (end.size() > value.size()) return false;
+    return std::equal(end.rbegin(), end.rend(), value.rbegin() + offset);
 }
 
 }

@@ -29,8 +29,8 @@ import   "import-files/returns-10.dua"
 import "import-files/outputs-123.dua"
 
 
-// Case Import from file 3
-// Returns 10
+// Case Import not at the top of the file 1
+// Panics
 
 int main()
 {
@@ -38,7 +38,7 @@ int main()
 }
 
 
-// Case Import not at the beginning of the line
+// Case Import not at the top of the file 2
 // Panics
 
 int main()
