@@ -44,10 +44,12 @@ void FileTestCasesRunner::run()
 
             Preprocessor preprocessor;
             std::string code = tests.common + '\n' + body;
-            try {
-                code = preprocessor.process(path, code);
-            } catch (std::exception &e) {
-                std::cerr << "Panicked at the preprocessing stage\n";
+            std::string preprocessed;
+
+            EXPECT_NO_THROW(preprocessed = preprocessor.process(path, code)) << "Panicked at the preprocessing stage\n";
+
+            if (preprocessed.empty()) {
+                // The preprocessor threw an exception
                 continue;
             }
 
@@ -69,7 +71,7 @@ void FileTestCasesRunner::run()
             auto exe_name = encoded_name + ".exe";
 
             std::vector<std::string> n = { encoded_name };
-            std::vector<std::string> c = { code };
+            std::vector<std::string> c = { preprocessed };
             std::vector<std::string> a = { "-o", exe_name, PROJECT_ROOT_DIR + "/lib/common.c" };
 
             bool succeeded;

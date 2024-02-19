@@ -33,7 +33,7 @@ size_t find(const std::string& str, size_t start, const std::string& target, boo
             if (must_be_at_start) {
                 size_t _i = i;
                 while (_i > 0 && std::isspace(str[--_i]) && str[_i] != '\n');
-                if (!(_i == 0 || str[_i-1] == '\n')) {
+                if (!(_i == 0 || str[_i] == '\n')) {
                     report_error("The directive " + target + " should begin at the start of the line, but it's not");
                 }
             }
