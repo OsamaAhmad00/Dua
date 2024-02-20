@@ -3,8 +3,7 @@
 #include "types/PointerType.hpp"
 #include "types/ReferenceType.hpp"
 #include "types/IntegerTypes.hpp"
-#include "AST/values/StringValueNode.hpp"
-#include "AST/lvalue/DereferenceNode.hpp"
+
 
 namespace dua
 {
@@ -22,7 +21,8 @@ Value IndexingNode::eval()
     if (index.is_null())
         compiler->report_error("Can't use a " + rhs_eval.type->to_string() + " as an index");
 
-    auto type = lhs->get_type();
+    // We have to strip the reference away to get the correct (array or pointer) type
+    auto type = lhs->get_type()->get_contained_type();
     if (auto ptr = type->as<PointerType>(); ptr != nullptr) {
         // Act as if this is an array
         lhs_eval.memory_location = lhs_eval.get();

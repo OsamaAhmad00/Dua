@@ -8,6 +8,7 @@
 #include "types/ReferenceType.hpp"
 #include <parsing/ParserFacade.hpp>
 #include "utils/CodeGeneration.hpp"
+#include "AST/BlockNode.hpp"
 
 #include <fstream>
 
@@ -162,30 +163,31 @@ void ModuleCompiler::create_the_object_class()
     std::vector<const Type*> params = { create_type<ReferenceType>(type, true) };
     auto info = FunctionInfo {
         create_type<FunctionType>(create_type<VoidType>(), params),
-        {},
+        { "self" },
         false,
         type
     };
 
-    // The destructor name should be mangled so that it's compliant with the rest
-    //  of the methods, and overriding happens successfully
-    name_resolver.register_function("Object.destructor", std::move(info));
-    auto destructor = module.getFunction("Object.destructor(Object&)");
-    auto bb = llvm::BasicBlock::Create(context, "entry", destructor);
-    auto ip = builder.saveIP();
-    builder.SetInsertPoint(bb);
-    builder.CreateRetVoid();
-    builder.restoreIP(ip);
-
-    auto comdat = module.getOrInsertComdat("Object.destructor(Object&)");
-    comdat->setSelectionKind(llvm::Comdat::Any);
-    destructor->setComdat(comdat);
+    current_class = type->llvm_type();
 
     typing_system.insert_type("Object", type);
     name_resolver.classes["Object"] = type;
+
+    BlockNode empty_block(this, {});
+
+    name_resolver.register_function("Object.destructor", info);
+    FunctionDefinitionNode destructor(this, "Object.destructor", &empty_block, info.type);
+    destructor.eval();
+
     name_resolver.create_vtable("Object");
     name_resolver.class_fields["Object"].push_back(name_resolver.get_vtable_field("Object"));
     type->llvm_type()->setBody(name_resolver.get_vtable_type("Object")->llvm_type());
+
+    name_resolver.register_function("Object.constructor", info);
+    FunctionDefinitionNode constructor(this, "Object.constructor", &empty_block, info.type);
+    constructor.eval();
+
+    current_class = nullptr;
 }
 
 Value ModuleCompiler::create_string(const std::string &name, const std::string &value)

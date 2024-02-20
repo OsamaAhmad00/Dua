@@ -35,7 +35,7 @@ Value ClassFieldNode::eval()
         return compiler->create_value(module().getFunction(name), get_type());
     }
 
-    auto i = eval_instance();
+    auto i = instance->eval();
     if (i.memory_location == nullptr)
         report_internal_error("Can't access a field (with name " + name + ") from an expression with type " + instance->get_type()->to_string());
 
@@ -93,12 +93,6 @@ const Type* ClassFieldNode::get_type()
     }
 
     return set_type(t);
-}
-
-Value ClassFieldNode::eval_instance() const
-{
-    if (!instance_eval.is_null()) return instance_eval;
-    return instance_eval = instance->eval();
 }
 
 std::string ClassFieldNode::get_name() const

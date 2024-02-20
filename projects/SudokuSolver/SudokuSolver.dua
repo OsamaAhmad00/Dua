@@ -1,0 +1,118 @@
+class SudokuSolver
+{
+    int[9][9] board;
+
+    constructor() { /* Initializes the board with zeros */ }
+
+    constructor(int[9][9] board) : board(board) { }
+
+    bool solve() {
+        return _solve(0, 0);
+    }
+
+    bool _solve(int i, int j)
+    {
+        if (j == 9) {
+            if (i == 8) {
+                // We've reached past the last square
+                return true;
+            }
+            return _solve(i + 1, 0);
+        }
+
+        if (board[i][j] != 0) {
+            // This square is already set. Move to the next
+            return _solve(i, j + 1);
+        }
+
+        // TODO Shuffle the candidates list so that the
+        //  solution is different on each trial
+        Vector<int> candidates = get_candidates(i, j);
+
+        for (int c = 0; c < candidates.size(); c++) {
+            board[i][j] = candidates[c];
+            if (_solve(i, j + 1) == true) {
+                // This is a valid substitution
+                return true;
+            }
+        }
+
+        // Nothing have worked out. Backtrack.
+        board[i][j] = 0;
+
+        return false;
+    }
+
+    Vector<int> get_candidates(int i, int j)
+    {
+        // Reserving 10 spots to avoid subtracting 1
+        bool[10] numbers;
+
+        for (int i = 0; i < 10; i++)
+            numbers[i] = true;
+
+        // Row
+        for (int j = 0; j < 9; j++)
+            numbers[board[i][j]] = false;
+
+        // Column
+        for (int i = 0; i < 9; i++)
+            numbers[board[i][j]] = false;
+
+        // Box
+        int box_i = (i / 3) * 3;
+        int box_j = (j / 3) * 3;
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                numbers[board[box_i + i][box_j + j]] = false;
+
+        Vector<int> result;
+        for (int i = 1; i <= 9; i++)
+            if (numbers[i] == true)
+                result.push(i);
+
+        return move(result);
+    }
+
+    char get_char(int i, int j) {
+        if (board[i][j] == 0) return '.';
+        return '0' + board[i][j];
+    }
+
+    void print()
+    {
+        OutputStream out;
+
+        char thick_vertical = 186;
+        char thick_horizontal = 205;
+
+        for (int i = 0; i < (9 + 8 * 3 + 2 * 2); i++)
+            out << thick_horizontal;
+
+        out << '\n';
+
+        for (int i = 0; i < 9; i++)
+        {
+            if (i && i % 3 == 0) {
+                for (int i = 0; i < (9 + 8 * 3 + 2 * 2); i++)
+                    out << thick_horizontal;
+                out << '\n';
+            }
+
+            out << thick_vertical << " " << get_char(i, 0);
+
+            for (int j = 1; j < 9; j++) {
+                if (j % 3 == 0) out << " " << thick_vertical << " ";
+                else out << " | ";
+                out << get_char(i, j);
+            }
+
+            out << " " << thick_vertical << "\n";
+        }
+
+        for (int i = 0; i < (9 + 8 * 3 + 2 * 2); i++)
+            out << thick_horizontal;
+
+        out << "\n\n";
+    }
+}

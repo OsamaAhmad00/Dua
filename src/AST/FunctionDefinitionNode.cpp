@@ -390,6 +390,8 @@ FunctionDefinitionNode *FunctionDefinitionNode::clone() const {
 
 void FunctionDefinitionNode::destruct_fields(const ClassType* class_type)
 {
+    if (class_type->name == "Object") return;
+
     // Self is a reference. Turn it into a pointer
     auto self = name_resolver().symbol_table.get("self");
     self.type = compiler->create_type<PointerType>(self.type->as<ReferenceType>()->get_element_type());
@@ -409,22 +411,19 @@ void FunctionDefinitionNode::destruct_fields(const ClassType* class_type)
         name_resolver().call_destructor(field);
     }
 
-    if (class_type->name != "Object")
-    {
-        // Here, we don't call the call_destructor method, instead, we call
-        //  the destructor of the parent manually. This is because call_destructor
-        //  loads the destructor from the vtable to choose the correct destructor
-        //  for the instance dynamically. This is not the behaviour we want. Instead,
-        //  we need to call the parent destructor statically with no dynamic dispatch.
-        auto parent = compiler->get_name_resolver().parent_classes[class_type->name];
-        auto parent_ptr = compiler->create_type<PointerType>(parent);
-        auto self_as_parent = self.cast_as(parent_ptr);
-        auto parent_ref = compiler->create_type<ReferenceType>(parent, false);
-        self_as_parent.type = parent_ref;
-        self_as_parent.memory_location = self.get();
-        self_as_parent.set(nullptr);
-        name_resolver().call_function(parent->name + ".destructor", { self_as_parent });
-    }
+    // Here, we don't call the call_destructor method, instead, we call
+    //  the destructor of the parent manually. This is because call_destructor
+    //  loads the destructor from the vtable to choose the correct destructor
+    //  for the instance dynamically. This is not the behaviour we want. Instead,
+    //  we need to call the parent destructor statically with no dynamic dispatch.
+    auto parent = compiler->get_name_resolver().parent_classes[class_type->name];
+    auto parent_ptr = compiler->create_type<PointerType>(parent);
+    auto self_as_parent = self.cast_as(parent_ptr);
+    auto parent_ref = compiler->create_type<ReferenceType>(parent, false);
+    self_as_parent.type = parent_ref;
+    self_as_parent.memory_location = self.get();
+    self_as_parent.set(nullptr);
+    name_resolver().call_function(parent->name + ".destructor", { self_as_parent });
 }
 
 }

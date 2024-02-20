@@ -297,7 +297,8 @@ const ClassType* TemplatedNameResolver::get_templated_class(const std::string &n
     auto full_name = get_templated_class_full_name(name, concrete_args);
 
     if (!compiler->name_resolver.has_class(full_name)) {
-        construct_templated_class(name, concrete_args);
+        register_templated_class(name, template_args);
+        construct_templated_class_fields(name, template_args);
     }
 
     auto cls = compiler->name_resolver.get_class(full_name);
@@ -364,6 +365,11 @@ void TemplatedNameResolver::register_templated_class(const std::string &name, co
 
     if (compiler->name_resolver.has_function(full_name))
         compiler->report_error("There is already a function with the name " + full_name + ". Can't have a class with the same name");
+
+    auto prev = registered_templated_classes.find(full_name);
+    if (prev != registered_templated_classes.end())
+        report_internal_error("The templated class " + full_name + " is registered already");
+    registered_templated_classes[full_name] = { name, template_args, false, false };
 
     auto cls = compiler->create_type<ClassType>(full_name);
     compiler->name_resolver.classes[full_name] = cls;
@@ -435,7 +441,12 @@ const ClassType* TemplatedNameResolver::define_templated_class(const std::string
 
     auto full_name = get_templated_class_full_name(name, template_args);
 
-    defined_templated_classes.insert(full_name);
+    auto info = registered_templated_classes.find(full_name);
+    if (info == registered_templated_classes.end())
+        report_internal_error("Definition of the unregistered templated class " + full_name);
+    if (info->second.is_defined)
+        report_internal_error("Redefinition of the fields of the templated class " + full_name);
+    info->second.is_defined = true;
 
     // Class is not defined yet.
     // Instantiate the class with the provided arguments
@@ -605,8 +616,16 @@ void TemplatedNameResolver::construct_templated_class_fields(const std::string& 
     for (auto& type : concrete_template_args)
         type = type->get_concrete_type();
 
-    auto key = compiler->name_resolver.get_templated_class_key(name, concrete_template_args.size());
     auto full_name = compiler->name_resolver.get_templated_class_full_name(name, concrete_template_args);
+
+    auto info = registered_templated_classes.find(full_name);
+    if (info == registered_templated_classes.end())
+        report_internal_error("Construction of fields of the unregistered templated class " + full_name);
+    if (info->second.are_fields_constructed)
+        report_internal_error("Reconstruction of the fields of the templated class " + full_name);
+    info->second.are_fields_constructed = true;
+
+    auto key = compiler->name_resolver.get_templated_class_key(name, concrete_template_args.size());
     compiler->name_resolver.create_vtable(full_name);
 
     auto parent = compiler->name_resolver.parent_classes[full_name];
@@ -690,7 +709,8 @@ bool TemplatedNameResolver::is_templated_class_defined(const std::string &name,
                                                        const std::vector<const Type *> &template_args)
 {
     auto full_name = get_templated_class_full_name(name, template_args);
-    return defined_templated_classes.find(full_name) != defined_templated_classes.end();
+    auto it = registered_templated_classes.find(full_name);
+    return it != registered_templated_classes.end() && it->second.is_defined;
 }
 
 }

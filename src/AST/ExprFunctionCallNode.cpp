@@ -40,7 +40,7 @@ Value ExprFunctionCallNode::eval()
     }
 
     if (is_method)
-        evaluated[0] = field->eval_instance();
+        evaluated[0] = field->instance->eval();
 
     return name_resolver().call_function(func->eval(), std::move(evaluated));
 }

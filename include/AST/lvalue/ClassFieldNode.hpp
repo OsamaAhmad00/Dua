@@ -7,7 +7,7 @@ namespace dua
 
 class ClassFieldNode : public VariableNode
 {
-    mutable Value instance_eval { nullptr, nullptr, nullptr };
+    friend class ExprFunctionCallNode;
 
     ASTNode* instance;
 
@@ -26,8 +26,6 @@ public:
     Value eval() override;
 
     [[nodiscard]] const Type* get_type() override;
-
-    [[nodiscard]] Value eval_instance() const;
 
     [[nodiscard]] std::string get_name() const override;
 

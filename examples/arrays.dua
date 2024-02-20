@@ -77,3 +77,19 @@ int main()
     for (int i = 0; i < 5; i++)
         printf("%d", arr[i]);
 }
+
+
+// Case Passing a multi-dimensional array element by reference
+// Outputs "5"
+
+void func(int& i)
+{
+    i = 5;
+}
+
+int main()
+{
+    int[3][3] arr;
+    func(arr[2][2]);
+    printf("%d", arr[2][2]);
+}

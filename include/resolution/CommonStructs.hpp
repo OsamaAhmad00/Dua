@@ -26,6 +26,14 @@ struct FieldConstructorArgs
     std::vector<ASTNode*> args;
 };
 
+struct TemplatedClassInfo
+{
+    std::string name;
+    std::vector<const Type*> template_args;
+    bool are_fields_constructed = false;
+    bool is_defined = false;
+};
+
 struct TemplatedFunctionNode
 {
     FunctionDefinitionNode* node;

@@ -112,7 +112,9 @@ void ParserAssistant::finish_parsing()
     }
 
     for (auto& [name, template_args] : templated_class_definitions) {
-        compiler->name_resolver.register_templated_class(name, template_args);
+        auto full_name = compiler->name_resolver.get_templated_class_full_name(name, template_args);
+        if (!compiler->name_resolver.has_class(full_name))
+            compiler->name_resolver.register_templated_class(name, template_args);
     }
 
     for (auto& [name, template_args] : templated_class_definitions) {
@@ -197,12 +199,20 @@ void ParserAssistant::finish_parsing()
                 queue.push(&class_info[child]);
 
             if (node->is_templated) {
-                if (!compiler->name_resolver.is_templated_class_defined(node->name, node->template_args))
+                if (!compiler->name_resolver.is_templated_class_defined(node->name, node->template_args)) {
                     compiler->name_resolver.define_templated_class(node->name, node->template_args);
+                }
             } else {
                 node->node->eval();
             }
         }
+    }
+
+    for (auto& [full_name, info] : compiler->name_resolver.registered_templated_classes) {
+        if (!info.are_fields_constructed)
+            compiler->name_resolver.construct_templated_class_fields(info.name, info.template_args);
+        if (!info.is_defined)
+            compiler->name_resolver.define_templated_class(info.name, info.template_args);
     }
 
     // Only the global scope

@@ -7,7 +7,9 @@ namespace dua
 
 Value AssignmentExpressionNode::eval()
 {
-    return perform_assignment(lhs->eval(), rhs->eval(), compiler);
+    auto lhs_eval = lhs->eval();
+    auto rhs_eval = rhs->eval();
+    return perform_assignment(lhs_eval, rhs_eval, compiler);
 }
 
 Value AssignmentExpressionNode::perform_assignment(Value lhs, Value rhs, ModuleCompiler* compiler)
