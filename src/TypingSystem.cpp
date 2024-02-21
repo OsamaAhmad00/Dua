@@ -237,6 +237,8 @@ const Type* TypingSystem::get_winning_type(const Type* lhs, const Type* rhs, boo
 
 Value TypingSystem::forced_cast_value(const Value& value, const Type *target_type) const
 {
+    // TODO check if the source type is not castable under any condition (such as casting a pointer to a function type)
+    // report_error("The type " + value.type->to_string() + " can't be casted in any way to the type " + target_type->to_string());
     auto casted = builder().CreateBitOrPointerCast(value.get(), target_type->llvm_type(), "forced_cast");
     auto result = value;
     result.set(casted);
@@ -274,6 +276,10 @@ int TypingSystem::similarity_score(const Type *t1, const Type *t2) const
 
     // Reference and non-reference types with the same element type are interchangeable
     if (t1 == t2 || t1 == t2->get_contained_type()) return 0;
+
+    // This is needed for the case of two equivalent types with two different class types,
+    //  such as an IdentifierType and a ClassType, both referring to the same type.
+    if (*t1 == *t2 || *t1 == *t2->get_contained_type()) return 0;
 
     // For types that must be the same, the above check is enough,
     //  but there are types that are castable to each other, in

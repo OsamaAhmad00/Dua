@@ -31,9 +31,9 @@ struct FunctionType : public Type
 
     std::string as_key() const override;
 
-    bool operator==(const FunctionType& other) const;
+    bool operator==(const Type& other) const override;
 
-    bool operator!=(const FunctionType& other) const { return !(*this == other); };
+    bool operator!=(const Type& other) const override { return !(*this == other); };
 };
 
 }

@@ -6,10 +6,6 @@
 namespace dua
 {
 
-inline bool equal_types(const Type* t1, const Type* t2) {
-    return (bool)t1 == (bool)t2 && (!t1 || *t1 == *t2);
-}
-
 Value FunctionType::default_value() const {
     return compiler->create_value(llvm::Constant::getNullValue(llvm_type()), this);
 }
@@ -61,17 +57,17 @@ std::string FunctionType::as_key() const
     return result;
 }
 
-bool FunctionType::operator==(const FunctionType &other) const
+bool FunctionType::operator==(const Type &other) const
 {
-    if (!equal_types(return_type, other.return_type))
-        return false;
-    if (param_types.size() != other.param_types.size())
-        return false;
+    auto other_func = other.as<FunctionType>();
+    if (other_func == nullptr) return false;
+    if (*return_type != *other_func->return_type) return false;
+    if (param_types.size() != other_func->param_types.size()) return false;
     // The names can be different.
     for (size_t i = 0; i < param_types.size(); i++)
-        if (!equal_types(param_types[i], other.param_types[i]))
+        if (*param_types[i] != *other_func->param_types[i])
             return false;
-    return is_var_arg == other.is_var_arg;
+    return is_var_arg == other_func->is_var_arg;
 }
 
 const FunctionType *FunctionType::with_concrete_types() const

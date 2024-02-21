@@ -16,8 +16,6 @@ protected:
 
     Value call_reference(const Value& reference, std::vector<Value> args);
 
-    Value get_method(std::vector<const Type*>& arg_types);
-
     Value get_templated_function(std::vector<const Type*>& args_types);
 
     std::string _current_name;

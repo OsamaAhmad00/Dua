@@ -1,0 +1,23 @@
+bool __IS_RANDOM_SEED_SET = false;
+
+void set_random_seed(i32 seed)
+{
+    __IS_RANDOM_SEED_SET = true;
+    srand(seed);
+}
+
+void set_random_seed()
+{
+    set_random_seed(time(null));
+}
+
+i16 random_int()
+{
+    if (!__IS_RANDOM_SEED_SET)
+        set_random_seed();
+    return rand();
+}
+
+nomangle int rand();
+nomangle void srand(i32 seed);
+nomangle int time(int* xxx);

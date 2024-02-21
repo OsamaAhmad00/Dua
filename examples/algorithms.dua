@@ -1,0 +1,39 @@
+import "../lib/algorithms.dua"
+
+nomangle int printf(str message, ...);
+
+var arr = int { 5, 3, 4, 1, 2, 7, 9, 8, 6, 0 };
+
+
+// Case Sorting an array in an ascending order
+// Outputs "0123456789"
+
+int main()
+{
+    sort_ascending<int>(&arr[0], 10);
+    for (int i = 0; i < 10; i++)
+        printf("%d", arr[i]);
+}
+
+
+// Case Sorting an array in a descending order
+// Outputs "9876543210"
+
+int main()
+{
+    sort_descending<int>(&arr[0], 10);
+    for (int i = 0; i < 10; i++)
+        printf("%d", arr[i]);
+}
+
+
+// Case Shuffle an array
+// Outputs "0469251738"
+
+int main()
+{
+    set_random_seed(5);
+    shuffle<int>(&arr[0], 10);
+    for (int i = 0; i < 10; i++)
+        printf("%d", arr[i]);
+}

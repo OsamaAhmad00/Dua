@@ -105,41 +105,25 @@ const Type *FunctionCallNode::get_type()
     return set_type(name_resolver().get_function(_current_name, arg_types).type->return_type);
 }
 
-Value FunctionCallNode::get_method(std::vector<const Type*>& arg_types)
-{
-    if (current_class() == nullptr)
-        return {};
-
-    auto class_name = current_class()->getName().str();
-    auto class_type = name_resolver().get_class(class_name);
-    auto reference_type = compiler->create_type<ReferenceType>(class_type, true);
-    arg_types.insert(arg_types.begin(), reference_type);
-    auto method = name_resolver().get_templated_function(class_name + "." + _current_name, template_args, arg_types, true, false);
-    if (!method.is_null()) {
-        return method;
-    } else {
-        // Undo
-        arg_types.erase(arg_types.begin());
-        return {};
-    }
-}
-
 Value FunctionCallNode::call_templated_function(std::vector<Value> args)
 {
-    std::vector<const Type*> arg_types(args.size());
-    for (size_t i = 0; i < args.size(); i++)
-        arg_types[i] = args[i].type;
-
-    auto func = get_templated_function(arg_types);
-    if (arg_types.size() == args.size() + 1) {
-        // This is a method call
+    if (current_class() != nullptr)
+    {
+        // Try as method first
         auto self = name_resolver().symbol_table.get("self");
         self.memory_location = self.get();
         self.set(nullptr);
-        args.insert(args.begin(), self);
+        std::vector<Value> method_args(args.size() + 1);
+        method_args[0] = self;
+        for (size_t i = 0; i < args.size(); i++)
+            method_args[i + 1] = args[i];
+        auto class_name = current_class()->getName().str();
+        auto result = compiler->get_name_resolver().call_templated_function(class_name + "." + _current_name, template_args, std::move(method_args), false);
+        if (!result.is_null())
+            return result;
     }
 
-    return name_resolver().call_function(func, std::move(args));
+    return name_resolver().call_templated_function(_current_name, template_args, std::move(args));
 }
 
 Value FunctionCallNode::call_reference(const Value &reference, std::vector<Value> args)
@@ -162,12 +146,23 @@ Value FunctionCallNode::call_reference(const Value &reference, std::vector<Value
 
 Value FunctionCallNode::get_templated_function(std::vector<const Type*>& arg_types)
 {
-    // Try as a method first
-    auto method = get_method(arg_types);
-    if (!method.is_null())
-        return method;
+    if (current_class() != nullptr)
+    {
+        // Try as a method first
+        auto class_name = current_class()->getName().str();
+        auto class_type = name_resolver().get_class(class_name);
+        auto reference_type = compiler->create_type<ReferenceType>(class_type, true);
+        arg_types.insert(arg_types.begin(), reference_type);
+        auto method = name_resolver().get_templated_function(class_name + "." + _current_name, template_args, arg_types, true, false);
+        if (!method.is_null()) {
+            return method;
+        } else {
+            // Undo
+            arg_types.erase(arg_types.begin());
+        }
+    }
 
-    return compiler->get_name_resolver().get_templated_function(_current_name, template_args, std::move(arg_types));
+    return compiler->get_name_resolver().get_templated_function(_current_name, template_args, arg_types);
 }
 
 }

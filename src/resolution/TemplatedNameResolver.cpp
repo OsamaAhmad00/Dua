@@ -47,7 +47,7 @@ void TemplatedNameResolver::add_templated_function(FunctionDefinitionNode* node,
     functions.push_back({node, std::move(template_params), std::move(info), cls, in_templated_class });
 }
 
-Value TemplatedNameResolver::get_templated_function(const std::string& name, std::vector<const Type *> &template_args, const std::vector<const Type *> &arg_types, bool use_arg_types, bool panic_on_error)
+Value TemplatedNameResolver::get_templated_function(const std::string& name, std::vector<const Type *> template_args, const std::vector<const Type *>& arg_types, bool use_arg_types, bool panic_on_error)
 {
     // Templated functions are named as follows:
     //  original_name.template_param_count.param_types_separated_by_dots
@@ -67,6 +67,10 @@ Value TemplatedNameResolver::get_templated_function(const std::string& name, std
 
     auto& functions = it->second;
     auto& any_overload = functions.front();
+
+    // Resolve template arguments before hiding the old types
+    for (auto& type : template_args)
+        type = type->get_concrete_type();
 
     // Global scope. Other scopes such as the scopes of class fields, class type aliases,
     //  and class template args will be pushed later
@@ -167,8 +171,8 @@ Value TemplatedNameResolver::get_templated_function(const std::string& name, std
     return compiler->create_value(func, type);
 }
 
-Value TemplatedNameResolver::get_templated_function(const std::string& name, std::vector<const Type *> &template_args, bool panic_on_error) {
-    return get_templated_function(std::move(name), template_args, std::vector<const Type*>{}, false, panic_on_error);
+Value TemplatedNameResolver::get_templated_function(const std::string& name, const std::vector<const Type *>& template_args, bool panic_on_error) {
+    return get_templated_function(name, template_args, std::vector<const Type*>{}, false, panic_on_error);
 }
 
 std::string TemplatedNameResolver::get_templated_function_full_name(std::string name, const std::vector<const Type *> &template_args)
@@ -711,6 +715,121 @@ bool TemplatedNameResolver::is_templated_class_defined(const std::string &name,
     auto full_name = get_templated_class_full_name(name, template_args);
     auto it = registered_templated_classes.find(full_name);
     return it != registered_templated_classes.end() && it->second.is_defined;
+}
+
+Value TemplatedNameResolver::call_templated_function(const std::string &name, std::vector<const Type*> template_args, std::vector<Value> args, bool panic_on_error)
+{
+    auto it = templated_functions.find(get_templated_function_key(name, template_args.size()));
+
+    if (it == templated_functions.end()) {
+        if (panic_on_error)
+            compiler->report_error("The templated function " + name + " with "
+                               + std::to_string(template_args.size()) + " template parameters is not defined");
+        return { };
+    }
+
+    // Finding the best overload
+
+    auto& functions = it->second;
+    auto& any_overload = functions.front();
+
+    // Resolve template arguments before hiding the old types
+    for (auto& type : template_args)
+        type = type->get_concrete_type();
+
+    // Global scope. Other scopes such as the scopes of class fields, class type aliases,
+    //  and class template args will be pushed later
+    compiler->name_resolver.symbol_table.keep_only_last_n_scopes(0, true);
+    compiler->typing_system.identifier_types.keep_only_last_n_scopes(0, true);
+
+    if (any_overload.in_templated_class)
+    {
+        // If one overload belongs to a class, all other overloads will belong to it too.
+        compiler->typing_system.push_scope();
+        compiler->name_resolver.push_scope();
+        auto class_name = any_overload.owner_class->getName().str();
+        auto& bindings = templated_class_bindings[class_name];
+        for (size_t i = 0; i < bindings.params.size(); i++)
+            compiler->typing_system.insert_type(bindings.params[i], bindings.args[i]);
+    }
+
+    std::vector<const Type*> arg_types(args.size());
+    for (size_t i = 0; i < args.size(); i++)
+        arg_types[i] = args[i].type;
+
+    auto idx = get_winner_templated_function(name, functions, template_args, std::move(arg_types));
+
+    auto& templated = functions[idx];
+
+    // A scope that will hold the bindings of the template
+    //  parameters to the template arguments, and will
+    //  shadow the outer scope types that collide if exists.
+    compiler->typing_system.push_scope();
+    compiler->name_resolver.push_scope();
+
+    for (size_t i = 0; i < template_args.size(); i++)
+        compiler->typing_system.insert_type(templated.template_params[i], template_args[i]);
+
+    std::string full_name = get_templated_function_full_name(name, template_args, templated.info.type->param_types);
+
+    if (compiler->name_resolver.has_function(full_name))
+    {
+        auto func = compiler->module.getFunction(full_name);
+        auto type = compiler->name_resolver.get_function_no_overloading(full_name).type;
+        auto value = compiler->create_value(func, type);
+        // Calling the function while the template args are still bound
+        auto result = compiler->name_resolver.call_function(value, std::move(args));
+
+        compiler->typing_system.identifier_types.restore_prev_state();
+        compiler->name_resolver.symbol_table.restore_prev_state();
+
+        return result;
+    }
+
+    // Function is not defined yet.
+    // Instantiate the function with the provided arguments
+
+    // Types shouldn't be cached during the evaluation of templated functions
+    auto old_type_cache_config = compiler->stop_caching_types;
+    compiler->stop_caching_types = true;
+
+    // The full name is computed here.
+    templated.node->nomangle = true;
+
+    // Temporarily reset the current function to nullptr
+    // so that we don't get the nested functions error.
+    auto old_func = compiler->current_function;
+    compiler->current_function = nullptr;
+
+    // Temporarily set the current class to the owner
+    // class so that method definitions are correct
+    auto old_class = compiler->current_class;
+    compiler->current_class = templated.owner_class;
+
+    compiler->name_resolver.register_function(full_name, templated.info, true);
+
+    std::swap(templated.node->name, full_name);
+    auto old_template_param_count = templated.node->template_param_count;
+    templated.node->template_param_count = FunctionDefinitionNode::TEMPLATED_BUT_EVALUATE;
+    templated.node->eval();
+    templated.node->template_param_count = old_template_param_count;
+    std::swap(templated.node->name, full_name);
+
+    compiler->current_class = old_class;
+    compiler->current_function = old_func;
+
+    auto func = compiler->module.getFunction(full_name);
+    auto type = compiler->name_resolver.get_function_no_overloading(full_name).type;
+    auto value = compiler->create_value(func, type);
+    // Calling the function while the template args are still bound
+    auto result = compiler->name_resolver.call_function(value, std::move(args));
+
+    compiler->typing_system.identifier_types.restore_prev_state();
+    compiler->name_resolver.symbol_table.restore_prev_state();
+
+    compiler->stop_caching_types = old_type_cache_config;
+
+    return result;
 }
 
 }

@@ -7,8 +7,20 @@
 namespace dua
 {
 
-bool Type::operator==(const Type &other) const {
-     return get_concrete_type() == other.get_concrete_type();
+bool Type::operator==(const Type &other) const
+{
+    auto c1 = get_concrete_type();
+    auto c2 = other.get_concrete_type();
+
+    if (c1 == this)
+    {
+        if (c2 == &other) return c1 == c2;
+
+        // Call the == operator of other
+        return *c2 == *this;
+    }
+
+    return *c1 == *c2;
 }
 
 bool Type::operator!=(const Type &other) const {
