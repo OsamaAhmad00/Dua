@@ -630,6 +630,14 @@ void TemplatedNameResolver::construct_templated_class_fields(const std::string& 
     info->second.are_fields_constructed = true;
 
     auto key = compiler->name_resolver.get_templated_class_key(name, concrete_template_args.size());
+
+    compiler->typing_system.identifier_types.keep_only_last_n_scopes(0, true);
+    compiler->typing_system.push_scope();
+    auto& templated_class = compiler->name_resolver.templated_classes[key];
+    auto& template_params = templated_class.template_params;
+    for (size_t i = 0; i < concrete_template_args.size(); i++)
+        compiler->typing_system.insert_type(template_params[i], concrete_template_args[i]);
+
     compiler->name_resolver.create_vtable(full_name);
 
     auto parent = compiler->name_resolver.parent_classes[full_name];
@@ -666,14 +674,6 @@ void TemplatedNameResolver::construct_templated_class_fields(const std::string& 
 
     for (size_t i = 1; i < parent_fields.size(); i++)
         concrete_fields.push_back(parent_fields[i]);
-
-    compiler->typing_system.identifier_types.keep_only_last_n_scopes(0, true);
-
-    compiler->typing_system.push_scope();
-    auto& templated_class = compiler->name_resolver.templated_classes[key];
-    auto& template_params = templated_class.template_params;
-    for (size_t i = 0; i < concrete_template_args.size(); i++)
-        compiler->typing_system.insert_type(template_params[i], concrete_template_args[i]);
 
     compiler->typing_system.push_scope();
     for (auto alias : templated_class.node->aliases)

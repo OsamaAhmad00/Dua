@@ -25,6 +25,8 @@ struct FunctionType : public Type
 
     const FunctionType* with_concrete_types() const;
 
+    const Type* get_concrete_type() const override;
+
     llvm::FunctionType* llvm_type() const override;
 
     std::string to_string() const override;

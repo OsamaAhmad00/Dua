@@ -699,6 +699,22 @@ class Vector<T>
         return self;
     }
 
+    void sort(int(T*, T*)* comparator) {
+        sort<T>(buffer, size(), comparator);
+    }
+
+    void sort_ascending() {
+        sort(ascending_comparator<T>);
+    }
+
+    void sort_descending() {
+        sort(descending_comparator<T>);
+    }
+
+    void shuffle() {
+        shuffle<T>(buffer, size());
+    }
+
     bool is_empty() { return size() == 0; }
 
     destructor
@@ -828,6 +844,57 @@ class OutputStream
 
     OutputStream& infix <<(str string);
 }
+
+)"
+,
+R"(
+
+Declaration void set_random_seed(i32 seed);
+
+Declaration void set_random_seed();
+
+Declaration i16 random_int();
+
+)"
+,
+R"(
+
+void sort<T>(T* base, long n, int(T*, T*)* comparator)
+{
+    qsort(((int*))base, n, sizeof(T), ((int(int*, int*)*))comparator);
+}
+
+int ascending_comparator<T>(T* a, T* b)
+{
+    return *a - *b;
+}
+
+int descending_comparator<T>(T* a, T* b)
+{
+    return *b - *a;
+}
+
+void sort_ascending<T>(T* base, long n)
+{
+    sort<T>(base, n, ascending_comparator<T>);
+}
+
+void sort_descending<T>(T* base, long n)
+{
+    sort<T>(base, n, descending_comparator<T>);
+}
+
+int random_comparator<T>(T* a, T* b)
+ {
+    return (random_int() % 2) ? 1 : -1;
+}
+
+void shuffle<T>(T* base, long n)
+{
+    sort<T>(base, n, random_comparator<T>);
+}
+
+nomangle void qsort(int* base, long n, long size, int(int*, int*)* comparator);
 
 )"
 ,

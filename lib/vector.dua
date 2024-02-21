@@ -1,4 +1,5 @@
 import "execution.dua"
+import "algorithms.dua"
 
 class Vector<T>
 {
@@ -169,6 +170,22 @@ class Vector<T>
         _is_const_initialized = other._is_const_initialized;
 
         return self;
+    }
+
+    void sort(int(T*, T*)* comparator) {
+        sort<T>(buffer, size(), comparator);
+    }
+
+    void sort_ascending() {
+        sort(ascending_comparator<T>);
+    }
+
+    void sort_descending() {
+        sort(descending_comparator<T>);
+    }
+
+    void shuffle() {
+        shuffle<T>(buffer, size());
     }
 
     bool is_empty() { return size() == 0; }

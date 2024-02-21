@@ -28,10 +28,11 @@ int main()
 
 
 // Case Shuffle an array
-// Outputs "0469251738"
 
 int main()
 {
+    // Even though a constant seed is used here, the
+    // output is not guaranteed across different platforms.
     set_random_seed(5);
     shuffle<int>(&arr[0], 10);
     for (int i = 0; i < 10; i++)

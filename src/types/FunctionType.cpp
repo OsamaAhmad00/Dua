@@ -84,4 +84,8 @@ const FunctionType *FunctionType::with_concrete_types() const
     return this;
 }
 
+const Type* FunctionType::get_concrete_type() const {
+    return with_concrete_types();
+}
+
 }

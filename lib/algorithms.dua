@@ -5,24 +5,28 @@ void sort<T>(T* base, long n, int(T*, T*)* comparator)
     qsort(((int*))base, n, sizeof(T), ((int(int*, int*)*))comparator);
 }
 
-int ascending_comparator<T>(T* a, T* b) {
+int ascending_comparator<T>(T* a, T* b)
+{
     return *a - *b;
 }
 
-int descending_comparator<T>(T* a, T* b) {
+int descending_comparator<T>(T* a, T* b)
+{
     return *b - *a;
 }
 
-void sort_ascending<T>(T* base, long n) {
+void sort_ascending<T>(T* base, long n)
+{
     sort<T>(base, n, ascending_comparator<T>);
 }
 
-void sort_descending<T>(T* base, long n) {
+void sort_descending<T>(T* base, long n)
+{
     sort<T>(base, n, descending_comparator<T>);
 }
 
 int random_comparator<T>(T* a, T* b)
-{
+ {
     return (random_int() % 2) ? 1 : -1;
 }
 
