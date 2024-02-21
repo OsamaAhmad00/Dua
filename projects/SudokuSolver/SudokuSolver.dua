@@ -25,9 +25,8 @@ class SudokuSolver
             return _solve(i, j + 1);
         }
 
-        // TODO Shuffle the candidates list so that the
-        //  solution is different on each trial
         Vector<int> candidates = get_candidates(i, j);
+        candidates.shuffle();
 
         for (int c = 0; c < candidates.size(); c++) {
             board[i][j] = candidates[c];
