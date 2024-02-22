@@ -21,6 +21,8 @@ public:
     {
         auto result = name_resolver().symbol_table.get(name);
 
+        result.type = result.type->get_contained_type();
+
         name_resolver().symbol_table.move_last_occurrence_of(name);
 
         result.memory_location = result.get();

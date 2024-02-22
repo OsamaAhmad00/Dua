@@ -407,9 +407,28 @@ void FunctionNameResolver::copy_construct(const Value &instance, const Value& ar
             call_function(name, { ref, arg });
             return;
         }
+
+        // There is no copy constructor defined for
+        //  this class. Copy construct every field
+
+        if (!compiler->typing_system.is_castable(arg.type, class_type))
+            report_error("Can't copy an object of type " + arg.type->to_string() + " to an object of type "
+                + class_type->to_string() + " without defining a copy constructor between the two types");
+
+        size_t n = class_type->fields().size();
+        auto other = compiler->create_value(arg.memory_location, arg.type);
+        for (size_t i = 0; i < n; i++) {
+            auto source = class_type->get_field(instance, i);
+            auto target = class_type->get_field(other, i);
+            target.memory_location = target.get();
+            target.set(nullptr);
+            copy_construct(source, target);
+        }
+
+        return;
     }
 
-    // Initializing a primitive type, or an object with no copy constructor.
+    // Initializing a primitive type
     auto casted = compiler->typing_system.cast_value(arg, instance.type);
     builder().CreateStore(casted.get(), instance.get());
 }

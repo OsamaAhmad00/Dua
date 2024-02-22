@@ -36,13 +36,13 @@ void TemplatedNameResolver::add_templated_function(FunctionDefinitionNode* node,
     auto name = get_templated_function_key(node->name, template_params.size());
     check_template_params(template_params, "the function " + name);
     auto& functions = templated_functions[std::move(name)];
-    for (auto& function : functions) {
-        if (*function.info.type == *info.type) {
-            compiler->report_error("Redefinition of the templated function " + node->name + " with the "
-                         + std::to_string(template_params.size()) + " template parameters and the signature " +
-                         info.type->to_string());
-        }
-    }
+//    for (auto& function : functions) {
+//        if (*function.info.type == *info.type) {
+//            compiler->report_error("Redefinition of the templated function " + node->name + " with the "
+//                         + std::to_string(template_params.size()) + " template parameters and the signature " +
+//                         info.type->to_string());
+//        }
+//    }
     auto cls = class_name.empty() ? nullptr : llvm::StructType::getTypeByName(*compiler->get_context(), class_name);
     functions.push_back({node, std::move(template_params), std::move(info), cls, in_templated_class });
 }
@@ -93,7 +93,7 @@ Value TemplatedNameResolver::get_templated_function(const std::string& name, std
         if (functions.size() > 1) {
             if (!panic_on_error) return {};
             compiler->report_error("Can't infer the correct overload for the templated function " + name +
-                         " without the knowledge of the argument types");
+                         " without the knowledge of the argument types (there are multiple overloads of the templated function)");
         }
     } else {
         idx = get_winner_templated_function(name, functions, template_args, arg_types);
@@ -412,6 +412,31 @@ void TemplatedNameResolver::register_templated_class(const std::string &name, co
             auto full_method_name = compiler->name_resolver.get_function_full_name(method_name, concrete_type->param_types);
             compiler->name_resolver.register_function(std::move(full_method_name), std::move(info), true);
         }
+    }
+
+    if (!compiler->name_resolver.has_function(full_name + ".destructor"))
+    {
+        std::vector<const Type*> params = { compiler->create_type<ReferenceType>(cls, true) };
+
+        auto info = FunctionInfo {
+                compiler->create_type<FunctionType>(compiler->create_type<VoidType>(), params),
+                { "self" },
+                false,
+                cls
+        };
+
+        auto func_name = compiler->name_resolver.get_function_full_name(full_name + ".destructor", params);
+
+        compiler->name_resolver.register_function(func_name, info, true);
+
+        compiler->push_deferred_node(
+            compiler->create_node<FunctionDefinitionNode>(
+                func_name,
+                compiler->create_node<BlockNode>(std::vector<ASTNode*>{}),
+                info.type,
+                true
+            )
+        );
     }
 
     compiler->typing_system.identifier_types.restore_prev_state();

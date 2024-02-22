@@ -243,7 +243,7 @@ void ParserAssistant::create_empty_method_if_doesnt_exist(const ClassType* cls, 
         false
     );
 
-    auto signature = FunctionInfo {
+    auto info = FunctionInfo {
         type,
         { "self" },
         false,
@@ -252,7 +252,7 @@ void ParserAssistant::create_empty_method_if_doesnt_exist(const ClassType* cls, 
 
     name = compiler->name_resolver.get_function_full_name(name, type->param_types);
 
-    compiler->name_resolver.register_function(name, std::move(signature), true);
+    compiler->name_resolver.register_function(name, std::move(info), true);
 
     compiler->push_deferred_node(
         compiler->create_node<FunctionDefinitionNode>(
