@@ -415,9 +415,19 @@ void FunctionNameResolver::copy_construct(const Value &instance, const Value& ar
             report_error("Can't copy an object of type " + arg.type->to_string() + " to an object of type "
                 + class_type->to_string() + " without defining a copy constructor between the two types");
 
+        // Regardless of where the object to copy is coming
+        //  from, the vtable is set to the vtable of the class
         size_t n = class_type->fields().size();
+        auto source_vtable = class_type->get_field(instance, 0);
+        auto target_vtable = compiler->create_value(
+            compiler->name_resolver.get_vtable_instance(class_type->name)->instance,
+            compiler->name_resolver.get_vtable_type(class_type->name)
+        );
+        copy_construct(source_vtable, target_vtable);
+
+        // Ignore the vtable field
         auto other = compiler->create_value(arg.memory_location, arg.type);
-        for (size_t i = 0; i < n; i++) {
+        for (size_t i = 1; i < n; i++) {
             auto source = class_type->get_field(instance, i);
             auto target = class_type->get_field(other, i);
             target.memory_location = target.get();

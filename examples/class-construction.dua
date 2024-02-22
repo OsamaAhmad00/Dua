@@ -568,3 +568,34 @@ int main()
 {
     func();
 }
+
+
+// Case Copying a child class with no copy-constructor
+// Outputs "Parent2"
+
+class Parent
+{
+    int i = 3;
+
+    void print() {
+        printf("Parent");
+    }
+}
+
+class Child : Parent
+{
+    int j = 5;
+
+    void print() {
+        printf("Child");
+    }
+}
+
+int main()
+{
+    Child c;
+    c.i = 2;
+    Parent p = *((Parent*))&c;
+    p.print();
+    printf("%d", p.i);
+}
