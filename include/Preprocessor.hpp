@@ -1,14 +1,14 @@
 #pragma once
 
 #include <string>
-#include <unordered_map>
+#include <unordered_set>
 
 namespace dua
 {
 
 class Preprocessor
 {
-    std::unordered_map<std::string, std::string> contents;
+    std::unordered_set<std::string> imported;
 
     std::string _process(const std::string& filename, const std::string& content);
 

@@ -22,7 +22,7 @@ inline std::string get_parent_path(const std::string& path) {
 
 std::string Preprocessor::process(const std::string &filename, const std::string &content)
 {
-    contents.clear();
+    imported.clear();
     return _process(filename, content);
 }
 
@@ -32,11 +32,12 @@ std::string Preprocessor::_process(const std::string &filename, const std::strin
     std::string result;
 
     // This is to avoid importing recursively forever
-    auto it = contents.find(filename);
-    if (it == contents.end())
-        contents[filename] = "";
-    else
-        return it->second;
+    auto it = imported.find(filename);
+    if (it != imported.end()) {
+        return "";
+    }
+
+    imported.insert(filename);
 
     auto old_path = std::filesystem::current_path();
     std::filesystem::current_path(get_parent_path(filename));
@@ -80,7 +81,7 @@ std::string Preprocessor::_process(const std::string &filename, const std::strin
 
     std::filesystem::current_path(old_path);
 
-    return contents[filename] = result;
+    return result;
 }
 
 }

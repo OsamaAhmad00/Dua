@@ -17,8 +17,11 @@ Value GlobalVariableDefinitionNode::eval()
     if (is_extern && is_static)
         compiler->report_error("Can't have both the static and the extern options together in the declaration of the global variable " + name);
 
+    if (module().getNamedGlobal(name) != nullptr)
+        compiler->report_error("The global variable " + name + " is already defined");
+
     module().getOrInsertGlobal(name, type->llvm_type());
-    llvm::GlobalVariable* variable = module().getGlobalVariable(name);
+    llvm::GlobalVariable* variable = module().getNamedGlobal(name);
 
     if (is_extern) {
         if (initializer != nullptr)
