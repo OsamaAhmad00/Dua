@@ -900,6 +900,54 @@ nomangle void qsort(int* base, long n, long size, int(int*, int*)* comparator);
 ,
 R"(
 
+class PriorityQueue<T>
+{
+    typealias size_t = long;
+
+    Vector<T> array;
+    int(T*, T*)* comparator;
+
+    constructor(int(T*, T*)* comparator);
+
+    size_t parent(size_t child);
+
+    size_t left(size_t parent);
+
+    size_t right(size_t parent);
+
+    void swap(size_t i, size_t j);
+
+    size_t back_index();
+
+    void bubble_up(size_t i);
+
+    void bubble_down(size_t i);
+
+    void insert(T t);
+
+    T& peek();
+
+    T pop();
+
+    size_t size();
+
+    bool is_empty();
+}
+
+class MinPriorityQueue<T> : PriorityQueue<T>
+{
+    constructor();
+}
+
+class MaxPriorityQueue<T> : PriorityQueue<T>
+{
+    constructor();
+}
+
+)"
+,
+R"(
+
 nomangle void exit(int exit_code);
 
 nomangle void getenv(str name);

@@ -1,6 +1,7 @@
 import "vector.dua"
+import "algorithms.dua"
 
-class Heap<T>
+class PriorityQueue<T>
 {
     typealias size_t = long;
 
@@ -94,4 +95,14 @@ class Heap<T>
     size_t size() { return array.size(); }
 
     bool is_empty() { return array.is_empty(); }
+}
+
+class MinPriorityQueue<T> : PriorityQueue<T>
+{
+    constructor() : Super(ascending_comparator<T>) { }
+}
+
+class MaxPriorityQueue<T> : PriorityQueue<T>
+{
+    constructor() : Super(descending_comparator<T>) { }
 }
