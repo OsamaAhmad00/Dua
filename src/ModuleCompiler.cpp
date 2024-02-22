@@ -603,7 +603,7 @@ class Vector<T>
         if (i < 0)
             panic("Can't have a negative index\n");
 
-        if (i >= _size)
+        if (i >= size())
             panic("Can't have an index bigger than the size\n");
 
         // FIXME this defeats the purpose of the use of the const buffer,

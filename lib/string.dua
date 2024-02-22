@@ -93,7 +93,7 @@ class String : Vector<i8>
     {
         // Accounting for the null terminator
         Vector<byte>::resize(self, new_size + 1);
-        self[new_size] = '\0';
+        buffer[new_size] = '\0';
     }
 
     String& infix =(str string)

@@ -1,0 +1,97 @@
+import "vector.dua"
+
+class Heap<T>
+{
+    typealias size_t = long;
+
+    Vector<T> array;
+    int(T*, T*)* comparator;
+
+    constructor(int(T*, T*)* comparator) : comparator(comparator) { }
+
+    size_t parent(size_t child) = (child - 1) / 2;
+
+    size_t left(size_t parent) = parent * 2 + 1;
+
+    size_t right(size_t parent) = left(parent) + 1;
+
+    void swap(size_t i, size_t j)
+    {
+        T temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+
+    // This method won't get called if the array is
+    // empty because it gets called after an insertion
+    size_t back_index() = array.size() - 1;
+
+    void bubble_up(size_t i)
+    {
+        if (i == 0) return;
+        size_t p = parent(i);
+        if (comparator(&array[p], &array[i]) > 0) {
+            swap(i, p);
+            bubble_up(p);
+        }
+    }
+
+    void bubble_down(size_t i)
+    {
+        size_t l = left(i);
+        size_t r = right(i);
+        if (l >= array.size()) {
+            return;
+        } else if (r >= array.size()) {
+            // here, l is within the bounds
+            if (comparator(&array[l], &array[i]) < 0) {
+                swap(i, l);
+                bubble_down(l);
+            }
+        } else {
+            // Both l and r are within the bounds
+            int cl = comparator(&array[l], &array[i]);
+            int cr = comparator(&array[r], &array[i]);
+            if (cl < 0 || cr < 0) {
+                if (comparator(&array[l], &array[r]) < 0) {
+                    swap(i, l);
+                    bubble_down(l);
+                } else {
+                    swap(i, r);
+                    bubble_down(r);
+                }
+            }
+        }
+    }
+
+    void insert(T t)
+    {
+        array.push(move(t));
+        bubble_up(back_index());
+    }
+
+    T& peek()
+    {
+        if (array.is_empty())
+            panic("Can't peek in an empty heap");
+        return array[0];
+    }
+
+    T pop()
+    {
+        if (array.is_empty())
+            panic("Can't pop from an empty heap");
+
+        if (array.size() == 1)
+            return array.pop();
+
+        T result = array[0];
+        array[0] = array.pop();
+        bubble_down(0);
+        return result;
+    }
+
+    size_t size() { return array.size(); }
+
+    bool is_empty() { return array.is_empty(); }
+}

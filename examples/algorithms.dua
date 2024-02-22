@@ -27,7 +27,7 @@ int main()
 }
 
 
-// Case Shuffle an array
+// Case Shuffling an array
 
 int main()
 {
