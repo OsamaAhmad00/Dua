@@ -31,10 +31,18 @@ Value LocalVariableDefinitionNode::eval()
 
         auto result = initializer->eval();
 
-        if (result.is_teleporting && !result.type->as<ReferenceType>()) {
+        auto i_ref = result.type->as<ReferenceType>();
+
+        if (result.is_teleporting && !i_ref) {
             compiler->report_error("The reference variable " + name + " of type " + type->to_string() +
                          " can't be bound to a temporary variable of type " + result.type->to_string() +
                          " which will be stale by the next statement");
+        }
+
+        if (i_ref != nullptr && i_ref->is_allocated()) {
+            result.memory_location = result.get();
+            result.set(nullptr);
+            result.type = i_ref->get_unallocated();
         }
 
         if (result.memory_location == nullptr)

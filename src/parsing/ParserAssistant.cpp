@@ -50,6 +50,9 @@ void ParserAssistant::finish_parsing()
     if (!used_dynamic_casting)
         compiler->delete_dynamic_casting_function();
 
+    for (auto alias : global_aliases)
+        alias->eval();
+
     for (auto& [constructor, args, owner_class, in_templated_class] : constructors_field_args)
     {
         if (in_templated_class)
@@ -149,9 +152,6 @@ void ParserAssistant::finish_parsing()
     // Evaluate all global variable definitions before defining functions and classes
     for (auto node : global_variable_nodes)
         node->eval();
-
-    for (auto alias : global_aliases)
-        alias->eval();
 
     for (auto& root : class_info["Object"].children)
     {

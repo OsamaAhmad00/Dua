@@ -14,6 +14,7 @@ const Type* IdentifierType::get_concrete_type() const
         return compiler->get_name_resolver().get_class(name);
     }
 
+    // If it's templated, it's a class type for sure
     auto concrete_types = template_args;
     for (auto& type : concrete_types)
         type = type->get_concrete_type();

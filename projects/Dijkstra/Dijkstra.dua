@@ -1,0 +1,105 @@
+class Edge
+{
+    int to;
+    int weight;
+
+    constructor() { }
+    constructor(int to, int weight) : to(to), weight(weight) { }
+}
+
+typealias Graph = Vector<Vector<Edge>>;
+
+class QueueNode
+{
+    int node;
+    int parent;
+    int weight;
+
+    constructor() { }
+    constructor(int node, int parent, int weight) : node(node), parent(parent), weight(weight) { }
+}
+
+int comparator(QueueNode* q1, QueueNode* q2)
+{
+    return q1->weight - q2->weight;
+}
+
+long MAX_DISTANCE = 1'000'000'000;
+
+class Dijkstra
+{
+    bool has_negative_cycle = false;
+    bool not_reachable = false;
+    Vector<int> shortest_distances;
+    Vector<int> parent_of;
+    Vector<bool> is_visited;
+    Vector<int> result;
+
+    constructor(Graph& g, int source, int target)
+        : shortest_distances(g.size(), MAX_DISTANCE), parent_of(g.size(), -1),
+          is_visited(g.size(), false), result(shortest_path(g, source, target))
+    {
+
+    }
+
+    Vector<int> shortest_path(Graph& g, int source, int target)
+    {
+        PriorityQueue<QueueNode> q(comparator);
+
+        q.insert((source, -1, 0)QueueNode);
+
+        for (int i = 0; i < g.size() - 1 && !q.is_empty(); )
+        {
+            var closest = q.pop();
+
+            int node = closest.node;
+
+            shortest_distances[node] = closest.weight;
+            parent_of[node] = closest.parent;
+
+            if (node == target)
+                break;
+
+            if (is_visited[node])
+            {
+                if (closest.weight >= shortest_distances[node]) {
+                    continue;
+                } else {
+                    has_negative_cycle = true;
+                    return ()Vector<int>;
+                }
+            }
+
+            is_visited[node] = true;
+            i++;
+
+            for (int j = 0; j < g[node].size(); j++)
+            {
+                Edge& edge = g[node][j];
+
+                if (closest.weight + edge.weight < shortest_distances[edge.to]) {
+                    q.insert((edge.to, node, closest.weight + edge.weight)QueueNode);
+                }
+            }
+        }
+
+        Vector<int> result;
+
+        int current = target;
+        while (current != source)
+        {
+            if (parent_of[current] == -1) {
+                not_reachable = true;
+                return ()Vector<int>;
+            }
+            result.push(current);
+            current = parent_of[current];
+        }
+        result.push(source);
+
+        result.reverse();
+
+        return move(result);
+    }
+
+}

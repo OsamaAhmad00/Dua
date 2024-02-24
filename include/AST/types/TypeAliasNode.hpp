@@ -16,7 +16,8 @@ public:
     TypeAliasNode(ModuleCompiler* compiler, std::string name, const Type* type)
             : name(std::move(name)), type(type) { this->compiler = compiler; };
 
-    Value eval() override {
+    Value eval() override
+    {
         typing_system().insert_type(name, type->get_concrete_type());
         return none_value();
     }

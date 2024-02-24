@@ -9,7 +9,7 @@ class ThrowExceptionErrorStrategy : public antlr4::DefaultErrorStrategy
 {
     void reportError(antlr4::Parser *recognizer, const antlr4::RecognitionException &e) override {
         auto token = e.getOffendingToken();
-        auto message = "Parsing error at line " + std::to_string(token->getLine()) + " at:\n";
+        auto message = "Parsing error at line " + std::to_string(token->getLine()) + " starting at:\n";
         auto& code = compiler->get_code();
         auto start = token->getStartIndex();
         auto end = std::min(start + 100, code.size());

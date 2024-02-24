@@ -539,7 +539,7 @@ class Vector<T>
 
     constructor(size_t n) : _capacity(n), buffer(n > 0 ? new[n] T : null)
     {
-        if (_size < 0) panic("The Vector class can't have negative size");
+        if (n < 0) panic("The Vector class can't have negative size");
     }
 
     constructor(T* buffer, size_t size) : _size(size)
@@ -606,7 +606,6 @@ class Vector<T>
         if (i >= size())
             panic("Can't have an index bigger than the size\n");
 
-        // FIXME this defeats the purpose of the use of the const buffer,
         //  but as of now, there is no way to tell whether the returned
         //  reference is going to be read from or written to, so this
         //  step is needed. Nevertheless, this would be useful for example
@@ -699,20 +698,21 @@ class Vector<T>
         return self;
     }
 
+    // Sorting can't be embed in the vector class because this
+    //  would require types stored in the class to have the
+    //  operators necessary for comparison be defined, which
+    //  is not needed if the class is going to be used just
+    //  for storing elements, regardless of their order.
     void sort(int(T*, T*)* comparator) {
         sort<T>(buffer, size(), comparator);
     }
 
-    void sort_ascending() {
-        sort(ascending_comparator<T>);
-    }
-
-    void sort_descending() {
-        sort(descending_comparator<T>);
-    }
-
     void shuffle() {
         shuffle<T>(buffer, size());
+    }
+
+    void reverse() {
+        reverse<T>(buffer, size());
     }
 
     bool is_empty() { return size() == 0; }
@@ -722,6 +722,44 @@ class Vector<T>
         _destroy_buffer();
     }
 
+    void destruct_elements()
+    {
+        // Const pointers are in a read-only
+        //  memory, and shouldn't be deleted
+        if (!_is_const_initialized)
+        {
+            if ((&buffer[0] as Object*) != null) {
+                // Have to cast as Object* so that the typing
+                //  system doesn't complain if T is a primitive type
+                for (size_t i = 0; i < size(); i++) {
+                    var obj = ((Object*))&buffer[i];
+                    obj->destructor();
+                }
+            }
+        }
+    }
+
+    void clear()
+    {
+        destruct_elements();
+        _size -= size();
+    }
+
+    void remove(size_t index)
+    {
+        if (index < 0)
+            panic("Can't remove a negative index");
+
+        if (index >= size())
+            panic("Can't remove an index bigger than the size");
+
+        for (size_t i = index; i < _size - 1; i++) {
+            buffer[i] = buffer[i + 1];
+        }
+
+        _size--;
+    }
+
     void _destroy_buffer()
     {
         // Const pointers are in a read-only
@@ -729,14 +767,7 @@ class Vector<T>
         if (_is_const_initialized)
             return;
 
-        if ((&buffer[0] as Object*) != null) {
-            // Have to cast as Object* so that the typing
-            //  system doesn't complain if T is a primitive type
-            for (size_t i = 0; i < size(); i++) {
-                var obj = ((Object*))&buffer[i];
-                obj->destructor();
-            }
-        }
+        destruct_elements();
 
         // Deleting with _RAW_ instead of delete to avoid
         //  calling the destructor on every position
@@ -894,6 +925,20 @@ void shuffle<T>(T* base, long n)
     sort<T>(base, n, random_comparator<T>);
 }
 
+void reverse<T>(T* base, long n)
+{
+    long i = 0;
+    long j = n - 1;
+    while (i < j)
+    {
+        T temp = base[i];
+        base[i] = base[j];
+        base[j] = temp;
+        i++;
+        j--;
+    }
+}
+
 nomangle void qsort(int* base, long n, long size, int(int*, int*)* comparator);
 
 )"
@@ -907,41 +952,103 @@ class PriorityQueue<T>
     Vector<T> array;
     int(T*, T*)* comparator;
 
-    constructor(int(T*, T*)* comparator);
+    constructor(int(T*, T*)* comparator) : comparator(comparator) { }
 
-    size_t parent(size_t child);
+    size_t parent(size_t child) = (child - 1) / 2;
 
-    size_t left(size_t parent);
+    size_t left(size_t parent) = parent * 2 + 1;
 
-    size_t right(size_t parent);
+    size_t right(size_t parent) = left(parent) + 1;
 
-    void swap(size_t i, size_t j);
+    void swap(size_t i, size_t j)
+    {
+        T temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
 
-    size_t back_index();
+    // This method won't get called if the array is
+    // empty because it gets called after an insertion
+    size_t back_index() = array.size() - 1;
 
-    void bubble_up(size_t i);
+    void bubble_up(size_t i)
+    {
+        if (i == 0) return;
+        size_t p = parent(i);
+        if (comparator(&array[p], &array[i]) > 0) {
+            swap(i, p);
+            bubble_up(p);
+        }
+    }
 
-    void bubble_down(size_t i);
+    void bubble_down(size_t i)
+    {
+        size_t l = left(i);
+        size_t r = right(i);
+        if (l >= array.size()) {
+            return;
+        } else if (r >= array.size()) {
+            // here, l is within the bounds
+            if (comparator(&array[l], &array[i]) < 0) {
+                swap(i, l);
+                bubble_down(l);
+            }
+        } else {
+            // Both l and r are within the bounds
+            int cl = comparator(&array[l], &array[i]);
+            int cr = comparator(&array[r], &array[i]);
+            if (cl < 0 || cr < 0) {
+                if (comparator(&array[l], &array[r]) < 0) {
+                    swap(i, l);
+                    bubble_down(l);
+                } else {
+                    swap(i, r);
+                    bubble_down(r);
+                }
+            }
+        }
+    }
 
-    void insert(T t);
+    void insert(T t)
+    {
+        array.push(move(t));
+        bubble_up(back_index());
+    }
 
-    T& peek();
+    T& peek()
+    {
+        if (array.is_empty())
+            panic("Can't peek in an empty heap");
+        return array[0];
+    }
 
-    T pop();
+    T pop()
+    {
+        if (array.is_empty())
+            panic("Can't pop from an empty heap");
 
-    size_t size();
+        if (array.size() == 1)
+            return array.pop();
 
-    bool is_empty();
+        T result = array[0];
+        array[0] = array.pop();
+        bubble_down(0);
+        return result;
+    }
+
+    size_t size() { return array.size(); }
+
+    bool is_empty() { return array.is_empty(); }
 }
 
 class MinPriorityQueue<T> : PriorityQueue<T>
 {
-    constructor();
+    constructor() : Super(ascending_comparator<T>) { }
 }
 
 class MaxPriorityQueue<T> : PriorityQueue<T>
 {
-    constructor();
+    constructor() : Super(descending_comparator<T>) { }
 }
 
 )"

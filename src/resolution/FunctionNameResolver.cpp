@@ -366,6 +366,11 @@ void FunctionNameResolver::call_constructor(const Value &value, std::vector<Valu
 
     if (name.empty())
     {
+        if (args.size() == 1) {
+            // The first argument is the self argument
+            compiler->report_error("There is no default constructor defined for the class " + class_type->name);
+        }
+
         auto message = "Neither a constructor nor a copy constructor for the class type "
                 + class_type->name + " are applicable with the provided arguments:";
 
@@ -439,6 +444,7 @@ void FunctionNameResolver::copy_construct(const Value &instance, const Value& ar
     }
 
     // Initializing a primitive type
+
     auto casted = compiler->typing_system.cast_value(arg, instance.type);
     builder().CreateStore(casted.get(), instance.get());
 }

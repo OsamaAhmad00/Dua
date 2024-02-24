@@ -1,0 +1,104 @@
+import "Dijkstra.dua"
+
+void print_graph(Graph& g)
+{
+    OutputStream out;
+    for (int i = 0; i < g.size(); i++) {
+        out << "Node " << i << ":\n";
+        for (int j = 0; j < g[i].size(); j++) {
+            out << "  (" << j << ") " << i << " --" << g[i][j].weight << "--> " <<  g[i][j].to << "\n";
+        }
+    }
+}
+
+int main()
+{
+    InputStream in;
+    OutputStream out;
+
+    Graph g();
+    g.resize(6);
+    g[1].push((5, 9)Edge);
+    g[1].push((4, 1)Edge);
+    g[2].push((5, 1)Edge);
+    g[3].push((2, 2)Edge);
+    g[4].push((3, 2)Edge);
+
+    while (true)
+    {
+        out << "Current Graph:\n\n";
+
+        print_graph(g);
+
+        out << "\n\nEnter the desired action number:\n";
+        out << "1 - Clear the graph\n";
+        out << "2 - Resize the graph\n";
+        out << "3 - Add an edge\n";
+        out << "4 - Remove an edge\n";
+        out << "5 - Compute shortest path\n";
+        out << "6 - Exit\n";
+        out << "> ";
+
+        int choice;
+        in >> choice;
+
+        if (choice == 1) {
+            g.clear();
+        } else if (choice == 2) {
+            out << "Enter the new size> ";
+            int size; in >> size;
+            if (size < g.size()) {
+                // Remove any reference to the deleted node
+                for (int deleted = size; deleted < g.size(); deleted++) {
+                    for (int i = 0; i < g.size(); i++) {
+                        for (int j = 0; j < g[i].size(); j++) {
+                            if (g[i][j].to == deleted) {
+                                g[i].remove(j);
+                                j--;
+                            }
+                        }
+                    }
+                }
+            }
+            g.resize(size);
+        } else if (choice == 3) {
+            out << "Enter the source, the destination, and the weight of the edge, with a whitespace in-between the numbers\n> ";
+            int i; int j; int weight;
+            in >> i >> j >> weight;
+            g[i].push((j, weight)Edge);
+        } else if (choice == 4) {
+            out << "Enter the source node, and the edge number, with a whitespace in-between\n> ";
+            int i; int j;
+            in >> i >> j;
+            g[i].remove(j);
+        } else if (choice == 5) {
+            out << "Enter the source and the destination node, with a whitespace in-between\n> ";
+            int i; int j;
+            in >> i >> j;
+            Dijkstra d(g, i, j);
+            if (d.not_reachable == true) {
+                out << "The node " << i << " is not reachable from the node " << j;
+            } else if (d.has_negative_cycle == true) {
+                out << "The graph contains a negative cycle";
+            } else {
+                out << "The shortest path from node " << i << " to node " << j << " is:\n";
+                out << d.result[0];
+                for (int i = 1; i < d.result.size(); i++) {
+                    out << " -> " << d.result[i];
+                }
+                out << "\nWith a total weight of " << d.shortest_distances[j];
+            }
+            out << "\n\n";
+        } else if (choice == 6) {
+            break;
+        } else {
+            out << "\n\n";
+            if (in.invalid_input_error == true)
+                out << "The entered choice is not a valid number\n";
+            else
+                out << choice << " is not a valid choice. Try again\n";
+            out << "> ";
+            continue;
+        }
+    }
+}

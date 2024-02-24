@@ -70,7 +70,7 @@ struct Scope
         return -1;
     }
 
-    const T& get(const Key& symbol) const {
+    T& get(const Key& symbol) {
         return map[get_valid_index(symbol)].value;
     }
 
@@ -160,7 +160,7 @@ struct SymbolTable
         return *this;
     }
 
-    const T& get(const Key& name, bool include_global = true, int scope_num = 1)
+    T& get(const Key& name, bool include_global = true, int scope_num = 1)
     {
         if (scopes.empty()) {
             report_internal_error("There is no scope", compiler);
@@ -191,7 +191,7 @@ struct SymbolTable
         return scopes[!include_global].get(name);
     }
 
-    const T& get_global(const Key& name) {
+    T& get_global(const Key& name) {
         return get(name, true, size());
     }
 

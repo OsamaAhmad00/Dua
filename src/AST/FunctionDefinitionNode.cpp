@@ -210,8 +210,14 @@ Value FunctionDefinitionNode::define_function()
     // It's ok for the main function to not return a value explicitly
     if (created_default_values && name != "main") {
         auto count = std::to_string(created_default_values);
-        compiler->report_warning("The function " + name + " doesn't return a value at "
-            + count + " terminal positions. Returning the default value instead");
+        if (info.type->return_type->as<ClassType>() != nullptr) {
+            compiler->report_error("The function " + name + " doesn't return a value at " + count +
+                " terminal positions. Can't return a default value instead since the return type is of the class type "
+                + info.type->return_type->to_string());
+        } else {
+            compiler->report_warning("The function " + name + " doesn't return a value at "
+                                     + count + " terminal positions. Returning the default value instead");
+        }
     }
 
     // Since each node takes care of the scopes it has created,

@@ -185,11 +185,24 @@ Value TypingSystem::cast_value(const dua::Value &value, const Type* target_type,
         return {};
     }
 
+    const ReferenceType* unallocated = nullptr;
     // Reference cast should be allocated
-    if (auto ref = target_type->as<ReferenceType>(); ref != nullptr)
-        target_type = ref->get_allocated();
+    if (auto ref = target_type->as<ReferenceType>(); ref != nullptr) {
+        if (!ref->is_allocated()) {
+            unallocated = ref;
+            target_type = ref->get_allocated();
+        }
+    }
 
-    return _cast_value(value, target_type, panic_on_failure, compiler);
+    auto result = _cast_value(value, target_type, panic_on_failure, compiler);
+
+    if (unallocated != nullptr) {
+        result.type = unallocated;
+        result.memory_location = result.get();
+        result.set(nullptr);
+    }
+
+    return result;
 }
 
 const Type* TypingSystem::get_winning_type(const Type* lhs, const Type* rhs, bool panic_on_failure, const std::string& message) const

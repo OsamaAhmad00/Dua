@@ -36,6 +36,15 @@ Value ClassFieldNode::eval()
     }
 
     auto i = instance->eval();
+
+    if (auto ref = i.type->as<ReferenceType>()) {
+        if (ref->is_allocated()) {
+            i.memory_location = i.get();
+            i.set(nullptr);
+            i.type = ref->get_unallocated();
+        }
+    }
+
     if (i.memory_location == nullptr)
         report_internal_error("Can't access a field (with name " + name + ") from an expression with type " + instance->get_type()->to_string());
 

@@ -12,7 +12,7 @@ class Vector<T>
 
     constructor(size_t n) : _capacity(n), buffer(n > 0 ? new[n] T : null)
     {
-        if (_size < 0) panic("The Vector class can't have negative size");
+        if (n < 0) panic("The Vector class can't have negative size");
     }
 
     constructor(T* buffer, size_t size) : _size(size)
@@ -79,7 +79,6 @@ class Vector<T>
         if (i >= size())
             panic("Can't have an index bigger than the size\n");
 
-        // FIXME this defeats the purpose of the use of the const buffer,
         //  but as of now, there is no way to tell whether the returned
         //  reference is going to be read from or written to, so this
         //  step is needed. Nevertheless, this would be useful for example
@@ -172,20 +171,21 @@ class Vector<T>
         return self;
     }
 
+    // Sorting can't be embed in the vector class because this
+    //  would require types stored in the class to have the
+    //  operators necessary for comparison be defined, which
+    //  is not needed if the class is going to be used just
+    //  for storing elements, regardless of their order.
     void sort(int(T*, T*)* comparator) {
         sort<T>(buffer, size(), comparator);
     }
 
-    void sort_ascending() {
-        sort(ascending_comparator<T>);
-    }
-
-    void sort_descending() {
-        sort(descending_comparator<T>);
-    }
-
     void shuffle() {
         shuffle<T>(buffer, size());
+    }
+
+    void reverse() {
+        reverse<T>(buffer, size());
     }
 
     bool is_empty() { return size() == 0; }
@@ -195,6 +195,44 @@ class Vector<T>
         _destroy_buffer();
     }
 
+    void destruct_elements()
+    {
+        // Const pointers are in a read-only
+        //  memory, and shouldn't be deleted
+        if (!_is_const_initialized)
+        {
+            if ((&buffer[0] as Object*) != null) {
+                // Have to cast as Object* so that the typing
+                //  system doesn't complain if T is a primitive type
+                for (size_t i = 0; i < size(); i++) {
+                    var obj = ((Object*))&buffer[i];
+                    obj->destructor();
+                }
+            }
+        }
+    }
+
+    void clear()
+    {
+        destruct_elements();
+        _size -= size();
+    }
+
+    void remove(size_t index)
+    {
+        if (index < 0)
+            panic("Can't remove a negative index");
+
+        if (index >= size())
+            panic("Can't remove an index bigger than the size");
+
+        for (size_t i = index; i < _size - 1; i++) {
+            buffer[i] = buffer[i + 1];
+        }
+
+        _size--;
+    }
+
     void _destroy_buffer()
     {
         // Const pointers are in a read-only
@@ -202,14 +240,7 @@ class Vector<T>
         if (_is_const_initialized)
             return;
 
-        if ((&buffer[0] as Object*) != null) {
-            // Have to cast as Object* so that the typing
-            //  system doesn't complain if T is a primitive type
-            for (size_t i = 0; i < size(); i++) {
-                var obj = ((Object*))&buffer[i];
-                obj->destructor();
-            }
-        }
+        destruct_elements();
 
         // Deleting with _RAW_ instead of delete to avoid
         //  calling the destructor on every position

@@ -21,6 +21,10 @@ Value FunctionCallNode::eval()
 {
     _current_name = unresolved_name->resolve();
 
+    if (_current_name == "printf") {
+        _current_name = "printf";
+    }
+
     auto evaluated_args = eval_args(args);
 
     if (is_templated)
@@ -59,8 +63,11 @@ Value FunctionCallNode::eval()
         return name_resolver().call_function(func_value, std::move(evaluated_args));
     }
 
-    if (!name_resolver().symbol_table.contains(_current_name))
-        compiler->report_error("The identifier " + _current_name + " doesn't refer to either a function or a function reference");
+    if (!name_resolver().symbol_table.contains(_current_name)) {
+        compiler->report_error("The identifier " + _current_name + " doesn't refer to either a function or"
+                           " a function reference. If you meant to instantiate an object of type " + _current_name +
+                           ", remember that the class name comes after the argument list (e.g. (...)" + _current_name + ")");
+    }
 
     auto reference = name_resolver().symbol_table.get(_current_name);
 

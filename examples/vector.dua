@@ -221,7 +221,7 @@ int main()
     v.push(5);
     v.push(4);
 
-    v.sort_ascending();
+    v.sort(ascending_comparator<int>);
 
     for (int i = 0; i < 5; i++)
         printf("%d", v[i]);
@@ -240,7 +240,7 @@ int main()
     v.push(5);
     v.push(4);
 
-    v.sort_descending();
+    v.sort(descending_comparator<int>);
 
     for (int i = 0; i < 5; i++)
         printf("%d", v[i]);
@@ -264,6 +264,42 @@ int main()
     v.shuffle();
 
     for (int i = 0; i < 5; i++)
+        printf("%d", v[i]);
+}
+
+
+// Case Clearing
+// Outputs "123"
+
+int main()
+{
+    Vector<int> v;
+    v.push(3);
+    v.push(1);
+    v.push(2);
+    v.push(5);
+    v.clear();
+    v.push(1);
+    v.push(2);
+    v.push(3);
+    for (int i = 0; i < v.size(); i++)
+        printf("%d", v[i]);
+}
+
+
+// Case Removing
+// Outputs "1245"
+
+int main()
+{
+    Vector<int> v;
+    v.push(1);
+    v.push(2);
+    v.push(3);
+    v.push(4);
+    v.push(5);
+    v.remove(2);
+    for (int i = 0; i < v.size(); i++)
         printf("%d", v[i]);
 }
 
