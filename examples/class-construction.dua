@@ -599,3 +599,21 @@ int main()
     p.print();
     printf("%d", p.i);
 }
+
+
+// Case Destruction of global objects
+// Outputs "Bye"
+
+class X
+{
+    destructor {
+        printf("Bye");
+    }
+}
+
+X x;
+
+int main()
+{
+
+}

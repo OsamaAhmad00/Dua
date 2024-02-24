@@ -49,7 +49,7 @@ std::string Preprocessor::_process(const std::string &filename, const std::strin
         while (keyword_start < content.size() &&
             (isspace(content[keyword_start]) || content[keyword_start] == '\n')) keyword_start++;
 
-        if (keyword_start == content.size() || !starts_with(content, keyword, keyword_start))
+        if (keyword_start + keyword.size() >= content.size() || !starts_with(content, keyword, keyword_start))
             break;
 
         size_t keyword_end = keyword_start + keyword.size();

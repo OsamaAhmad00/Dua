@@ -14,6 +14,7 @@
 
 #include <llvm/Support/Host.h>
 #include <llvm/Transforms/Utils/ModuleUtils.h>
+#include <llvm/IR/Verifier.h>
 
 namespace dua
 {
@@ -59,9 +60,13 @@ ModuleCompiler::ModuleCompiler(std::string module_name, std::string code, bool i
 
     destruct_global_scope();
 
-    complete_dua_init_function();
-
+    // It's important that this function gets called
+    //  before finalizing the .dua.init function,
+    //  because the .dua.cleanup function is registered
+    //  in the .dua.init function
     complete_dua_cleanup_function();
+
+    complete_dua_init_function();
 
     llvm::raw_string_ostream stream(result);
     module.print(stream, nullptr);
@@ -389,9 +394,21 @@ void ModuleCompiler::complete_dua_cleanup_function()
     } else {
         // Return
         builder.CreateRetVoid();
-        // TODO vary the priority as needed
-        int priority = 0;
-        llvm::appendToGlobalDtors(module, dua_cleanup, priority);
+
+        // Using @llvm.global_dtors crashes on some Windows machines. As a workaround,
+        //  we register the cleanup functions using the atexit function instead.
+
+        // Declare the atexit function
+        auto atexit_type = create_type<FunctionType> (
+            create_type<VoidType>(),
+            std::vector<const Type*> { create_type<PointerType>(create_type<I64Type>()) }
+        );
+        llvm::Function* atexit_func = llvm::Function::Create(atexit_type->llvm_type(), llvm::Function::ExternalLinkage, "atexit", module);
+        llvm::verifyFunction(*atexit_func);
+
+        auto init = get_dua_init_function();
+        builder.SetInsertPoint(&init->getEntryBlock());
+        builder.CreateCall(atexit_func, dua_cleanup);
     }
 }
 
