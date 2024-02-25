@@ -217,6 +217,12 @@ public:
     // If this is true, the dua standard library will be included, and some syntactic sugars
     //  will be applied, such as creating a String class from string literals instead of i8*
     const bool include_libdua = true;
+
+    // Used to inform different components that the parsing stage is done. Its main use is
+    //  for the templated name resolver to know when registering a new templated class whether
+    //  the parsing stage (at which the classes are defined while parsing) is done or not, so
+    //  that it knows whether it needs to define the class manually or not
+    bool done_parsing = false;
 };
 
 }

@@ -209,7 +209,17 @@ void ParserAssistant::finish_parsing()
         }
     }
 
-    for (auto& [full_name, info] : compiler->name_resolver.registered_templated_classes) {
+    // We mark the parsing as done early here so that templated class registration also defines the class
+    compiler->done_parsing = true;
+
+    // Defining templated classes may lead to the registration of other templated classes, which
+    //  will insert new elements to the map while iterating on its elements. To fix this problem,
+    //  the parsing is marked as done by this point, which will cause the register function to
+    //  define the templated classes that will be registered after this point. Also, a copy of
+    //  the map is taken here so that the registration of the new classes doesn't affect the
+    //  map we're iterating on.
+    auto registered_templated_classes = compiler->name_resolver.registered_templated_classes;
+    for (auto& [full_name, info] : registered_templated_classes) {
         if (!info.are_fields_constructed)
             compiler->name_resolver.construct_templated_class_fields(info.name, info.template_args);
         if (!info.is_defined)

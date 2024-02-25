@@ -19,9 +19,12 @@ class QueueNode
     constructor(int node, int parent, int weight) : node(node), parent(parent), weight(weight) { }
 }
 
-int comparator(QueueNode* q1, QueueNode* q2)
+class Comparator
 {
-    return q1->weight - q2->weight;
+    int compare(QueueNode& q1, QueueNode& q2)
+    {
+        return q1.weight - q2.weight;
+    }
 }
 
 long MAX_DISTANCE = 1'000'000'000;
@@ -44,7 +47,7 @@ class Dijkstra
 
     Vector<int> shortest_path(Graph& g, int source, int target)
     {
-        PriorityQueue<QueueNode> q(comparator);
+        PriorityQueue<QueueNode, Comparator> q;
 
         q.insert((source, -1, 0)QueueNode);
 
@@ -101,5 +104,4 @@ class Dijkstra
 
         return move(result);
     }
-
 }

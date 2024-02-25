@@ -302,7 +302,10 @@ const ClassType* TemplatedNameResolver::get_templated_class(const std::string &n
 
     if (!compiler->name_resolver.has_class(full_name)) {
         register_templated_class(name, template_args);
-        construct_templated_class_fields(name, template_args);
+        if (!compiler->done_parsing) {
+            // If the parsing is done, the register function will construct the class
+            construct_templated_class_fields(name, template_args);
+        }
     }
 
     auto cls = compiler->name_resolver.get_class(full_name);
@@ -384,6 +387,9 @@ void TemplatedNameResolver::register_templated_class(const std::string &name, co
     auto parent = it->second.parent;
     compiler->name_resolver.parent_classes[full_name] = get_parent_class(parent);
 
+    auto old_function = compiler->current_function;
+    compiler->current_function = nullptr;
+
     auto& methods = templated.node->methods;
     for (auto & method : methods)
     {
@@ -414,17 +420,33 @@ void TemplatedNameResolver::register_templated_class(const std::string &name, co
         }
     }
 
+    std::vector<const Type*> params = { compiler->create_type<ReferenceType>(cls, true) };
+
+    auto info = FunctionInfo {
+        compiler->create_type<FunctionType>(compiler->create_type<VoidType>(), params),
+        { "self" },
+        false,
+        cls
+    };
+
+    if (!compiler->name_resolver.has_function(full_name + ".constructor"))
+    {
+        auto func_name = compiler->name_resolver.get_function_full_name(full_name + ".constructor", params);
+
+        compiler->name_resolver.register_function(func_name, info, true);
+
+        compiler->push_deferred_node(
+            compiler->create_node<FunctionDefinitionNode>(
+                func_name,
+                compiler->create_node<BlockNode>(std::vector<ASTNode*>{}),
+                info.type,
+                true
+            )
+        );
+    }
+
     if (!compiler->name_resolver.has_function(full_name + ".destructor"))
     {
-        std::vector<const Type*> params = { compiler->create_type<ReferenceType>(cls, true) };
-
-        auto info = FunctionInfo {
-                compiler->create_type<FunctionType>(compiler->create_type<VoidType>(), params),
-                { "self" },
-                false,
-                cls
-        };
-
         auto func_name = compiler->name_resolver.get_function_full_name(full_name + ".destructor", params);
 
         compiler->name_resolver.register_function(func_name, info, true);
@@ -439,8 +461,15 @@ void TemplatedNameResolver::register_templated_class(const std::string &name, co
         );
     }
 
+    compiler->current_function = old_function;
+
     compiler->typing_system.identifier_types.restore_prev_state();
     compiler->name_resolver.symbol_table.restore_prev_state();
+
+    if (compiler->done_parsing) {
+        construct_templated_class_fields(name, template_args);
+        define_templated_class(name, template_args);
+    }
 }
 
 const ClassType* TemplatedNameResolver::define_templated_class(const std::string &name, const std::vector<const Type *> &template_args)

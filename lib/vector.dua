@@ -176,8 +176,8 @@ class Vector<T>
     //  operators necessary for comparison be defined, which
     //  is not needed if the class is going to be used just
     //  for storing elements, regardless of their order.
-    void sort(int(T*, T*)* comparator) {
-        sort<T>(buffer, size(), comparator);
+    void sort<Comparator>() {
+        sort<T, Comparator>(buffer, size());
     }
 
     void shuffle() {

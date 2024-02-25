@@ -1,38 +1,63 @@
 import "random.dua"
 
-void sort<T>(T* base, long n, int(T*, T*)* comparator)
+int c_comparator_converter<T, Comparator>(T* a, T* b)
 {
-    qsort(((int*))base, n, sizeof(T), ((int(int*, int*)*))comparator);
+    Comparator cmp;
+    return cmp.compare(*a, *b);
 }
 
-int ascending_comparator<T>(T* a, T* b)
+void sort<T, Comparator>(T* base, long n)
 {
-    return *a - *b;
+    qsort(((int*))base, n, sizeof(T), ((int(int*, int*)*))c_comparator_converter<T, Comparator>);
 }
 
-int descending_comparator<T>(T* a, T* b)
+class ascending_comparator<T>
 {
-    return *b - *a;
+    int compare(T& a, T& b)
+    {
+        if (a < b) {
+            return -1;
+        }
+
+        // If both a < b == false and b < a == false, then a = b
+        return b < a;
+    }
+}
+
+class descending_comparator<T>
+{
+    int compare(T& a, T& b)
+    {
+        if (b < a) {
+            return -1;
+        }
+
+        // If both a < b == false and b < a == false, then a = b
+        return a < b;
+    }
 }
 
 void sort_ascending<T>(T* base, long n)
 {
-    sort<T>(base, n, ascending_comparator<T>);
+    sort<T, ascending_comparator<T>>(base, n);
 }
 
 void sort_descending<T>(T* base, long n)
 {
-    sort<T>(base, n, descending_comparator<T>);
+    sort<T, descending_comparator<T>>(base, n);
 }
 
-int random_comparator<T>(T* a, T* b)
- {
-    return (random_int() % 2) ? 1 : -1;
+class random_comparator<T>
+{
+    int compare(T& a, T& b)
+    {
+        return (random_int() % 2) ? 1 : -1;
+    }
 }
 
 void shuffle<T>(T* base, long n)
 {
-    sort<T>(base, n, random_comparator<T>);
+    sort<T, random_comparator<T>>(base, n);
 }
 
 void reverse<T>(T* base, long n)

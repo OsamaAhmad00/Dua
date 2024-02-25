@@ -726,8 +726,8 @@ class Vector<T>
     //  operators necessary for comparison be defined, which
     //  is not needed if the class is going to be used just
     //  for storing elements, regardless of their order.
-    void sort(int(T*, T*)* comparator) {
-        sort<T>(buffer, size(), comparator);
+    void sort<Comparator>() {
+        sort<T, Comparator>(buffer, size());
     }
 
     void shuffle() {
@@ -919,39 +919,64 @@ Declaration i16 random_int();
 ,
 R"(
 
-void sort<T>(T* base, long n, int(T*, T*)* comparator)
+int c_comparator_converter<T, Comparator>(T* a, T* b)
 {
-    qsort(((int*))base, n, sizeof(T), ((int(int*, int*)*))comparator);
+    Comparator cmp;
+    return cmp.compare(*a, *b);
 }
 
-int ascending_comparator<T>(T* a, T* b)
+void sort<T, Comparator>(T* base, long n)
 {
-    return *a - *b;
+    qsort(((int*))base, n, sizeof(T), ((int(int*, int*)*))c_comparator_converter<T, Comparator>);
 }
 
-int descending_comparator<T>(T* a, T* b)
+class ascending_comparator<T>
 {
-    return *b - *a;
+    int compare(T& a, T& b)
+    {
+        if (a < b) {
+            return -1;
+        }
+
+        // If both a < b == false and b < a == false, then a = b
+        return b < a;
+    }
+}
+
+class descending_comparator<T>
+{
+    int compare(T& a, T& b)
+    {
+        if (b < a) {
+            return -1;
+        }
+
+        // If both a < b == false and b < a == false, then a = b
+        return a < b;
+    }
 }
 
 void sort_ascending<T>(T* base, long n)
 {
-    sort<T>(base, n, ascending_comparator<T>);
+    sort<T, ascending_comparator<T>>(base, n);
 }
 
 void sort_descending<T>(T* base, long n)
 {
-    sort<T>(base, n, descending_comparator<T>);
+    sort<T, descending_comparator<T>>(base, n);
 }
 
-int random_comparator<T>(T* a, T* b)
- {
-    return (random_int() % 2) ? 1 : -1;
+class random_comparator<T>
+{
+    int compare(T& a, T& b)
+    {
+        return (random_int() % 2) ? 1 : -1;
+    }
 }
 
 void shuffle<T>(T* base, long n)
 {
-    sort<T>(base, n, random_comparator<T>);
+    sort<T, random_comparator<T>>(base, n);
 }
 
 void reverse<T>(T* base, long n)
@@ -974,14 +999,13 @@ nomangle void qsort(int* base, long n, long size, int(int*, int*)* comparator);
 ,
 R"(
 
-class PriorityQueue<T>
+class PriorityQueue<T, Comparator>
 {
     typealias size_t = long;
 
     Vector<T> array;
-    int(T*, T*)* comparator;
 
-    constructor(int(T*, T*)* comparator) : comparator(comparator) { }
+    Comparator comparator;
 
     size_t parent(size_t child) = (child - 1) / 2;
 
@@ -1004,7 +1028,7 @@ class PriorityQueue<T>
     {
         if (i == 0) return;
         size_t p = parent(i);
-        if (comparator(&array[p], &array[i]) > 0) {
+        if (comparator.compare(array[p], array[i]) > 0) {
             swap(i, p);
             bubble_up(p);
         }
@@ -1018,16 +1042,16 @@ class PriorityQueue<T>
             return;
         } else if (r >= array.size()) {
             // here, l is within the bounds
-            if (comparator(&array[l], &array[i]) < 0) {
+            if (comparator.compare(array[l], array[i]) < 0) {
                 swap(i, l);
                 bubble_down(l);
             }
         } else {
             // Both l and r are within the bounds
-            int cl = comparator(&array[l], &array[i]);
-            int cr = comparator(&array[r], &array[i]);
+            int cl = comparator.compare(array[l], array[i]);
+            int cr = comparator.compare(array[r], array[i]);
             if (cl < 0 || cr < 0) {
-                if (comparator(&array[l], &array[r]) < 0) {
+                if (comparator.compare(array[l], array[r]) < 0) {
                     swap(i, l);
                     bubble_down(l);
                 } else {
@@ -1070,15 +1094,9 @@ class PriorityQueue<T>
     bool is_empty() { return array.is_empty(); }
 }
 
-class MinPriorityQueue<T> : PriorityQueue<T>
-{
-    constructor() : Super(ascending_comparator<T>) { }
-}
+class MinPriorityQueue<T> : PriorityQueue<T, ascending_comparator<T>> { }
 
-class MaxPriorityQueue<T> : PriorityQueue<T>
-{
-    constructor() : Super(descending_comparator<T>) { }
-}
+class MaxPriorityQueue<T> : PriorityQueue<T, descending_comparator<T>> { }
 
 )"
 ,

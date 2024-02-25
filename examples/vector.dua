@@ -1,5 +1,10 @@
 import "../lib/vector.dua"
 
+// A quick hack to replace the extern variable
+//  to avoid both compilation and linking errors
+int __ = { move(__IS_RANDOM_SEED_SET); 0 };
+bool __IS_RANDOM_SEED_SET = false;
+
 nomangle int printf(str message, ...);
 
 // Case Pushing an element
@@ -221,7 +226,7 @@ int main()
     v.push(5);
     v.push(4);
 
-    v.sort(ascending_comparator<int>);
+    v.sort<ascending_comparator<int>>();
 
     for (int i = 0; i < 5; i++)
         printf("%d", v[i]);
@@ -240,7 +245,7 @@ int main()
     v.push(5);
     v.push(4);
 
-    v.sort(descending_comparator<int>);
+    v.sort<descending_comparator<int>>();
 
     for (int i = 0; i < 5; i++)
         printf("%d", v[i]);

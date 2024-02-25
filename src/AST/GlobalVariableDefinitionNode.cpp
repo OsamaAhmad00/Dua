@@ -17,11 +17,19 @@ Value GlobalVariableDefinitionNode::eval()
     if (is_extern && is_static)
         compiler->report_error("Can't have both the static and the extern options together in the declaration of the global variable " + name);
 
-    if (module().getNamedGlobal(name) != nullptr)
+    if (compiler->get_name_resolver().symbol_table.contains_global(name))
         compiler->report_error("The global variable " + name + " is already defined");
 
-    module().getOrInsertGlobal(name, type->llvm_type());
-    llvm::GlobalVariable* variable = module().getNamedGlobal(name);
+    // The variable is inserted in the module, and
+    //  the module is responsible for deleting it
+    auto variable = new llvm::GlobalVariable(
+        module(),
+        type->llvm_type(),
+        false,
+        llvm::GlobalValue::ExternalLinkage,
+        nullptr,
+        name
+    );
 
     if (is_extern) {
         if (initializer != nullptr)
@@ -52,7 +60,9 @@ Value GlobalVariableDefinitionNode::eval()
         llvm::Constant* const_initializer = nullptr;
         if (initializer != nullptr) {
             init_value = initializer->eval();
-            const_initializer = llvm::dyn_cast<llvm::Constant>(init_value.get());
+            if (auto casted = init_value.cast_as(type); !casted.is_null()) {
+                const_initializer = casted.get_constant();
+            }
         }
 
         if (const_initializer != nullptr) {
@@ -71,8 +81,6 @@ Value GlobalVariableDefinitionNode::eval()
     // Restore the old position back
     builder().restoreIP(old_position);
     current_function() = old_function;
-
-    variable->setConstant(false);
 
     name_resolver().symbol_table.insert_global(name, compiler->create_value(variable, type));
 
