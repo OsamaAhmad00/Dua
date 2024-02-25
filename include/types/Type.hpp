@@ -15,6 +15,7 @@ struct Type
 {
     ModuleCompiler* compiler = nullptr;
     virtual Value default_value() const = 0;
+    virtual Value zero_value() const;
     virtual llvm::Type* llvm_type() const = 0;
     virtual std::string to_string() const = 0;
     virtual std::string as_key() const = 0;

@@ -23,6 +23,8 @@ public:
 
     Value default_value() const override;
 
+    Value zero_value() const override;
+
     llvm::Type* llvm_type() const override;
 
     std::string to_string() const override;

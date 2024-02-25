@@ -19,15 +19,8 @@ ClassType::ClassType(ModuleCompiler *compiler, std::string name)
 
 Value ClassType::default_value() const
 {
-    std::vector<llvm::Constant*> initializers(fields().size());
-
-    auto& f = fields();
-    for (int i = 0 ; i < initializers.size(); i++) {
-        initializers[i] = f[i].type->default_value().get_constant();
-    }
-
-    auto result = llvm::ConstantStruct::get(llvm_type(), std::move(initializers));
-    return compiler->create_value(result, this);
+    compiler->report_internal_error("Class types don't have default values");
+    return {};
 }
 
 llvm::StructType* ClassType::llvm_type() const {
@@ -114,6 +107,19 @@ Value ClassType::get_method(const std::string& name, Value instance, const std::
                 : compiler->module.getFunction(full_name);
     auto method = compiler->create_value(method_ptr, method_type);
     return method;
+}
+
+Value ClassType::zero_value() const
+{
+    std::vector<llvm::Constant*> initializers(fields().size());
+
+    auto& f = fields();
+    for (int i = 0 ; i < initializers.size(); i++) {
+        initializers[i] = f[i].type->zero_value().get_constant();
+    }
+
+    auto result = llvm::ConstantStruct::get(llvm_type(), std::move(initializers));
+    return compiler->create_value(result, this);
 }
 
 }

@@ -45,6 +45,8 @@ public:
 
     Value default_value() const override;
 
+    Value zero_value() const override;
+
     llvm::StructType* llvm_type() const override;
 
     const std::vector<ClassField>& fields() const;

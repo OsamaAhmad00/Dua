@@ -60,7 +60,11 @@ bool Type::is_resolvable_now() const {
     return this == concrete_type || concrete_type->is_resolvable_now();
 }
 
-    template <>
+Value Type::zero_value() const {
+    return default_value();
+}
+
+template <>
 const ReferenceType* Type::as<ReferenceType>() const {
     return dynamic_cast<const ReferenceType*>(this);
 }

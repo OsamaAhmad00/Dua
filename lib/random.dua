@@ -1,4 +1,4 @@
-bool __IS_RANDOM_SEED_SET = false;
+extern bool __IS_RANDOM_SEED_SET;
 
 void set_random_seed(i32 seed)
 {

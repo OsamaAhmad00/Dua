@@ -68,4 +68,8 @@ bool IdentifierType::is_resolvable_now() const
     return compiler->get_typing_system().identifier_types.contains(full_name);
 }
 
+Value IdentifierType::zero_value() const {
+    return get_concrete_type()->zero_value();
+}
+
 }

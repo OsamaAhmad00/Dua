@@ -1,0 +1,37 @@
+class InputStream
+{
+    int* stream;
+    str buffer;
+    bool end_of_file_error = false;
+    bool input_failure_error = false;
+    bool range_error = false;  // Underflow or Overflow
+    bool invalid_input_error = false;
+
+    constructor(int* stream);
+
+    constructor();
+}
+
+class OutputStream
+{
+    int* stream;
+    bool error = false;
+    int error_code = 0;
+
+    constructor(int* stream);
+
+    constructor();
+}
+
+nomangle int* c_stderr();
+
+InputStream in;
+
+OutputStream out;
+
+OutputStream err(c_stderr());
+
+int __INPUT_STREAM_BUFFER_LEN = 4096;
+
+bool __IS_RANDOM_SEED_SET = false;
+

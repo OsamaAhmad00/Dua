@@ -44,25 +44,28 @@ Value GlobalVariableDefinitionNode::eval()
 
     if (!is_extern)
     {
-        variable->setInitializer(type->default_value().get_constant());
-
         std::vector<Value> evaluated_args(args.size());
         for (int i = 0; i < args.size(); i++)
             evaluated_args[i] = args[i]->eval();
 
         Value init_value;
-        if (initializer != nullptr) init_value = initializer->eval();
-        auto init = initializer ? &init_value : nullptr;
+        llvm::Constant* const_initializer = nullptr;
+        if (initializer != nullptr) {
+            init_value = initializer->eval();
+            const_initializer = llvm::dyn_cast<llvm::Constant>(init_value.get());
+        }
 
-        auto initializer = compiler->create_local_variable(name + "_initializer", type, init, std::move(evaluated_args), false);
-        auto value = compiler->create_value(type, initializer);
-        value.is_teleporting = true;
-        auto instance = compiler->create_value(variable, type);
-        name_resolver().copy_construct(instance, value);
-
-        auto comdat = module().getOrInsertComdat(name);
-        comdat->setSelectionKind(llvm::Comdat::Any);
-        variable->setComdat(comdat);
+        if (const_initializer != nullptr) {
+            variable->setInitializer(const_initializer);
+        } else {
+            variable->setInitializer(type->zero_value().get_constant());
+            auto init = initializer ? &init_value : nullptr;
+            auto initializer = compiler->create_local_variable(name + "_initializer", type, init, std::move(evaluated_args), false);
+            auto value = compiler->create_value(type, initializer);
+            value.is_teleporting = true;
+            auto instance = compiler->create_value(variable, type);
+            name_resolver().copy_construct(instance, value);
+        }
     }
 
     // Restore the old position back

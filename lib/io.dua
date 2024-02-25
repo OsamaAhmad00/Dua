@@ -1,6 +1,6 @@
 import "c.dua"
 
-int __INPUT_STREAM_BUFFER_LEN = 4096;
+extern int __INPUT_STREAM_BUFFER_LEN;
 
 class InputStream
 {

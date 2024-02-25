@@ -35,6 +35,8 @@ public:
 
     Value default_value() const override;
 
+    Value zero_value() const override;
+
     llvm::Type* llvm_type() const override;
 
     const Type* get_element_type() const;

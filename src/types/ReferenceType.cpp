@@ -55,4 +55,8 @@ bool ReferenceType::is_allocated() const {
     return _is_allocated;
 }
 
+Value ReferenceType::zero_value() const {
+    return compiler->create_value(llvm::Constant::getNullValue(llvm_type()), this);
+}
+
 }

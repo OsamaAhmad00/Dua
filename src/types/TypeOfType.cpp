@@ -50,4 +50,8 @@ std::string TypeOfType::as_key() const {
     return "TypeOf(" + std::to_string((unsigned long long)node) + ")";
 }
 
+Value TypeOfType::zero_value() const {
+    return get_concrete_type()->zero_value();
+}
+
 }
