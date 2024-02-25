@@ -893,6 +893,12 @@ class OutputStream
     OutputStream& infix <<(str string);
 }
 
+InputStream in;
+
+OutputStream out;
+
+OutputStream err(c_stderr());
+
 )"
 ,
 R"(

@@ -2,9 +2,6 @@ import "SudokuSolver.dua"
 
 int main()
 {
-    InputStream in;
-    OutputStream out;
-
     SudokuSolver s( int[9] {
         int { 0, 6, 8, 0, 1, 0, 0, 4, 7 },
         int { 0, 0, 0, 0, 0, 7, 0, 0, 5 },

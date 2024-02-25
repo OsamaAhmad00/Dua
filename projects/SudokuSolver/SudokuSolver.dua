@@ -80,8 +80,6 @@ class SudokuSolver
 
     void print()
     {
-        OutputStream out;
-
         char thick_vertical = 186;
         char thick_horizontal = 205;
 
