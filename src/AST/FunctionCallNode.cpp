@@ -21,10 +21,6 @@ Value FunctionCallNode::eval()
 {
     _current_name = unresolved_name->resolve();
 
-    if (_current_name == "printf") {
-        _current_name = "printf";
-    }
-
     auto evaluated_args = eval_args(args);
 
     if (is_templated)

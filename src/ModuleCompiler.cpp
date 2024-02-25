@@ -510,14 +510,14 @@ Value ModuleCompiler::get_bound_value(Value value, const Type *bound_type)
     return value;
 }
 
-llvm::AllocaInst* ModuleCompiler::create_local_variable(const std::string& name, const Type* type, Value* init, std::vector<Value> args)
+llvm::AllocaInst* ModuleCompiler::create_local_variable(const std::string& name, const Type* type, Value* init, std::vector<Value> args, bool track_variable)
 {
     llvm::BasicBlock* entry = &current_function->getEntryBlock();
     temp_builder.SetInsertPoint(entry, entry->begin());
     llvm::AllocaInst* instance = temp_builder.CreateAlloca(type->llvm_type(), 0, name);
     auto value = create_value(instance, type->get_concrete_type());
 
-    if (!name.empty())
+    if (track_variable && !name.empty())
         name_resolver.symbol_table.insert(name, value);
 
     if (init)

@@ -149,10 +149,6 @@ void ParserAssistant::finish_parsing()
     //  are visible to the class definitions.
     create_missing_methods();
 
-    // Evaluate all global variable definitions before defining functions and classes
-    for (auto node : global_variable_nodes)
-        node->eval();
-
     for (auto& root : class_info["Object"].children)
     {
         if (class_info.find(root) == class_info.end())
@@ -181,6 +177,11 @@ void ParserAssistant::finish_parsing()
             }
         }
     }
+
+    // Evaluate all global variable definitions before defining functions
+    //  and classes, but after setting the bodies of the classes
+    for (auto node : global_variable_nodes)
+        node->eval();
 
     for (auto& root : class_info["Object"].children)
     {

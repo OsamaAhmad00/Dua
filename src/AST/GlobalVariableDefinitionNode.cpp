@@ -42,46 +42,32 @@ Value GlobalVariableDefinitionNode::eval()
     current_function() = compiler->get_dua_init_function();
     builder().SetInsertPoint(&current_function()->getEntryBlock());
 
-    llvm::Constant* constant = nullptr;
-
-    if (initializer != nullptr)
-    {
-        auto value = initializer->eval();
-
-        auto llvm_value = typing_system().cast_value(value, type).get();
-        if (llvm_value == nullptr)
-            compiler->report_error("Type mismatch between the global variable " + name + " and its initializer");
-
-        auto casted = llvm::dyn_cast<llvm::Constant>(llvm_value);
-        // If it's not a constant, then the initialization happens in the
-        // .dua.init function. Otherwise, initialized with the constant value.
-        if (casted == nullptr) {
-            builder().CreateStore(llvm_value, variable);
-        } else {
-            constant = casted;
-        }
-    }
-    else if (!args.empty())
-    {
-        std::vector<Value> evaluated(args.size());
-        for (int i = 0; i < args.size(); i++)
-            evaluated[i] = args[i]->eval();
-
-        name_resolver().call_constructor(compiler->create_value(variable, type), std::move(evaluated));
-    }
-
-    // Restore the old position back
-    builder().restoreIP(old_position);
-    current_function() = old_function;
-
     if (!is_extern)
     {
-        variable->setInitializer(constant ? constant : type->default_value().get_constant());
+        variable->setInitializer(type->default_value().get_constant());
+
+        std::vector<Value> evaluated_args(args.size());
+        for (int i = 0; i < args.size(); i++)
+            evaluated_args[i] = args[i]->eval();
+
+        Value init_value;
+        if (initializer != nullptr) init_value = initializer->eval();
+        auto init = initializer ? &init_value : nullptr;
+
+        auto initializer = compiler->create_local_variable(name + "_initializer", type, init, std::move(evaluated_args), false);
+        auto value = compiler->create_value(type, initializer);
+        value.is_teleporting = true;
+        auto instance = compiler->create_value(variable, type);
+        name_resolver().copy_construct(instance, value);
 
         auto comdat = module().getOrInsertComdat(name);
         comdat->setSelectionKind(llvm::Comdat::Any);
         variable->setComdat(comdat);
     }
+
+    // Restore the old position back
+    builder().restoreIP(old_position);
+    current_function() = old_function;
 
     variable->setConstant(false);
 

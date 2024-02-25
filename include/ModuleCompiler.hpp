@@ -113,7 +113,7 @@ public:
     void create_dynamic_casting_function();
     void delete_dynamic_casting_function();
 
-    llvm::AllocaInst* create_local_variable(const std::string& name, const Type* type, Value* init, std::vector<Value> args = {});
+    llvm::AllocaInst* create_local_variable(const std::string& name, const Type* type, Value* init, std::vector<Value> args = {}, bool track_variable = true);
 
     llvm::BasicBlock* create_basic_block(const std::string& name, llvm::Function* function = nullptr);
 

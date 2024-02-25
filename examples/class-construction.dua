@@ -601,6 +601,24 @@ int main()
 }
 
 
+// Case Construction of global objects
+// Outputs "Hello 5"
+
+class X
+{
+    constructor(int i) {
+        printf("Hello %d", i);
+    }
+}
+
+X x(5);
+
+int main()
+{
+
+}
+
+
 // Case Destruction of global objects
 // Outputs "Bye"
 
