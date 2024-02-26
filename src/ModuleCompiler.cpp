@@ -617,8 +617,7 @@ class Vector<T>
         if (_is_const_initialized)
             alloc_new_buffer(_capacity);
 
-        // TODO call the destructor on the popped element
-        return buffer[--_size];
+        return teleport(buffer[--_size]);
     }
 
     T& postfix [](size_t i)
@@ -678,6 +677,9 @@ class Vector<T>
 
         if (new_size > _capacity)
             alloc_new_buffer(new_size);
+
+        for (size_t i = _size; i < new_size; i++)
+            construct(buffer[i]);
 
         _size = new_size;
     }

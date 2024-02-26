@@ -1212,4 +1212,9 @@ void ParserAssistant::create_teleport() {
     push_node<TeleportNode>(pop_node());
 }
 
+void ParserAssistant::create_construct() {
+    push_node<ConstructNode>(pop_node(), pop_args());
+    inc_statements();
+}
+
 }

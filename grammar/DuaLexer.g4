@@ -87,6 +87,9 @@ Teleport: 'teleport';
 
 OffsetOf: 'offsetof';
 
+Construct: 'construct';
+Destruct: 'destruct';
+
 I64: ('i64' | 'long' );
 I32: ('i32' | 'int'  );
 I16: ('i16' | 'short');

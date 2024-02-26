@@ -1,0 +1,54 @@
+nomangle int printf(str message, ...);
+
+// This is useful for containers that allocate a raw memory,
+//  which will need to manually construct its elements at
+//  some point
+
+
+// Case Constructing a primitive type
+// Outputs "0"
+
+int main()
+{
+    // Calling the construct operator
+    // on primitive types assigns it
+    // the default value of the type
+    int i = 3;
+    construct(i);
+    printf("%d", i);
+}
+
+
+// Case Constructing a class type
+// Outputs "XYZ122221"
+
+class X
+{
+    int i = 1;
+    int j = 2;
+    constructor() { printf("X"); }
+
+    constructor(int i) : i(i) { printf("Y"); }
+
+    constructor(int i, int j) : i(i), j(j) { printf("Z"); }
+}
+
+int main()
+{
+    var arr = _RAW_ new[5] X;
+    construct(arr[0]);
+    construct(arr[1])(2);
+    construct(arr[2]) (2, 1);
+    printf("%d%d", arr[0].i, arr[0].j);
+    printf("%d%d", arr[1].i, arr[1].j);
+    printf("%d%d", arr[2].i, arr[2].j);
+}
+
+
+// Case Constructing a non-existing value
+// Panics
+
+int main()
+{
+    construct(i);
+}
