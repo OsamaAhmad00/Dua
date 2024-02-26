@@ -83,6 +83,8 @@ Postfix: 'postfix';
 
 Move: 'move';
 
+Teleport: 'teleport';
+
 OffsetOf: 'offsetof';
 
 I64: ('i64' | 'long' );

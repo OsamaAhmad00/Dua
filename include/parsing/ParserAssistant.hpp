@@ -57,6 +57,7 @@
 #include "AST/operators/AddressOfNode.hpp"
 #include "AST/operators/MoveNode.hpp"
 #include "AST/operators/OffsetOfNode.hpp"
+#include "AST/operators/TeleportNode.hpp"
 
 #include "AST/lvalue/VariableNode.hpp"
 #include "AST/IndexingNode.hpp"
@@ -374,6 +375,7 @@ public:
     void create_temp_object();
     void create_move();
     void create_offset_of();
+    void create_teleport();
 
     template<typename T>
     void create_unary_expr() {

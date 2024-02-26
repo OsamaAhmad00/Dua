@@ -1208,4 +1208,8 @@ void ParserAssistant::create_offset_of() {
     push_node<OffsetOfNode>(pop_type(), pop_str());
 }
 
+void ParserAssistant::create_teleport() {
+    push_node<TeleportNode>(pop_node());
+}
+
 }

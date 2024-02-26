@@ -364,6 +364,7 @@ expression
     | when_expression
     | '(' expression ')'
     | Move '(' identifier ')' { assistant.create_move(); }
+    | Teleport '(' expression ')' { assistant.create_teleport(); }
     | OffsetOf '(' expr_or_type ',' identifier ')' { assistant.create_offset_of(); }
     | '(' arg_list ')' type { assistant.create_temp_object(); }
     | expression '.' function_name template_args_or_none '(' arg_list ')' { assistant.create_method_call(); }

@@ -1,0 +1,36 @@
+nomangle int printf(str message, ...);
+
+// This operator should may lead to a problematic behaviour, and should be used with care.
+//  For example, if both x and y are vectors, and the assignment x = teleport(y) is done,
+//  now, by the end of the scope, both x and y will try to free the same buffer, leading
+//  to a double-free error.
+// When to use this operator? One case is in the Vector<T>::pop method, which returns
+//  the last element as it is, without calling its destructor. Its destructor will be
+//  called when it goes out of its new scope
+
+
+// Case Teleporting an object
+// Outputs "copy"
+
+class X
+{
+    =constructor(X& other) {
+        printf("copy");
+    }
+}
+
+int main()
+{
+    X x;
+    X y = x;
+    X z = teleport(x);
+}
+
+
+// Case Teleporting a non-existing variable
+// Panics
+
+int main()
+{
+    teleport(x);
+}
