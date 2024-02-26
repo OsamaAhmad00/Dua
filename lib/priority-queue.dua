@@ -15,12 +15,7 @@ class PriorityQueue<T, Comparator>
 
     size_t right(size_t parent) = left(parent) + 1;
 
-    void swap(size_t i, size_t j)
-    {
-        T temp = array[i];
-        array[i] = array[j];
-        array[j] = temp;
-    }
+    void swap(size_t i, size_t j) { swap<T>(array[i], array[j]); }
 
     // This method won't get called if the array is
     // empty because it gets called after an insertion

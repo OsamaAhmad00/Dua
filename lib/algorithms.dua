@@ -66,12 +66,26 @@ void reverse<T>(T* base, long n)
     long j = n - 1;
     while (i < j)
     {
-        T temp = base[i];
-        base[i] = base[j];
-        base[j] = temp;
+        swap<T>(base[i], base[j]);
         i++;
         j--;
     }
 }
 
+void mirror_memory<T>(T& to, T& from)
+{
+    // Primarily used to move an object from one place
+    //  to the other, without calling the destructor
+    //  on the old object
+    memcpy(((int*))&to, ((int*))&from, sizeof(T));
+}
+
+void swap<T>(T& a, T& b)
+{
+    T temp = teleport(a);
+    mirror_memory<T>(a, b);
+    mirror_memory<T>(b, temp);
+}
+
+nomangle void memcpy(int* to, int* from, long bytes);
 nomangle void qsort(int* base, long n, long size, int(int*, int*)* comparator);

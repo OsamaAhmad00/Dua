@@ -628,7 +628,7 @@ class Vector<T>
         if (i >= size())
             panic("Can't have an index bigger than the size\n");
 
-        //  but as of now, there is no way to tell whether the returned
+        //  As of now, there is no way to tell whether the returned
         //  reference is going to be read from or written to, so this
         //  step is needed. Nevertheless, this would be useful for example
         //  in case of temporary string literals, which are just a temporary
@@ -659,10 +659,14 @@ class Vector<T>
 
         T* temp = new[new_capacity] T;
 
-        for (size_t i = 0; i < _size; i++)
-            temp[i] = buffer[i];
+        size_t n = _size < new_capacity ? _size : new_capacity;
 
-        _destroy_buffer();
+        for (size_t i = 0; i < n; i++) {
+            // To avoid calling the destructor on temp[i]
+            mirror_memory<T>(temp[i], buffer[i]);
+        }
+
+        free_buffer();
         buffer = temp;
 
         _capacity = new_capacity;
@@ -699,23 +703,31 @@ class Vector<T>
     {
         if (&other == &self) return self;
 
+        if (other.is_empty()) {
+            clear();
+            return self;
+        }
+
         if (other._is_const_initialized)
         {
-            _destroy_buffer();
+            free_buffer();
             buffer = other.buffer;
             _size = other._size;
             _capacity = other._capacity;
         }
-        else if (other._size != 0)
+        else
         {
+            destruct_elements();
             resize(other._size);
 
             // Don't set _size and _capacity. the resize method will set
             //  them as appropriate (_capacity might remain bigger than
             //  other._capacity)
 
-            for (size_t i = 0; i < _size; i++)
-                buffer[i] = other.buffer[i];
+            // To avoid calling the destructor on buffer[i] when copying
+            _size = 0;
+            for (size_t i = 0; i < other._size; i++)
+                push(other.buffer[i]);
         }
 
         _is_const_initialized = other._is_const_initialized;
@@ -744,24 +756,18 @@ class Vector<T>
 
     destructor
     {
-        _destroy_buffer();
+        destruct_elements();
+        free_buffer();
     }
 
     void destruct_elements()
     {
         // Const pointers are in a read-only
         //  memory, and shouldn't be deleted
-        if (!_is_const_initialized)
-        {
-            if ((&buffer[0] as Object*) != null) {
-                // Have to cast as Object* so that the typing
-                //  system doesn't complain if T is a primitive type
-                for (size_t i = 0; i < size(); i++) {
-                    var obj = ((Object*))&buffer[i];
-                    obj->destructor();
-                }
-            }
-        }
+        if (_is_const_initialized) return;
+
+        for (size_t i = 0; i < size(); i++)
+            destruct(buffer[i]);
     }
 
     void clear()
@@ -770,29 +776,32 @@ class Vector<T>
         _size -= size();
     }
 
-    void remove(size_t index)
+    T remove(size_t index)
     {
         if (index < 0)
-            panic("Can't remove a negative index");
+            panic("Can't remove at a negative index");
 
         if (index >= size())
-            panic("Can't remove an index bigger than the size");
+            panic("Can't remove at an index bigger than the size");
+
+        T removed = teleport(buffer[index]);
 
         for (size_t i = index; i < _size - 1; i++) {
-            buffer[i] = buffer[i + 1];
+            // To avoid calling the destructor on buffer[i]
+            mirror_memory<T>(buffer[i], buffer[i + 1]);
         }
 
         _size--;
+
+        return teleport(removed);
     }
 
-    void _destroy_buffer()
+    void free_buffer()
     {
         // Const pointers are in a read-only
         //  memory, and shouldn't be deleted
         if (_is_const_initialized)
             return;
-
-        destruct_elements();
 
         // Deleting with _RAW_ instead of delete to avoid
         //  calling the destructor on every position
@@ -987,14 +996,28 @@ void reverse<T>(T* base, long n)
     long j = n - 1;
     while (i < j)
     {
-        T temp = base[i];
-        base[i] = base[j];
-        base[j] = temp;
+        swap<T>(base[i], base[j]);
         i++;
         j--;
     }
 }
 
+void mirror_memory<T>(T& to, T& from)
+{
+    // Primarily used to move an object from one place
+    //  to the other, without calling the destructor
+    //  on the old object
+    memcpy(((int*))&to, ((int*))&from, sizeof(T));
+}
+
+void swap<T>(T& a, T& b)
+{
+    T temp = teleport(a);
+    mirror_memory<T>(a, b);
+    mirror_memory<T>(b, temp);
+}
+
+nomangle void memcpy(int* to, int* from, long bytes);
 nomangle void qsort(int* base, long n, long size, int(int*, int*)* comparator);
 
 )"
@@ -1015,12 +1038,7 @@ class PriorityQueue<T, Comparator>
 
     size_t right(size_t parent) = left(parent) + 1;
 
-    void swap(size_t i, size_t j)
-    {
-        T temp = array[i];
-        array[i] = array[j];
-        array[j] = temp;
-    }
+    void swap(size_t i, size_t j) { swap<T>(array[i], array[j]); }
 
     // This method won't get called if the array is
     // empty because it gets called after an insertion
