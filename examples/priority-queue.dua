@@ -2,7 +2,7 @@ import "../lib/priority-queue.dua"
 
 // A quick hack to replace the extern variable
 //  to avoid both compilation and linking errors
-int __ = { move(__IS_RANDOM_SEED_SET); 0 };
+int __ = { untrack(__IS_RANDOM_SEED_SET); 0 };
 bool __IS_RANDOM_SEED_SET = false;
 
 nomangle int printf(str message, ...);

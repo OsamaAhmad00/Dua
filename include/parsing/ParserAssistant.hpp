@@ -60,6 +60,7 @@
 #include "AST/operators/TeleportNode.hpp"
 #include "AST/operators/ConstructNode.hpp"
 #include "AST/operators/DestructNode.hpp"
+#include "AST/operators/UntrackNode.hpp"
 
 #include "AST/lvalue/VariableNode.hpp"
 #include "AST/IndexingNode.hpp"
@@ -380,6 +381,7 @@ public:
     void create_teleport();
     void create_construct();
     void create_destruct();
+    void create_untrack();
 
     template<typename T>
     void create_unary_expr() {

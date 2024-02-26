@@ -2,10 +2,10 @@ import "../lib/string.dua"
 
 // A quick hack to replace the extern variable
 //  to avoid both compilation and linking errors
-int _0 = { move(__IS_RANDOM_SEED_SET); 0 };
+int _0 = { untrack(__IS_RANDOM_SEED_SET); 0 };
 bool __IS_RANDOM_SEED_SET = false;
 
-int _1 = { move(__INPUT_STREAM_BUFFER_LEN); 0 };
+int _1 = { untrack(__INPUT_STREAM_BUFFER_LEN); 0 };
 int __INPUT_STREAM_BUFFER_LEN = 4096;
 
 nomangle int printf(str message, ...);

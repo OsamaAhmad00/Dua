@@ -353,6 +353,7 @@ statement
     | expression_statement
     | Construct '(' expression ')' optional_constructor_args ';' { assistant.create_construct(); }
     | Destruct  '(' expression ')' ';' { assistant.create_destruct(); }
+    | Untrack '(' identifier ')' ';' { assistant.create_untrack(); }
     | ';'  { assistant.create_empty_statement(); }
     ;
 

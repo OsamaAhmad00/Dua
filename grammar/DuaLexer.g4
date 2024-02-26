@@ -82,6 +82,7 @@ Infix: 'infix';
 Postfix: 'postfix';
 
 Move: 'move';
+Untrack: 'untrack';
 
 Teleport: 'teleport';
 

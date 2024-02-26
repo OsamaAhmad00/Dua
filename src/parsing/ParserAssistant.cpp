@@ -1222,4 +1222,9 @@ void ParserAssistant::create_destruct() {
     inc_statements();
 }
 
+void ParserAssistant::create_untrack() {
+    push_node<UntrackNode>(pop_str());
+    inc_statements();
+}
+
 }

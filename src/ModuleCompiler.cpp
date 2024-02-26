@@ -604,7 +604,7 @@ class Vector<T>
     void push(T t)
     {
         expand_if_needed();
-        buffer[_size++] = t;
+        mirror_memory<T>(buffer[_size++], t);
     }
 
     T pop()
@@ -724,10 +724,14 @@ class Vector<T>
             //  them as appropriate (_capacity might remain bigger than
             //  other._capacity)
 
-            // To avoid calling the destructor on buffer[i] when copying
-            _size = 0;
-            for (size_t i = 0; i < other._size; i++)
-                push(other.buffer[i]);
+            // To avoid calling the destructor on buffer[i] when assigning
+            for (size_t i = 0; i < other._size; i++) {
+                T copy;
+                // To call the = infix operator if exists
+                copy = other.buffer[i];
+                mirror_memory<T>(buffer[i], copy);
+                untrack(copy);
+            }
         }
 
         _is_const_initialized = other._is_const_initialized;

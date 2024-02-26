@@ -176,8 +176,11 @@ class Vector<T>
 
             // To avoid calling the destructor on buffer[i] when assigning
             for (size_t i = 0; i < other._size; i++) {
-                T copy = other.buffer[i];
-                mirror_memory<T>(buffer[i], move(copy));
+                T copy;
+                // To call the = infix operator if exists
+                copy = other.buffer[i];
+                mirror_memory<T>(buffer[i], copy);
+                untrack(copy);
             }
         }
 

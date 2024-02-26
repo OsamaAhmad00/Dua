@@ -1,0 +1,45 @@
+nomangle int printf(str message, ...);
+
+class X
+{
+    int i = 5;
+
+    destructor { printf("destructor"); }
+}
+
+
+// Case Accessing an untracked variable
+// Panics
+
+int main()
+{
+    X x;
+    untrack(x);
+    printf("%d", x.i);
+}
+
+
+// Case Untracking an object
+// Outputs "12"
+
+int main()
+{
+    X x;
+    printf("1");
+    // The variable x is untracked (removed from the
+    // symbol table), and its destructor won't get called
+    untrack(x);
+    printf("2");
+}
+
+
+// Case Redefining the a variable after untracking it
+// Outputs "3"
+
+int main()
+{
+    int x = 5;
+    untrack(x);
+    int x = 3;
+    printf("%d", x);
+}
