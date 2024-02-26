@@ -73,7 +73,7 @@ int main()
             in >> i >> j;
             Dijkstra d(g, i, j);
             if (d.not_reachable == true) {
-                out << "The node " << i << " is not reachable from the node " << j;
+                out << "The node " << j << " is not reachable from the node " << i;
             } else if (d.has_negative_cycle == true) {
                 out << "The graph contains a negative cycle";
             } else {

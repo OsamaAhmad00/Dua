@@ -51,17 +51,11 @@ class Dijkstra
 
         q.insert((source, -1, 0)QueueNode);
 
-        for (int i = 0; i < g.size() - 1 && !q.is_empty(); )
+        while(!q.is_empty())
         {
             var closest = q.pop();
 
             int node = closest.node;
-
-            shortest_distances[node] = closest.weight;
-            parent_of[node] = closest.parent;
-
-            if (node == target)
-                break;
 
             if (is_visited[node])
             {
@@ -73,12 +67,16 @@ class Dijkstra
                 }
             }
 
+            shortest_distances[node] = closest.weight;
+            parent_of[node] = closest.parent;
             is_visited[node] = true;
-            i++;
 
-            for (int j = 0; j < g[node].size(); j++)
+            if (node == target)
+                break;
+
+            for (int i = 0; i < g[node].size(); i++)
             {
-                Edge& edge = g[node][j];
+                Edge& edge = g[node][i];
 
                 if (closest.weight + edge.weight < shortest_distances[edge.to]) {
                     q.insert((edge.to, node, closest.weight + edge.weight)QueueNode);
