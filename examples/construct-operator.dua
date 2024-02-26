@@ -10,8 +10,8 @@ nomangle int printf(str message, ...);
 
 int main()
 {
-    // Calling the construct operator
-    // on primitive types assigns it
+    // Using the construct operator
+    // with primitive types assigns it
     // the default value of the type
     int i = 3;
     construct(i);

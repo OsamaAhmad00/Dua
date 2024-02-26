@@ -352,7 +352,7 @@ statement
     | Break { assistant.create_break(); }
     | expression_statement
     | Construct '(' expression ')' optional_constructor_args ';' { assistant.create_construct(); }
-    | Destruct  '(' expression ')' ';'
+    | Destruct  '(' expression ')' ';' { assistant.create_destruct(); }
     | ';'  { assistant.create_empty_statement(); }
     ;
 

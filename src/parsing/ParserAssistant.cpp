@@ -1217,4 +1217,9 @@ void ParserAssistant::create_construct() {
     inc_statements();
 }
 
+void ParserAssistant::create_destruct() {
+    push_node<DestructNode>(pop_node());
+    inc_statements();
+}
+
 }

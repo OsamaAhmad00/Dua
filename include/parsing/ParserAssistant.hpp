@@ -59,6 +59,7 @@
 #include "AST/operators/OffsetOfNode.hpp"
 #include "AST/operators/TeleportNode.hpp"
 #include "AST/operators/ConstructNode.hpp"
+#include "AST/operators/DestructNode.hpp"
 
 #include "AST/lvalue/VariableNode.hpp"
 #include "AST/IndexingNode.hpp"
@@ -378,6 +379,7 @@ public:
     void create_offset_of();
     void create_teleport();
     void create_construct();
+    void create_destruct();
 
     template<typename T>
     void create_unary_expr() {

@@ -1,0 +1,53 @@
+nomangle int printf(str message, ...);
+
+// This is useful for containers that allocate a raw memory,
+//  which will need to manually destruct its elements at
+//  some point
+
+
+// Case Destructing a primitive type
+// Outputs "3"
+
+int main()
+{
+    // Using the destruct operator with
+    //  primitive types has no effect
+    int i = 3;
+    destruct(i);
+    printf("%d", i);
+}
+
+
+// Case Destructing a class type
+// Outputs "123X321"
+
+class X
+{
+    int i = 1;
+
+    constructor(int i) : i(i) { }
+
+    destructor { printf("%d", i); }
+}
+
+int main()
+{
+    X x1(1);
+    X x2(2);
+    X x3(3);
+
+    destruct(x1);
+    destruct(x2);
+    destruct(x3);
+
+    printf("X");
+}
+
+
+// Case Destructing a non-existing value
+// Panics
+
+int main()
+{
+    destruct(i);
+}
