@@ -280,7 +280,7 @@ function_definition
 
 function_body
     : block_statement { assistant.create_function_definition_block_body(); }
-    | '=' expression ';' { assistant.create_function_definition_expression_body(); }
+    | '=' scoped_expression ';' { assistant.create_function_definition_expression_body(); }
     ;
 
 param_list @init { assistant.push_counter(); }
@@ -316,6 +316,11 @@ scoped_statement
     | { assistant.enter_scope(); } statement { assistant.create_block(); assistant.inc_statements(); }
     ;
 
+scoped_expression
+    : block_expression
+    | { assistant.enter_scope(); } expression { assistant.inc_statements(); assistant.create_block(); }
+    ;
+
 // There is a corner case. a & b shouldn't be parsed as defining b to be of type a&,
 //  but a & b = x should be parsed as a reference variable definition.
 // The normal assignment defintion shouldn't have a higher precedence than the fucntion
@@ -347,12 +352,12 @@ statement
     | block_statement
     | type_alias
     | return_statement
-    | raw_or_none Delete delete_brackets_or_none expression ';' { assistant.create_free(); }
+    | raw_or_none Delete delete_brackets_or_none scoped_expression ';' { assistant.create_free(); }
     | Continue { assistant.create_continue(); }
     | Break { assistant.create_break(); }
     | expression_statement
-    | Construct '(' expression ')' optional_constructor_args ';' { assistant.create_construct(); }
-    | Destruct  '(' expression ')' ';' { assistant.create_destruct(); }
+    | Construct '(' scoped_expression ')' optional_constructor_args ';' { assistant.create_construct(); }
+    | Destruct  '(' scoped_expression ')' ';' { assistant.create_destruct(); }
     | Untrack '(' identifier ')' ';' { assistant.create_untrack(); }
     | ';'  { assistant.create_empty_statement(); }
     ;
@@ -417,7 +422,9 @@ expression
     | expression '|'  expression { assistant.create_binary_expr<BitwiseOrNode>(); }
     | expression '&&' expression { assistant.create_logical_and(); }
     | expression '||' expression { assistant.create_logical_or(); }
-    | expression '?' expression ':' expression { assistant.create_ternary_operator(); }
+    // To avoid getting the left-recursion error, the condition of the ternary operator will get
+    //  put inside a block in the ParserAssistant funciton that creates the ternary node
+    | expression '?' scoped_expression ':' scoped_expression { assistant.create_ternary_operator(); }
     | <assoc=right> expression '=' expression { assistant.create_assignment(); }
     | <assoc=right> expression '+='  expression  { assistant.create_compound_assignment<AdditionNode>(); }
     | <assoc=right> expression '-='  expression  { assistant.create_compound_assignment<SubtractionNode>(); }
@@ -488,11 +495,11 @@ expression_statement
     ;
 
 if_statement  @init { assistant.enter_conditional(); assistant.inc_branches(); }
-    : 'if' '(' expression ')' scoped_statement else_if_else_statement { assistant.create_if_statement(); }
+    : 'if' '(' scoped_expression ')' scoped_statement else_if_else_statement { assistant.create_if_statement(); }
     ;
 
 else_if_else_statement
-    : 'else' 'if' '(' expression ')' scoped_statement else_if_else_statement { assistant.inc_branches(); }
+    : 'else' 'if' '(' scoped_expression ')' scoped_statement else_if_else_statement { assistant.inc_branches(); }
     | else_statement
     ;
 
@@ -506,12 +513,12 @@ if_expression @init {
     assistant.inc_branches();
     assistant.set_has_else();
 }
-    : 'if' '(' expression ')' expression else_if_expression 'else' expression
+    : 'if' '(' scoped_expression ')' scoped_expression else_if_expression 'else' scoped_expression
         { assistant.push_str("if"); assistant.create_if_expression(); }
     ;
 
 else_if_expression
-    : 'else' 'if' '(' expression ')' expression else_if_expression { assistant.inc_branches(); }
+    : 'else' 'if' '(' scoped_expression ')' scoped_expression else_if_expression { assistant.inc_branches(); }
     | /* empty */
     ;
 
@@ -523,7 +530,7 @@ when_expression @init {
     ;
 
 when_list
-    : when_list_no_else ',' 'else' '->' expression { assistant.push_str("when"); assistant.create_if_expression(); }
+    : when_list_no_else ',' 'else' '->' scoped_expression { assistant.push_str("when"); assistant.create_if_expression(); }
     ;
 
 when_list_no_else
@@ -532,7 +539,7 @@ when_list_no_else
     ;
 
 when_item
-    : expression '->' expression { assistant.inc_branches(); }
+    : scoped_expression '->' scoped_expression { assistant.inc_branches(); }
     ;
 
 // Used for for loops
@@ -577,7 +584,7 @@ comma_separated_arguments
 // If none, push 1. If used as a condition, equals true. If used as
 // a statement, equals an expression statement with no side effect.
 expression_or_none_loop
-    : expression
+    : scoped_expression
     | /* empty */ { assistant.push_node<I8ValueNode>(1); }
     ;
 

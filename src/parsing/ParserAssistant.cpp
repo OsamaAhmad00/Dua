@@ -673,11 +673,21 @@ void ParserAssistant::create_post_dec() {
     push_node<PostfixAdditionExpressionNode>(pop_node(), -1);
 }
 
-void ParserAssistant::create_ternary_operator() {
+void ParserAssistant::create_ternary_operator()
+{
     enter_conditional();
     inc_branches();
     set_has_else();
     push_str("ternary");
+
+    auto else_node = pop_node();
+    auto then_node = pop_node();
+    auto condition = pop_node();
+    condition = compiler->create_node<BlockNode>(std::vector<ASTNode*>{ condition });
+    nodes.push_back(condition);
+    nodes.push_back(then_node);
+    nodes.push_back(else_node);
+
     create_if_expression();
 }
 
