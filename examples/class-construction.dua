@@ -635,3 +635,36 @@ int main()
 {
 
 }
+
+
+// Case Assigning an object with no infix = defined
+// Outputs "XYZ"
+
+class X
+{
+    =constructor(X& x) { printf("X"); }
+}
+
+class Y
+{
+    =constructor(Y& y) { printf("Y"); }
+}
+
+class Z
+{
+    =constructor(Z& z) { printf("Z"); }
+}
+
+class G
+{
+    X x;
+    Y y;
+    Z z;
+}
+
+int main()
+{
+    G g1;
+    G g2;
+    g2 = g1;
+}

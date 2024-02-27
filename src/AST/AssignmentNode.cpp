@@ -49,8 +49,6 @@ Value AssignmentExpressionNode::perform_assignment(Value lhs, Value rhs, ModuleC
 
     auto& builder = *compiler->get_builder();
 
-    builder.CreateStore(rhs.get(), lhs.memory_location);
-
     // If lhs is an object, call its destructor before copying
     // The destruction has to happen after the copying of the object
     if (auto cls = lhs.type->is<ClassType>(); cls != nullptr)
@@ -65,9 +63,12 @@ Value AssignmentExpressionNode::perform_assignment(Value lhs, Value rhs, ModuleC
         builder.SetInsertPoint(call_destructor);
         auto instance = compiler->create_value(lhs.memory_location, lhs.type);
         compiler->get_name_resolver().call_destructor(instance);
+        compiler->get_name_resolver().copy_construct(instance, { rhs });
         builder.CreateBr(end);
 
         builder.SetInsertPoint(end);
+    } else {
+        builder.CreateStore(rhs.get(), lhs.memory_location);
     }
 
     // The assignment expression a = b = c from the point of
