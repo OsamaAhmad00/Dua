@@ -465,9 +465,9 @@ void ModuleCompiler::push_temp_expr_scope() {
 void ModuleCompiler::destruct_temp_expr_scope()
 {
     for (auto& [id, value] : temp_expressions.scopes.back().map) {
-        // Creating a value with the pointer. This is what call_destructor accepts
+        // Creating a value with the pointer. This is what destruct method accepts
         auto ptr = create_value(value.memory_location, value.type);
-        name_resolver.call_destructor(ptr);
+        name_resolver.destruct(ptr);
     }
     temp_expressions.pop_scope();
 }
@@ -534,7 +534,7 @@ llvm::AllocaInst* ModuleCompiler::create_local_variable(const std::string& name,
         }
         name_resolver.copy_construct(value, *init);
     } else {
-        name_resolver.call_constructor(value, std::move(args));
+        name_resolver.construct(value, std::move(args));
     }
 
     return instance;

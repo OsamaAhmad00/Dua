@@ -62,7 +62,7 @@ Value AssignmentExpressionNode::perform_assignment(Value lhs, Value rhs, ModuleC
 
         builder.SetInsertPoint(call_destructor);
         auto instance = compiler->create_value(lhs.memory_location, lhs.type);
-        compiler->get_name_resolver().call_destructor(instance);
+        compiler->get_name_resolver().destruct(instance);
         compiler->get_name_resolver().copy_construct(instance, { rhs });
         builder.CreateBr(end);
 

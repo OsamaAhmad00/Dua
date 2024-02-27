@@ -305,10 +305,21 @@ Value FunctionNameResolver::call_function(const Value& func, std::vector<Value> 
     return result;
 }
 
-void FunctionNameResolver::call_constructor(const Value &value, std::vector<Value> args)
+void FunctionNameResolver::construct(const Value &value, std::vector<Value> args)
 {
     if (!value.get()->getType()->isPointerTy())
         compiler->report_internal_error("Trying to initialize a non-lvalue item");
+
+    if (auto arr = value.type->is<ArrayType>(); arr != nullptr)
+    {
+        auto size = arr->get_size();
+        auto element_type = arr->get_element_type();
+        auto ptr_type = compiler->create_type<PointerType>(element_type);
+        auto ptr = value.cast_as(ptr_type);
+        auto llvm_size = builder().getInt64(size);
+        auto size_value = compiler->create_value(llvm_size, compiler->create_type<I64Type>());
+        return construct_array(ptr, size_value, std::move(args));
+    }
 
     auto class_type = value.type->is<ClassType>();
 
@@ -451,11 +462,22 @@ void FunctionNameResolver::copy_construct(const Value &instance, const Value& ar
     builder().CreateStore(casted.get(), instance.get());
 }
 
-void FunctionNameResolver::call_destructor(const Value& value)
+void FunctionNameResolver::destruct(const Value& value)
 {
     auto is_ref = value.type->as<ReferenceType>();
     if (is_ref != nullptr)
         return;
+
+    if (auto arr = value.type->is<ArrayType>(); arr != nullptr)
+    {
+        auto size = arr->get_size();
+        auto element_type = arr->get_element_type();
+        auto ptr_type = compiler->create_type<PointerType>(element_type);
+        auto ptr = value.cast_as(ptr_type);
+        auto llvm_size = builder().getInt64(size);
+        auto size_value = compiler->create_value(llvm_size, compiler->create_type<I64Type>());
+        return destruct_array(ptr, size_value);
+    }
 
     auto class_type = value.type->as<ClassType>();
     if (class_type == nullptr)
@@ -763,7 +785,7 @@ std::string FunctionNameResolver::get_winning_method(const ClassType *owner, con
     return result_list.front().first;
 }
 
-void FunctionNameResolver::construct_array(const Value &ptr, size_t element_size, const Value& count, std::vector<Value> args)
+void FunctionNameResolver::construct_array(const Value &ptr, const Value& count, std::vector<Value> args)
 {
     // Call the constructor for each element in a loop
 
@@ -772,19 +794,20 @@ void FunctionNameResolver::construct_array(const Value &ptr, size_t element_size
     auto element_type = ptr_type->get_element_type();
     auto alloc_type = element_type->llvm_type();
 
-    auto condition_bb = compiler->create_basic_block("array_init_condition");
-    auto body_bb = compiler->create_basic_block("array_init_loop");
-    auto end_bb = compiler->create_basic_block("array_init_end");
+    auto condition_bb = compiler->create_basic_block("construct_condition");
+    auto body_bb = compiler->create_basic_block("construct_loop");
+    auto end_bb = compiler->create_basic_block("construct_end");
 
     auto as_i64 = count.cast_as(compiler->create_type<I64Type>(), false);
     if (as_i64.is_null())
         compiler->report_error("The type " + count.type->to_string()
                                + " can't be used as the size of an array. (While allocating an array of " + element_type->to_string() + ")");
 
+    auto element_size = alloc_type->isSized() ? llvm::DataLayout(compiler->get_module()).getTypeAllocSize(alloc_type) : 1;
     llvm::Value* bytes = builder().getInt64(element_size);
     bytes = builder().CreateMul(as_i64.get(), bytes);
 
-    auto counter = compiler->create_local_variable(".array_counter", compiler->create_type<I64Type>(), nullptr);
+    auto counter = compiler->create_local_variable(".construct_counter", compiler->create_type<I64Type>(), nullptr, {}, false);
     builder().CreateBr(condition_bb);
 
     builder().SetInsertPoint(condition_bb);
@@ -799,7 +822,7 @@ void FunctionNameResolver::construct_array(const Value &ptr, size_t element_size
         ptr.get(),
         { builder().getInt32(0), counter_val }
     );
-    compiler->get_name_resolver().call_constructor(compiler->create_value(instance, element_type), std::move(args));
+    compiler->get_name_resolver().construct(compiler->create_value(instance, element_type), std::move(args));
     auto inc = builder().CreateAdd(counter_val, builder().getInt64(1));
     builder().CreateStore(inc, counter);
     builder().CreateBr(condition_bb);
@@ -809,11 +832,11 @@ void FunctionNameResolver::construct_array(const Value &ptr, size_t element_size
 
 void FunctionNameResolver::destruct_array(const Value &ptr, const Value &count)
 {
-    auto condition_bb = compiler->create_basic_block("delete_destruct_condition");
-    auto body_bb = compiler->create_basic_block("delete_destruct_loop");
-    auto destruct_end_bb = compiler->create_basic_block("delete_destruct_end");
+    auto condition_bb = compiler->create_basic_block("destruct_condition");
+    auto body_bb = compiler->create_basic_block("destruct_loop");
+    auto destruct_end_bb = compiler->create_basic_block("destruct_end");
 
-    auto counter = compiler->create_local_variable(".delete_counter", compiler->create_type<I64Type>(), nullptr);
+    auto counter = compiler->create_local_variable(".destruct_counter", compiler->create_type<I64Type>(), nullptr, {}, false);
     builder().CreateBr(condition_bb);
 
     builder().SetInsertPoint(condition_bb);
@@ -829,7 +852,7 @@ void FunctionNameResolver::destruct_array(const Value &ptr, const Value &count)
         ptr.get(),
         { builder().getInt32(0), counter_val }
     );
-    compiler->get_name_resolver().call_destructor(compiler->create_value(instance, element_type));
+    compiler->get_name_resolver().destruct(compiler->create_value(instance, element_type));
     auto inc = builder().CreateAdd(counter_val, builder().getInt64(1));
     builder().CreateStore(inc, counter);
     builder().CreateBr(condition_bb);

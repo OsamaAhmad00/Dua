@@ -93,3 +93,56 @@ int main()
     func(arr[2][2]);
     printf("%d", arr[2][2]);
 }
+
+
+// Case Initializing a multi-dimensional array of objects
+// Outputs "555555555555"
+
+class X
+{
+    int i = 1;
+
+    constructor(int i) : i(i) { }
+}
+
+int main()
+{
+    X[3][4] arr(5);
+
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 3; j++)
+            printf("%d", arr[i][j].i);
+}
+
+
+// Case Default initializing a multi-dimensional array of objects
+// Outputs "111111111111"
+
+class X
+{
+    int i = 1;
+}
+
+int main()
+{
+    X[3][4] arr;
+
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 3; j++)
+            printf("%d", arr[i][j].i);
+}
+
+
+// Case Destruction of a multi-dimensional array of objects
+// Outputs "CCCCCCDDDDDD"
+
+class X
+{
+    constructor() { printf("C"); }
+    destructor    { printf("D"); }
+}
+
+int main()
+{
+    X[3][2] arr;
+}

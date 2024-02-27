@@ -26,7 +26,7 @@ public:
         instance.memory_location = nullptr;
         instance.type = instance.type->get_contained_type();
 
-        name_resolver().call_destructor(instance);
+        name_resolver().destruct(instance);
 
         return none_value();
     }

@@ -18,6 +18,8 @@ public:
 
     Value default_value() const override;
 
+    Value zero_value() const override;
+
     llvm::ArrayType* llvm_type() const override;
 
     const Type* get_element_type() const { return element_type; }
@@ -27,6 +29,8 @@ public:
     std::string to_string() const override { return element_type->to_string() + "[" + std::to_string(size) + "]"; }
 
     std::string as_key() const override { return element_type->as_key() + "_Arr_" + std::to_string(size) + "_"; }
+
+    size_t get_size() const { return size; }
 };
 
 }

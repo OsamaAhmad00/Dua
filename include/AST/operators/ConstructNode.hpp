@@ -31,7 +31,7 @@ public:
         for (int i = 0; i < args.size(); i++)
             evaluated_args[i] = args[i]->eval();
 
-        name_resolver().call_constructor(instance, std::move(evaluated_args));
+        name_resolver().construct(instance, std::move(evaluated_args));
 
         return none_value();
     }

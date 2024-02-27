@@ -302,7 +302,7 @@ void FunctionDefinitionNode::construct_fields(const ClassType *class_type)
             }
         }
 
-        compiler->get_name_resolver().call_constructor(self_as_parent, std::move(parent_args));
+        compiler->get_name_resolver().construct(self_as_parent, std::move(parent_args));
     }
 
     auto& fields = class_type->fields();
@@ -339,7 +339,7 @@ void FunctionDefinitionNode::construct_fields(const ClassType *class_type)
             //  otherwise, the parent constructor takes care of them.
             // There is an exception for the vtable, which is at index 0
             if (found) {
-                name_resolver().call_constructor(instance, std::move(args));
+                name_resolver().construct(instance, std::move(args));
             }
             continue;
         }
@@ -377,7 +377,7 @@ void FunctionDefinitionNode::construct_fields(const ClassType *class_type)
             // This is a special case
             builder().CreateStore(args.front().get(), instance.get());
         } else {
-            name_resolver().call_constructor(instance, std::move(args));
+            name_resolver().construct(instance, std::move(args));
         }
     }
 }
@@ -414,14 +414,14 @@ void FunctionDefinitionNode::destruct_fields(const ClassType* class_type)
         auto field = class_type->get_field(self, i);
         auto is_obj = dynamic_cast<const ClassType*>(field.type) != nullptr;
         if (!is_obj) continue;
-        name_resolver().call_destructor(field);
+        name_resolver().destruct(field);
     }
 
-    // Here, we don't call the call_destructor method, instead, we call
-    //  the destructor of the parent manually. This is because call_destructor
-    //  loads the destructor from the vtable to choose the correct destructor
-    //  for the instance dynamically. This is not the behaviour we want. Instead,
-    //  we need to call the parent destructor statically with no dynamic dispatch.
+    // Here, we don't call the destruct method, instead, we call the destructor
+    //  of the parent manually. This is because the destruct method loads the
+    //  destructor from the vtable to choose the correct destructor for the
+    //  instance dynamically. This is not the behaviour we want. Instead, we
+    //  need to call the parent destructor statically with no dynamic dispatch.
     auto parent = compiler->get_name_resolver().parent_classes[class_type->name];
     auto parent_ptr = compiler->create_type<PointerType>(parent);
     auto self_as_parent = self.cast_as(parent_ptr);

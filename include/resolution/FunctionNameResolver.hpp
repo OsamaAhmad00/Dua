@@ -46,11 +46,11 @@ public:
     Value call_function(const std::string &name, std::vector<Value> args = {}, Value* out_result = nullptr);
     Value call_function(const Value& func, std::vector<Value> args = {});
 
-    void call_constructor(const Value& value, std::vector<Value> args);
+    void construct(const Value& value, std::vector<Value> args);
     void copy_construct(const Value& value, const Value& arg);
-    void call_destructor(const Value& value);
+    void destruct(const Value& value);
 
-    void construct_array(const Value& ptr, size_t element_size, const Value& count, std::vector<Value> args);
+    void construct_array(const Value& ptr, const Value& count, std::vector<Value> args);
     void destruct_array(const Value& ptr, const Value& count);
 
     Value call_operator(const std::string& position_name, const Value& lhs, const Value& rhs, const std::string& name);

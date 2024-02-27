@@ -12,7 +12,7 @@ void NameResolver::destruct_all_variables(const Scope<Value> &scope)
     size_t size = scope.map.size();
     if (size == 0) return;
     for (size_t i = size - 1; i != (size_t)-1; i--)
-        call_destructor(scope.map[i].value);
+        destruct(scope.map[i].value);
 }
 
 void NameResolver::push_scope()

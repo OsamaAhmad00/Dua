@@ -65,7 +65,7 @@ Value MallocNode::eval()
         for (int i = 0; i < args.size(); i++)
             evaluated[i] = args[i]->eval();
 
-        name_resolver().construct_array(pointer, size, count->eval(), std::move(evaluated));
+        name_resolver().construct_array(pointer, count->eval(), std::move(evaluated));
     }
 
     return compiler->create_value(pointer.get(), get_type());
