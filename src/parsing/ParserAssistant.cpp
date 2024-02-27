@@ -1237,4 +1237,9 @@ void ParserAssistant::create_untrack() {
     inc_statements();
 }
 
+void ParserAssistant::create_set_vtable() {
+    push_node<SetVtableNode>(pop_node(), pop_type());
+    inc_statements();
+}
+
 }

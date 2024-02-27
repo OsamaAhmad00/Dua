@@ -359,6 +359,7 @@ statement
     | Construct '(' scoped_expression ')' optional_constructor_args ';' { assistant.create_construct(); }
     | Destruct  '(' scoped_expression ')' ';' { assistant.create_destruct(); }
     | Untrack '(' identifier ')' ';' { assistant.create_untrack(); }
+    | SetVtable '(' expression ',' type ')' ';' { assistant.create_set_vtable(); }
     | ';'  { assistant.create_empty_statement(); }
     ;
 
@@ -382,8 +383,7 @@ expression
     | expression '[' expression ']' { assistant.create_indexing(); }
     | '(' '(' type ')' ')' expression { assistant.create_forced_cast(); }
     | '(' type ')' expression { assistant.create_cast(); }
-    | raw_or_none New optional_new_size identifier_type optional_constructor_args { assistant.create_malloc(); }
-    | raw_or_none New optional_new_size type { assistant.push_counter(); assistant.create_malloc(); }
+    | raw_or_none New optional_new_size type optional_constructor_args { assistant.create_malloc(); }
     | SizeOf '(' expr_or_type ')'   { assistant.create_size_of();   }
     | TypeName '(' expr_or_type ')' { assistant.create_type_name(); }
     | DynamicName '(' expression ')' { assistant.push_null_type(); assistant.create_dynamic_name(); }

@@ -1,0 +1,56 @@
+nomangle int printf(str message, ...);
+
+class X
+{
+    destructor {
+        printf("X");
+    }
+}
+
+class Y
+{
+    destructor {
+        printf("Y");
+    }
+}
+
+
+// Case Replacing the vtable of a class with another
+// Outputs "Y"
+
+int main()
+{
+    X x;
+    _set_vtable(x, Y);
+}
+
+
+// Case Replacing the vtable of an array element
+// Outputs "Y"
+
+int main()
+{
+    var arr = new[1] X;
+    _set_vtable(arr[0], Y);
+    delete[] arr;
+}
+
+
+// Case Primitive type expression
+// Outputs ""
+
+int main()
+{
+    int x;
+    _set_vtable(x, X);
+}
+
+
+// Case Primitive type target
+// Outputs "X"
+
+int main()
+{
+    X x;
+    _set_vtable(x, int);
+}

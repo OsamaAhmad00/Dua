@@ -61,6 +61,7 @@
 #include "AST/operators/ConstructNode.hpp"
 #include "AST/operators/DestructNode.hpp"
 #include "AST/operators/UntrackNode.hpp"
+#include "AST/operators/SetVtableNode.hpp"
 
 #include "AST/lvalue/VariableNode.hpp"
 #include "AST/IndexingNode.hpp"
@@ -382,6 +383,7 @@ public:
     void create_construct();
     void create_destruct();
     void create_untrack();
+    void create_set_vtable();
 
     template<typename T>
     void create_unary_expr() {

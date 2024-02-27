@@ -84,6 +84,8 @@ Postfix: 'postfix';
 Move: 'move';
 Untrack: 'untrack';
 
+SetVtable: '_set_vtable';
+
 Teleport: 'teleport';
 
 OffsetOf: 'offsetof';
