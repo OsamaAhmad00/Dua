@@ -194,12 +194,6 @@ Value FunctionDefinitionNode::define_function()
         {
             // There is no terminator for this basic block
 
-            if (info.type->return_type->as<ClassType>() != nullptr) {
-                compiler->report_error("The function " + name + " doesn't return a value at one or more terminal"
-                       " positions. Can't return a default value instead since the return type is of the class type "
-                       + info.type->return_type->to_string());
-            }
-
             builder().SetInsertPoint(&basic_block);
 
             compiler->destruct_function_scope();
@@ -208,7 +202,9 @@ Value FunctionDefinitionNode::define_function()
                 builder().CreateRetVoid();
             } else {
                 created_default_values++;
-                builder().CreateRet(info.type->return_type->default_value().get());
+                auto return_ptr = compiler->create_local_variable(".implicit_return_value", info.type->return_type, nullptr, {}, false);
+                auto return_value = builder().CreateLoad(info.type->return_type->llvm_type(), return_ptr);
+                builder().CreateRet(return_value);
             }
         }
     }

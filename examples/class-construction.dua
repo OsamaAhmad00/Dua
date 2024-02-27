@@ -668,3 +668,24 @@ int main()
     G g2;
     g2 = g1;
 }
+
+
+// Case Implicit return of an object
+// Outputs "CD"
+
+class X
+{
+    constructor() { printf("C"); }
+    destructor    { printf("D"); }
+}
+
+X func() {
+    // No return statement. An implicit return
+    // with the default value will be returned,
+    // and a warning will be reported
+}
+
+int main()
+{
+    var x = func();
+}

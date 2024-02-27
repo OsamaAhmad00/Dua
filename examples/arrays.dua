@@ -146,3 +146,55 @@ int main()
 {
     X[3][2] arr;
 }
+
+
+// Case Implicit return of an array of integers
+// Outputs "00000"
+
+int[5] func() {
+    // No return statement. An implicit return
+    // with the default value will be returned,
+    // and a warning will be reported
+}
+
+int main()
+{
+    var arr = func();
+    for (int i = 0; i < 5; i++)
+        printf("%d", arr[i]);
+}
+
+
+// Case Implicit return of an array of objects
+// Outputs "CCCCCDDDDD"
+
+class X
+{
+    constructor() { printf("C"); }
+    destructor    { printf("D"); }
+}
+
+X[5] func() {
+    // No return statement. An implicit return
+    // with the default value will be returned,
+    // and a warning will be reported
+}
+
+int main()
+{
+    var arr = func();
+}
+
+
+// Case Default-initializing an array of objects with no default constructor
+// Panics
+
+class X
+{
+    constructor(int i) { }
+}
+
+int main()
+{
+    X[5] arr;
+}
