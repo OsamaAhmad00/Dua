@@ -560,7 +560,7 @@ class Vector<T>
     T* buffer;
     bool _is_const_initialized = false;
 
-    constructor(size_t n) : _capacity(n), buffer(n > 0 ? new[n] T : null)
+    constructor(size_t n) : _capacity(n), buffer(n > 0 ? _RAW_ new[n] T : null)
     {
         if (n < 0) panic("The Vector class can't have negative size");
     }
@@ -605,6 +605,7 @@ class Vector<T>
     {
         expand_if_needed();
         mirror_memory<T>(buffer[_size++], t);
+        untrack(t);
     }
 
     T pop()
@@ -657,7 +658,7 @@ class Vector<T>
         if (new_capacity <= 0)
             panic("Cannot allocate a non-positive-sized buffer");
 
-        T* temp = new[new_capacity] T;
+        T* temp = _RAW_ new[new_capacity] T;
 
         size_t n = _size < new_capacity ? _size : new_capacity;
 
@@ -718,19 +719,16 @@ class Vector<T>
         else
         {
             destruct_elements();
-            resize(other._size);
 
-            // Don't set _size and _capacity. the resize method will set
-            //  them as appropriate (_capacity might remain bigger than
-            //  other._capacity)
+            reserve(other._size);
 
-            // To avoid calling the destructor on buffer[i] when assigning
-            for (size_t i = 0; i < other._size; i++) {
-                T copy;
-                // To call the = infix operator if exists
-                copy = other.buffer[i];
-                mirror_memory<T>(buffer[i], copy);
-                untrack(copy);
+            _size = other._size;
+
+            for (size_t i = 0; i < _size; i++) {
+                // To give the effect of copy constructing the object
+                T t = other.buffer[i];
+                mirror_memory<T>(buffer[i], t);
+                untrack(t);
             }
         }
 
@@ -757,12 +755,6 @@ class Vector<T>
     }
 
     bool is_empty() { return size() == 0; }
-
-    destructor
-    {
-        destruct_elements();
-        free_buffer();
-    }
 
     void destruct_elements()
     {
@@ -797,7 +789,7 @@ class Vector<T>
 
         _size--;
 
-        return teleport(removed);
+        return move(removed);
     }
 
     void free_buffer()
@@ -811,6 +803,12 @@ class Vector<T>
         //  calling the destructor on every position
         //  in the buffer, even if it's not occupied
         _RAW_ delete[] buffer;
+    }
+
+    destructor
+    {
+        destruct_elements();
+        free_buffer();
     }
 }
 

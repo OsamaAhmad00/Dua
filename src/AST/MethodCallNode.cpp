@@ -74,7 +74,7 @@ const Type* MethodCallNode::get_type()
 
     auto class_type = get_instance_type();
     auto arg_types = get_arg_types();
-    auto full_name = name_resolver().get_winning_method(class_type, _current_name, arg_types);
+    auto full_name = name_resolver().get_winning_method(class_type, unresolved_name->resolve(), arg_types);
 
     if (is_templated) {
         _current_name = std::move(full_name);

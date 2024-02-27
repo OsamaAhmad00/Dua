@@ -44,6 +44,24 @@ int main()
 }
 
 
+// Case Destructing an array element
+// Outputs "DD"
+
+class X
+{
+    destructor {
+        printf("D");
+    }
+}
+
+int main()
+{
+    var arr = new[1] X;
+    destruct(arr[0]);
+    delete[] arr;
+}
+
+
 // Case Destructing a non-existing value
 // Panics
 

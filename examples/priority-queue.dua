@@ -42,3 +42,30 @@ int main()
         printf("%d", q.pop());
     }
 }
+
+
+// Case Using a custom comparator
+// Outputs "123"
+
+class Integer
+{
+    int num;
+    constructor(int num) : num(num) { }
+    constructor() { }
+}
+
+class Comparator
+{
+    int compare(Integer& a, Integer& b) {
+        return a.num - b.num;
+    }
+}
+
+int main()
+{
+    PriorityQueue<Integer, Comparator> p;
+    p.insert((3)Integer);
+    p.insert((2)Integer);
+    p.insert((1)Integer);
+    printf("%d%d%d", p.pop().num, p.pop().num, p.pop().num);
+}

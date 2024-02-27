@@ -53,7 +53,7 @@ Value AssignmentExpressionNode::perform_assignment(Value lhs, Value rhs, ModuleC
 
     // If lhs is an object, call its destructor before copying
     // The destruction has to happen after the copying of the object
-    if (auto cls = lhs.type->as<ClassType>(); cls != nullptr)
+    if (auto cls = lhs.type->is<ClassType>(); cls != nullptr)
     {
         // Check for self-assignment first
         auto ne = builder.CreateICmpNE(lhs.memory_location, rhs.memory_location);

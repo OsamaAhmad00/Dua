@@ -7,6 +7,25 @@ bool __IS_RANDOM_SEED_SET = false;
 
 nomangle int printf(str message, ...);
 
+class X
+{
+    int i = 3;
+
+    constructor() { printf("%dC1\n", i); }
+
+    constructor(int i) : i(i) { printf("%dC2\n", i); }
+
+    =constructor(X& other) : i(other.i) { printf("%dCC\n", i); }
+
+    X& infix =(X& other) {
+        self.i = other.i;
+        printf("%dA\n", i);
+        return self;
+    }
+
+    destructor { printf("%dD\n", i); }
+}
+
 // Case Pushing an element
 
 int main()
@@ -308,3 +327,160 @@ int main()
         printf("%d", v[i]);
 }
 
+
+// Case Empty vector of object
+// Outputs ""
+
+int main()
+{
+    // Reserving space for 10 elements,
+    // but the vector is actually empty
+    Vector<X> v(10);
+}
+
+
+// Case Resizing a vector of objects
+// Outputs "3C1\n3C1\n3C1\n3D\n3D\n3D\n"
+
+int main()
+{
+    Vector<X> v;
+    v.resize(3);
+}
+
+
+// Case Reserving space for objects
+// Outputs "1C2\n1D\n"
+
+int main()
+{
+    Vector<X> v;
+    v.push((1)X);
+    v.reserve(10);
+}
+
+
+// Case Popping from a vector of objects
+// Outputs "5C2\n5D\n"
+
+int main()
+{
+    Vector<X> v;
+    v.push((5)X);
+    X x = v.pop();
+}
+
+
+// Case Assigning a vector of objects to another
+// Outputs "4C2\n4CC\n5D\n4D\n"
+
+int main()
+{
+    Vector<X> v1;
+    v1.push((4)X);
+
+    Vector<X> v2 = v1;
+    v2[0].i = 5;
+}
+
+
+// Case Sorting objects
+// Outputs "5C2\n4C2\n3C2\n2C2\n1C2\n123451D\n2D\n3D\n4D\n5D\n"
+
+class Comparator
+{
+    int compare(X& a, X& b) {
+        return a.i - b.i;
+    }
+}
+
+int main()
+{
+    Vector<X> v;
+    v.push((5)X);
+    v.push((4)X);
+    v.push((3)X);
+    v.push((2)X);
+    v.push((1)X);
+
+    v.sort<Comparator>();
+
+    for (int i = 0; i < 5; i++)
+        printf("%d", v[i].i);
+}
+
+
+// Case Shuffling objects
+
+int main()
+{
+    // Even though a constant seed is used here, the
+    // output is not guaranteed across different platforms.
+    Vector<X> v;
+    v.push((5)X);
+    v.push((4)X);
+    v.push((3)X);
+    v.push((2)X);
+    v.push((1)X);
+
+    set_random_seed(5);
+    v.shuffle();
+
+    for (int i = 0; i < 5; i++)
+        printf("%d", v[i].i);
+}
+
+
+// Case Clearing a vector of objects
+// Outputs "3C2\n1C2\n2C2\n5C2\n3D\n1D\n2D\n5D\n1C2\n2C2\n3C2\n1231D\n2D\n3D\n"
+
+int main()
+{
+    Vector<X> v;
+    v.push((3)X);
+    v.push((1)X);
+    v.push((2)X);
+    v.push((5)X);
+    v.clear();
+    v.push((1)X);
+    v.push((2)X);
+    v.push((3)X);
+    for (int i = 0; i < v.size(); i++)
+        printf("%d", v[i].i);
+}
+
+
+// Case Removing an object
+// Outputs "1C2\n2C2\n3C2\n4C2\n5C2\n3D\n12451D\n2D\n4D\n5D\n"
+
+int main()
+{
+    Vector<X> v;
+    v.push((1)X);
+    v.push((2)X);
+    v.push((3)X);
+    v.push((4)X);
+    v.push((5)X);
+    v.remove(2);
+    for (int i = 0; i < v.size(); i++)
+        printf("%d", v[i].i);
+}
+
+
+// Case Resizing to smaller size then larger size
+// Outputs "3C1\n3C1\n3C1\n5C2\n4C2\n3C1\n3C1\n333333D\n3D\n3D\n3D\n3D\n"
+
+int main()
+{
+    Vector<X> v;
+
+    v.resize(3);
+    v.push((5)X);
+    v.push((4)X);
+
+    v.resize(3);
+    v.resize(5);
+
+    for (int i = 0; i < 5; i++)
+        printf("%d", v[i].i);
+}
