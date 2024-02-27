@@ -517,9 +517,9 @@ llvm::AllocaInst* ModuleCompiler::create_local_variable(const std::string& name,
     llvm::AllocaInst* instance = temp_builder.CreateAlloca(type->llvm_type(), 0, name);
     auto value = create_value(instance, type->get_concrete_type());
 
-    if (!type->as<ReferenceType>()) {
-        // Initializing the variable to a clean zero value
-        //  before the constructor is called (if it's a class type)
+    if (type->is<ClassType>()) {
+        // Initializing the variable to a clean zero
+        //  value before the constructor is called
         builder.CreateStore(type->zero_value().get(), instance);
     }
 

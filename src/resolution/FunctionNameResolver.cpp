@@ -5,6 +5,8 @@
 #include "types/PointerType.hpp"
 #include "types/ReferenceType.hpp"
 #include "types/VoidType.hpp"
+#include "types/IntegerTypes.hpp"
+#include "types/ArrayType.hpp"
 
 namespace dua
 {
@@ -759,6 +761,50 @@ std::string FunctionNameResolver::get_winning_method(const ClassType *owner, con
     }
 
     return result_list.front().first;
+}
+
+void FunctionNameResolver::construct_array(const Value &ptr, size_t element_size, const Value& count, std::vector<Value> args)
+{
+    // Call the constructor for each element in a loop
+
+    // This must be a pointer type
+    auto ptr_type = ptr.type->as<PointerType>();
+    auto element_type = ptr_type->get_element_type();
+    auto alloc_type = element_type->llvm_type();
+
+    auto condition_bb = compiler->create_basic_block("array_init_condition");
+    auto body_bb = compiler->create_basic_block("array_init_loop");
+    auto end_bb = compiler->create_basic_block("array_init_end");
+
+    auto as_i64 = count.cast_as(compiler->create_type<I64Type>(), false);
+    if (as_i64.is_null())
+        compiler->report_error("The type " + count.type->to_string()
+                               + " can't be used as the size of an array. (While allocating an array of " + element_type->to_string() + ")");
+
+    llvm::Value* bytes = builder().getInt64(element_size);
+    bytes = builder().CreateMul(as_i64.get(), bytes);
+
+    auto counter = compiler->create_local_variable(".array_counter", compiler->create_type<I64Type>(), nullptr);
+    builder().CreateBr(condition_bb);
+
+    builder().SetInsertPoint(condition_bb);
+    auto counter_val = builder().CreateLoad(builder().getInt64Ty(), counter);
+    auto cmp = builder().CreateICmpEQ(counter_val, as_i64.get());
+    builder().CreateCondBr(cmp, end_bb, body_bb);
+
+    builder().SetInsertPoint(body_bb);
+    auto array = compiler->create_type<ArrayType>(element_type, LONG_LONG_MAX);
+    auto instance = builder().CreateGEP(
+            array->llvm_type(),
+            ptr.get(),
+            { builder().getInt32(0), counter_val }
+    );
+    compiler->get_name_resolver().call_constructor(compiler->create_value(instance, element_type), std::move(args));
+    auto inc = builder().CreateAdd(counter_val, builder().getInt64(1));
+    builder().CreateStore(inc, counter);
+    builder().CreateBr(condition_bb);
+
+    builder().SetInsertPoint(end_bb);
 }
 
 }
