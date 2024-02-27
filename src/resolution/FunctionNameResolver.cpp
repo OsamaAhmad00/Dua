@@ -795,9 +795,9 @@ void FunctionNameResolver::construct_array(const Value &ptr, size_t element_size
     builder().SetInsertPoint(body_bb);
     auto array = compiler->create_type<ArrayType>(element_type, LONG_LONG_MAX);
     auto instance = builder().CreateGEP(
-            array->llvm_type(),
-            ptr.get(),
-            { builder().getInt32(0), counter_val }
+        array->llvm_type(),
+        ptr.get(),
+        { builder().getInt32(0), counter_val }
     );
     compiler->get_name_resolver().call_constructor(compiler->create_value(instance, element_type), std::move(args));
     auto inc = builder().CreateAdd(counter_val, builder().getInt64(1));
@@ -805,6 +805,36 @@ void FunctionNameResolver::construct_array(const Value &ptr, size_t element_size
     builder().CreateBr(condition_bb);
 
     builder().SetInsertPoint(end_bb);
+}
+
+void FunctionNameResolver::destruct_array(const Value &ptr, const Value &count)
+{
+    auto condition_bb = compiler->create_basic_block("delete_destruct_condition");
+    auto body_bb = compiler->create_basic_block("delete_destruct_loop");
+    auto destruct_end_bb = compiler->create_basic_block("delete_destruct_end");
+
+    auto counter = compiler->create_local_variable(".delete_counter", compiler->create_type<I64Type>(), nullptr);
+    builder().CreateBr(condition_bb);
+
+    builder().SetInsertPoint(condition_bb);
+    auto counter_val = builder().CreateLoad(builder().getInt64Ty(), counter);
+    auto cmp = builder().CreateICmpEQ(counter_val, count.get());
+    builder().CreateCondBr(cmp, destruct_end_bb, body_bb);
+
+    builder().SetInsertPoint(body_bb);
+    auto element_type = ptr.type->as<PointerType>()->get_element_type();
+    auto array = compiler->create_type<ArrayType>(element_type, LONG_LONG_MAX);
+    auto instance = builder().CreateGEP(
+        array->llvm_type(),
+        ptr.get(),
+        { builder().getInt32(0), counter_val }
+    );
+    compiler->get_name_resolver().call_destructor(compiler->create_value(instance, element_type));
+    auto inc = builder().CreateAdd(counter_val, builder().getInt64(1));
+    builder().CreateStore(inc, counter);
+    builder().CreateBr(condition_bb);
+
+    builder().SetInsertPoint(destruct_end_bb);
 }
 
 }

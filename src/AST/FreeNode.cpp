@@ -43,34 +43,8 @@ Value FreeNode::eval()
         count = builder().CreateLoad(builder().getInt64Ty(), free_ptr.get());
     }
 
-    if (call_destructors)
-    {
-        auto condition_bb = compiler->create_basic_block("delete_destruct_condition");
-        auto body_bb = compiler->create_basic_block("delete_destruct_loop");
-        auto destruct_end_bb = compiler->create_basic_block("delete_destruct_end");
-
-        auto counter = compiler->create_local_variable(".delete_counter", compiler->create_type<I64Type>(), nullptr);
-        builder().CreateBr(condition_bb);
-
-        builder().SetInsertPoint(condition_bb);
-        auto counter_val = builder().CreateLoad(builder().getInt64Ty(), counter);
-        auto cmp = builder().CreateICmpEQ(counter_val, count);
-        builder().CreateCondBr(cmp, destruct_end_bb, body_bb);
-
-        builder().SetInsertPoint(body_bb);
-        auto element_type = ptr_type->get_element_type();
-        auto array = compiler->create_type<ArrayType>(element_type, LONG_LONG_MAX);
-        auto instance = builder().CreateGEP(
-            array->llvm_type(),
-            ptr.get(),
-            { builder().getInt32(0), counter_val }
-        );
-        name_resolver().call_destructor(compiler->create_value(instance, element_type));
-        auto inc = builder().CreateAdd(counter_val, builder().getInt64(1));
-        builder().CreateStore(inc, counter);
-        builder().CreateBr(condition_bb);
-
-        builder().SetInsertPoint(destruct_end_bb);
+    if (call_destructors) {
+        name_resolver().destruct_array(ptr, compiler->create_value(count, compiler->create_type<I64Type>()));
     }
 
     // Here, we pass the param type of free, regardless of the actual type of the expression, to
