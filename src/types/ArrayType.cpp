@@ -16,7 +16,7 @@ llvm::ArrayType* ArrayType::llvm_type() const {
 }
 
 const Type *ArrayType::get_concrete_type() const {
-    return compiler->create_type<ArrayType>(element_type->get_concrete_type(), size);
+    return compiler->create_type<ArrayType>(element_type->get_concrete_type(), size, _is_raw);
 }
 
 Value ArrayType::zero_value() const {

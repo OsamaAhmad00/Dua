@@ -333,8 +333,8 @@ statement_corner_case
     ;
 
 raw_or_none
-    : Raw          { assistant.is_raw = false; }
-    | /* empty */  { assistant.is_raw = true;  }
+    : Raw          { assistant.is_raw = true; }
+    | /* empty */  { assistant.is_raw = false;  }
     ;
 
 delete_brackets_or_none
@@ -637,7 +637,7 @@ types_list @init { assistant.push_counter(); }
 type
     : '(' type ')'
     | type '(' types_list var_arg_or_none ')'   { assistant.create_function_type();  }
-    | type '[' size ']'                         { assistant.create_array_type();     }
+    | type '[' size ']' raw_or_none             { assistant.create_array_type();     }
     | type '*'                                  { assistant.create_pointer_type();   }
     | type '&'                                  { assistant.create_reference_type(); }
     | TypeOf '(' expression ')'                 { assistant.create_type_of();        }

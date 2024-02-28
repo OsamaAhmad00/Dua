@@ -312,6 +312,9 @@ void FunctionNameResolver::construct(const Value &value, std::vector<Value> args
 
     if (auto arr = value.type->is<ArrayType>(); arr != nullptr)
     {
+        if (arr->is_raw())
+            return;
+
         auto size = arr->get_size();
         auto element_type = arr->get_element_type();
         auto ptr_type = compiler->create_type<PointerType>(element_type);
@@ -470,6 +473,9 @@ void FunctionNameResolver::destruct(const Value& value)
 
     if (auto arr = value.type->is<ArrayType>(); arr != nullptr)
     {
+        if (arr->is_raw())
+            return;
+
         auto size = arr->get_size();
         auto element_type = arr->get_element_type();
         auto ptr_type = compiler->create_type<PointerType>(element_type);

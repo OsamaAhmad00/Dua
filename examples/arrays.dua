@@ -198,3 +198,34 @@ int main()
 {
     X[5] arr;
 }
+
+
+// Case Raw array of objects
+// Outputs ""
+
+class X
+{
+    constructor() { printf("C"); }
+    destructor    { printf("D"); }
+}
+
+int main()
+{
+    // Just a chunk of uninitialized memory.
+    // No constructors, nor destructors will be called
+    //  on the elements of the array.
+    // Not recommended unless you're developing some
+    //  kind of container or know what you're doing.
+    // You might need to use the _set_vtable operator
+    //  along with it to store only the vtable, so that
+    //  function calls work correctly (otherwise the
+    //  program will crash)
+    X[5] _RAW_ arr;
+}
+
+// Case Raw array of primitive types
+
+int main()
+{
+    int[5] _RAW_ arr;
+}

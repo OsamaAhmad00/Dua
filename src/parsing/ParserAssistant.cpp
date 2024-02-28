@@ -642,7 +642,7 @@ void ParserAssistant::create_pointer_type() {
 void ParserAssistant::create_array_type() {
     auto type = pop_type();
     auto size = pop_num();
-    push_type<ArrayType>(type, size);
+    push_type<ArrayType>(type, size, is_raw);
 }
 
 void ParserAssistant::create_string_value()
@@ -953,7 +953,7 @@ void ParserAssistant::create_malloc()
 
     auto args = pop_args();
     auto count = pop_node();
-    push_node<MallocNode>(pop_type(), std::move(args), count, is_array, is_raw);
+    push_node<MallocNode>(pop_type(), std::move(args), count, is_array, !is_raw);
 }
 
 void ParserAssistant::create_free()
@@ -969,7 +969,7 @@ void ParserAssistant::create_free()
 
         declared_free = true;
     }
-    push_node<FreeNode>(pop_node(), is_array, is_raw);
+    push_node<FreeNode>(pop_node(), is_array, !is_raw);
     inc_statements();
 }
 
