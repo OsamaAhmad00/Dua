@@ -308,19 +308,29 @@ Value FunctionNameResolver::call_function(const Value& func, std::vector<Value> 
 void FunctionNameResolver::construct(const Value &value, std::vector<Value> args)
 {
     if (!value.get()->getType()->isPointerTy())
-        compiler->report_internal_error("Trying to initialize a non-lvalue item");
+        compiler->report_internal_error("Trying to construct an expression with no memory address");
 
     if (auto arr = value.type->is<ArrayType>(); arr != nullptr)
     {
-        if (arr->is_raw())
+        if (arr->is_raw()) {
             return;
+        }
 
         auto size = arr->get_size();
         auto element_type = arr->get_element_type();
         auto ptr_type = compiler->create_type<PointerType>(element_type);
-        auto ptr = value.cast_as(ptr_type);
+        // The passed value is already the pointer to the array
+        auto ptr = compiler->create_value(value.get(), ptr_type);
         auto llvm_size = builder().getInt64(size);
         auto size_value = compiler->create_value(llvm_size, compiler->create_type<I64Type>());
+
+        if (args.size() == 1) {
+            auto arg_arr = args[0].type->as<ArrayType>();
+            if (arg_arr && *arg_arr == *arr) {
+                return copy_construct_array(ptr, args[0].cast_as(ptr_type), size_value);
+            }
+        }
+
         return construct_array(ptr, size_value, std::move(args));
     }
 
@@ -459,6 +469,26 @@ void FunctionNameResolver::copy_construct(const Value &instance, const Value& ar
         return;
     }
 
+    auto arr_type = instance.type->as<ArrayType>();
+    if (arr_type != nullptr && !arg.is_teleporting)
+    {
+        auto arg_arr = arg.type->as<ArrayType>();
+        if (arg_arr == nullptr || *arr_type != *arg_arr) {
+            compiler->report_error("Can't copy-construct an array of type "
+                                   + arr_type->to_string() + " from the type " + arg.type->to_string());
+        }
+        if (arg.memory_location == nullptr) {
+            compiler->report_error("Can't copy-construct the array of type "
+                                   + arr_type->to_string() + " from the array with type " + arg.type->to_string() +
+                                   " that has no memory address");
+        }
+        auto size = compiler->create_value(builder().getInt64(arr_type->get_size()), compiler->create_type<I64Type>());
+        auto ptr_type = compiler->create_type<PointerType>(arr_type->get_element_type());
+        auto to = compiler->create_value(instance.get(), ptr_type);
+        auto from = compiler->create_value(arg.memory_location, ptr_type);
+        return copy_construct_array(to, from, size);
+    }
+
     // Initializing a primitive type
 
     auto casted = compiler->typing_system.cast_value(arg, instance.type);
@@ -468,18 +498,21 @@ void FunctionNameResolver::copy_construct(const Value &instance, const Value& ar
 void FunctionNameResolver::destruct(const Value& value)
 {
     auto is_ref = value.type->as<ReferenceType>();
-    if (is_ref != nullptr)
+    if (is_ref != nullptr) {
         return;
+    }
 
     if (auto arr = value.type->is<ArrayType>(); arr != nullptr)
     {
-        if (arr->is_raw())
+        if (arr->is_raw()) {
             return;
+        }
 
         auto size = arr->get_size();
         auto element_type = arr->get_element_type();
         auto ptr_type = compiler->create_type<PointerType>(element_type);
-        auto ptr = value.cast_as(ptr_type);
+        // The passed value is already the pointer to the array
+        auto ptr = compiler->create_value(value.get(), ptr_type);
         auto llvm_size = builder().getInt64(size);
         auto size_value = compiler->create_value(llvm_size, compiler->create_type<I64Type>());
         return destruct_array(ptr, size_value);
@@ -836,6 +869,54 @@ void FunctionNameResolver::construct_array(const Value &ptr, const Value& count,
     builder().SetInsertPoint(end_bb);
 }
 
+void FunctionNameResolver::copy_construct_array(const Value &to, const Value &from, const Value &count)
+{
+    // This must be a pointer type
+    auto ptr_type = to.type->as<PointerType>();
+    auto element_type = ptr_type->get_element_type();
+    auto alloc_type = element_type->llvm_type();
+
+    auto condition_bb = compiler->create_basic_block("copy_construct_condition");
+    auto body_bb = compiler->create_basic_block("copy_construct_loop");
+    auto end_bb = compiler->create_basic_block("copy_construct_end");
+
+    auto as_i64 = count.cast_as(compiler->create_type<I64Type>(), false);
+    if (as_i64.is_null())
+        compiler->report_error("The type " + count.type->to_string()
+                               + " can't be used as the size of an array. (While allocating an array of " + element_type->to_string() + ")");
+
+    auto element_size = alloc_type->isSized() ? llvm::DataLayout(compiler->get_module()).getTypeAllocSize(alloc_type) : 1;
+    llvm::Value* bytes = builder().getInt64(element_size);
+    bytes = builder().CreateMul(as_i64.get(), bytes);
+
+    auto counter = compiler->create_local_variable(".copy_construct_counter", compiler->create_type<I64Type>(), nullptr, {}, false);
+    builder().CreateBr(condition_bb);
+
+    builder().SetInsertPoint(condition_bb);
+    auto counter_val = builder().CreateLoad(builder().getInt64Ty(), counter);
+    auto cmp = builder().CreateICmpEQ(counter_val, as_i64.get());
+    builder().CreateCondBr(cmp, end_bb, body_bb);
+
+    builder().SetInsertPoint(body_bb);
+    auto array = compiler->create_type<ArrayType>(element_type, LONG_LONG_MAX);
+    auto to_element = builder().CreateGEP(
+        array->llvm_type(),
+        to.get(),
+        { builder().getInt32(0), counter_val }
+    );
+    auto from_element = builder().CreateGEP(
+        array->llvm_type(),
+        from.get(),
+        { builder().getInt32(0), counter_val }
+    );
+    compiler->get_name_resolver().copy_construct(compiler->create_value(to_element, element_type), compiler->create_value(element_type, from_element));
+    auto inc = builder().CreateAdd(counter_val, builder().getInt64(1));
+    builder().CreateStore(inc, counter);
+    builder().CreateBr(condition_bb);
+
+    builder().SetInsertPoint(end_bb);
+}
+
 void FunctionNameResolver::destruct_array(const Value &ptr, const Value &count)
 {
     auto condition_bb = compiler->create_basic_block("destruct_condition");
@@ -865,5 +946,6 @@ void FunctionNameResolver::destruct_array(const Value &ptr, const Value &count)
 
     builder().SetInsertPoint(destruct_end_bb);
 }
+
 
 }

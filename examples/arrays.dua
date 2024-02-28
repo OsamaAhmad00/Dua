@@ -1,6 +1,14 @@
 nomangle int printf(str message, ...);
 
 
+// Case Creating an array
+
+int main()
+{
+    int[5] arr;
+}
+
+
 // Case Default value
 // Outputs "00000"
 
@@ -228,4 +236,29 @@ int main()
 int main()
 {
     int[5] _RAW_ arr;
+}
+
+
+// Case Copy constructing an array
+// Outputs "123456789"
+
+int main()
+{
+    var arr = int[3] {
+        int { 1, 2, 3 },
+        int { 4, 5, 6 },
+        int { 7, 8, 9 }
+    };
+
+    // This is a special case
+    // Even though the arguments of the array are
+    //  used to initialize each element separately,
+    //  if the passed argument is a single argument,
+    //  and it's of the same array type, then this
+    //  copy constructs array form the the argument
+    int[3][3] copy(arr);
+
+    for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++)
+            printf("%d", copy[i][j]);
 }

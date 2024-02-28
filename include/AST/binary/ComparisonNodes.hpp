@@ -38,11 +38,11 @@ public:                                                                         
             compiler->report_error("Can't perform the operation "                     \
                 #NAME " between the types "                                           \
                 + lhs.type->to_string() + " and " + rhs.type->to_string());           \
-        llvm::Value* ptr;                                                             \
+        llvm::Value* res;                                                             \
         if (type->as<FloatType>()) {                                                  \
-            ptr = compiler->get_builder()->FLOAT_OP(l.get(), r.get(), LABEL);         \
+            res = compiler->get_builder()->FLOAT_OP(l.get(), r.get(), LABEL);         \
         } else {                                                                      \
-            ptr = compiler->get_builder()->INT_OP(l.get(), r.get(), LABEL);           \
+            res = compiler->get_builder()->INT_OP(l.get(), r.get(), LABEL);           \
         }                                                                             \
                                                                                       \
         /* This is necessary for making sure that the type returned is actually */    \
@@ -50,7 +50,7 @@ public:                                                                         
         /*  type, which the typing system will allow, the underlying llvm::Type */    \
         /*  might be different, and we have to make sure that it's the correct  */    \
         /*  type too.                                                           */    \
-        auto value = compiler->create_value(ptr, type);                               \
+        auto value = compiler->create_value(res, compiler->create_type<I8Type>());    \
         return value.cast_as(compiler->create_type<I8Type>());                        \
     }                                                                                 \
                                                                                       \

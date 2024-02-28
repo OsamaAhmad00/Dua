@@ -33,7 +33,7 @@ int main()
 {
     var ptr = new int[5];
     (*ptr)[1] = 2;
-    var i = (i64)ptr;
+    var i = ((i64))ptr;
     print( *( ((i32*))(i + 4) ) );
     delete ptr;
 }

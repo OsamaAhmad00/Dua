@@ -25,4 +25,9 @@ Value ArrayType::zero_value() const {
     return compiler->create_value(result, this);
 }
 
+bool ArrayType::operator==(const Type &other) const {
+    auto as_arr = other.as<ArrayType>();
+    return as_arr && element_type == as_arr->element_type && size == as_arr->size;
+}
+
 }

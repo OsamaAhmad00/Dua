@@ -84,9 +84,18 @@ static Value _cast_value(const Value& value, const Type* type, bool panic_on_fai
 
     llvm::Value* v = value.get();
 
-    if (auto arr = value.type->as<ArrayType>(); arr != nullptr) {
+    if (auto arr = value.type->as<ArrayType>(); arr != nullptr)
+    {
+        if (*arr == *type)
+            return result;
+
+        if (value.memory_location == nullptr) {
+            compiler->report_internal_error("Can't cast the array with type " + arr->to_string()
+                + " with no memory location to a type other than its array type (to " + type->to_string() + ")");
+        }
+
         source_type = arr->get_element_type()->llvm_type()->getPointerTo();
-        v = builder.CreateBitOrPointerCast(v, source_type);
+        v = builder.CreateBitOrPointerCast(value.memory_location, source_type);
     }
 
     // If the types are both integer types, use the Trunc or ZExt or SExt instructions
@@ -338,8 +347,6 @@ int TypingSystem::similarity_score(const Type *t1, const Type *t2) const
             }
         }
         if (is<FloatType>(t1))   return 4;
-        if (is<PointerType>(t1)) return 8;
-        if (is<ArrayType>(t1))   return 9;
         return -1;
     }
 

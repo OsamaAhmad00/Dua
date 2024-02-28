@@ -34,6 +34,8 @@ public:
     size_t get_size() const { return size; }
 
     bool is_raw() const { return _is_raw; }
+
+    bool operator==(const Type& other) const override;
 };
 
 }

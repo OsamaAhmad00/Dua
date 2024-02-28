@@ -9,6 +9,7 @@
 #include <parsing/ParserFacade.hpp>
 #include "utils/CodeGeneration.hpp"
 #include "AST/BlockNode.hpp"
+#include "types/ArrayType.hpp"
 
 #include <fstream>
 
@@ -338,23 +339,23 @@ std::string ModuleCompiler::get_current_status()
     //  that the error is in the global scope, where in fact,
     //  the error is in one of the functions.
 
-    std::string result = "In file " + module_name;
+    std::string result = "in " + module_name;
     result.pop_back();
     result.pop_back();
     result += "dua";
 
     if (current_class != nullptr) {
         auto class_name = current_class->getName().str();
-        result += ", in class " + class_name;
+        result += ", the class " + class_name;
     }
 
     if (current_function != nullptr) {
         auto func_name = current_function->getName().str();
-        result += ", in function " + func_name;
+        result += ", the function " + func_name;
     }
 
     if (current_class == nullptr && current_function == nullptr) {
-        result += ", in global scope";
+        result += " in global scope";
     }
 
     result += ":\n";
@@ -531,6 +532,12 @@ llvm::AllocaInst* ModuleCompiler::create_local_variable(const std::string& name,
         if (!args.empty()) {
             report_error("Can't have an both an initializer and an initialization "
                                  "list in the definition of a local variable (the variable " + name + ")");
+        }
+        if (init->memory_location == nullptr && init->type->as<ArrayType>()) {
+            // TODO remove this
+            // For the GEP instruction to work
+            init->memory_location = builder.CreateAlloca(init->type->llvm_type());
+            builder.CreateStore(init->get(), init->memory_location);
         }
         name_resolver.copy_construct(value, *init);
     } else {

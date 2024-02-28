@@ -51,6 +51,7 @@ public:
     void destruct(const Value& value);
 
     void construct_array(const Value& ptr, const Value& count, std::vector<Value> args);
+    void copy_construct_array(const Value& to, const Value& from, const Value& count);
     void destruct_array(const Value& ptr, const Value& count);
 
     Value call_operator(const std::string& position_name, const Value& lhs, const Value& rhs, const std::string& name);

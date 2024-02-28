@@ -34,7 +34,7 @@ int main()
 {
     Parent p;
     var c = &p as Child*;
-    printf("%d", (int)c);
+    printf("%d", ((int))c);
 }
 
 
@@ -91,7 +91,7 @@ int main()
 {
     Parent3 p;
     Child* c = &p as Child*;
-    printf("%d", (int)c);
+    printf("%d", ((int))c);
 }
 
 
@@ -132,7 +132,7 @@ int main()
 {
     int i;
     X* x = &i as X*;
-    printf("%d", (int)x);
+    printf("%d", ((int))x);
 }
 
 
@@ -145,7 +145,7 @@ int main()
 {
     X x;
     int* i = &x as int*;
-    printf("%d", (int)i);
+    printf("%d", ((int))i);
 }
 
 
