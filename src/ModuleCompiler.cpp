@@ -558,6 +558,8 @@ std::vector<std::string> libdua_declarations {
 //  because the declaration alone doesn't instantiate a concrete class.
 R"(
 
+nomangle int printf(str message, ...);
+
 class Vector<T>
 {
     typealias size_t = long;
@@ -841,6 +843,7 @@ class String : Vector<i8>
     Declaration void push(byte c);
     Declaration byte pop();
     Declaration String substring(size_t from, size_t upto);
+    Declaration void resize(size_t new_size);
 
     Declaration size_t size();
     Declaration size_t capacity();

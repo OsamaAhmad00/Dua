@@ -8,7 +8,6 @@
 #include <filesystem>
 #include <gtest/gtest.h>
 
-
 namespace dua
 {
 
@@ -89,14 +88,14 @@ void FileTestCasesRunner::run()
 
             if (should_panic) {
                 succeeded = true;
-                EXPECT_ANY_THROW(succeeded = !run_clang_on_llvm_ir(n, c, a, false));
+                EXPECT_ANY_THROW(succeeded = !run_clang_on_llvm_ir(n, c, a, false, false));
                 if (succeeded)
                     std::cerr << termcolor::green << "\t\tException thrown, Passed!" << termcolor::reset << '\n';
                 passed_cases += succeeded;
                 continue;
             } else {
                 succeeded = false;
-                EXPECT_NO_THROW(succeeded = run_clang_on_llvm_ir(n, c, a, false));
+                EXPECT_NO_THROW(succeeded = run_clang_on_llvm_ir(n, c, a, false, false));
             }
 
             long long time_limit = -1;

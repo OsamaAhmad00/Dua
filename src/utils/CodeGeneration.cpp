@@ -1,6 +1,7 @@
 #include <utils/CodeGeneration.hpp>
 #include <cstdlib>
 #include <fstream>
+#include <iostream>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -12,6 +13,13 @@
 #include <boost/process.hpp>
 #include <boost/filesystem.hpp>
 
+#ifdef _WIN32
+#include <stdlib.h>
+#else
+#include <unistd.h>
+#include <limits.h>
+#endif
+
 namespace bp = boost::process;
 namespace fs = boost::filesystem;
 
@@ -22,18 +30,6 @@ std::string uuid()
 {
     boost::uuids::random_generator generator;
     return boost::uuids::to_string(generator());
-}
-
-std::string get_clang_name()
-{
-    // FIXME make it detect the available versions of clang
-
-#ifdef _WIN32
-    return "clang";
-#else
-    // -lm = link with the math library
-    return "clang-17 -lm";
-#endif
 }
 
 void generate_llvm_ir(const strings& filename, const strings& code, bool include_libdua)
@@ -48,73 +44,52 @@ void generate_llvm_ir(const strings& filename, const strings& code, bool include
     }
 }
 
+std::string get_program_location()
+{
+#ifdef _WIN32
+    char* path;
+    _get_pgmptr(&path);
+    return path;
+#else
+    char path[PATH_MAX]; // create a buffer to store the path
+    ssize_t len = readlink("/proc/self/exe", path, sizeof(path)); // read the symbolic
+    return path;
+#endif
+}
+
 std::string get_libdua()
 {
-    std::string path = PROJECT_ROOT_DIR + "/bin";
-    std::string file = path + "/dua.a";
-
-    if (fs::exists(file))
-        return file;
-
-    if (!fs::exists(path)) {
-        fs::create_directories(path);
-    }
-
-    strings obj_files;
-    fs::directory_iterator end_iter;
-    auto lib_dir = PROJECT_ROOT_DIR + "/lib";
-    for(fs::directory_iterator dir_iter(lib_dir); dir_iter != end_iter; ++dir_iter)
-    {
-        if(fs::is_regular_file(dir_iter->status()))
-        {
-            auto name = dir_iter->path().filename().string();
-            auto output_name = path + "/" + name;
-            name = lib_dir + "/" + name;
-
-            if (ends_with(name, ".c")) {
-                output_name.back() = 'o';
-                system((get_clang_name() + " " + name + " -c -o " + output_name).c_str());
-                obj_files.push_back(output_name);
-            } else if (ends_with(name, ".dua")) {
-                output_name.pop_back();
-                output_name.pop_back();
-                output_name.pop_back();
-                auto llvm_ir_name = output_name + "ll";
-                output_name += 'o';
-                Preprocessor p;
-                auto code = read_file(name);
-                code = p.process(name, code);
-                generate_llvm_ir( { llvm_ir_name }, { code }, false);
-                system((get_clang_name() + " -c -Wno-override-module " + llvm_ir_name + " -o " + output_name).c_str());
-                fs::remove(llvm_ir_name);
-                obj_files.push_back(output_name);
-            }
-            // else, ignore
-        }
-    }
-
-    // TODO create and link against a dynamic library
-    auto obj_files_concatenated = boost::algorithm::join(obj_files, " ");
-    system(("ar r " + file + " " + obj_files_concatenated).c_str());
-
-    for (auto& obj : obj_files)
-        fs::remove(obj);
-
-    return file;
+    auto program_path = std::filesystem::weakly_canonical(get_program_location());
+    auto directory = program_path.parent_path();
+    return "\"-L" + directory.string() + "\" -ldua";
 }
 
 int run_clang(const std::vector<std::string>& args, bool include_libdua)
 {
-     std::string concatenated = " -Wno-override-module " + boost::algorithm::join(args, " ");
+     std::string concatenated = " -Wno-override-module --start-no-unused-arguments " + boost::algorithm::join(args, " ");
      if (include_libdua)
          concatenated += " " + get_libdua();
 
-    return std::system((get_clang_name() + concatenated).c_str());
+#ifdef _WIN32
+    std::string system_specific_flags = "";
+#else
+    // -lm = link with the math library
+    std::string system_specific_flags = "-lm ";
+#endif
+
+    return std::system(("clang " + system_specific_flags + concatenated).c_str());
 }
 
-bool run_clang_on_llvm_ir(const strings& filename, const strings& code, const strings& args, bool include_libdua)
+bool run_clang_on_llvm_ir(const strings& filename, const strings& code, const strings& args, bool include_libdua, bool use_temp)
 {
-    auto directory = uuid();
+    auto directory = (use_temp ? std::filesystem::temp_directory_path().string() : "");
+
+#ifndef _WIN32
+    // If not Windows
+    if (use_temp) directory += "/";
+#endif
+
+    directory += uuid();
     std::filesystem::create_directory(directory);
     auto old_path = std::filesystem::current_path();
     std::filesystem::current_path(directory);
@@ -133,7 +108,7 @@ bool run_clang_on_llvm_ir(const strings& filename, const strings& code, const st
 
     std::filesystem::current_path(old_path);
 
-    run_clang(("./" + directory + "/" + names) + args, include_libdua);
+    run_clang((directory + "/" + names) + args, include_libdua);
 
     std::filesystem::remove_all(directory);
 
@@ -158,8 +133,9 @@ void compile(const strings& source_files, const strings& args, bool include_libd
         for (int i = 0; i < n; i++)
             code[i] = preprocessor.process(source_files[i], read_file(source_files[i]));
         run_clang_on_llvm_ir(stripped, code, args, include_libdua);
-    } catch (...) {
-        exit(-1);
+    } catch (std::exception& e) {
+        std::cerr << e.what() << '\n';
+        exit(1);
     }
 }
 
