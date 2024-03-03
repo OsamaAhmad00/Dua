@@ -15,9 +15,19 @@
 
 #ifdef _WIN32
 #include <stdlib.h>
+
+#define WHERE "where "
+#define NO_STDERR " 2>NUL"
+#define POPEN _popen
+#define PCLOSE _pclose
 #else
 #include <unistd.h>
 #include <limits.h>
+
+#define WHERE "which "
+#define NO_STDERR ""
+#define POPEN popen
+#define PCLOSE pclose
 #endif
 
 namespace bp = boost::process;
@@ -42,6 +52,24 @@ void generate_llvm_ir(const strings& filename, const strings& code, bool include
         output << compiler.get_result();
         output.close();
     }
+}
+
+std::string get_clang_name()
+{
+    std::string clang_versions[] = { "clang-17", "clang-16", "clang-15", "clang" };
+    for (const auto& name : clang_versions) {
+        std::string cmd = WHERE + name + NO_STDERR;
+        std::array<char, 128> buffer{};
+        std::unique_ptr<FILE, decltype(&PCLOSE)> pipe(POPEN(cmd.c_str(), "r"), PCLOSE);
+        if (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+            return name;
+        }
+    }
+    std::string message = "Can't find clang on the system under any of these names:\n";
+    for (auto& name : clang_versions)
+        message += "  " + name;
+    report_error(message);
+    return "";
 }
 
 std::string get_program_location()
@@ -77,7 +105,7 @@ int run_clang(const std::vector<std::string>& args, bool include_libdua)
     std::string system_specific_flags = "-lm ";
 #endif
 
-    return std::system(("clang " + system_specific_flags + concatenated).c_str());
+    return std::system((get_clang_name() + " " + system_specific_flags + concatenated).c_str());
 }
 
 bool run_clang_on_llvm_ir(const strings& filename, const strings& code, const strings& args, bool include_libdua, bool use_temp)

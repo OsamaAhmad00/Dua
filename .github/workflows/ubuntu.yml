@@ -23,8 +23,6 @@ jobs:
         wget https://apt.llvm.org/llvm.sh
         chmod u+x llvm.sh
         sudo ./llvm.sh 17
-        sudo rm -f /bin/clang
-        sudo ln -s /bin/clang-17 /usr/bin/clang
 
     - name: Install Java
       run: sudo apt install default-jre -y
