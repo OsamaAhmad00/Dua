@@ -747,7 +747,7 @@ std::string FunctionNameResolver::get_winning_method(const ClassType *owner, con
         return get_winning_function(owner->name + ".constructor", arg_types, panic_on_not_found, panic_on_ambiguity);
     }
 
-    auto key = name;
+    auto key = name + '(';
     auto vtable = compiler->name_resolver.get_vtable_instance(owner->name);
     auto begin = vtable->method_names_without_class_prefix.lower_bound(key);
     key.back()++;
