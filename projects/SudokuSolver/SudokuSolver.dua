@@ -75,37 +75,46 @@ class SudokuSolver
         return '0' + board[i][j];
     }
 
+    void print_horizontal_bar()
+    {
+        int width = 29;
+
+        // char thick_horizontal = 205;
+        char thick_horizontal = '-';
+
+        out << "o";
+        for (int _ = 0; _ < 3; _++) {
+            for (int i = 0; i < 9; i++)
+                out << thick_horizontal;
+            out << "o";
+        }
+        out << "\n";
+    }
+
     void print()
     {
-        char thick_vertical = 186;
-        char thick_horizontal = 205;
+        // char thick_vertical = 186;
+        char thick_vertical = '|';
 
-        for (int i = 0; i < (9 + 8 * 3 + 2 * 2); i++)
-            out << thick_horizontal;
-
-        out << '\n';
+        print_horizontal_bar();
 
         for (int i = 0; i < 9; i++)
         {
-            if (i && i % 3 == 0) {
-                for (int i = 0; i < (9 + 8 * 3 + 2 * 2); i++)
-                    out << thick_horizontal;
-                out << '\n';
-            }
+            if (i && i % 3 == 0)
+                print_horizontal_bar();
 
             out << thick_vertical << " " << get_char(i, 0);
 
             for (int j = 1; j < 9; j++) {
                 if (j % 3 == 0) out << " " << thick_vertical << " ";
-                else out << " | ";
+                else out << "  ";
                 out << get_char(i, j);
             }
 
             out << " " << thick_vertical << "\n";
         }
 
-        for (int i = 0; i < (9 + 8 * 3 + 2 * 2); i++)
-            out << thick_horizontal;
+        print_horizontal_bar();
 
         out << "\n\n";
     }
