@@ -4,7 +4,6 @@
 
 The Dua Compiler is a cross-platform compiler for the Dua language, written in C++, leveraging the power of the LLVM compiler infrastructure.
 
-
 ## Platform and Architecture Support
 
 Thanks to the LLVM backend, the Dua compiler is equipped with a broad range of platform and architecture support. It seamlessly targets various platforms including but not limited to:
@@ -27,10 +26,53 @@ In addition, it supports a multitude of architectures, encompassing:
 The compiler is capable of handling both little and big endian, wherever applicable.
 
 
+## Simple Example
+
+This example demonstrates the use of templated classes, inheritance, method overriding, and output streams in a simple Dua program.
+
+```
+class Box<T>
+{
+    T value;
+
+    constructor(T value) : value(value) { }
+
+    void show() {
+        out << "Value: " << value << "\n";
+    }
+}
+
+class IntBox : Box<int>
+{
+    constructor(int i) : Super(i) { }
+
+    // Overridden method
+    void show() {
+        out << "Integer Value: " << value << "\n";
+    }
+}
+
+int main()
+{
+    Box<String> sbox("Hello World");
+    IntBox ibox(5);
+	
+    sbox.show();
+    ibox.show();
+	
+    /*
+    * Output:
+    * Value: Hello World
+    * Integer Value: 5
+    */
+}
+```
+
+
 ## Language Features
 
 ### Object-Oriented Programming
-The Dua language supports the core concepts of object-oriented programming, including classes, inheritance, method overloading, and virtual methods. Examples can be found in the following files:
+The Dua language supports the core concepts of object-oriented programming, including classes, inheritance, method overriding, and method overloading. Examples can be found in the following files:
 - [class-construction.dua](examples/class-construction.dua)
 - [class-definition.dua](examples/class-definition.dua)
 - [inheritance.dua](examples/inheritance.dua)
@@ -100,7 +142,7 @@ The components of libdua are globally accessible throughout the program. However
 ## Installation and Usage
 
 #### Prerequisites
-Ensure that `clang` version 15.0 or higher is installed and accessible via one of the following commands: `clang`, `clang-15`, `clang-16`, `clang-17`.
+Ensure that `clang` version 15.0 or higher is installed and accessible via one of the following commands: `clang`, `clang-15`, `clang-16`, or `clang-17`.
 
 #### Installing Dua Compiler
 Download and install the Dua compiler installer from the releases page. The compiler requires `clang` to function properly.
