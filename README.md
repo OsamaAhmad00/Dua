@@ -2,439 +2,227 @@
 
 # Dua
 
-The Dua language compiler. Written in C++, and is based on LLVM, Antlr4, Boost libraries, and the GoogleTest framework
+The Dua Compiler is a cross-platform compiler for the Dua language, written in C++, leveraging the power of the LLVM compiler infrastructure.
 
-## Notable compiler functionalities
 
-- Compiling to multiple architectures (such as x86, MIPS, RISC-V, and even PIC microcontrollers)
-- Compiling to multiple OSs (such as Windows, Linux, and MacOSX)
-- Generating and linking against both static and dynamic libraries
-- Generating LLVM IR
-- Generating assembly
-- Generating object files
-- Generating executables
+## Platform and Architecture Support
 
----
+Thanks to the LLVM backend, the Dua compiler is equipped with a broad range of platform and architecture support. It seamlessly targets various platforms including but not limited to:
 
-## Examples on the compilation process
+- Windows
+- Linux
+- macOS
+- Android
+- iOS
 
-```bash
-# Basic compilation:
-dua main.dua
+In addition, it supports a multitude of architectures, encompassing:
 
-# Generate LLVM IR:
-dua main.dua -S -emit-llvm
+- x86/x86-64
+- WASM32/64
+- ARM/ARM64
+- RISCV32/64
+- MIPS/MIPS64
+- Thumb
 
-#Generate assembly:
-dua main.dua -S
+The compiler is capable of handling both little and big endian, wherever applicable.
 
-# Generate an object file:
-dua main.dua -c
 
-# Cross-compilation:
-# For more information on targete triples, consult: https://clang.llvm.org/docs/CrossCompilation.html#target-triple
-dua main.dua --target=x86_64-pc-windows-msvc
+## Language Features
+
+### Object-Oriented Programming
+The Dua language supports the core concepts of object-oriented programming, including classes, inheritance, method overloading, and virtual methods. Examples can be found in the following files:
+- [class-construction.dua](examples/class-construction.dua)
+- [class-definition.dua](examples/class-definition.dua)
+- [inheritance.dua](examples/inheritance.dua)
+
+### Type Inference
+The Dua language is capable of inferring types, which simplifies code and improves readability. See examples in [type-inference.dua](examples/type-inference.dua).
+
+### Polymorphism
+The Dua language supports both static-time (through templates) and runtime polymorphism, managing overloaded functions, templated entities, and operator overloading. Examples can be found in the following files:
+- [generic-classes.dua](examples/generic-classes.dua)
+- [generic-functions.dua](examples/generic-functions.dua)
+- [functions.dua](examples/functions.dua)
+- [function-overloading.dua](examples/function-overloading.dua)
+
+### Meta-Programming
+The Dua language supports meta-programming. Examples can be found in the following files:
+- [typename-operator.dua](examples/typename-operator.dua)
+- [typeof-operator.dua](examples/typeof-operator.dua)
+- [noref-operator.dua](examples/noref-operator.dua)
+- [istype-operator.dua](examples/istype-operator.dua)
+
+### Operator Overloading
+The Dua language allows for operator overloading, enabling custom behavior for operators. Examples can be found in the following files:
+- [infix-operators.dua](examples/infix-operators.dua)
+- [postfix-operators.dua](examples/postfix-operators.dua)
+
+### Type-Aliasing
+The Dua language supports type-aliasing. You can find examples in [type-alias.dua](examples/type-alias.dua).
+
+### Low-Level Manipulation
+The Dua language provides the ability to manipulate low-level details by offering multiple helpful operators, including `sizeof`, `offsetof`, `dynamicname`, `typename`, `_set_vtable`, and more. Examples can be found in the following files:
+- [sizeof-operator.dua](examples/sizeof-operator.dua)
+- [offsetof-operator.dua](examples/offsetof-operator.dua)
+- [dynamicname-operator.dua](examples/dynamicname-operator.dua)
+- [typename-operator.dua](examples/typename-operator.dua)
+- [set-vtable-operator.dua](examples/set-vtable-operator.dua)
+
+### Standard Library
+The Dua language includes a standard library with essential classes and algorithms, including vectors, strings, priority queues, I/O streams, and more. Examples can be found in the following files:
+- [vector.dua](examples/vector.dua)
+- [string.dua](examples/string.dua)
+- [priority-queue.dua](examples/priority-queue.dua)
+- [algorithms.dua](examples/algorithms.dua)
+
+The [examples](examples) folder contains over 450 examples demonstrating language usage.
+
+
+## Example Projects
+
+The [projects](projects) folder includes a collection of sample projects showcasing the capabilities of the Dua language. Notable examples include:
+
+- [Sudoku Solver](projects/SudokuSolver): An efficient program to solve Sudoku puzzles.
+- [Graph Shortest Path Finder](projects/Dijkstra): A tool that computes the shortest path in a graph using Dijkstra's shortest-path algorithm
+
+These projects serve as practical references for understanding the syntax and features of the Dua language.
+
+
+## Compilation Features
+
+The Dua Compiler comes with the ability to generate and link against both static and dynamic libraries. It has the versatility to produce LLVM IR, assembly, object files, or executables.
+
+By default, the Dua compiler links against two libraries: libc and libdua. If you wish to avoid linking against these libraries, you can use the `-no-stdlib` option for libc and `-no-libdua` for libdua.
+
+The components of libdua are globally accessible throughout the program. However, to utilize libc, a declaration of the function intended for use must be written.
+
+
+## Installation and Usage
+
+#### Prerequisites
+Ensure that `clang` version 15.0 or higher is installed and accessible via one of the following commands: `clang`, `clang-15`, `clang-16`, `clang-17`.
+
+#### Installing Dua Compiler
+Download and install the Dua compiler installer from the releases page. The compiler requires `clang` to function properly.
+
+#### Compiling a Basic Dua Programs
+To compile a Dua program, it's as simple as the following command:
+```
+Dua example.dua -o example.exe
 ```
 
-The compiler is based on clang (LLVM), which means that post-IR-generation options can be passed to the compiler.
+The Dua compiler is built upon Clang, ensuring compatibility with all post Intermediate Representation (IR) generation Clang arguments. Consequently, standard Clang commands are applicable, such as `-c` to generate object files and `-S -emit-llvm` for LLVM IR output, among others.
 
----
+#### Manual Installation
+After building, place the `libdua` library file in a standard library directory (e.g., `/lib` or `/usr/lib` on Linux) or in the same directory as the Dua compiler executable. For convenience, add the path of the Dua compiler executable to the `PATH` environment variable or move it to a directory included in the `PATH` (e.g., `/bin` or `/usr/bin` on Linux).
 
-The compiler links with `libc` automatically, which means that any `libc` function can be called within the Dua code.
-You just need to declare the function before usage.
-
-## Example of using LibC
-
-```
-int printf(str message, ...);
-
-int main()
-{
-    printf("Hello, world!");
-}
-```
-
----
-
-## Basic language syntax
-
-For a detailed examination of the syntax, you can take a look at the `grammar` folder.
-
-### Primitive data types
-
-- `i64` / `long`         = 64-bit integer
-- `i32` / `int`          = 32-bit integer
-- `i16` / `short`        = 16-bit integer
-- `i8` / `byte` / `bool` = 8-bit integer
-- `f64` / `double`       = 64-bit floating point number
-- `f32` / `float`        = 64-bit floating point number
-- `str`                  = Just a syntactic sugar for `i8*`
-- `ArrType[ArrSize]`     = An array with type `ArrType` and size `ArrSize`
-- `PtrType*`             = A pointer type to a `PtrType` type
-- `void`                 = The void type
-
-  Further examples of the language are in the `examples` folder.
-
-### Literals
-
-- Integer literals:
-
-  - Bases: Integer literals can be in one of the following bases:
-    - Hexadecimal: Prefixed with `0x`. Example: `0x0123`
-    - Decimal    : The default. No prefix.
-    - Octal      : Prefixed with `0`. Example: `0123`
-    - Binary     : Prefixed with `0b`. Example: `0b010101`
-  - Width: Depending on the suffix, literals will have different bit-width (and will be casted as appropriate depending on the context).
-    - 64-bits: The default bit-width for integers
-    - 32-bits: 32-bit integers are suffixed with `I` (int).   Example: `123I`
-    - 16-bits: 16-bit integers are suffixed with `S` (short). Example: `123S`
-    - 8-bits : 8-bit  integers are suffixed with `T` (tiny).  Example: `123T`
-- Floating-point literals:
-
-  - 64-bits: The default bit-width for floating-point numbers
-  - 32-bits: 32-bit floating-point numbers are suffixed with `F` (float). Example: `123.456F`
-- String literals: String literals are put between double quotes. Example: `"Hello, world!"`
-- Other: Other literals include `null`, `true`, and `false`.
-
-### Variables:
-
-Variables are defined as follows: `type name = value;`. For declarations, just omit the initialization. Global variables must be initialized.
-
-### Comments:
-
-- Single-line comments: Starts with `//` and ends by the end of the line.
-- Multi-line comments: Starts with `/*` and ends with `*/`.
-
-### Functions: Functions can be in declared/defined in the global scope only.
-
-You can set the function to have variable-argument parameters by adding `...` at the end of the parameter list.
-
-functions can have different types of bodies:
-
-- Block body
-- Expression body
-
-For declarations, just omit the body, and add a `;` at the end.
-
-Examples:
-
-```
-// Declaration
-void func(int y);
-
-// Variadic function declaration
-void printf(i8* message, ...);
-
-// Block-body
-int add(int i, int j) { return i + j; }
-
-// Expression body
-int mult(int i, int j) = i * j;
-```
-
-### Expressions
-
-Expressions don't end with `;`. If they did, they'll be considered an expression statement, and unless they have a side effect (such as the compound assignment operators), they will most likely be eliminated.
-
-For expressions, we'll construct examples directly.
-
-- If Expressions:
-
-  ```
-  // If expressions must have an else branch. 
-
-  int min = if (x < y) x else y;
-
-  int result = if (x > 50) 1 else if (x == 50) 0 else -1;
-  ```
-- The Ternary Operator:
-
-  ```
-  int min = (x < y) ? x : y;
-  ```
-- When Expressions:
-
-  ```
-  // Just like if expressions, when expressions must have an else branch.
-  int min = when {
-      x < y -> x,
-      else  -> y
-  };
-
-  int result = when {
-      x > 50  -> 1,
-      x == 50 -> 0,
-      else    -> -1
-  };
-  ```
-- Cast Expressions:
-
-  ```
-      int* null_pointer = (int*)0;
-
-      // Here, the casting is not necessary. It'll happen implicitly.
-      long extended = (long)123T;
-
-      // Same as above
-      short truncated = 123I;
-  ```
-- Block Expressions: Block expressions end with an expression (no `;` at the end), and evaluate to that expression
-
-  ```
-  int value = { int x = get_x(); int y = get_y(); if (x < y) x else y };
-
-  // result = 3
-  int result = { print(x); 3 };
-  ```
-- Address Of and Dereferencing:
-
-  ```
-  int x = 5;
-  int* ptr = &x;
-  int** ptrptr = &ptr;
-
-  // x = 3
-  *ptr = 3;
-
-  // x = 10
-  ***&ptrptr = 10;
-  ```
-- Other: Other supported expressions include:
-
-  - `()`: Parenthesized expression
-  - `+`: Addition
-  - `-`: Subtraction
-  - `*`: Multiplication
-  - `/`: Division
-  - `%`: Mod
-  - `++`: Pre/Post-Increment
-  - `--`: Pre/Post-Decrement
-  - `-`: Unary Minus (Negation)
-  - `+`: Unary Plus  (Identity)
-  - `!`: Not
-  - `~`: Bitwise Complement
-  - `<<`: Left Shift
-  - `>>`: Right Shift
-  - `>>>`: Arithmetic Right Shift
-  - `<`: Less Than
-  - `>`: Greater Than
-  - `<=`: Less Than or Equal
-  - `>=`: Greater Than or Equal
-  - `==`: Equal
-  - `!=`: Not Equal
-  - `&`: Bitwise And
-  - `^`: Xor
-  - `|`: Bitwise Or
-  - `&&`: Logical And
-  - `||`: Logical Or
-  - `=`: Equals
-  - `+=`: Compound Assignment (addition)
-  - `-=`: Compound Assignment (subtraction)
-  - `*=`: Compound Assignment (multiplication)
-  - `/=`: Compound Assignment (division)
-  - `%=`: Compound Assignment (mod)
-  - `<<=`: Compound Assignment (left shift)
-  - `>>=`: Compound Assignment (right shift)
-  - `>>>=`: Compound Assignment (arithmetic right shift)
-  - `&=`: Compound Assignment (bitwise and)
-  - `^=`: Compound Assignment (xor)
-  - `|=`: Compound Assignment (bitwise or)
-
-  Note that the logical `&&` and `||` exhibit the "short-circuiting" behaviour. Which means that later elements of an and or or expression won't get evaluated in case the result is already determined.
-  This is helpful in checking for nullable types for example. Example:
-
-  ```
-  // Here, ptr won't be dereferenced if it's null
-  if (ptr != null && *ptr == 5) ...;
-  ```
-
-### Statements
-
-Just like expressions, we'll proceed with examples.
-
-- If Statements:
-
-  ```
-  if (x < y)
-      value = x;
-  else
-      value = y;
-
-  if (x < 5) {
-      value = 1;
-  } else if (x == 5) {
-      value = 0;
-  } else {
-      value = -1;
-  }
-  ```
-- For Loops:
-
-  ```
-  for (int i = 0; i < n; i++) {
-      if (...) continue;
-      ...
-      if (...) break;
-  }
-
-  // The condition and the update sections are expressions, which
-  //  means that you can use block expressions in them.
-  for (int i = 0, int j = 4; { int x = i * j - 3; x < 10 }; { i++; j++ })
-  {
-      ...
-  }
-
-  for (int i = 0; i < n; i++)
-      print(i);
-
-  // Sections can be empty.
-  // Infinite loop
-  for (;;);
-  ```
-- While Loops:
-
-  ```
-  while (x < y)
-  {
-      x++;
-  }
-
-  // Infinite loop
-  while ();
-
-  while (x < y)
-      x++;
-  ```
-- Do-While Loops:
-
-  ```
-  do {
-      ...
-  } while (x < y);
-
-  do print(x) while (x++ < y);
-
-  // Infinite loop
-  do; while();
-  ```
-- Other: Other statements include empty statements (just `;`), expression statements (expression followed by `;`), and block statements.
-
----
-
-## Basic Language Semantics
-
-It's worth Noting that blocks (expressions or statements) introduce a new scope, in which name shadowing applies.
-
-This applies to blocks used in if, when, while, ... expressions/statements.
-
-Example:
-
-```
-int x = 12;
-
-int func()
-{
-    // Prints 12
-    print(x);
-}
-
-int main()
-{
-    int x = 3;
-  
-    {
-        int x = 5;
-        // Prints 5
-        print(x);
-    }
-  
-    // Prints 3
-    print(x);
-}
-```
-
----
 
 ## Testing
 
-To add new test cases, you can add a new test source file in `testing/tests`, and use the `define_test` macro in `testing\tests\CMakeLists.txt` to include the new test. Note that the source file name should be the same as the test name, plus the `.cpp` extension.
+### Adding Test Cases
 
-You Can also make use of the already present testing framework, that is based on GoogleTest. To Use the framework you should use the `FileTestCasesRunner` class present within the `testing\tests` folder.
+To introduce new test cases, follow these steps:
 
-The `FileTestCasesRunner` takes a single argument, the name of the test file, that is present in the `examples` folder. This serves the purpose of both having test cases, along with having examples of the usage of the language.
+1. Create a new test source file within the `testing/tests` folder and name the file according to the test case, appending the `.cpp` extension.
 
-Here are some notes to take into consideration while writing a test file:
-- The test file consists a common section and cases.
-- The common section is the part between the beginning of the file and the first case. It's added at the top of every case automatically.
-- Each case consists of a header (the first part), and a body (the second part).
-- Each line of the header is a single-line comment (prefixed with `//`).
-- The body is just the test code. It can be anything.
+2. Utilize the `define_test` macro in `testing\tests\CMakeLists.txt`, passing it the test name to be registered.
 
-A test case body consists of the following:
-- Required case name, written as `// CASE name of the case`. This must be the first line of the header.
-- Optional expected exit code, written as `// Returns exit_code`
-- Optional expected stdout (stderr is not included), written as `// Outputs stdout_output`
-- Optional flag indicating that the test should panic at compile time, written as `// Panics`
-- For runtime panics, you can make sure that the program has exited with the desired exit code.
+### Utilizing the Existing Testing Framework
 
-Note that the header is case-insensitive, and you can write it in the case you like.
+The used testing framework is built on GoogleTest. To leverage it:
 
-Here is an example of a simple test file:
-```
+- Employ the `FileTestCasesRunner` class located in the `testing\tests` folder.
+- The `FileTestCasesRunner` requires the test file name as an argument, and expects to find the test file at the `examples` folder.
 
+This approach serves dual purposes:
 
-// CASE Basic declaration
-// Returns 1
+- It provides a repository of test cases.
+- It offers examples demonstrating language usage.
 
-int main()
-{
-    int y;
-    y = 1;
-    return y;
-}
+### Test File Structure
 
+When writing a test file, consider the following structure:
 
-// CASE Basic definition
-// Returns 4
+- **Common Section**: This is the initial portion of the file up to the first test case. It's prepended to each case automatically.
+- **Cases**: Each case is divided into a header and a body.
+  - **Header**: Composed of single-line comments (`//`), detailing the test specifications.
+  - **Body**: Contains the actual test code.
 
-int main()
-{
-    int z = 4;
-    return z;
-}
-```
+### Test Case Header
 
----
+Test case headers consist of following:
+
+- **Case Name**: Denoted by `// Case <name>`. This is the only mandatory element, and must be the header's first line.
+
+Other optional header elements are:
+- **Expected Exit Code**: `// Returns <exit_code>`.
+- **Expected Stdout**: `// Outputs <stdout_output>`. Stderr is not captured.
+- **Time Limit**: `// Time Limit <time_limit_in_ms>`.
+- **Compile-Time Failure**: `// Panics`. This indicates that the test should fail during compilation.
+- **Exceeds Time Limit**: `// Exceeds time limit`. This flags tests expected to run longer than the specified limit.
+
+To ensure that there are no runtime failures, assert that the program exits with the intended exit code (usually 0).
+
+**Note**: The header is not case-sensitive. You may use any preferred casing.
+
+Test case examples can be found at the [examples](examples) folder
+
 
 ## Project Folder Structure
 
 The project is organized as follows:
 
-- `antlr4`: Contains the files needed to be able to link and run Antlr4 to parse the source files
-- `examples`: Contains examples of different language features. Also used as tests to assure compiler correctness
-- `grammar`: Contains the grammar files used by Antlr4 to generate the parser
-- `include`: Contains the include headers
-  - `AST`: Contains classes representing AST nodes, which also hold the code generation logic
-  - `parsing`: Contains helper classes related to parsing
-  - `types`: Contains classes representing types
-  - `utils`: Contains util functions such as the `termcolor` library, or `clang` related functions for final executable generation.
-- `src`: Contains all source files
-- `testing`: Contains the test files along with the tools needed for testing.
+- **antlr4**: This folder houses essential files that enable the linkage and execution of Antlr4 for parsing the source files.
+- **examples**: A collection of various language feature examples, which also serve as tests to ensure the compiler's accuracy and reliability.
+- **grammar**: Here, you'll find the grammar files that Antlr4 utilizes to produce the parser.
+- **include**: Contains the header files that are included across the project.
+- **lib**: The source code for `libdua`, the core library of the Dua language, resides here.
+- **projects**: This folder is dedicated to showcasing example projects written in the Dua language.
+- **scripts**: Scripts that aid in the building and installation process of the compiler for both Windows and Linux systems can be found here.
+- **src**: All the source files that constitute the compiler are located within this folder.
+- **testing**: Comprises test files and the necessary tools for conducting thorough testing of the compiler.
 
-## Project Prerequisites
 
-- `Antlr4`: The needed files are in the `Antlr4` folder, but you need to have `Java` installed in order for the jar file to run.
-- `LLVM`: needs to be installed on your system
-- `Boost`: needs to be installed on your system
-- `GoogleTest`: you just need to clone the project along with the submodules.
+## Prerequisites for the Project
+
+Before you begin, ensure you have the following prerequisites installed and set up:
+
+- **Java**: Required to run the `Antlr4` jar file. The necessary `Antlr4` files can be found in the project's `Antlr4` folder.
+- **LLVM**: This must be installed on your system. Please follow the installation guide appropriate for your operating system.
+- **Boost**: This C++ library needs to be installed on your system. Installation instructions are available on the Boost official website.
+- **GoogleTest**: For unit testing, simply clone the project repository along with the submodules to include GoogleTest.
+
+Please refer to the installation guides for each prerequisite for detailed instructions.
+
 
 ## Todo
 
 Here are some of the possible improvements to the language and the compiler:
 
-- OOP support
-- Support multi-dimensional arrays
-- Improve error messages
-- Incorporate multithreading into LLVM IR generation
-- Support higher-order functions
-- Write more examples
+  - Support default parameter values
+  - Support casting operator
+  - Support more operators (prefix, infix, postfix)
+  - Support unsigned integers (trivial)
+  - Support access modifiers for classes
+  - Support exceptions and stack unwinding
+  - Better error reporting
+  - Syntax highlighting 
+  - Don't create a vtable if it's not needed and save the pointer in each object
+  - Better names for templated classes and functions when exposed in a message
+  - Store the addresses in the symbol table in the memory_location field instead of in the loaded_value
+  - Unify the use of the `loaded_value` and `memory_location` for the `dua::Value` struct in all functions instead of having some functions expecting the address in the `loaded_value` field, and other in the `memory_location` field.
+  - Support compiling using multiple threads
+  - Instead of having the type deduction logic (the `ASTNode::get_type` method), and the node evaluation logic (the `ASTNode::eval` method) separate, which may introduce inconsistency bugs, introduce a "dry-run" option in the eval method, that performs a dry-run, computing the desired node result type without evaluating the node. 
+  - Source map generation and debugging support
+  - Support the const qualifier
+  - Support moving ownership (move constructor and move copy constructor)
+  - Support nested classes and nested functions
+  - Support function static variables, taking synchronization between multiple threads into consideration
+  - Support static methods and static fields
+  - Implement sophisticated imports and import resolution
+  - Better command line interface (i.e. support the `Dua *.dua` command)
+  - Restructure the project dependencies (includes and cmake dependencies), and linking options for different components (parser, compiler, tests)
+  - Detect invalid circular dependencies in class creation and provide meaningful error messages for them
+  - Update the CFG to continue parsing in presence of errors
+  - Report all errors instead of stopping at the first one
+  
