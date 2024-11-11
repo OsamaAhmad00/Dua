@@ -4,6 +4,8 @@ project(Dua)
 # Required for antlr4
 set(CMAKE_CXX_STANDARD 17)
 
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address,undefined -g3")
+
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 # Start of LLVM ---------
