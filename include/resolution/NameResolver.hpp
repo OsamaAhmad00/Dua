@@ -31,7 +31,9 @@ public:
 
     template<typename T, typename ...Args>
     ResolutionString* create_resolution_string(Args ...args) {
-        return new T(compiler, args...);
+        auto result = new T(compiler, args...);
+        resolution_strings.push_back(result);
+        return result;
     }
 
     ~NameResolver();
